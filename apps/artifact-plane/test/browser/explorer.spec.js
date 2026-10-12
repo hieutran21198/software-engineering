@@ -94,14 +94,14 @@ test("B1-B7: explore, expand, select, pan, zoom, proposals, diagnostics, refresh
     expect(await page.evaluate(() => window.compromised)).toBeUndefined();
     await expect(panel.locator("a[href], img, script")).toHaveCount(0);
     // Built-in zoom and fit controls actually change viewport state.
-    const viewport = page.locator(".react-flow__viewport");
+    const viewport = page.locator(".canvas-surface .react-flow__viewport");
     const initialTransform = await viewport.getAttribute("style");
     await page.getByRole("button", { name: "Zoom In", exact: true }).click();
     await expect
       .poll(() => viewport.getAttribute("style"))
       .not.toBe(initialTransform);
     await page.getByRole("button", { name: "Fit View", exact: true }).click();
-    const pane = page.locator(".react-flow__pane");
+    const pane = page.locator(".canvas-surface .react-flow__pane");
     const box = await pane.boundingBox();
     const beforePan = await viewport.getAttribute("style");
     await page.mouse.move(box.x + 25, box.y + box.height - 110);

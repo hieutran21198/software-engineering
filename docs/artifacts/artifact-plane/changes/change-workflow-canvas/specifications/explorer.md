@@ -110,7 +110,7 @@ Current step prioritizes relevant uncommitted file changes, then the latest dist
 
 ### UI and failures
 
-Add a Workflow view beside the dependency canvas. List worktrees and their changes, with a selected-worktree indicator and explicit Open action. Show inferred step, evidence reasons, tasks, and expandable phase commit lists. Full IDs and subjects are plain text. Keep canvas selection and inspector width during view switching. Empty, unreadable, shallow, ambiguous, and history-limited states must remain visible. Worktree metadata failure does not remove the existing artifact graph.
+Add a Workflow view beside the dependency canvas. Group worktrees and their changes on the interactive canvas, with a selected-worktree indicator. Node selection shows inferred step, evidence reasons, tasks, expandable phase commits, and the explicit Open action in the inspector. Full IDs and subjects are plain text. Keep canvas selection and inspector width during view switching. Empty, unreadable, shallow, ambiguous, and history-limited states must remain visible. Worktree metadata failure does not remove the existing artifact graph.
 
 ### Validation and impact self-check
 
