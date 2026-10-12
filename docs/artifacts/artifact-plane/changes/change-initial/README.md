@@ -9,3 +9,6 @@ One application in `apps/artifact-plane`. No established artifact prerequisites 
 ## Knowledge
 
 - [Requirements](requirements/explorer.md)
+- [Specification](specifications/explorer.md)
+- [Local server decision](decisions/001-local-server.md)
+- [Implementation plan](tasks/README.md)
