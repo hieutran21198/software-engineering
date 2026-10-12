@@ -115,3 +115,19 @@ Add a Workflow view beside the dependency canvas. List worktrees and their chang
 ### Validation and impact self-check
 
 B11–B14 govern new behavior. Add Git fixtures for two worktrees, uncommitted phase edits, inherited completed tasks, distinct phase commits, squash commits, declared versus stale active changes, detached/unavailable worktrees, and history limits. Fingerprint all inspected files and Git metadata before/after. Retain existing API protections and DAG/reference checks. Only Artifact Plane changes; no new artifact dependency. Contract-Driven Development supplies the additive API and evidence rules, BDD supplies examples, and existing CI supplies integrated validation. KISS uses plain functions and existing libraries; STE separates evidence from claims.
+
+## Workflow canvas contract
+
+Replace the Workflow card list with React Flow using the existing library. Consume snapshot.workflow unchanged. No server or inference contract changes. Derive nodes and positions in memory using plain functions.
+
+Each registered worktree is a labeled group with branch, path, short HEAD, availability, and selected marker. Each change occupies a row inside its worktree. Show change identity and the existing inferred step or Historical/Unknown label. Phase nodes follow source steps in order: Requirement, Specification, Plan, Approval, Implementation, Validation, Version preparation. Display evidence state and highlight the current inferred phase. Use distinct text as well as color. Connecting lines indicate phase order only; they do not assert completed prerequisites or artifact dependencies. Show a legend for this meaning.
+
+Use deterministic positions and group dimensions derived from row counts. Keep nodes fixed in layout; allow pan, zoom, fit, and selection. No new graph layout dependency. Empty or unavailable groups remain visible with diagnostics. Fit initially and provide a manual fit control; do not reset the viewport on each selection.
+
+Node IDs encode worktree path, artifact, change, and phase using structured string tuples. Keep selection separate from artifact canvas selection. Switching views preserves each selection. Refresh resolves workflow selection by ID against the new snapshot; missing IDs clear selection. Opening another repository clears workflow selection. Inspector width uses the existing shared resize control.
+
+Worktree inspector shows branch, path, full HEAD, availability, diagnostics, and explicit Open worktree action when readable and not selected. Change inspector shows inference reason, declared-active caveat, and task evidence. Phase inspector shows state, evidence, associated commits and exact completion commit or unknown. Preserve full IDs and messages, safely rendered as text. At narrow widths use the existing stacked inspector behavior. No polling, persistent browser storage, Git mutations, or background work.
+
+### Canvas specification self-check
+
+Requirements 21–23 and B15–B16 map to layout, selection, evidence inspection, and source safety. No API, artifact DAG, upstream dependency, or inference change is needed. Existing ADRs remain valid. KISS reuses React Flow and plain functions. STE distinguishes sequence lines from dependency or completion claims. No blockers remain for Plan.
