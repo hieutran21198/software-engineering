@@ -4,13 +4,14 @@ import { execFile } from "node:child_process";
 import { promisify } from "node:util";
 import { buildSnapshot, parseArtifact } from "../src/model.js";
 const execute = promisify(execFile);
+import { readWorkflow } from "./workflow.js";
 export class ExploreError extends Error {
   constructor(status, message) {
     super(message);
     this.status = status;
   }
 }
-async function git(root, args) {
+export async function git(root, args, raw = false) {
   const { stdout } = await execute(
     "git",
     [
@@ -28,9 +29,9 @@ async function git(root, args) {
       maxBuffer: 8 * 1024 * 1024,
     },
   );
-  return stdout.trim();
+  return raw ? stdout : stdout.trim();
 }
-export async function exploreRepository(path) {
+export async function scanRepository(path) {
   if (typeof path !== "string" || !isAbsolute(path) || path.includes("\0"))
     throw new ExploreError(400, "Enter an absolute repository path.");
   let root;
@@ -183,9 +184,16 @@ export async function exploreRepository(path) {
   } catch {
     throw new ExploreError(422, "Git status could not be read.");
   }
-  return buildSnapshot(
+  const snapshot = buildSnapshot(
     files,
     { path: root, branch, head, dirty: Boolean(status), status },
     diagnostics,
   );
+  return { snapshot, files };
+}
+
+export async function exploreRepository(path) {
+  const { snapshot, files } = await scanRepository(path);
+  snapshot.workflow = await readWorkflow(snapshot.repository.path, { snapshot, files }, scanRepository, git);
+  return snapshot;
 }
