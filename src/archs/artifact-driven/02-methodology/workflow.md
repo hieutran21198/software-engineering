@@ -1,0 +1,56 @@
+# Workflow
+
+An artifact has one active change. Each phase finishes and validates its output before the next phase consumes it. Corrections remain in the same change.
+
+## Roles and Phase Gates
+
+| Phase | Owner | Complete when |
+| --- | --- | --- |
+| Requirement | Product Owner (PO) | The need, scope, acceptance criteria, and potentially affected artifacts are clear. No unresolved blockers prevent Specification. |
+| Specification | Technical Lead (TL) | Behavior and all applicable interface contracts are defined. Necessary ADRs are recorded, dependency impact analysis is complete, and no blockers prevent Plan. |
+| Plan | Technical Lead | Tasks cover the required work, reference governing knowledge, identify dependencies and parallel implementation opportunities, and contain concrete DoD checks. No blockers prevent Implementation planning. |
+| Implementation | Assigned implementers, coordinated by one implementation coordinator | Required tasks satisfy their DoD and combined implementation passes integration and dependency validation. |
+| Version | Implementation coordinator prepares; team reviews and merges | Checks pass, the version is selected, and the snapshot, root README, and DAG agree. Establishment requires all required changes to land on `main` or `master`. |
+
+The coordinator can be the TL or a designated implementer. This is an assigned responsibility; it does not require another agent session.
+
+## Requirement
+
+The PO authors and validates the requirements, then performs a self-check before handing them to the TL. No separate reviewer or approval step is required.
+
+Record the reason for the change in its README. Retain applicable requirements from the copied baseline and add, amend, or remove requirements as needed. Identify potentially affected artifacts for dependency impact analysis.
+
+## Specification and Plan
+
+The TL defines precise behavior and contracts from the completed requirements. Requirements own the need and desired outcomes; specifications own detailed behavior and interfaces; ADRs own architectural choices and their reasons.
+
+Cover all applicable interfaces, including APIs, events, data formats, error behavior, and operational interactions. Create an ADR only for a necessary architectural decision with multiple options. Complete impact analysis throughout Requirement and Specification.
+
+For AI-assisted work, use a frontier model for Specification and then Plan in the same session. Self-check each phase before advancing. Preserve the phase gates even when one actor performs both roles. A separate planning agent or fresh-session review is not mandatory.
+
+The plan produces `tasks/README.md` and task files. Each task records its scope, implementation location, governing references, dependencies, and DoD checks. Identify which tasks can run in parallel across applications, services, or repositories. Present the completed plan and wait for explicit user approval before Implementation. A new plan or material change requires renewed approval.
+
+## Implementation
+
+Each assigned developer or AI agent implements a task, adds or updates tests, runs its DoD checks, and records evidence in the task. Parallel tasks must respect their dependencies and established contracts.
+
+The coordinator validates the combined implementation and handles failures across task boundaries. Dependent Implementation begins only after required upstream changes establish their versions and the prepared specifications and plan are rechecked against them.
+
+## Corrections
+
+| Problem | Return to |
+| --- | --- |
+| Requirement ambiguity or missing business rule | Requirement; the PO revises, self-checks, and commits the output before handoff. |
+| Contract or architectural gap | Specification; the TL revises the design and impact analysis, then updates Plan. |
+| Missing or incorrect implementation task | Plan; the TL amends and self-checks the plan. |
+| Code or test defect | Implementation; the implementer fixes and repeats relevant checks. |
+
+Pause affected downstream work while its governing input is corrected. Repeat affected phase checks before resuming; retain unaffected work that remains valid.
+
+## Commits and Team Review
+
+Each completed phase produces a commit containing its output. Corrections also produce commits. In projects spanning repositories, commit the relevant outputs in their owning repositories.
+
+Commit each phase on a dedicated branch. Never commit directly to protected branches such as `main` or `master`. When remotes exist, push change branches and open one PR per changed repository, cross-linking companion PRs. Always stop for the team to review and merge. If no remote exists, ask the user how to finish; do not assume remote creation or local integration.
+
+Plan approval is a required user gate before Implementation. Team PR review and merge establish the version after validation. Neither requires redundant agent reviews; phase self-checks and implementation validation remain required.

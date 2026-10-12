@@ -1,0 +1,5 @@
+website/node_modules/
+website/.docusaurus/
+website/.docs/
+website/build/
+dist/

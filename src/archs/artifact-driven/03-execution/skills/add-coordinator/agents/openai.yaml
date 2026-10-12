@@ -1,0 +1,3 @@
+interface:
+  display_name: "ADD Coordinator"
+  short_description: "Drive ADD changes through evidence and approval"
