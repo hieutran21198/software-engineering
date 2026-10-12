@@ -167,7 +167,8 @@ small {
 }
 .workspace {
   display: grid;
-  grid-template-columns: 220px minmax(240px, 1fr) 340px;
+  position: relative;
+  grid-template-columns: 220px minmax(300px, 1fr) var(--inspector-width, 340px);
   flex: 1;
   min-height: 0;
 }
@@ -304,9 +305,12 @@ nav {
   background: #2b3048;
   color: #cfc6ff;
 }
-.canvas-area .react-flow {
-  height: calc(100% - 66px);
-  margin-top: 66px;
+.canvas-surface {
+  position: absolute;
+  top: 66px;
+  bottom: 48px;
+  left: 0;
+  right: 0;
 }
 .artifact-node {
   width: 100%;
@@ -412,7 +416,7 @@ nav {
   fill: #101827;
 }
 .react-flow__controls {
-  bottom: 60px;
+  bottom: 12px;
   box-shadow: none;
   border: 1px solid #3a4860;
   border-radius: 6px;
@@ -745,7 +749,10 @@ summary {
 }
 @media (max-width: 1150px) {
   .workspace {
-    grid-template-columns: 180px minmax(240px, 1fr) 290px;
+    grid-template-columns: 180px minmax(300px, 1fr) var(
+        --inspector-width,
+        340px
+      );
   }
   .details-panel {
     padding: 16px;
@@ -846,4 +853,48 @@ summary {
 .knowledge-source h4 {
   color: #a4b3ca;
   font-size: 10px;
+}
+
+.inspector-divider {
+  position: absolute;
+  z-index: 10;
+  top: 0;
+  bottom: 0;
+  left: calc(100% - var(--inspector-width, 340px) - 4px);
+  width: 8px;
+  cursor: col-resize;
+  touch-action: none;
+  user-select: none;
+}
+.inspector-divider::before {
+  content: "";
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  left: 3px;
+  width: 2px;
+  background: #35435b;
+}
+.inspector-divider::after {
+  content: "";
+  position: absolute;
+  top: calc(50% - 18px);
+  left: 2px;
+  width: 4px;
+  height: 36px;
+  border-radius: 3px;
+  background: #6e7d99;
+}
+.inspector-divider:hover::before,
+.inspector-divider:focus-visible::before {
+  background: #aaa1ff;
+}
+.inspector-divider:focus-visible {
+  outline: 2px solid #aaa1ff;
+  outline-offset: 1px;
+}
+@media (max-width: 800px) {
+  .inspector-divider {
+    display: none;
+  }
 }

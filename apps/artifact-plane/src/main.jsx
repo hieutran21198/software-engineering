@@ -1,4 +1,10 @@
-import React, { useCallback, useMemo, useState } from "react";
+import React, {
+  useCallback,
+  useEffect,
+  useMemo,
+  useRef,
+  useState,
+} from "react";
 import { createRoot } from "react-dom/client";
 import {
   ReactFlow,
@@ -207,6 +213,49 @@ function App() {
     [planning, setPlanning] = useState(false);
   const [expandedTypes, setExpandedTypes] = useState(new Set());
   const [filter, setFilter] = useState("");
+  const workspaceRef = useRef(null);
+  const [panelWidth, setPanelWidth] = useState(340),
+    [panelMax, setPanelMax] = useState(640);
+  useEffect(() => {
+    const workspace = workspaceRef.current;
+    const measure = () => {
+      const width = workspace.getBoundingClientRect().width;
+      if (width <= 800) return;
+      const sidebar = workspace
+        .querySelector(".sidebar")
+        .getBoundingClientRect().width;
+      const max = Math.max(
+        240,
+        Math.min(640, Math.floor(width - sidebar - 300)),
+      );
+      setPanelMax(max);
+      setPanelWidth((current) => Math.max(240, Math.min(max, current)));
+    };
+    const observer = new ResizeObserver(measure);
+    observer.observe(workspace);
+    measure();
+    return () => observer.disconnect();
+  }, []);
+  const resizePanel = (width) =>
+    setPanelWidth(Math.max(240, Math.min(panelMax, width)));
+  function dragPanel(event) {
+    if (!event.currentTarget.hasPointerCapture(event.pointerId)) return;
+    resizePanel(
+      workspaceRef.current.getBoundingClientRect().right - event.clientX,
+    );
+  }
+  function resizeWithKeyboard(event) {
+    const widths = {
+      ArrowLeft: panelWidth + 20,
+      ArrowRight: panelWidth - 20,
+      Home: 240,
+      End: panelMax,
+    };
+    if (Object.hasOwn(widths, event.key)) {
+      event.preventDefault();
+      resizePanel(widths[event.key]);
+    }
+  }
   async function open(repositoryPath, refresh = false) {
     setBusy(true);
     setError("");
@@ -356,7 +405,11 @@ function App() {
           {error}
         </div>
       )}
-      <div className="workspace">
+      <div
+        className="workspace"
+        ref={workspaceRef}
+        style={{ "--inspector-width": panelWidth + "px" }}
+      >
         <aside className="sidebar">
           <div className="sidebar-title">
             <span className="eyebrow">Repository</span>
@@ -467,27 +520,29 @@ function App() {
               </p>
             </div>
           ) : (
-            <ReactFlow
-              key={snapshot.repository.path}
-              nodes={graph.nodes}
-              edges={graph.edges}
-              nodeTypes={nodeTypes}
-              onNodeClick={onNodeClick}
-              fitView
-              fitViewOptions={{ padding: 0.18 }}
-              nodesDraggable={false}
-              nodesConnectable={false}
-              edgesReconnectable={false}
-              deleteKeyCode={null}
-              selectionOnDrag={false}
-              minZoom={0.1}
-              maxZoom={2}
-              colorMode="dark"
-              proOptions={{}}
-            >
-              <Background color="#334059" gap={24} size={1} />
-              <Controls showInteractive={false} />
-            </ReactFlow>
+            <div className="canvas-surface">
+              <ReactFlow
+                key={snapshot.repository.path}
+                nodes={graph.nodes}
+                edges={graph.edges}
+                nodeTypes={nodeTypes}
+                onNodeClick={onNodeClick}
+                fitView
+                fitViewOptions={{ padding: 0.18 }}
+                nodesDraggable={false}
+                nodesConnectable={false}
+                edgesReconnectable={false}
+                deleteKeyCode={null}
+                selectionOnDrag={false}
+                minZoom={0.1}
+                maxZoom={2}
+                colorMode="dark"
+                proOptions={{}}
+              >
+                <Background color="#334059" gap={24} size={1} />
+                <Controls showInteractive={false} />
+              </ReactFlow>
+            </div>
           )}
           {snapshot && snapshot.artifacts.length > 0 && (
             <div className="canvas-legend">
@@ -527,7 +582,38 @@ function App() {
             </details>
           )}
         </main>
-        <aside className="details-panel" aria-label="Selection details">
+        <div
+          className="inspector-divider"
+          role="separator"
+          aria-label="Resize details panel"
+          aria-orientation="vertical"
+          aria-valuemin={240}
+          aria-valuemax={panelMax}
+          aria-valuenow={panelWidth}
+          aria-controls="details-panel"
+          tabIndex={0}
+          onKeyDown={resizeWithKeyboard}
+          onPointerDown={(event) => {
+            if (event.button !== 0) return;
+            event.preventDefault();
+            event.currentTarget.focus();
+            event.currentTarget.setPointerCapture(event.pointerId);
+          }}
+          onPointerMove={dragPanel}
+          onPointerUp={(event) => {
+            if (event.currentTarget.hasPointerCapture(event.pointerId))
+              event.currentTarget.releasePointerCapture(event.pointerId);
+          }}
+          onPointerCancel={(event) => {
+            if (event.currentTarget.hasPointerCapture(event.pointerId))
+              event.currentTarget.releasePointerCapture(event.pointerId);
+          }}
+        />
+        <aside
+          id="details-panel"
+          className="details-panel"
+          aria-label="Selection details"
+        >
           {artifact ? (
             <>
               <div className="details-heading">
