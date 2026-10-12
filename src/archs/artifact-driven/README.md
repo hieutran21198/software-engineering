@@ -77,3 +77,7 @@ artifact-driven/
     ├── adopting-from-git.md
     └── working-with-ai.md
 ```
+
+## Required Skills
+
+ADD requires `kiss` for simple, sufficient solutions and `asd-ste-100` for clear document writing and rewriting. Both ship under `required-skills/` in the adopted bundle. Apply them in existing phase and task self-checks.

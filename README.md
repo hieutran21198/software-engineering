@@ -6,7 +6,7 @@ A repository of knowledge, templates, and seed files for software project archit
 
 This repository helps software engineers document and organize project architecture. It stores reusable resources that teams can adapt to their projects.
 
-The resources include ADD guidance and role skills, reusable patterns, a project README template, and an agent skill for clear technical writing. The Go command `se-adopt` selects an architecture bundle and copies it into a consumer workspace. ADD is the first available architecture.
+The resources include ADD guidance and role skills, reusable patterns, a project README template, and agent skills for clear writing and simple solutions. The Go command `se-adopt` selects an architecture bundle and copies it into a consumer workspace. ADD is the first available architecture.
 
 ## Responsibilities
 
@@ -55,6 +55,10 @@ src/
 └── utils/
     ├── agents/
     │   └── skills/
+    │       ├── kiss/
+    │       │   ├── SKILL.md
+    │       │   └── agents/
+    │       │       └── openai.yaml
     │       └── asd-ste-100/
     │           ├── SKILL.md
     │           └── agents/
@@ -106,3 +110,5 @@ Keep its knowledge under `src/archs/<name>/` and expose an embedded `fs.FS` bund
 - [Artifact-Driven Development](src/archs/artifact-driven/README.md): Foundation, methodology, execution skills, and reusable patterns for coordinating artifact-centered work.
 - [Project README template](src/utils/project/assets/templates/README.md): A starting structure for documenting a project's purpose, responsibilities, setup, and development workflow.
 - [ASD-STE100 principles skill](src/utils/agents/skills/asd-ste-100/SKILL.md): Guidance for writing new documents or rewriting existing documents with Simplified Technical English principles. It improves readability and removes filler while preserving technical meaning. It does not certify compliance with ASD-STE100.
+
+- [KISS skill](src/utils/agents/skills/kiss/SKILL.md): Choose simple solutions that meet current requirements and preserve necessary contracts and checks. KISS and ASD-STE100 principles are required skills for ADD and ship in its adopted bundle.

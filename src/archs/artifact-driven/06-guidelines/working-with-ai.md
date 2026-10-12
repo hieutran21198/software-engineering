@@ -6,6 +6,10 @@ Give the agent the adopted bundle location, knowledge workspace, implementation 
 
 Ask the consumer AI to adopt the bundle and configure its own harness, such as Command Code, Codex, or Claude Code. It determines the supported skill and agent setup from the installed tool. Keep the canonical ADD bundle intact so skill and pattern references remain available.
 
+## Required Skills
+
+Make `kiss` and `asd-ste-100` available to every ADD role. Their canonical instructions are at `required-skills/kiss/SKILL.md` and `required-skills/asd-ste-100/SKILL.md` in the adopted bundle. Read and apply them during existing phase and task self-checks. KISS guides solution complexity; ASD-STE100 principles guide document writing and rewriting.
+
 ## Required Capabilities
 
 - One coordinator interviews the user and drives the workflow.
@@ -16,7 +20,7 @@ Ask the consumer AI to adopt the bundle and configure its own harness, such as C
 
 Roles can share a session; a role profile does not require a separate agent run. The consumer AI registers or adapts the bundled skills using native harness capabilities. If a required capability is unavailable, it reports the limitation and uses an explicit sequential fallback where possible.
 
-Add concise ADD instructions to the applicable existing `AGENTS.md` or `CLAUDE.md`. Preserve unrelated guidance and avoid duplicate instructions. Point to the canonical bundle, identify the knowledge and implementation workspaces, and state the plan-approval, dependency, worktree, and merge boundaries. Do not duplicate the full methodology or introduce a workflow state layer. Resolve conflicts with existing instructions through the user rather than overwriting them.
+Add concise ADD instructions to the applicable existing `AGENTS.md` or `CLAUDE.md`. Preserve unrelated guidance and avoid duplicate instructions. Point to the canonical bundle, identify the knowledge and implementation workspaces, require both skills, and state the plan-approval, dependency, worktree, and merge boundaries. Do not duplicate the full methodology or introduce a workflow state layer. Resolve conflicts with existing instructions through the user rather than overwriting them.
 
 ## Start a Change
 

@@ -88,3 +88,27 @@ func TestCommandHelpAndInvalidArguments(t *testing.T) {
 		}
 	}
 }
+
+func TestAdoptionIncludesRequiredUtilitySkills(t *testing.T) {
+	workspace := t.TempDir()
+	var out bytes.Buffer
+	if err := run([]string{"--project", workspace}, &out, &out); err != nil {
+		t.Fatal(err)
+	}
+	for _, name := range []string{"kiss", "asd-ste-100"} {
+		for _, file := range []string{"SKILL.md", "agents/openai.yaml"} {
+			relative := name + "/" + file
+			want, err := os.ReadFile(filepath.Join("../../src/utils/agents/skills", relative))
+			if err != nil {
+				t.Fatal(err)
+			}
+			got, err := os.ReadFile(filepath.Join(workspace, "docs/artifact-driven/required-skills", relative))
+			if err != nil {
+				t.Fatal(err)
+			}
+			if !bytes.Equal(got, want) {
+				t.Errorf("required skill differs from canonical source: %s", relative)
+			}
+		}
+	}
+}

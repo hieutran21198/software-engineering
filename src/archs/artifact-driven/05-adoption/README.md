@@ -59,3 +59,7 @@ For AI-assisted adoption, the consumer agent handles project-local skill/team se
 Repeated adoption retains identical files and adds missing bundle files. If a bundled path already contains different content or conflicts with a directory, the command fails before copying. It does not overwrite consumer edits or remove unrelated files.
 
 For updates that conflict with local changes, compare and reconcile manually or adopt into a separate directory. There is no automatic upgrade, forced overwrite, Git commit, push, or PR creation. The normal ADD workflow applies when you begin a project change.
+
+## Required Utility Skills
+
+The ADD bundle includes `kiss` and `asd-ste-100` under `required-skills/`. Both are required for ADD work. The copy command embeds their canonical utility sources, so adopted bundles remain self-contained. Consumer AI setup must make both skills available to every ADD role.

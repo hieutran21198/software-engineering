@@ -13,6 +13,14 @@ Execution uses one coordinator and role-specific agent skills. The coordinator i
 
 A new plan or material change requires renewed plan approval before affected implementation continues. Ordinary fixes within the approved scope do not require another review.
 
+## Required Skills
+
+All ADD roles must read and apply `kiss` and `asd-ste-100`. In the adopted bundle, their instructions are at `required-skills/kiss/SKILL.md` and `required-skills/asd-ste-100/SKILL.md`.
+
+Use KISS when defining requirements, choosing designs, planning work, and implementing changes. Use ASD-STE100 principles when writing or rewriting artifact documents and task evidence. Preserve necessary contracts, constraints, and detail. This applies writing principles; it does not certify ASD-STE100 compliance.
+
+Apply both during existing phase and task self-checks. They do not add a workflow phase or a separate review. Consumer AI setup must make both skills available to all roles. If either is missing, restore it from the ADD bundle before continuing affected work.
+
 ## Role Skills
 
 | Skill | Responsibility |

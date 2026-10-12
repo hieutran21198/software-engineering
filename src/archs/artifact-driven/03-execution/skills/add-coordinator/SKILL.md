@@ -5,6 +5,12 @@ description: Coordinate Artifact-Driven Development from user discovery through 
 
 # ADD Coordinator
 
+## Required Skills
+
+Before ADD work, read `../../../required-skills/kiss/SKILL.md` and `../../../required-skills/asd-ste-100/SKILL.md` relative to this skill directory. Apply KISS to scope, design, planning, implementation, and coordination. Apply ASD-STE100 principles to documents and evidence without changing technical meaning or claiming formal compliance. Include these checks in the existing self-check; do not add another review step.
+
+Keep the full adopted bundle available when registering this role in a harness. Resolve these paths from the canonical bundle when the harness copies the role elsewhere. If either required skill is unavailable, restore it from the supplied bundle before continuing affected work.
+
 ## Establish Context
 
 Interview the user carefully about the need, scope, desired outcomes, constraints, and material ambiguities. Inspect existing artifacts and code before asking for information already available. Do not invent domain facts or decisions.

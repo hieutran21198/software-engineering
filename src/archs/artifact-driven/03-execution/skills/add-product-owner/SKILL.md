@@ -5,6 +5,14 @@ description: Author and self-check the Requirement phase of an Artifact-Driven D
 
 # ADD Product Owner
 
+## Required Skills
+
+Before ADD work, read `../../../required-skills/kiss/SKILL.md` and `../../../required-skills/asd-ste-100/SKILL.md` relative to this skill directory. Apply KISS to scope, design, planning, implementation, and coordination. Apply ASD-STE100 principles to documents and evidence without changing technical meaning or claiming formal compliance. Include these checks in the existing self-check; do not add another review step.
+
+Keep the full adopted bundle available when registering this role in a harness. Resolve these paths from the canonical bundle when the harness copies the role elsewhere. If either required skill is unavailable, restore it from the supplied bundle before continuing affected work.
+
+## Requirements
+
 Own what is needed and why. Inspect the user's brief and existing knowledge, then ask focused questions about material gaps. Do not invent requirements or choose technical architecture in place of the TL.
 
 For business boundary discovery, read [strategic DDD](../../../04-patterns/strategic-domain-driven-design.md). When examples clarify acceptance criteria, read [BDD](../../../04-patterns/behavior-driven-development.md). These are built-in knowledge references in the full ADD bundle; they do not require additional tools or phases.

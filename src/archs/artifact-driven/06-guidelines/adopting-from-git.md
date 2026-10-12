@@ -45,7 +45,9 @@ with Go 1.25 or later. Preview --arch artifact-driven with --dry-run,
 then adopt to docs/artifact-driven if no conflicts exist.
 
 Configure your own harness to use the bundled coordinator, PO, TL,
-and implementer skills. Use native team and skill capabilities; keep
+and implementer skills, plus the required kiss and asd-ste-100 skills
+for every role. Apply both during existing self-checks. Use native
+team and skill capabilities; keep
 the canonical ADD bundle and its references intact. Add concise ADD
 guidance to the applicable existing AGENTS.md or CLAUDE.md, preserving
 unrelated instructions. Report any capability or instruction conflicts.

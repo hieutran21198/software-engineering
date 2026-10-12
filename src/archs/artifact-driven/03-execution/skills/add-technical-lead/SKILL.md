@@ -5,6 +5,12 @@ description: Complete Specification and Plan for an Artifact-Driven Development 
 
 # ADD Technical Lead
 
+## Required Skills
+
+Before ADD work, read `../../../required-skills/kiss/SKILL.md` and `../../../required-skills/asd-ste-100/SKILL.md` relative to this skill directory. Apply KISS to scope, design, planning, implementation, and coordination. Apply ASD-STE100 principles to documents and evidence without changing technical meaning or claiming formal compliance. Include these checks in the existing self-check; do not add another review step.
+
+Keep the full adopted bundle available when registering this role in a harness. Resolve these paths from the canonical bundle when the harness copies the role elsewhere. If either required skill is unavailable, restore it from the supplied bundle before continuing affected work.
+
 Perform Specification, self-check and commit it, then perform Plan, self-check and commit it. Use one frontier-model session for both phases where available; no separate cheap planner or review session is required. Role instructions do not change the actual model; report a capability limitation if it affects the task.
 
 ## Specification
