@@ -36,6 +36,11 @@ Use plain records and invariant checks where useful. Full tactical DDD structure
 | B3, B5 | Preserve established graph; calculate proposed removals/additions. | Distinguish graph status and planning relationships. |
 | B4 | Return unresolved-reference diagnostic without losing valid data. | Show target, reason, and diagnostic when expanded. |
 | B6 | Compare file contents and Git state; reread after external edits. | Open, inspect, refresh, and show refreshed content. |
+| B7 | Canvas actions require no repository mutation or new API contract. | Pan, zoom, fit, select, expand/collapse multiple groups, and inspect element details. |
+
+## Canvas delivery
+
+Task 02 uses a locally bundled React UI with React Flow and Dagre. The canvas shows artifact nodes and expands them into grouped element nodes in place. Library controls provide pan, zoom, and fit. Repository/API contracts and the selected development patterns remain unchanged. Task 03 verifies canvas interactions and read-only behavior on the integrated application.
 
 ## Self-check
 

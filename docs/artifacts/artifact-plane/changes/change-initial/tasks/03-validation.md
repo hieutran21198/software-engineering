@@ -16,6 +16,7 @@ Tasks 01 and 02 complete on the integrated branch.
 
 - [ ] Run scanner/API tests and the local asset build successfully.
 - [ ] Exercise a fixture repository in the browser: open, select, expand, inspect relationships, display proposals/diagnostics, and refresh.
+- [ ] Verify B7: pan, zoom, fit, select elements, expand/collapse multiple artifacts, and retain dependency status distinctions and zoom during relayout.
 - [ ] Check repository contents and Git status remain unchanged after integrated operations.
 - [ ] Document installation, start command, supported Markdown conventions, and explicit refresh behavior in the app README.
 - [ ] Check new documentation links obey the parent-to-child hierarchy.
