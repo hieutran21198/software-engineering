@@ -44,4 +44,4 @@ Task 02 uses a locally bundled React UI with React Flow and Dagre. The canvas sh
 
 ## Self-check
 
-All acceptance criteria have scanner, UI, or integrated checks below. Examples map to reader and browser checks. Tasks specify ownership, prerequisites, and observable DoD. KISS keeps one app, plain functions, and sequential work. STE checks keep actions and validation criteria explicit. No implementation has started; approval of this revised plan is required before these tasks execute.
+All acceptance criteria have scanner, UI, or integrated checks below. Examples map to reader and browser checks. Tasks specify ownership, prerequisites, and observable DoD. KISS keeps one app, plain functions, and sequential work. STE checks keep actions and validation criteria explicit. The revised plan was approved before implementation. Task evidence records the completed checks.

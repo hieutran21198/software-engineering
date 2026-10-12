@@ -61,4 +61,4 @@ Support the canonical ADD layout and its documented YAML element references and 
 
 ## Self-check
 
-The scope covers the user's requested behavior and read-only constraint. No other project artifacts exist to change. KISS excludes unrelated runtime infrastructure. STE checks preserve the requirements and use direct acceptance criteria. The proposed path-input interaction is subject to explicit plan approval.
+The scope covers the user's requested behavior and read-only constraint. No other project artifacts exist to change. KISS excludes unrelated runtime infrastructure. STE checks preserve the requirements and use direct acceptance criteria. The path-input interaction is part of the approved plan.

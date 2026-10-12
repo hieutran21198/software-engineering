@@ -1,0 +1,4 @@
+artifacts:
+  artifact-plane:
+    path: artifact-plane
+    depends_on: []

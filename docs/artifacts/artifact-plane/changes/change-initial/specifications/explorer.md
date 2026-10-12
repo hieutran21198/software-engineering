@@ -2,7 +2,7 @@
 
 ## Runtime and opening
 
-Use a Node.js process with a small HTTP server and static browser UI. Bind to `127.0.0.1`. A path input opens an absolute path on the server's computer. This is the proposed interaction pending plan approval. No repository picker service or installation into the inspected repository is required.
+Use a Node.js process with a small HTTP server and static browser UI. Bind to `127.0.0.1`. A path input opens an absolute path on the server's computer. The approved interaction uses a repository path input. No repository picker service or installation into the inspected repository is required.
 
 `POST /api/explore` accepts JSON `{ "path": "/absolute/repository" }`. Each request reads the working tree and returns a fresh in-memory snapshot. No selected-repository state is persisted. Reject non-JSON requests, foreign origins, and unexpected Host headers. Browser requests originate from the local application. Do not expose filesystem content through generic static routes.
 
