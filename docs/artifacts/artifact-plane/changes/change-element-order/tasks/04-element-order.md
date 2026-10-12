@@ -6,20 +6,21 @@ Own ordering and display changes in `apps/artifact-plane/src/model.js`, shared e
 
 ## Prerequisites and governing elements
 
-User approval of this plan. Artifact Plane `1.0.0` is established through the merged initial PR. Governing elements are requirements 11–13 and B8 in `requirements/explorer.md`, and Logical element ordering in `specifications/explorer.md` in this change.
+User approval of this plan. Artifact Plane `1.0.0` is established through the merged initial PR. Governing elements are requirements 11–14 and B8–B9 in `requirements/explorer.md`, and Logical element ordering in `specifications/explorer.md` in this change.
 
 ## Definition of Done
 
 - [ ] Write a failing B8 behavior regression before changing the ordering implementation.
-- [ ] Return elements in current-version-first source order, then active change, then naturally ordered candidates.
+- [ ] Return elements in type-first order, with current version, active change, and naturally ordered candidates inside each type.
 - [ ] Order categories as Requirements, Specifications, Decisions, Tasks; place each direct category README first and sort other paths naturally.
-- [ ] Show source and category headings consistently on the expanded canvas and in the inspector; omit empty categories.
+- [ ] Show collapsible type groups with counts in both canvas and inspector; start them closed and omit empty types. Inside open types, show labeled source groups.
+- [ ] Select a referenced or listed element by opening its owning artifact and type; preserve reference connections to hidden targets through artifact nodes.
+- [ ] Reduce canvas record height to 52 pixels with 6-pixel vertical padding and 8-pixel gaps; verify readable labels and centered handles.
 - [ ] Keep element IDs, reference endpoints, selection, collapse, and zoom behavior correct after layout changes.
 - [ ] Run `npm test`, `npm run build`, and `npm run test:browser` on the combined result. Check ordered canvas positions and inspector entries against the shared fixture.
 - [ ] Verify inspected repository files and Git state remain unchanged through the corrected views.
 - [ ] Document the order and record actual results here. Check documentation links against the hierarchy.
-- [ ] Suggest patch version `1.0.1` after validation; obtain version confirmation before preparing its full snapshot and consistent root/DAG.
-- [ ] Publish a dedicated review PR and inspect CI results. Stop for team review and merge.
+Release preparation and combined validation follow in task 05.
 
 ## Evidence
 
