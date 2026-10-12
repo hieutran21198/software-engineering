@@ -10,6 +10,9 @@ User approval. The snapshot contract permits initial UI development with fixture
 
 ## Definition of Done
 
+- [ ] Consume the documented snapshot contract without filesystem/Git access or duplicated repository parsing in the browser.
+- [ ] Check fixture snapshots from requirement examples B1–B5 render the specified statuses and relationships.
+
 - [ ] Open a repository using a path input and refresh explicitly.
 - [ ] Render artifact DAG edges with established/addition/removal distinctions and selectable nodes.
 - [ ] Offer keyboard-accessible artifact selection, details, current version, and active change.

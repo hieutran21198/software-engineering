@@ -2,13 +2,17 @@
 
 ## Scope and ownership
 
-Own app usage documentation, integrated tests, and validation evidence. The coordinator owns changes to artifact knowledge. Governing elements are all acceptance criteria in `requirements/explorer.md` and the interface/input contract in `specifications/explorer.md` in this change.
+Own app usage documentation, integrated tests, the app check job in the existing `.github/workflows` workflow, and validation evidence. The coordinator owns changes to artifact knowledge. Governing elements are all acceptance criteria in `requirements/explorer.md` and the interface/input contract in `specifications/explorer.md` in this change.
 
 ## Prerequisites
 
 Tasks 01 and 02 complete on the integrated branch.
 
 ## Definition of Done
+
+- [ ] Validate requirement examples B1–B6 across the reader/API and browser; preserve one authoritative set of fixtures.
+- [ ] Add an independent Node.js 24 app check job running `npm ci`, `npm test`, and `npm run build` in `apps/artifact-plane` with its lockfile. Preserve existing jobs.
+- [ ] Run the same test and build commands locally and record integrated results. After publication, inspect the actual app CI result; record any unavailable or failed checks rather than claiming they passed.
 
 - [ ] Run scanner/API tests and the local asset build successfully.
 - [ ] Exercise a fixture repository in the browser: open, select, expand, inspect relationships, display proposals/diagnostics, and refresh.

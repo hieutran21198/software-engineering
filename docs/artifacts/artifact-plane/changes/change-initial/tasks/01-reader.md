@@ -10,6 +10,11 @@ User approval of the plan. No upstream implementation dependencies.
 
 ## Definition of Done
 
+- [ ] Separate filesystem/Git reads from pure parsing, reference-resolution, and graph calculations with plain modules.
+- [ ] Use the TDD cycle for meaningful parser, resolution, graph, and read-only behavior; run the relevant suite after refactoring.
+- [ ] Use shared fixtures for requirement examples B1–B6 and assert observable snapshot outputs.
+- [ ] Verify the API response fields and error outcomes against the snapshot contract.
+
 - [ ] Discover artifacts, declared versions, change candidates, knowledge elements, and Git context according to the contract.
 - [ ] Return established and proposed artifact edges and resolved or unresolved element references.
 - [ ] Test initial artifacts, proposals, removals, cycles, missing endpoints, metadata ambiguity, malformed YAML, and index disagreement.
