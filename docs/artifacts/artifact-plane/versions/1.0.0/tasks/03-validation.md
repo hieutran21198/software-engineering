@@ -22,14 +22,14 @@ Tasks 01 and 02 complete on the integrated branch.
 - [x] Check new documentation links obey the parent-to-child hierarchy.
 - [x] Record actual commands, results, and any remaining limitations in task evidence.
 - [x] Suggest initial version `1.0.0` for user confirmation; prepare the full snapshot and consistent root/DAG only after confirmation.
-- [ ] Push the dedicated branch and open a PR after validation and version preparation. Stop for team review and merge.
+- [x] Push the dedicated branch and open a PR after validation and version preparation. Stop for team review and merge.
 
 ## Evidence
 
 Local validation passed: npm ci; npm test (14 checks); npm run build; npm run test:browser (2 checks) using the existing Chromium executable. The shared fixtures cover B1–B7 and preserve inspected repository files and Git state. The browser requested no external assets and reported no page errors. The screenshot was inspected for readable nodes, edge labels, controls, diagnostics, and details.
 
-Repository checks go test ./... and go vet ./... passed. The app has an independent Node.js 24 test/build/browser job in the existing CI workflow. Existing jobs remain intact. App usage documentation describes supported formats, installation, opening, canvas exploration, and refresh. Documentation links were checked for missing targets and ancestor references.
+Repository checks go test ./... and go vet ./... passed. The app has an independent Node.js 24 test/build/browser job in the existing CI workflow. Existing jobs remain intact. App usage documentation describes supported formats, installation, opening, canvas exploration, and refresh. All 15 new documentation links passed missing-target and ancestor-reference checks. Active-change and version snapshot contents match. A real-repository smoke check discovered one artifact and 14 elements with zero diagnostics and unchanged Git index/status.
 
-The user confirmed initial version 1.0.0. It introduces the first explorer contract and has no established compatibility baseline. The snapshot and regenerated DAG are proposed until merge. Publication and remote CI results will be recorded after the PR exists.
+The user confirmed initial version 1.0.0. It introduces the first explorer contract and has no established compatibility baseline. The snapshot and regenerated DAG are proposed until merge. Published the dedicated branch and opened [PR #1](https://github.com/hieutran21198/software-engineering/pull/1) for team review. The [integrated CI run](https://github.com/hieutran21198/software-engineering/actions/runs/38281711143) passed the artifact-plane, Go, and documentation jobs. Deployment and release jobs were skipped for the PR. No merge or deployment was performed.
 
 KISS retains one local process, request-driven reads, plain records/functions, and an in-memory UI. STE checks preserve the requirements and use direct instructions. Parser support is bounded by the documented README conventions. Vite's bundle-size and client-directive warnings are non-blocking; browser checks passed.
