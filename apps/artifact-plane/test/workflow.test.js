@@ -64,3 +64,35 @@ test('finished identical snapshots retain historical commits but no inferred run
   assert.equal(c.currentStep,null); assert.match(c.inferenceReason,/No distinguishable ongoing/);
   assert.ok(c.steps.find(s=>s.name==='Requirement').commits.some(c=>c.id===id));
 });
+
+test('explicit completion transition keeps full exact commit; later evidence edits do not invent completion', async t => {
+  const f = await setup(t);
+  await put(f.root,`${change}README.md`,'# Change');
+  await put(f.root,`${change}requirements/main.md`,'# Requirements\nNew requirement.');
+  commit(f.root,'requirement draft');
+  await put(f.root,`${change}requirements/main.md`,'# Requirements\nNew requirement.\n\n## Self-check\nPassed.');
+  const completion = commit(f.root,'completed requirement');
+  const c = (await exploreRepository(f.root)).workflow.worktrees[0].changes[0];
+  const phase = c.steps.find(s=>s.name==='Requirement');
+  assert.equal(phase.state,'documented-complete'); assert.equal(phase.completionCommit.id,completion);
+  assert.equal(phase.completionCommit.subject,'completed requirement');
+});
+
+test('history cap and shallow evidence are disclosed; non-ADD and unavailable roots stay visible', async () => {
+  const { readWorkflow } = await import('../server/workflow.js');
+  const data = {files:new Map(),snapshot:{artifacts:[]}};
+  const commands=[];
+  const fakeGit = async (root,args) => {
+    commands.push(args);
+    if (args[0]==='worktree') return 'worktree /selected\0HEAD abc\0branch refs/heads/main\0\0worktree /no-add\0HEAD def\0\0worktree /missing\0HEAD ghi\0\0';
+    if(args[0]==='log') return Array.from({length:201},(_,i)=>`${i.toString(16).padStart(40,'0')}\0subject ${i}\0\ndocs/artifacts/demo/README.md\0`).join('');
+    if(args[0]==='rev-parse') return 'true';
+    return '';
+  };
+  const scan = async root => { const e = new Error(root==='/no-add'?'Repository has no readable docs/artifacts directory.':'Missing worktree'); e.status=404; throw e; };
+  const workflow = await readWorkflow('/selected',data,scan,fakeGit);
+  assert.ok(workflow.worktrees[0].diagnostics.some(d=>d.code==='history-limited'));
+  assert.ok(workflow.worktrees[0].diagnostics.some(d=>d.code==='shallow-history'));
+  assert.equal(workflow.worktrees[1].availability,'non-add');assert.equal(workflow.worktrees[2].availability,'unavailable');
+  assert.equal(commands.filter(c=>c[0]==='worktree').length,1);assert.ok(commands.find(c=>c[0]==='log').includes('-201'));
+});

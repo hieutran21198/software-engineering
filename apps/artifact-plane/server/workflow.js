@@ -33,12 +33,13 @@ export function checklist(markdown) {
 }
 const prose = text => marked.lexer(text).filter(t => t.type !== 'code').map(t => t.raw).join('\n');
 const explicit = text => { const clean = prose(text), counts = checklist(text); return /(?:self-check|completion)[^]*?(?:passed|complete|verified)/i.test(clean) || counts.checked > 0 && counts.unchecked === 0 && counts.state !== 'unknown' && taskEvidence(clean); };
-const validation = text => /(?:npm test|npm run build|playwright|test results|validation|checks?)/i.test(text) && /(?:passed|passing|verified|\b\d+ tests?\b)/i.test(text);
-const taskEvidence = text => /(?:##?\s+Evidence|implementation|commit|verified|passed)/i.test(text) && !/Implementation has not started\./i.test(text);
+const validation = text => { const clean = prose(text); return /(?:npm test|npm run build|playwright|test results|validation|checks?)/i.test(clean) && /(?:passed|passing|verified|\b\d+ tests?\b)/i.test(clean); };
+const taskEvidence = text => { const clean = prose(text); const evidence = clean.split(/^##?\s+Evidence\b/im)[1] || ''; return /(?:implementation|commit|verified|passed|tests?|checks?)/i.test(evidence) && !/Implementation has not started\./i.test(evidence); };
 const category = path => path.includes('/requirements/') ? 'Requirement' : /\/(specifications|decisions)\//.test(path) ? 'Specification' : path.includes('/tasks/') ? 'Plan' : null;
 function associations(path, text, previous) {
   const result = new Set(); const type = category(path);
-  if (type) result.add(type);
+  const definition = value => value.split(/^##?\s+(?:Evidence|Validation|Completion)\b/im)[0].replace(/\[[ xX]\]/g, '[ ]');
+  if (type && (type !== 'Plan' || definition(text) !== definition(previous))) result.add(type);
   if (path.includes('/tasks/') && text !== previous) {
     const before = checklist(previous), after = checklist(text);
     if (after.checked !== before.checked || taskEvidence(text) && !taskEvidence(previous)) result.add('Implementation');
@@ -78,7 +79,8 @@ async function evidenceFor(root, data, git, head, diagnostics) {
     const prefix = `docs/artifacts/${artifact.id}/changes/${name}/`;
     const versionPrefix = `docs/artifacts/${artifact.id}/versions/${artifact.currentVersion}/`;
     const owned = [...files].filter(([path]) => path.startsWith(prefix) && category(path));
-    const introduction = [...history].reverse().find(commit => commit.paths.some(path => path.startsWith(prefix)));
+    const first = [...history].reverse().find(commit => commit.paths.some(path => path.startsWith(prefix)));
+    const introduction = first && !await content(`${first.id}^`, `${prefix}README.md`) && first.paths.includes(`${prefix}README.md`) ? first : null;
     const introductionVersion = introduction ? parseArtifact(artifact.id, await content(`${introduction.id}^`, `docs/artifacts/${artifact.id}/README.md`)).currentVersion : null;
     const introductionBaseline = new Map();
     for (const [path] of owned) if (introductionVersion) introductionBaseline.set(path, await content(`${introduction.id}^`, `docs/artifacts/${artifact.id}/versions/${introductionVersion}/${path.slice(prefix.length)}`));
