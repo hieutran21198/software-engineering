@@ -22,6 +22,34 @@ The inspected repository must remain unchanged. This restriction includes Git me
 
 No database, authentication, AI agents, workflow engine, background workers, or persistent graph state. Prefer existing libraries. Keep the architecture simple and prioritize working behavior over extensibility.
 
+## Behavior examples
+
+These examples clarify the acceptance criteria and supply shared fixtures for implementation checks.
+
+### B1 — Initial artifact
+
+Given an artifact README declares no established version and one `change-initial` directory exists, when the repository opens, show no established version and show `change-initial` as the active change. Show its knowledge elements as proposed knowledge.
+
+### B2 — Established dependency and reference
+
+Given `authentication` depends on `tenant`, and an authentication element references `specifications/identity.md` in tenant, when tenant declares current version `1.0.0`, draw tenant → authentication and resolve the reference within tenant's `versions/1.0.0`. A newer version directory does not change resolution. Tenant is upstream of authentication; authentication is downstream of tenant.
+
+### B3 — Proposed dependency removal
+
+Given an established tenant → authentication edge and authentication's active proposal removes tenant, when the repository opens, retain the established edge with a proposed-removal annotation. Exclude it from the planning graph. The proposal does not change the established relationship.
+
+### B4 — Missing referenced element
+
+Given a valid artifact reference points to a missing element in the owner's current version, when the reader expands the consuming artifact, show the target and reason with an unresolved-reference diagnostic. Keep other artifacts and references inspectable.
+
+### B5 — Proposed dependency addition
+
+Given two artifacts with no established edge and an active proposal adds tenant as authentication's dependency, when the repository opens, show tenant → authentication as a proposed addition in the planning view. Do not present it as established.
+
+### B6 — Read-only refresh
+
+Given a repository with tracked and untracked files, when the reader opens, inspects, and refreshes it without external edits, all repository file contents and Git state remain unchanged. An explicit refresh after an external Markdown edit displays the updated working-tree content.
+
 ## Input boundary
 
 Support the canonical ADD layout and its documented YAML element references and dependency proposals. Root README conventions must be documented by the implementation. Unsupported or ambiguous conventions produce diagnostics. Arbitrary Markdown prose cannot reliably identify a dependency.
