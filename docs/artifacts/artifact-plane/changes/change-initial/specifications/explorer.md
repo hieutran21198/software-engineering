@@ -10,7 +10,15 @@ Use Git read commands with argument arrays, no shell interpolation, and optional
 
 Return 400 for invalid input, 404 for a missing repository or ADD directory, and 422 for an unreadable or invalid Git root. A readable but inconsistent ADD repository returns 200 with diagnostics. Unexpected failures return a sanitized 500 error.
 
-## Discovery and metadata
+## Implementation boundaries
+
+Apply Ports and Adapters through plain modules and functions. The repository reader owns filesystem access and read-only Git commands. It produces source records with relative paths and contents. Parsing and graph functions consume those records to calculate metadata, edges, reference resolution, diagnostics, and reachability without filesystem, Git, HTTP, or browser calls. The HTTP handler validates requests and returns the calculated snapshot. The browser consumes that snapshot and owns selection, rendering, and explicit refresh.
+
+Use ordinary objects and arrays for Artifact, Element, Reference, Edge, and Diagnostic records. Stable identifiers and explicit established/proposed status preserve domain meaning. Do not add aggregate classes, repository interfaces, dependency-injection containers, or alternative adapters without a demonstrated need. Test graph rules directly and test the real reader against temporary Git repositories.
+
+Contract-driven checks cover supported input formats, producer response shape, UI consumption, and error behavior. Requirement examples B1–B6 govern shared fixtures. Use TDD for parsing, reference resolution, graph rules, and read-only guarantees after plan approval. Use ordinary test assertions; no BDD framework is required.
+
+## Discovery and metadata rules
 
 Discover immediate child directories of `docs/artifacts` that contain `README.md`. Directory names are stable artifact identifiers; display the first Markdown heading as the title. Preserve the README content for details.
 
@@ -39,6 +47,8 @@ Expanding a selected artifact shows elements grouped by snapshot source and an e
 ## Validation and impact
 
 Fixture repositories cover established versions, initial artifacts, active proposals, element references, missing targets, cycles, index disagreement, metadata conflicts, multiple changes, malformed YAML, hostile Markdown, and escaping paths. Verify repository file bytes and Git status before and after exploration and refresh. Browser acceptance verifies opening, node selection, expansion, relationship lists, diagnostics, and read-only behavior. No upstream project contracts block implementation.
+
+Add an independent Artifact Plane check job to the existing GitHub Actions workflow. Use Node.js 24 and the application's lockfile; run `npm ci`, `npm test`, and `npm run build` from `apps/artifact-plane`. These same commands must work locally. Validate the integrated code before PR handoff. This job checks the app and does not publish or deploy it.
 
 ## Self-check
 
