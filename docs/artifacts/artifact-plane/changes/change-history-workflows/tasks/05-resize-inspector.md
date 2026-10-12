@@ -19,7 +19,7 @@ User approval of this revised plan and task 04 integrated on the change branch. 
 - [x] Inspect the grouped canvas and resized inspector visually, including long filenames and Markdown at minimum and wider panel widths.
 - [x] Record actual validation results in current tasks and check documentation links against the hierarchy.
 - [x] Suggest minor version `1.1.0` after validation because resizing and collapsible type groups add compatible UI capabilities. Obtain version confirmation before preparing the complete snapshot and consistent root/DAG.
-- [ ] Publish a dedicated review PR, inspect integrated CI, and stop for team review and merge.
+- [x] Publish a dedicated review PR, inspect integrated CI, and stop for team review and merge.
 
 ## Evidence
 
@@ -28,3 +28,5 @@ The B10 browser regression failed before the divider existed and passed after im
 Browser screenshots at minimum, wider, and stacked panel sizes were inspected. Visual QA exposed Fit scrolling the canvas toolbar away; a regression reproduced scrollTop 66 before the explicit viewport surface fix and scrollTop 0 afterward. Toolbar, legend, and controls now retain their own space. Shared grouping and resize fixtures verify inspected repository bytes are unchanged. No new library, persistence, or backend endpoint was added. KISS and STE checks preserve direct UI state and readable instructions.
 
 The user confirmed compatible minor version 1.1.0. The complete proposed snapshot matches the active change. All 28 documentation links passed hierarchy and target checks. The real repository opens read-only with four closed type groups (3 requirements, 3 specifications, 3 decisions, 16 tasks) and an unchanged Git index. Its retained initial change and new change produce the existing multiple-changes diagnostic; this correction does not change archive/active-source discovery. Review PR publication follows snapshot preparation. The Vite client-directive and bundle-size warnings remain non-blocking; browser checks pass.
+
+Historical handoff is complete: [PR #2](https://github.com/hieutran21198/software-engineering/pull/2) merged and established 1.1.0. Its passing integrated CI validated the grouped records and inspector changes.

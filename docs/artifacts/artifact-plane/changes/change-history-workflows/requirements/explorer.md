@@ -65,7 +65,7 @@ The scope covers the user's requested behavior and read-only constraint. No othe
 
 ## Element reading order
 
-11. Expanded artifacts and inspector lists group knowledge by type in ADD reading order: Requirements, Specifications, Decisions, then Tasks. Type groups show record counts and can be opened or closed. Inside each type, source labels distinguish current-version elements from change elements.
+11. Expanded artifacts and inspector lists group knowledge by type in ADD reading order: Requirements, Specifications, Decisions, then Tasks. Type groups show record counts and can be opened or closed. Primary type groups contain current-version elements. Each change has separate type groups under Change histories.
 12. Place a category's README before its other files. Order the remaining paths naturally, so `2-reader.md` precedes `10-validation.md`. Keep nested paths deterministic.
 13. Preserve element identity, reference resolution, dependency relationships, selection, and read-only behavior when changing display order.
 14. Reduce excess bottom space in canvas records while keeping filenames and source labels readable.
@@ -73,7 +73,7 @@ The scope covers the user's requested behavior and read-only constraint. No othe
 
 ### B8 — Ordered artifact knowledge
 
-Given an artifact has elements from its current version and a change, including requirements, specifications, decisions, and numbered task files, when the reader expands the artifact or opens its inspector list, show collapsible Requirements → Specifications → Decisions → Tasks groups with counts. Opening Tasks shows source groups with the current version first. Within each Tasks source, show README.md, 2-reader.md, then 10-validation.md. Selecting a displayed element opens the same source-specific record as before.
+Given an artifact has elements from its current version and a change, including requirements, specifications, decisions, and numbered task files, when the reader expands the artifact or opens its inspector list, show collapsible Requirements → Specifications → Decisions → Tasks groups with counts. Opening primary Tasks shows only current-version records. Opening Tasks within a change history shows only that change. Within either source, show README.md, 2-reader.md, then 10-validation.md. Selecting a displayed element opens the same source-specific record as before.
 
 ### B9 — Compact records
 
@@ -89,7 +89,7 @@ The correction addresses the reported screenshot without changing discovery or d
 
 ## Change histories and workflow visibility
 
-These requirements replace mixed version/change grouping in requirements 11–14 where it conflicts. Compact records, resizing, references, and read-only rules remain valid.
+Compact records, resizing, references, and read-only rules remain valid.
 
 16. Primary Requirements, Specifications, Decisions, and Tasks groups show only current-version records. All change records belong in a separate **Change histories** section, closed by default. Each change has its own closed type groups and counts. Preserve Markdown inspection, selection, and reference navigation. Retained directories do not prove an active workflow.
 17. List all local worktrees registered to the opened repository. Show branch, absolute path, HEAD, and selected worktree. Provide an explicit action to open another readable ADD worktree. Represent detached, locked, prunable, unavailable, and non-ADD entries honestly. Do not switch Git branches or scan unrelated repositories.

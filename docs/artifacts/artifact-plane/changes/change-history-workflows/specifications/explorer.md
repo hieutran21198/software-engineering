@@ -26,7 +26,7 @@ Read YAML front matter keys `current_version` and `depends_on` when present. Als
 
 Root README declarations are authoritative. Compare `dag.yaml` with discovered roots and report missing entries, unknown artifacts, and different dependencies. Do not replace root declarations with the index. No index is required to inspect valid root declarations.
 
-An immediate `changes/change-*` directory identifies a candidate active change. Zero means no active change; one is active; multiple produce an ambiguity diagnostic and are shown as candidates. Do not select one by timestamp. Enumerate `.md` knowledge files recursively in `requirements`, `specifications`, `decisions`, and `tasks` in the declared current snapshot and candidate changes. Do not enumerate historical versions as current knowledge.
+An immediate `changes/change-*` directory identifies retained change knowledge. Resolve active-change declarations under the Knowledge display contract below. Without a declaration, zero means no active change, one is selected, and multiple produce ambiguity. Do not select one by timestamp. Enumerate `.md` knowledge files recursively in `requirements`, `specifications`, `decisions`, and `tasks` in the declared current snapshot and candidate changes. Do not enumerate historical versions as current knowledge.
 
 ## Dependencies and resolution
 
@@ -38,11 +38,11 @@ Reject absolute element paths, path traversal, and symlinks that escape the sele
 
 ## Snapshot response and UI
 
-The response contains `repository` context, `artifacts`, `edges`, `references`, and `diagnostics`. Artifact records contain identifier, title, README, currentVersion (nullable), activeChange (nullable), change candidates, and elements. Edges carry source, target, and status (`established`, `proposed-add`, `proposed-remove`). Element records carry artifact, relative path, snapshot source, and Markdown content. References carry consuming element, target artifact/path/source, reason, status, and whether resolution succeeded. Diagnostics carry code, source path, and message.
+The response contains `repository` context, `artifacts`, `edges`, `references`, `diagnostics`, and the additive `workflow` evidence defined below. Artifact records contain identifier, title, README, currentVersion (nullable), activeChange (nullable), change candidates, and elements. Edges carry source, target, and status (`established`, `proposed-add`, `proposed-remove`). Element records carry artifact, relative path, snapshot source, and Markdown content. References carry consuming element, target artifact/path/source, reason, status, and whether resolution succeeded. Diagnostics carry code, source path, and message.
 
 Use React with React Flow (`@xyflow/react`) for the interactive graph canvas and Dagre (`@dagrejs/dagre`) for automatic artifact layout. Use built-in pan, zoom, fit-view controls, and node selection. Render labels as text, not repository-provided HTML. Clicking a node selects an artifact; a parallel artifact list provides keyboard selection. Show details, version, active change, and upstream/downstream lists in a details panel. Compute direct and transitive reachability independently for established and planning graphs with visited sets, including when inputs contain cycles.
 
-Expanding an artifact turns its canvas node into a group containing collapsible type headings. Opening a type reveals element nodes, grouped by snapshot source. Keep element positions in a simple local arrangement; Dagre lays out the outer artifact groups using their measured dimensions. Support multiple expanded artifacts. Draw element references between visible element nodes; for collapsed target artifacts, connect to the artifact node and retain the exact target in the reference list. Use a distinguishable unresolved target marker when the artifact or element is missing. Selecting an element opens its Markdown and reference details. Collapsing a group hides its element nodes and preserves artifact dependency edges. Element connections explain references and never alter the execution DAG.
+Expanding an artifact turns its canvas node into a group containing collapsible type headings. Opening a primary type reveals current-version nodes. Change histories contains separately expandable changes and their type groups. Keep element positions in a simple local arrangement; Dagre lays out the outer artifact groups using their measured dimensions. Support multiple expanded artifacts. Draw element references between visible element nodes; for collapsed target artifacts, connect to the artifact node and retain the exact target in the reference list. Use a distinguishable unresolved target marker when the artifact or element is missing. Selecting an element opens its Markdown and reference details. Collapsing a group hides its element nodes and preserves artifact dependency edges. Element connections explain references and never alter the execution DAG.
 
 Keep selected nodes, expanded artifact/type groups, viewport, and inspector width in browser memory only. Disable node dragging, connection creation, deletion, and graph editing; the canvas remains an explorer. Expansion recomputes layout without resetting zoom; fit-view is explicit after the initial load. Render Markdown with an existing parser and sanitizer; disable unsafe links and embedded HTML execution. Show empty states and diagnostics. Provide explicit Refresh and graph fit controls. No custom canvas rendering engine or paid example code is required.
 
@@ -58,11 +58,11 @@ The contract covers every requirement with one request-driven process. Libraries
 
 ## Logical element ordering
 
-Use one shared ordering rule for the snapshot's elements and both UI views. Type order is Requirements, Specifications, Decisions, then Tasks. Within each type, source order is the declared current version, the uniquely identified active change, then other change candidates in natural name order. If active change detection is ambiguous, label the change sources as candidates rather than inventing an active source. This correction does not change source discovery or archive detection.
+Use one shared ordering rule for the snapshot's elements and both UI views. Type order is Requirements, Specifications, Decisions, then Tasks. Within each type, source order is the declared current version, the uniquely identified active change, then other change candidates in natural name order. If active change detection is ambiguous, label the change sources as candidates rather than inventing an active source. The histories contract below defines source display and declaration discovery.
 
 Within each type/source pair, place the direct category `README.md` first. Compare the remaining snapshot-relative paths with natural numeric, case-insensitive ordering and a case-sensitive tie-breaker. Keep stable source-specific element identifiers.
 
-Render collapsible type headings with total record counts in expanded artifacts and the inspector Knowledge elements section. Type groups start closed. Use one browser-memory expansion set keyed by artifact and type so the two views agree. Omit empty types. Within an open type, show source headings and ordered records. Selecting an element from a reference or list opens its owning artifact and type. Headings are controls and labels, not execution dependency nodes.
+Render collapsible type headings with total record counts in expanded artifacts and the inspector Knowledge elements section. Type groups start closed. Use one browser-memory expansion set keyed by artifact, source, and type so the two views agree. Omit empty types. Within an open type, show its source heading and ordered records. Selecting an element from a reference or list opens its owning artifact and every required history/source/type container. Headings are controls and labels, not execution dependency nodes.
 
 Size artifact groups from the same visible section data that positions their elements. Show element reference edges only when their consuming element is visible. Route references to hidden target elements through their owning artifact node and preserve the exact target in the inspector. Keep missing-target diagnostics visible. Type collapse hides its element nodes and reference edges without changing artifact dependencies or resetting zoom. Reference connections retain existing element IDs.
 
@@ -72,7 +72,7 @@ Add a shared-fixture B8 regression with deliberately scrambled records, all four
 
 ### Ordering specification self-check
 
-The order follows ADD knowledge reading flow with an established baseline first. No API fields, element identifiers, dependency rules, new libraries, or runtime components are required. The existing local-server decision remains applicable; no new ADR is needed. KISS keeps a shared plain-function ordering rule, and STE checks make the source and category labels explicit. B8 supplies the contract and validation boundary for the new task.
+The order follows ADD knowledge reading flow with an established baseline first. The ordering rule preserves element identifiers and dependency relationships. The histories and workflow extension below adds runtime API data while retaining the existing local-server decision. KISS keeps a shared plain-function ordering rule, and STE checks make the source and category labels explicit. B8 supplies the contract and validation boundary for the new task.
 
 ## Resizable inspector
 
@@ -82,11 +82,11 @@ Expose the divider as a focusable vertical separator with its current width and 
 
 ## Revised validation
 
-B8 checks type-first grouping, current-source-first ordering within each type, counts, default collapse, and natural filenames. B9 checks 52-pixel records and attached handles in an open group. B10 checks pointer and keyboard resizing, width bounds, Markdown reflow, and the stacked layout. Existing B1–B7 fixtures must open the required type before inspecting elements. Re-run the read-only and canvas tests against the combined UI changes. KISS reuses existing components and browser state; STE keeps labels and interactions explicit.
+B8 checks type order, source-specific counts, default collapse, and natural filenames. B9 checks 52-pixel records and attached handles in an open group. B10 checks pointer and keyboard resizing, width bounds, Markdown reflow, and the stacked layout. Existing B1–B7 fixtures must open the required type before inspecting elements. Re-run the read-only and canvas tests against the combined UI changes. KISS reuses existing components and browser state; STE keeps labels and interactions explicit.
 
 ## Histories and worktree evidence contract
 
-This section supersedes mixed source grouping and directory-count-only active-change selection where it conflicts. Existing element IDs and reference resolution remain stable.
+Existing element IDs and reference resolution remain stable.
 
 ### Knowledge display
 
