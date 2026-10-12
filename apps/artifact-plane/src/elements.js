@@ -6,7 +6,7 @@ const TYPES = [
 ];
 const natural = new Intl.Collator("en", { numeric: true, sensitivity: "base" });
 const compare = (a, b) => natural.compare(a, b) || (a < b ? -1 : a > b ? 1 : 0);
-export const typeKey = (artifact, type) => JSON.stringify([artifact, type]);
+export const typeKey = (artifact, type, source) => JSON.stringify(source ? [artifact, source, type] : [artifact, type]);
 export const elementType = (element) => element.path.split("/")[0];
 
 // One ordering rule supplies the API, canvas, and inspector.
@@ -47,3 +47,31 @@ export const orderElements = (artifact) =>
   elementGroups(artifact).flatMap((group) =>
     group.sources.flatMap((source) => source.elements),
   );
+
+export const historyKey = (artifact, source = "histories") => JSON.stringify([artifact, source]);
+// A single source-aware control list keeps canvas and inspector in sync.
+export function knowledgeGroups(artifact, expanded) {
+  const result = [];
+  function types(source, prefix = "") {
+    const filtered = { ...artifact, elements: artifact.elements.filter(e => e.source === source) };
+    for (const group of elementGroups(filtered)) {
+      const key = typeKey(artifact.id, group.type, source.startsWith("change:") ? source : undefined);
+      result.push({ ...group, key, label: group.label, ariaLabel: prefix + group.label,
+        open: expanded.has(key), depth: prefix ? 2 : 0 });
+    }
+  }
+  if (artifact.currentVersion) types("version:" + artifact.currentVersion);
+  if (artifact.changes.length) {
+    const key = historyKey(artifact.id);
+    result.push({ key, label: "Change histories", ariaLabel: "Change histories", count: artifact.changes.length,
+      open: expanded.has(key), sources: [], depth: 0 });
+    if (expanded.has(key)) for (const change of [...artifact.changes].sort((a,b) => compare(a.name,b.name))) {
+      const source = "change:" + change.name, changeKey = historyKey(artifact.id, source);
+      result.push({ key: changeKey, label: change.name, ariaLabel: change.name,
+        count: artifact.elements.filter(e => e.source === source).length,
+        open: expanded.has(changeKey), sources: [], depth: 1 });
+      if (expanded.has(changeKey)) types(source, change.name + " · ");
+    }
+  }
+  return result;
+}

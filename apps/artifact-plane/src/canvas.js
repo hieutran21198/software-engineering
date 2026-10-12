@@ -1,4 +1,4 @@
-import { elementGroups, typeKey } from "./elements.js";
+import { knowledgeGroups } from "./elements.js";
 import dagre from "@dagrejs/dagre";
 import { effectiveEdges } from "./graph.js";
 const artifactNodeId = (id) => `artifact:${id}`;
@@ -21,8 +21,8 @@ export function canvasGraph(
       groups = [];
     let y = 104;
     if (open)
-      for (const group of elementGroups(a)) {
-        const shown = expandedTypes.has(typeKey(a.id, group.type));
+      for (const group of knowledgeGroups(a, expandedTypes)) {
+        const shown = group.open;
         const header = { ...group, open: shown, y, headings: [] };
         groups.push(header);
         y += 34;

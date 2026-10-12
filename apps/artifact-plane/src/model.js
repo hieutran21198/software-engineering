@@ -136,6 +136,7 @@ export function parseArtifact(id, markdown, ds = []) {
     currentVersion: consistent(versions) ? versions[0] : null,
     dependsOn: consistent(deps) ? deps[0] : [],
     activeChange: null,
+    activeDeclaration: sections(body, ["active change"]),
     changes: [],
     elements: [],
   };
@@ -189,8 +190,18 @@ export function buildSnapshot(files, repository = {}, inputDiagnostics = []) {
       name,
       readme: files.get(`${prefix}changes/${name}/README.md`) || "",
     }));
-    if (changes.size === 1) a.activeChange = [...changes][0];
-    if (changes.size > 1)
+    if (a.activeDeclaration.length) {
+      const links = [];
+      for (const text of a.activeDeclaration) marked.walkTokens(marked.lexer(text), token => {
+        if (token.type !== "link") return;
+        const match = token.href.match(/^(?:\.\/)?changes\/(change-[^/\\\s]+)\/README\.md$/);
+        if (match) links.push(match[1]);
+        else links.push(null);
+      });
+      if (a.activeDeclaration.length === 1 && links.length === 1 && changes.has(links[0]) && !links[0].includes("..")) a.activeChange = links[0];
+      else report(diagnostics, "invalid-active-change", prefix + "README.md", "Active change must link to one existing owned change README.");
+    } else if (changes.size === 1) a.activeChange = [...changes][0];
+    if (changes.size > 1 && !a.activeChange)
       report(
         diagnostics,
         "multiple-changes",

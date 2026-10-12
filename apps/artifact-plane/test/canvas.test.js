@@ -2,7 +2,7 @@ import test from "node:test";
 import assert from "node:assert/strict";
 import { buildSnapshot } from "../src/model.js";
 import { canvasGraph } from "../src/canvas.js";
-import { typeKey } from "../src/elements.js";
+import { typeKey, historyKey } from "../src/elements.js";
 import { sourceFixture } from "./fixtures.js";
 
 test("B7: expanded element groups and reference endpoints preserve artifact edges", () => {
@@ -16,6 +16,7 @@ test("B7: expanded element groups and reference endpoints preserve artifact edge
     false,
     new Set([
       typeKey("authentication", "specifications"),
+      historyKey("authentication"), historyKey("authentication", "change:change-login"), typeKey("authentication", "specifications", "change:change-login"),
       typeKey("tenant", "specifications"),
     ]),
   );
@@ -43,7 +44,7 @@ test("B7: expanded element groups and reference endpoints preserve artifact edge
     view,
     new Set(["authentication"]),
     false,
-    new Set([typeKey("authentication", "specifications")]),
+    new Set([typeKey("authentication", "specifications"), historyKey("authentication"), historyKey("authentication", "change:change-login"), typeKey("authentication", "specifications", "change:change-login")]),
   );
   assert.ok(
     collapsedTarget.edges.some(
@@ -67,11 +68,11 @@ test("B8-B9: type groups start closed, ordered visible records use compact posit
   const artifact = collapsed.nodes.find((n) => n.type === "artifact");
   assert.deepEqual(
     artifact.data.groups.map((g) => g.label),
-    ["Requirements", "Specifications", "Decisions", "Tasks"],
+    ["Requirements", "Specifications", "Decisions", "Tasks", "Change histories"],
   );
   assert.deepEqual(
     artifact.data.groups.map((g) => g.count),
-    [2, 2, 2, 10],
+    [1, 1, 1, 5, 1],
   );
   const open = canvasGraph(
     view,
@@ -79,7 +80,7 @@ test("B8-B9: type groups start closed, ordered visible records use compact posit
     false,
     new Set([
       typeKey("knowledge", "tasks"),
-      typeKey("knowledge", "specifications"),
+      typeKey("knowledge", "specifications"), historyKey("knowledge"), historyKey("knowledge", "change:change-next"), typeKey("knowledge", "specifications", "change:change-next"), typeKey("knowledge", "tasks", "change:change-next"),
     ]),
   );
   const records = open.nodes.filter((n) => n.type === "element");
@@ -87,6 +88,7 @@ test("B8-B9: type groups start closed, ordered visible records use compact posit
     records.map((n) => n.data.element.id),
     view.artifacts[0].elements
       .filter((e) => ["tasks", "specifications"].includes(e.path.split("/")[0]))
+      .sort((a,b) => Number(a.source.startsWith("change:")) - Number(b.source.startsWith("change:")))
       .map((e) => e.id),
   );
   for (const n of records) assert.equal(n.style.height, 52);

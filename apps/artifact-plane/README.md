@@ -136,3 +136,9 @@ npm run test:browser
 ```
 
 The tests build temporary Git fixtures and check supported formats, graph rules, API validation, and unchanged repository bytes and Git state. Browser checks cover canvas controls, expansion, details, proposals, sanitization, diagnostics, and refresh. On systems with an existing Chromium executable, set `PLAYWRIGHT_CHROMIUM_EXECUTABLE_PATH` to its absolute path.
+
+### Change histories and workflows
+
+Primary type groups contain the current version. Open **Change histories**, a change name, and a type to inspect retained change records. Reference selection opens the correct source automatically.
+
+Select **Workflow** to see registered local worktrees, branches, paths, inferred steps, task evidence, and associated commits. Expand a step and commit to inspect its full ID and message. **Open worktree** opens another readable ADD worktree. Steps can be unknown, and associated commits do not prove approval or successful checks. Copied tasks are marked inherited. Squash commits can appear under several steps. The view reads at most 200 relevant commits per worktree and reports shallow or limited history. Use **Refresh** to read again; the application has no polling or execution controls.
