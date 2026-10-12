@@ -18,10 +18,6 @@ This artifact owns the repository explorer and its input interpretation rules.
 
 None.
 
-## Proposed release
-
-Version 1.2.0 is prepared on the change branch. It separates Change histories from current knowledge and adds local worktree, inferred step, and commit evidence views. Version 1.1.0 remains established on main until the required knowledge and implementation merge. This section describes proposed state until merge.
-
 ## Knowledge snapshot
 
 - [Requirements](versions/1.2.0/requirements/explorer.md)
@@ -32,4 +28,4 @@ Version 1.2.0 is prepared on the change branch. It separates Change histories fr
 
 ## Active change
 
-[Change histories and workflow evidence](changes/change-history-workflows/README.md)
+[Workflow canvas](changes/change-workflow-canvas/README.md)
