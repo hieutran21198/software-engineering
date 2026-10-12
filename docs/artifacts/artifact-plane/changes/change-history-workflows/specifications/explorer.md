@@ -83,3 +83,35 @@ Expose the divider as a focusable vertical separator with its current width and 
 ## Revised validation
 
 B8 checks type-first grouping, current-source-first ordering within each type, counts, default collapse, and natural filenames. B9 checks 52-pixel records and attached handles in an open group. B10 checks pointer and keyboard resizing, width bounds, Markdown reflow, and the stacked layout. Existing B1–B7 fixtures must open the required type before inspecting elements. Re-run the read-only and canvas tests against the combined UI changes. KISS reuses existing components and browser state; STE keeps labels and interactions explicit.
+
+## Histories and worktree evidence contract
+
+This section supersedes mixed source grouping and directory-count-only active-change selection where it conflicts. Existing element IDs and reference resolution remain stable.
+
+### Knowledge display
+
+Primary type groups filter to the declared current-version source. Change histories is a separate closed container. Its change entries are naturally sorted by name, closed by default, and contain the four existing type groups. Type counts count only the displayed source. Expansion keys include artifact, source, and type. Reference navigation opens every required container. Collapse retains selected details. Keep 52-pixel records and existing resize bounds. Do not place history elements among current-version elements.
+
+Recognize an explicit Active change section in an artifact root README when it has exactly one safe local link to an existing changes/change-name/README.md. Ignore code examples. Accept only the owning artifact's change directory; reject traversal outside it and contradictory declarations. A valid declaration takes precedence over retained directory count. Without it, retain the single-directory fallback; multiple candidates remain ambiguous. This selects a declared change, not proof that it is running. Existing proposals use only this selected source. History retains every discovered change.
+
+### Read-only API extension
+
+POST /api/explore keeps its input and existing snapshot fields. Add workflow = {worktrees, diagnostics, historyLimit: 200}. Each worktree has path, branch (nullable), head (nullable), selected, detached, locked, prunable, availability (readable, unavailable, non-add), changes, and diagnostics. Each change has artifact, name, declaredActive, currentStep (nullable), inferenceReason, steps, and tasks. Each step has name, state (observed, inferred, documented-complete, unknown), evidence[], commits[], and completionCommit (nullable). A commit contains full id and subject. Evidence contains a kind, relative file, and short explanation. Tasks include path and checked/unchecked counts from actual Markdown checkboxes, with malformed/empty checklists marked unknown. These additive fields are bounded runtime data, never stored in inspected files.
+
+Enumerate registered worktrees using git worktree list --porcelain -z. Preserve spaces and non-ASCII paths. Read only those roots; apply the existing containment and symlink protections separately in each. Do not follow arbitrary paths from Markdown. No recursive workflow scans: one enumeration and one bounded evidence read per registered worktree. Reuse plain scanner functions and the safe Git subprocess wrapper. Unavailable entries receive diagnostics rather than failing the selected snapshot. Opening a worktree calls the existing API with its root. Refresh performs a fresh read; no watchers or polling.
+
+### Step evidence and commit association
+
+Read at most the latest 200 commits reachable from each worktree HEAD that touch docs/artifacts. Include changed paths and subjects with delimiter-safe Git output. Associate Requirement with requirements/, Specification with specifications/ and decisions/, Plan with tasks/README.md and task definitions, Implementation with task checklist/evidence changes, Validation with task evidence describing check results, and Version preparation with versions/ changes and artifact root version changes. Associate by changed file content and paths, never by commit subject alone. Show all associated commits within the bound, newest first. Disclose truncation and shallow history. A squash can belong to several steps. Do not resolve unregistered branches or fetch remote history.
+
+For copied change baselines, compare against the declared current snapshot and the change's introduction commit; unchanged inherited files/checklists do not prove new progress. If the current snapshot contains the same change knowledge, report no distinguishable ongoing change rather than a running workflow. Root declarations can be stale after merge. Multiple distinguishable changes remain separate, with no guessed global active step.
+
+Current step prioritizes relevant uncommitted file changes, then the latest distinguishable committed evidence. Requirement/specification edits identify observed work. Task definition edits identify Plan work; unchecked current tasks with implementation evidence indicate Implementation. Validation is supported only by explicit current-task validation evidence, and Version preparation by distinguishable snapshot preparation. Missing or conflicting evidence yields unknown with a reason. A higher phase never automatically completes preceding phases. Documented completion requires explicit self-check/completion text or checked current-task criteria plus evidence; label it as documented, not independently verified. Approval is not inferable from Git and is shown as unknown. completionCommit stays null unless history shows the introduction of explicit completion evidence; otherwise show associated commits and 'Exact completion commit unknown'.
+
+### UI and failures
+
+Add a Workflow view beside the dependency canvas. List worktrees and their changes, with a selected-worktree indicator and explicit Open action. Show inferred step, evidence reasons, tasks, and expandable phase commit lists. Full IDs and subjects are plain text. Keep canvas selection and inspector width during view switching. Empty, unreadable, shallow, ambiguous, and history-limited states must remain visible. Worktree metadata failure does not remove the existing artifact graph.
+
+### Validation and impact self-check
+
+B11–B14 govern new behavior. Add Git fixtures for two worktrees, uncommitted phase edits, inherited completed tasks, distinct phase commits, squash commits, declared versus stale active changes, detached/unavailable worktrees, and history limits. Fingerprint all inspected files and Git metadata before/after. Retain existing API protections and DAG/reference checks. Only Artifact Plane changes; no new artifact dependency. Contract-Driven Development supplies the additive API and evidence rules, BDD supplies examples, and existing CI supplies integrated validation. KISS uses plain functions and existing libraries; STE separates evidence from claims.
