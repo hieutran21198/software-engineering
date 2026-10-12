@@ -18,7 +18,7 @@ import { marked } from "marked";
 import DOMPurify from "dompurify";
 import { relationships } from "./graph.js";
 import { canvasGraph } from "./canvas.js";
-import { elementGroups, typeKey } from "./elements.js";
+import { knowledgeGroups, typeKey, historyKey } from "./elements.js";
 import "@xyflow/react/dist/style.css";
 import "./style.css";
 
@@ -59,15 +59,15 @@ function ArtifactNode({ data, selected }) {
       </div>
       {data.open &&
         data.groups.map((group) => (
-          <React.Fragment key={group.type}>
+          <React.Fragment key={group.key}>
             <button
               className="type-toggle canvas-type nodrag nopan"
-              style={{ top: group.y }}
-              aria-label={group.label + " in " + a.title}
+              style={{ top: group.y, left: 16 + group.depth * 8, width: 328 - group.depth * 8 }}
+              aria-label={group.ariaLabel + " in " + a.title}
               aria-expanded={group.open}
               onClick={(event) => {
                 event.stopPropagation();
-                data.toggleType(a.id, group.type);
+                data.toggleType(a.id, group.key);
               }}
             >
               <span>
@@ -296,7 +296,7 @@ function App() {
     setExpanded((current) => new Set([...current, artifactId]));
     setExpandedTypes((current) => {
       const next = new Set(current),
-        key = typeKey(artifactId, type);
+        key = type;
       next.has(key) ? next.delete(key) : next.add(key);
       return next;
     });
@@ -341,7 +341,7 @@ function App() {
     setExpanded((current) => new Set([...current, artifactId]));
     setExpandedTypes(
       (current) =>
-        new Set([...current, typeKey(artifactId, record.path.split("/")[0])]),
+        new Set([...current, typeKey(artifactId, record.path.split("/")[0], record.source.startsWith("change:") ? record.source : undefined), ...(record.source.startsWith("change:") ? [historyKey(artifactId), historyKey(artifactId, record.source)] : [])]),
     );
     setSelection({ artifact: artifactId, element: elementId });
   }
@@ -653,20 +653,6 @@ function App() {
                     {expanded.has(artifact.id) ? "Collapse" : "Expand"} elements
                     on canvas
                   </button>
-                  {artifact.changes.length > 0 && (
-                    <details>
-                      <summary>
-                        {artifact.changes.length} change candidate
-                        {artifact.changes.length === 1 ? "" : "s"}
-                      </summary>
-                      {artifact.changes.map((c) => (
-                        <div key={c.name}>
-                          <h4>{c.name}</h4>
-                          <Markdown text={c.readme} />
-                        </div>
-                      ))}
-                    </details>
-                  )}
                   <section className="relationships">
                     <h3>
                       {planning ? "Planning" : "Established"} dependencies
@@ -685,18 +671,16 @@ function App() {
                   <section>
                     <h3>Knowledge elements</h3>
                     {artifact.elements.length ? (
-                      elementGroups(artifact).map((group) => {
-                        const open = expandedTypes.has(
-                          typeKey(artifact.id, group.type),
-                        );
+                      knowledgeGroups(artifact, expandedTypes).map((group) => {
+                        const open = group.open;
                         return (
                           <div className="knowledge-type" key={group.type}>
                             <button
                               className="type-toggle inspector-type"
-                              aria-label={group.label + " in inspector"}
+                              aria-label={group.ariaLabel + " in inspector"}
                               aria-expanded={open}
                               onClick={() =>
-                                toggleType(artifact.id, group.type)
+                                toggleType(artifact.id, group.key)
                               }
                             >
                               <span>

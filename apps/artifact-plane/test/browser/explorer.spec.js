@@ -75,6 +75,9 @@ test("B1-B7: explore, expand, select, pan, zoom, proposals, diagnostics, refresh
     await page
       .getByRole("button", { name: "Specifications in Tenant", exact: true })
       .click();
+    await page.getByRole("button", {name:"Change histories in Authentication",exact:true}).click();
+    await page.getByRole("button", {name:"change-login in Authentication",exact:true}).click();
+    await page.getByRole("button", {name:"change-login · Specifications in Authentication",exact:true}).click();
     await expect(page.locator(".react-flow__node-element")).toHaveCount(3);
     // Select an actual canvas element; Markdown remains inert.
     const identity = page
@@ -199,15 +202,20 @@ test("B8-B9: collapsible type groups, logical source order, compact records, and
       .click();
     await expect(page.locator(".react-flow__node-element")).toHaveCount(0);
     expect(await page.locator(".canvas-type").allTextContents()).toEqual([
-      "▸ Requirements2",
-      "▸ Specifications2",
-      "▸ Decisions2",
-      "▸ Tasks10",
+      "▸ Requirements1",
+      "▸ Specifications1",
+      "▸ Decisions1",
+      "▸ Tasks5",
+      "▸ Change histories1",
     ]);
     await page
       .getByRole("button", { name: "Tasks in Knowledge", exact: true })
       .click();
     const records = page.locator(".react-flow__node-element");
+    await expect(records).toHaveCount(5);
+    await page.getByRole("button", {name:"Change histories in Knowledge",exact:true}).click();
+    await page.getByRole("button", {name:"change-next in Knowledge",exact:true}).click();
+    await page.getByRole("button", {name:"change-next · Tasks in Knowledge",exact:true}).click();
     await expect(records).toHaveCount(10);
     const order = [
       "tasks/README.md",
@@ -243,6 +251,7 @@ test("B8-B9: collapsible type groups, logical source order, compact records, and
     await page
       .getByRole("button", { name: "Specifications in Knowledge", exact: true })
       .click();
+    await page.getByRole("button", {name:"change-next · Specifications in Knowledge",exact:true}).click();
     await expect(records).toHaveCount(12);
     // A hidden target's category opens when its resolved reference is selected.
     await panel
@@ -263,7 +272,7 @@ test("B8-B9: collapsible type groups, logical source order, compact records, and
     await page
       .getByRole("button", { name: "Tasks in Knowledge", exact: true })
       .click();
-    await expect(records).toHaveCount(4);
+    await expect(records).toHaveCount(8);
     await page.getByRole("button", { name: "Fit View", exact: true }).click();
     await page.screenshot({
       path: "test-results/grouped-canvas.png",
