@@ -1,4 +1,10 @@
-import React, { useCallback, useMemo, useState } from "react";
+import React, {
+  useCallback,
+  useEffect,
+  useMemo,
+  useRef,
+  useState,
+} from "react";
 import { createRoot } from "react-dom/client";
 import {
   ReactFlow,
@@ -12,6 +18,7 @@ import { marked } from "marked";
 import DOMPurify from "dompurify";
 import { relationships } from "./graph.js";
 import { canvasGraph } from "./canvas.js";
+import { elementGroups, typeKey } from "./elements.js";
 import "@xyflow/react/dist/style.css";
 import "./style.css";
 
@@ -50,6 +57,35 @@ function ArtifactNode({ data, selected }) {
         </span>
         <span>{a.elements.length} elements</span>
       </div>
+      {data.open &&
+        data.groups.map((group) => (
+          <React.Fragment key={group.type}>
+            <button
+              className="type-toggle canvas-type nodrag nopan"
+              style={{ top: group.y }}
+              aria-label={group.label + " in " + a.title}
+              aria-expanded={group.open}
+              onClick={(event) => {
+                event.stopPropagation();
+                data.toggleType(a.id, group.type);
+              }}
+            >
+              <span>
+                {group.open ? "▾" : "▸"} {group.label}
+              </span>
+              <span className="type-count">{group.count}</span>
+            </button>
+            {group.headings.map((heading) => (
+              <div
+                className="canvas-source-heading"
+                key={heading.label}
+                style={{ top: heading.y }}
+              >
+                {heading.label}
+              </div>
+            ))}
+          </React.Fragment>
+        ))}
       {data.open && a.elements.length === 0 && (
         <p className="empty-node">No knowledge elements found.</p>
       )}
@@ -175,7 +211,51 @@ function App() {
   const [expanded, setExpanded] = useState(new Set()),
     [selection, setSelection] = useState(null),
     [planning, setPlanning] = useState(false);
+  const [expandedTypes, setExpandedTypes] = useState(new Set());
   const [filter, setFilter] = useState("");
+  const workspaceRef = useRef(null);
+  const [panelWidth, setPanelWidth] = useState(340),
+    [panelMax, setPanelMax] = useState(640);
+  useEffect(() => {
+    const workspace = workspaceRef.current;
+    const measure = () => {
+      const width = workspace.getBoundingClientRect().width;
+      if (width <= 800) return;
+      const sidebar = workspace
+        .querySelector(".sidebar")
+        .getBoundingClientRect().width;
+      const max = Math.max(
+        240,
+        Math.min(640, Math.floor(width - sidebar - 300)),
+      );
+      setPanelMax(max);
+      setPanelWidth((current) => Math.max(240, Math.min(max, current)));
+    };
+    const observer = new ResizeObserver(measure);
+    observer.observe(workspace);
+    measure();
+    return () => observer.disconnect();
+  }, []);
+  const resizePanel = (width) =>
+    setPanelWidth(Math.max(240, Math.min(panelMax, width)));
+  function dragPanel(event) {
+    if (!event.currentTarget.hasPointerCapture(event.pointerId)) return;
+    resizePanel(
+      workspaceRef.current.getBoundingClientRect().right - event.clientX,
+    );
+  }
+  function resizeWithKeyboard(event) {
+    const widths = {
+      ArrowLeft: panelWidth + 20,
+      ArrowRight: panelWidth - 20,
+      Home: 240,
+      End: panelMax,
+    };
+    if (Object.hasOwn(widths, event.key)) {
+      event.preventDefault();
+      resizePanel(widths[event.key]);
+    }
+  }
   async function open(repositoryPath, refresh = false) {
     setBusy(true);
     setError("");
@@ -192,6 +272,7 @@ function App() {
       setPath(result.repository.path);
       if (!refresh) {
         setExpanded(new Set());
+        setExpandedTypes(new Set());
         setSelection(null);
         setFilter("");
         setPlanning(false);
@@ -211,19 +292,36 @@ function App() {
       }),
     [],
   );
+  const toggleType = useCallback((artifactId, type) => {
+    setExpanded((current) => new Set([...current, artifactId]));
+    setExpandedTypes((current) => {
+      const next = new Set(current),
+        key = typeKey(artifactId, type);
+      next.has(key) ? next.delete(key) : next.add(key);
+      return next;
+    });
+  }, []);
   const graph = useMemo(() => {
     if (!snapshot) return { nodes: [], edges: [] };
-    const result = canvasGraph(snapshot, expanded, planning);
+    const result = canvasGraph(snapshot, expanded, planning, expandedTypes);
     result.nodes = result.nodes.map((n) => ({
       ...n,
       selected:
         n.type === "artifact"
           ? selection?.artifact === n.data.artifact.id && !selection?.element
           : n.type === "element" && selection?.element === n.data.element.id,
-      data: { ...n.data, toggle },
+      data: { ...n.data, toggle, toggleType },
     }));
     return result;
-  }, [snapshot, expanded, planning, selection, toggle]);
+  }, [
+    snapshot,
+    expanded,
+    expandedTypes,
+    planning,
+    selection,
+    toggle,
+    toggleType,
+  ]);
   const artifact = snapshot?.artifacts.find(
     (a) => a.id === selection?.artifact,
   );
@@ -235,9 +333,20 @@ function App() {
   const reachability =
     artifact && relationships(artifact.id, snapshot.edges, planning);
   const selectArtifact = (id) => setSelection({ artifact: id });
+  function revealElement(artifactId, elementId) {
+    const record = snapshot.artifacts
+      .find((a) => a.id === artifactId)
+      ?.elements.find((e) => e.id === elementId);
+    if (!record) return;
+    setExpanded((current) => new Set([...current, artifactId]));
+    setExpandedTypes(
+      (current) =>
+        new Set([...current, typeKey(artifactId, record.path.split("/")[0])]),
+    );
+    setSelection({ artifact: artifactId, element: elementId });
+  }
   function selectTarget(ref) {
-    setExpanded((current) => new Set([...current, ref.artifact]));
-    setSelection({ artifact: ref.artifact, element: ref.targetId });
+    revealElement(ref.artifact, ref.targetId);
   }
   const onNodeClick = (_, node) => {
     if (node.type === "artifact") selectArtifact(node.data.artifact.id);
@@ -296,7 +405,11 @@ function App() {
           {error}
         </div>
       )}
-      <div className="workspace">
+      <div
+        className="workspace"
+        ref={workspaceRef}
+        style={{ "--inspector-width": panelWidth + "px" }}
+      >
         <aside className="sidebar">
           <div className="sidebar-title">
             <span className="eyebrow">Repository</span>
@@ -407,27 +520,29 @@ function App() {
               </p>
             </div>
           ) : (
-            <ReactFlow
-              key={snapshot.repository.path}
-              nodes={graph.nodes}
-              edges={graph.edges}
-              nodeTypes={nodeTypes}
-              onNodeClick={onNodeClick}
-              fitView
-              fitViewOptions={{ padding: 0.18 }}
-              nodesDraggable={false}
-              nodesConnectable={false}
-              edgesReconnectable={false}
-              deleteKeyCode={null}
-              selectionOnDrag={false}
-              minZoom={0.1}
-              maxZoom={2}
-              colorMode="dark"
-              proOptions={{}}
-            >
-              <Background color="#334059" gap={24} size={1} />
-              <Controls showInteractive={false} />
-            </ReactFlow>
+            <div className="canvas-surface">
+              <ReactFlow
+                key={snapshot.repository.path}
+                nodes={graph.nodes}
+                edges={graph.edges}
+                nodeTypes={nodeTypes}
+                onNodeClick={onNodeClick}
+                fitView
+                fitViewOptions={{ padding: 0.18 }}
+                nodesDraggable={false}
+                nodesConnectable={false}
+                edgesReconnectable={false}
+                deleteKeyCode={null}
+                selectionOnDrag={false}
+                minZoom={0.1}
+                maxZoom={2}
+                colorMode="dark"
+                proOptions={{}}
+              >
+                <Background color="#334059" gap={24} size={1} />
+                <Controls showInteractive={false} />
+              </ReactFlow>
+            </div>
           )}
           {snapshot && snapshot.artifacts.length > 0 && (
             <div className="canvas-legend">
@@ -467,7 +582,38 @@ function App() {
             </details>
           )}
         </main>
-        <aside className="details-panel" aria-label="Selection details">
+        <div
+          className="inspector-divider"
+          role="separator"
+          aria-label="Resize details panel"
+          aria-orientation="vertical"
+          aria-valuemin={240}
+          aria-valuemax={panelMax}
+          aria-valuenow={panelWidth}
+          aria-controls="details-panel"
+          tabIndex={0}
+          onKeyDown={resizeWithKeyboard}
+          onPointerDown={(event) => {
+            if (event.button !== 0) return;
+            event.preventDefault();
+            event.currentTarget.focus();
+            event.currentTarget.setPointerCapture(event.pointerId);
+          }}
+          onPointerMove={dragPanel}
+          onPointerUp={(event) => {
+            if (event.currentTarget.hasPointerCapture(event.pointerId))
+              event.currentTarget.releasePointerCapture(event.pointerId);
+          }}
+          onPointerCancel={(event) => {
+            if (event.currentTarget.hasPointerCapture(event.pointerId))
+              event.currentTarget.releasePointerCapture(event.pointerId);
+          }}
+        />
+        <aside
+          id="details-panel"
+          className="details-panel"
+          aria-label="Selection details"
+        >
           {artifact ? (
             <>
               <div className="details-heading">
@@ -539,24 +685,49 @@ function App() {
                   <section>
                     <h3>Knowledge elements</h3>
                     {artifact.elements.length ? (
-                      artifact.elements.map((e) => (
-                        <button
-                          className="element-list-item"
-                          key={e.id}
-                          onClick={() => {
-                            setExpanded(
-                              (current) => new Set([...current, artifact.id]),
-                            );
-                            setSelection({
-                              artifact: artifact.id,
-                              element: e.id,
-                            });
-                          }}
-                        >
-                          <span>{e.path}</span>
-                          <small>{e.source}</small>
-                        </button>
-                      ))
+                      elementGroups(artifact).map((group) => {
+                        const open = expandedTypes.has(
+                          typeKey(artifact.id, group.type),
+                        );
+                        return (
+                          <div className="knowledge-type" key={group.type}>
+                            <button
+                              className="type-toggle inspector-type"
+                              aria-label={group.label + " in inspector"}
+                              aria-expanded={open}
+                              onClick={() =>
+                                toggleType(artifact.id, group.type)
+                              }
+                            >
+                              <span>
+                                {open ? "▾" : "▸"} {group.label}
+                              </span>
+                              <span className="type-count">{group.count}</span>
+                            </button>
+                            {open &&
+                              group.sources.map((source) => (
+                                <div
+                                  className="knowledge-source"
+                                  key={source.source}
+                                >
+                                  <h4>{source.label}</h4>
+                                  {source.elements.map((e) => (
+                                    <button
+                                      className="element-list-item"
+                                      key={e.id}
+                                      onClick={() =>
+                                        revealElement(artifact.id, e.id)
+                                      }
+                                    >
+                                      <span>{e.path}</span>
+                                      <small>{e.source}</small>
+                                    </button>
+                                  ))}
+                                </div>
+                              ))}
+                          </div>
+                        );
+                      })
                     ) : (
                       <p className="muted">No elements found.</p>
                     )}
