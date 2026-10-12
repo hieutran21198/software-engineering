@@ -1,40 +1,51 @@
-import React from "react";
-
-function Commit({commit}) {
-  return <details className="workflow-commit"><summary><code>{commit.id.slice(0, 8)}</code> {commit.subject}</summary><code className="full-commit">{commit.id}</code></details>;
+import React, {useMemo} from 'react';
+import {ReactFlow,ReactFlowProvider,Background,Controls,Handle,Position} from '@xyflow/react';
+import {workflowGraph} from './workflow-canvas.js';
+const stateLabel = state => state === 'documented-complete' ? 'Documented complete' : state;
+function WorktreeNode({data,selected}) {
+ const w=data.worktree;
+ return <div className={`workflow-group ${w.selected?'selected-worktree':''} ${selected?'selected':''}`}>
+  <h3>{w.branch || (w.detached?'Detached HEAD':'Unknown branch')}</h3>
+  <p title={w.path}>{w.path}</p>
+  <small>{w.selected?'Selected worktree · ':''}{w.availability} · HEAD {w.head?.slice(0,8)||'No commits'}{w.locked?' · Locked':''}{w.prunable?' · Prunable':''}</small>
+  {!w.changes.length && <p className="workflow-empty">{w.availability==='readable'?'No ADD changes discovered.':'Worktree unavailable. Select for details.'}</p>}
+ </div>;
 }
-export function Workflow({workflow, onOpen, busy}) {
-  if (!workflow) return <div className="workflow-view"><p>Workflow evidence is unavailable. Refresh to retry.</p></div>;
-  return <div className="workflow-view" aria-label="Local ADD workflows">
-    <h2>Local ADD workflows</h2>
-    <p className="muted">Steps are inferred from Markdown and Git. This view does not detect running agents or prove approval. Read again with Refresh.</p>
-    <p className="tiny">At most {workflow.historyLimit} commits touching artifact knowledge per worktree.</p>
-    {workflow.diagnostics.map((d,i)=><p className="workflow-diagnostic" key={i}>{d.message}</p>)}
-    {!workflow.worktrees.length && <p className="muted">No registered worktrees available.</p>}
-    {workflow.worktrees.map(worktree=><article className={`worktree-card ${worktree.selected ? "selected" : ""}`} key={worktree.path}>
-      <header className="worktree-head"><h3>{worktree.branch || (worktree.detached ? "Detached HEAD" : "Unknown branch")}</h3>
-        {worktree.selected ? <span className="source-tag">Selected worktree</span> : <button disabled={busy || worktree.availability !== "readable"} onClick={()=>onOpen(worktree.path)}>Open worktree</button>}
-      </header>
-      <p className="worktree-path">{worktree.path}</p>
-      <p className="tiny">HEAD <code title={worktree.head || ""}>{worktree.head?.slice(0,8) || "No commits"}</code> · {worktree.availability}{worktree.locked ? " · Locked" : ""}{worktree.prunable ? " · Prunable" : ""}</p>
-      {worktree.head && <details><summary>Full HEAD ID</summary><code className="full-commit">{worktree.head}</code></details>}
-      {worktree.diagnostics.map((d,i)=><p className="workflow-diagnostic" key={i}>{d.message}</p>)}
-      {worktree.availability === "readable" && !worktree.changes.length && <p className="muted">No ADD changes discovered.</p>}
-      {worktree.changes.map(change=><details className="workflow-change" key={change.artifact + "/" + change.name}>
-        <summary><strong>{change.artifact} / {change.name}</strong><span className="step-badge">{change.currentStep || (change.inferenceReason.startsWith("No distinguishable ongoing") ? "Historical" : "Unknown")}</span></summary>
-        <p className="muted">{change.inferenceReason}</p>
-        {change.declaredActive && <p className="tiny">Declared change; this does not prove ongoing execution.</p>}
-        <div className="workflow-steps">{change.steps.map(step=><details className="workflow-step" key={step.name}>
-          <summary><strong>{step.name}</strong><span>{step.state === "documented-complete" ? "Documented complete" : step.state} · {step.commits.length} commits</span></summary>
-          {step.evidence.length ? <ul>{step.evidence.map((e,i)=><li key={i}>{e.explanation}{e.file && <small>{e.file}</small>}</li>)}</ul> : <p className="muted">No completion evidence available.</p>}
-          {step.completionCommit ? <div><p className="tiny">Commit introducing completion evidence</p><Commit commit={step.completionCommit}/></div> : <p className="tiny">Exact completion commit unknown.</p>}
-          {!!step.commits.length && <p className="tiny">Associated commits</p>}
-          {step.commits.map(commit=><Commit key={commit.id} commit={commit}/>)}
-        </details>)}</div>
-        <details className="workflow-tasks"><summary>Task evidence ({change.tasks.length})</summary>
-          {change.tasks.length ? change.tasks.map(task=><div className="workflow-task" key={task.path}><p>{task.path}</p><small>{task.checked} checked · {task.unchecked} unchecked · {task.state}{task.inherited ? " · Inherited / historical" : ""}</small></div>) : <p className="muted">No tasks found.</p>}
-        </details>
-      </details>)}
-    </article>)}
-  </div>;
+function ChangeNode({data,selected}) {
+ const c=data.change;
+ return <div className={`workflow-row ${selected?'selected':''}`}><strong>{c.artifact} / {c.name}</strong><span className="step-badge">{c.currentStep || (c.inferenceReason.startsWith('No distinguishable ongoing')?'Historical':'Unknown')}</span></div>;
+}
+function PhaseNode({data,selected}) {
+ const {step,change}=data;
+ return <div className={`workflow-phase ${selected?'selected':''} ${change.currentStep===step.name?'current':''}`}>
+  <Handle type="target" position={Position.Left} isConnectable={false}/>
+  <strong>{step.name}</strong><span>{stateLabel(step.state)}</span><small>{step.commits.length} associated commits{change.currentStep===step.name?' · Current':''}</small>
+  <Handle type="source" position={Position.Right} isConnectable={false}/>
+ </div>;
+}
+const nodeTypes={worktree:WorktreeNode,change:ChangeNode,phase:PhaseNode};
+export function Workflow({workflow,selection,onSelect}) {
+ const graph=useMemo(()=>workflowGraph(workflow,selection),[workflow,selection]);
+ return <div className="workflow-view" aria-label="Local ADD workflows">
+  <ReactFlowProvider><ReactFlow nodes={graph.nodes} edges={graph.edges} nodeTypes={nodeTypes} onNodeClick={(_,node)=>onSelect(node.id)} fitView fitViewOptions={{padding:0.12}} minZoom={0.15} maxZoom={2} nodesDraggable={false} nodesConnectable={false} edgesReconnectable={false} deleteKeyCode={null} colorMode="dark">
+   <Background color="#334059" gap={24}/><Controls showInteractive={false}/>
+  </ReactFlow></ReactFlowProvider>
+  {!graph.nodes.length && <p className="workflow-no-data">{workflow?'No registered worktrees available.':'Workflow evidence unavailable. Refresh to retry.'}</p>}
+  <div className="workflow-legend">Lines show phase order · States inferred from Git + Markdown · Select a node for evidence</div>
+ </div>;
+}
+function Commit({commit}) {
+ return <details className="workflow-commit"><summary><code>{commit.id.slice(0,8)}</code> {commit.subject}</summary><code className="full-commit">{commit.id}</code></details>;
+}
+export function WorkflowDetails({node,workflow,busy,onOpen,onClear}) {
+ if(!node) return <div className="empty-details"><span className="eyebrow">Workflow inspector</span><h2>Explore workflow phases</h2><p>Select a worktree, change, or phase to inspect its evidence. Steps are inferred from Markdown and Git. Approval and running agents are not detected. Refresh reads again.</p><p>At most {workflow?.historyLimit || 200} artifact commits per worktree.</p>{workflow?.diagnostics.map((d,i)=><p className="workflow-diagnostic" key={i}>{d.message}</p>)}</div>;
+ const {worktree:w,change:c,step:s}=node.data;
+ return <div className="workflow-details">
+  <div className="details-heading"><span className="eyebrow">{s?'Phase':c?'Change':'Worktree'} details</span><button aria-label="Clear workflow selection" onClick={onClear}>×</button></div>
+  <h2>{s?.name || (c?`${c.artifact} / ${c.name}`:w.branch || 'Detached HEAD')}</h2>
+  <div className="details-meta"><span>{w.branch || 'Detached HEAD'}</span><span>{w.path}</span>{c&&<span>{c.artifact} / {c.name}</span>}</div>
+  {!c&&<><p className="muted">{w.availability}{w.selected?' · Selected worktree':''}{w.locked?' · Locked':''}{w.prunable?' · Prunable':''}</p>{w.head&&<><p className="tiny">Full HEAD ID</p><code className="full-commit">{w.head}</code></>}{!w.selected&&<button disabled={busy || w.availability!=='readable'} onClick={()=>onOpen(w.path)}>Open worktree</button>}{w.diagnostics.map((d,i)=><p className="workflow-diagnostic" key={i}>{d.message}</p>)}</>}
+  {c&&<><p className="muted">{c.inferenceReason}</p>{c.declaredActive&&<p className="tiny">Declared change; this does not prove ongoing execution.</p>}</>}
+  {s?<section><h3>{stateLabel(s.state)}</h3>{s.evidence.length?<ul>{s.evidence.map((e,i)=><li key={i}>{e.explanation}{e.file&&<small>{e.file}</small>}</li>)}</ul>:<p className="muted">No completion evidence available.</p>}{s.completionCommit?<><p className="tiny">Commit introducing completion evidence</p><Commit commit={s.completionCommit}/></>:<p className="tiny">Exact completion commit unknown.</p>}<h3>Associated commits</h3>{s.commits.length?s.commits.map(commit=><Commit key={commit.id} commit={commit}/>):<p className="muted">None.</p>}</section>:c&&<section><h3>Task evidence ({c.tasks.length})</h3>{c.tasks.map(task=><div className="workflow-task" key={task.path}><p>{task.path}</p><small>{task.checked} checked · {task.unchecked} unchecked · {task.state}{task.inherited?' · Inherited / historical':''}</small></div>)}</section>}
+ </div>;
 }
