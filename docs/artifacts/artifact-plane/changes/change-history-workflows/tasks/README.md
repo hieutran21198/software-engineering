@@ -1,30 +1,33 @@
-# Grouped records and resizable inspector plan
+# Change histories and workflow evidence plan
 
-Correct knowledge reading order and record density, and make the right inspector resizable in `apps/artifact-plane` after approval of this plan. The established `1.0.0` snapshot supplies the baseline. There are no upstream artifact implementation prerequisites.
+The complete 1.1.0 snapshot is the baseline. Implement in apps/artifact-plane after explicit approval. No upstream artifact implementation prerequisite exists.
 
-## Current work
+## Current tasks
 
-1. [Order, group, and compact knowledge elements](04-element-order.md).
-2. [Resize the inspector and validate the combined UI](05-resize-inspector.md).
+1. [Separate current knowledge and change histories](06-change-histories.md).
+2. [Read local worktree and workflow evidence](07-worktree-evidence.md).
+3. [Display workflow evidence and validate integration](08-workflow-view.md).
 
-Execute the two tasks sequentially because both touch the UI and styles. Use Contract-Driven Development for the ordering and resize rules, B8–B10 as the behavior examples, and TDD for meaningful regressions. Preserve plain module boundaries and run the existing CI checks. No new library or sorting configuration is needed.
-
-## Historical tasks
-
-These completed tasks explain the established implementation. Their evidence does not validate the new ordering behavior.
-
-- [Initial reader and API](01-reader.md)
-- [Initial interactive canvas](02-interface.md)
-- [Initial integrated validation](03-validation.md)
+Execute sequentially in the current session. Tasks share reader/model/UI contracts; extra branches or abstractions would add coordination cost. Coordinator owns artifact changes. Task 08 depends on tasks 06 and 07. No background agent is part of the application.
 
 ## Governing elements
 
-The current tasks implement requirements 11–15 and B8–B10 in `requirements/explorer.md`, and the logical element-ordering and resizable-inspector contracts in `specifications/explorer.md` in this change. Existing valid requirements, specifications, decisions, and historical task evidence are retained from `1.0.0`.
+Requirements 16–20 and B11–B14 in requirements/explorer.md, Histories and worktree evidence contract in specifications/explorer.md, and decision 002-derived-workflow.md in this change govern the work. Contract-Driven Development fixes the API first; BDD supplies behavior examples; targeted regression tests and existing CI validate the result.
 
-## Reviewable result
+## Historical tasks
 
-Expanded artifacts show up to four closed type groups instead of a long flat record list. Opening a type reveals current-version records followed by change records, in natural filename order. Open records are 52 pixels high instead of 70. The right panel has a pointer- and keyboard-operated divider; panel width and group expansion remain in browser memory.
+- [Initial reader](01-reader.md)
+- [Initial canvas](02-interface.md)
+- [Initial validation](03-validation.md)
+- [Grouped records](04-element-order.md)
+- [Inspector sizing](05-resize-inspector.md)
 
-## Self-check
+Their copied evidence does not validate this change. Preserve valid records; do not copy Git hashes into knowledge files.
 
-The tasks cover type grouping, compact records, pointer/keyboard panel resizing, selection/reference preservation, and integrated validation. The user delegated source precedence; current-version-first within each type is the specified choice. The change preserves discovery and dependencies. KISS uses two small sequential tasks and existing libraries. STE checks keep the rules explicit. The revised plan was approved before implementation. Current tasks record the integrated evidence.
+## Integration and delivery
+
+Run Node tests, production build, and Chromium browser tests. Inspect history and workflow views visually. Verify inspected worktrees remain unchanged. Check documentation hierarchy. After DoD passes, propose a compatible minor version and request confirmation. Prepare a full snapshot, root README, and DAG; push the dedicated branch and open a review PR. Stop for team merge.
+
+## Plan self-check
+
+Tasks cover grouping, active declarations, worktree enumeration, bounded commit provenance, baseline comparison, uncertainty, UI, and read-only checks. No new database, framework, dependency, execution control, or persistent state is required. KISS retains plain functions and existing tools. STE names concrete evidence and failures. Implementation awaits user approval.
