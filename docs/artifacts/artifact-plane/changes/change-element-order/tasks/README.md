@@ -27,4 +27,4 @@ Expanded artifacts show up to four closed type groups instead of a long flat rec
 
 ## Self-check
 
-The tasks cover type grouping, compact records, pointer/keyboard panel resizing, selection/reference preservation, and integrated validation. The user delegated source precedence; current-version-first within each type is the specified choice. The change preserves discovery and dependencies. KISS uses two small sequential tasks and existing libraries. STE checks keep the rules explicit. Implementation waits for explicit approval of this correction plan.
+The tasks cover type grouping, compact records, pointer/keyboard panel resizing, selection/reference preservation, and integrated validation. The user delegated source precedence; current-version-first within each type is the specified choice. The change preserves discovery and dependencies. KISS uses two small sequential tasks and existing libraries. STE checks keep the rules explicit. The revised plan was approved before implementation. Current tasks record the integrated evidence.
