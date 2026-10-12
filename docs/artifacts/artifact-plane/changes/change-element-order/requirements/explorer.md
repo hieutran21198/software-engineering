@@ -53,7 +53,7 @@ Given a repository with tracked and untracked files, when the reader opens, insp
 
 ### B7 — Canvas exploration
 
-Given a displayed artifact graph, when the reader pans, zooms, selects an artifact, and expands it, show that artifact's elements and reference connections on the same canvas. Selecting an element shows its details. Collapsing the artifact hides its element nodes while preserving artifact dependency edges. These actions do not change repository data.
+Given a displayed artifact graph, when the reader pans, zooms, selects an artifact, and expands it, show that artifact's type groups on the same canvas. Opening a type group shows its elements and reference connections. Selecting an element shows its details. Collapsing the artifact hides its element nodes while preserving artifact dependency edges. These actions do not change repository data.
 
 ## Input boundary
 
@@ -65,13 +65,23 @@ The scope covers the user's requested behavior and read-only constraint. No othe
 
 ## Element reading order
 
-11. Expanded artifacts and inspector lists present knowledge in ADD reading order: Requirements, Specifications, Decisions, then Tasks. Each source has a clear label so current-version elements and change elements are distinguishable.
+11. Expanded artifacts and inspector lists group knowledge by type in ADD reading order: Requirements, Specifications, Decisions, then Tasks. Type groups show record counts and can be opened or closed. Inside each type, source labels distinguish current-version elements from change elements.
 12. Place a category's README before its other files. Order the remaining paths naturally, so `2-reader.md` precedes `10-validation.md`. Keep nested paths deterministic.
 13. Preserve element identity, reference resolution, dependency relationships, selection, and read-only behavior when changing display order.
+14. Reduce excess bottom space in canvas records while keeping filenames and source labels readable.
+15. Let the reader resize the right details panel without changing repository files or saving persistent UI state. Keep the canvas and content usable at supported widths.
 
 ### B8 — Ordered artifact knowledge
 
-Given an artifact has elements from its current version and a change, including requirements, specifications, decisions, and numbered task files, when the reader expands the artifact or opens its inspector list, show separate source groups. Within each source, show Requirements → Specifications → Decisions → Tasks. Within Tasks, show README.md, 2-reader.md, then 10-validation.md. Selecting a displayed element opens the same source-specific record as before.
+Given an artifact has elements from its current version and a change, including requirements, specifications, decisions, and numbered task files, when the reader expands the artifact or opens its inspector list, show collapsible Requirements → Specifications → Decisions → Tasks groups with counts. Opening Tasks shows source groups with the current version first. Within each Tasks source, show README.md, 2-reader.md, then 10-validation.md. Selecting a displayed element opens the same source-specific record as before.
+
+### B9 — Compact records
+
+Given an open type group on the canvas, show each record with its filename and source label and less bottom space than the initial release. Labels remain readable and connection handles remain attached to the correct record.
+
+### B10 — Resizable inspector
+
+Given the desktop layout with a selected element, when the reader drags the inspector divider or uses its keyboard resize control, change the panel width within bounds. Markdown reflows, canvas controls remain usable, and the selected element remains selected.
 
 ### Ordering self-check
 
