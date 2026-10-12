@@ -107,3 +107,32 @@ export async function fingerprint(root) {
   await walk(root);
   return result;
 }
+
+export function orderingFixture() {
+  const files = new Map([
+    ["docs/artifacts/knowledge/README.md", rootReadme("Knowledge", "1.0.0")],
+    ["docs/artifacts/knowledge/changes/change-next/README.md", "# Next change"],
+  ]);
+  const paths = [
+    "tasks/10-validation.md",
+    "decisions/choice.md",
+    "tasks/2-reader.md",
+    "tasks/README.md",
+    "specifications/contract.md",
+    "requirements/need.md",
+    "tasks/nested/10-detail.md",
+    "tasks/nested/2-detail.md",
+  ];
+  for (const source of ["changes/change-next", "versions/1.0.0"]) {
+    for (const path of paths)
+      files.set(
+        `docs/artifacts/knowledge/${source}/${path}`,
+        `# ${path}\n\nKnowledge ${source}.`,
+      );
+  }
+  files.set(
+    "docs/artifacts/knowledge/changes/change-next/specifications/contract.md",
+    element("knowledge", "requirements/need.md"),
+  );
+  return files;
+}

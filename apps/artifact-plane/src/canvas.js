@@ -1,40 +1,62 @@
+import { elementGroups, typeKey } from "./elements.js";
 import dagre from "@dagrejs/dagre";
 import { effectiveEdges } from "./graph.js";
 const artifactNodeId = (id) => `artifact:${id}`;
 const elementNodeId = (id) => `element:${id}`;
 
 // Layout only outer groups. Child positions stay relative to their artifact.
-export function canvasGraph(snapshot, expanded, planning = false) {
+export function canvasGraph(
+  snapshot,
+  expanded,
+  planning = false,
+  expandedTypes = new Set(),
+) {
   const outer = [],
     children = [],
     edges = [],
     layoutEdges = [];
   const byId = new Map(snapshot.artifacts.map((a) => [a.id, a]));
   for (const a of snapshot.artifacts) {
-    const open = expanded.has(a.id);
+    const open = expanded.has(a.id),
+      groups = [];
+    let y = 104;
+    if (open)
+      for (const group of elementGroups(a)) {
+        const shown = expandedTypes.has(typeKey(a.id, group.type));
+        const header = { ...group, open: shown, y, headings: [] };
+        groups.push(header);
+        y += 34;
+        if (shown)
+          for (const source of group.sources) {
+            header.headings.push({ label: source.label, y });
+            y += 24;
+            for (const e of source.elements) {
+              children.push({
+                id: elementNodeId(e.id),
+                type: "element",
+                parentId: artifactNodeId(a.id),
+                extent: "parent",
+                data: { element: e },
+                position: { x: 16, y },
+                style: { width: 328, height: 52 },
+              });
+              y += 60;
+            }
+          }
+        y += 8;
+      }
     outer.push({
       id: artifactNodeId(a.id),
       type: "artifact",
-      data: { artifact: a, open },
+      data: { artifact: a, open, groups },
       position: { x: 0, y: 0 },
       style: {
         width: open ? 360 : 280,
-        height: open ? 115 + Math.max(1, a.elements.length) * 82 : 112,
+        height: open ? Math.max(156, y + 10) : 112,
       },
     });
-    if (open)
-      a.elements.forEach((e, i) =>
-        children.push({
-          id: elementNodeId(e.id),
-          type: "element",
-          parentId: artifactNodeId(a.id),
-          extent: "parent",
-          data: { element: e },
-          position: { x: 16, y: 100 + i * 82 },
-          style: { width: 328, height: 70 },
-        }),
-      );
   }
+  const visibleElements = new Set(children.map((n) => n.id));
   function missing(id, label) {
     if (!outer.some((n) => n.id === id))
       outer.push({
@@ -93,14 +115,14 @@ export function canvasGraph(snapshot, expanded, planning = false) {
     layoutEdges.push([source, target]);
   }
   for (const ref of snapshot.references) {
-    if (!expanded.has(ref.consumerArtifact)) continue;
+    if (!visibleElements.has(elementNodeId(ref.consumer))) continue;
     const consumer = elementNodeId(ref.consumer);
     const prerequisite = !ref.resolved
       ? missing(
           `missing-reference:${ref.id}`,
           `Unresolved: ${ref.artifact}/${ref.element}`,
         )
-      : expanded.has(ref.artifact)
+      : visibleElements.has(elementNodeId(ref.targetId))
         ? elementNodeId(ref.targetId)
         : artifactNodeId(ref.artifact);
     const color = !ref.resolved

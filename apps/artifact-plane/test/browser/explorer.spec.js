@@ -4,6 +4,7 @@ import { join } from "node:path";
 import {
   fixtureRepository,
   sourceFixture,
+  orderingFixture,
   fingerprint,
   git,
 } from "../fixtures.js";
@@ -64,6 +65,15 @@ test("B1-B7: explore, expand, select, pan, zoom, proposals, diagnostics, refresh
       .click();
     await page
       .getByRole("button", { name: "Expand Tenant", exact: true })
+      .click();
+    await page
+      .getByRole("button", {
+        name: "Specifications in Authentication",
+        exact: true,
+      })
+      .click();
+    await page
+      .getByRole("button", { name: "Specifications in Tenant", exact: true })
       .click();
     await expect(page.locator(".react-flow__node-element")).toHaveCount(3);
     // Select an actual canvas element; Markdown remains inert.
@@ -166,6 +176,100 @@ test("invalid path error and empty artifact directory are usable", async ({
     await expect(
       page.getByRole("heading", { name: "No artifacts found" }),
     ).toBeVisible();
+  } finally {
+    await fixture.cleanup();
+  }
+});
+
+test("B8-B9: collapsible type groups, logical source order, compact records, and reference reveal", async ({
+  page,
+}) => {
+  const fixture = await fixtureRepository(orderingFixture());
+  const before = await fingerprint(fixture.root);
+  try {
+    await page.goto("/");
+    await page.getByLabel("Repository path").fill(fixture.root);
+    await page.getByRole("button", { name: "Open repository" }).click();
+    await page
+      .getByRole("navigation", { name: "Artifacts" })
+      .getByRole("button", { name: /Knowledge/ })
+      .click();
+    await page
+      .getByRole("button", { name: "Expand Knowledge", exact: true })
+      .click();
+    await expect(page.locator(".react-flow__node-element")).toHaveCount(0);
+    expect(await page.locator(".canvas-type").allTextContents()).toEqual([
+      "▸ Requirements2",
+      "▸ Specifications2",
+      "▸ Decisions2",
+      "▸ Tasks10",
+    ]);
+    await page
+      .getByRole("button", { name: "Tasks in Knowledge", exact: true })
+      .click();
+    const records = page.locator(".react-flow__node-element");
+    await expect(records).toHaveCount(10);
+    const order = [
+      "tasks/README.md",
+      "tasks/2-reader.md",
+      "tasks/10-validation.md",
+      "tasks/nested/2-detail.md",
+      "tasks/nested/10-detail.md",
+    ];
+    expect(await records.locator("strong").allTextContents()).toEqual([
+      ...order,
+      ...order,
+    ]);
+    expect(
+      await records
+        .first()
+        .evaluate((el) => parseFloat(getComputedStyle(el).height)),
+    ).toBe(52);
+    expect(
+      await records
+        .first()
+        .locator(".element-node")
+        .evaluate((el) => getComputedStyle(el).paddingBottom),
+    ).toBe("6px");
+    const panel = page.getByRole("complementary", {
+      name: "Selection details",
+    });
+    expect(
+      await panel.locator(".element-list-item span").allTextContents(),
+    ).toEqual([...order, ...order]);
+    await expect(
+      panel.getByRole("button", { name: "Tasks in inspector", exact: true }),
+    ).toHaveAttribute("aria-expanded", "true");
+    await page
+      .getByRole("button", { name: "Specifications in Knowledge", exact: true })
+      .click();
+    await expect(records).toHaveCount(12);
+    // A hidden target's category opens when its resolved reference is selected.
+    await panel
+      .getByRole("button", {
+        name: "knowledge / requirements/need.md",
+        exact: true,
+      })
+      .click();
+    await expect(
+      page.getByRole("button", {
+        name: "Requirements in Knowledge",
+        exact: true,
+      }),
+    ).toHaveAttribute("aria-expanded", "true");
+    await expect(
+      panel.getByRole("heading", { name: "requirements/need.md", exact: true, level: 2 }),
+    ).toBeVisible();
+    await page
+      .getByRole("button", { name: "Tasks in Knowledge", exact: true })
+      .click();
+    await expect(records).toHaveCount(4);
+    await page.getByRole("button", { name: "Fit View", exact: true }).click();
+    await page.screenshot({
+      path: "test-results/grouped-canvas.png",
+      fullPage: true,
+    });
+    expect(await fingerprint(fixture.root)).toEqual(before);
   } finally {
     await fixture.cleanup();
   }

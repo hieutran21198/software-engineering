@@ -305,8 +305,8 @@ nav {
   color: #cfc6ff;
 }
 .canvas-area .react-flow {
-  height: 100%;
-  padding-top: 66px;
+  height: calc(100% - 66px);
+  margin-top: 66px;
 }
 .artifact-node {
   width: 100%;
@@ -363,7 +363,7 @@ nav {
 }
 .element-node {
   height: 100%;
-  padding: 9px 12px;
+  padding: 6px 12px;
   border: 1px solid #354660;
   border-radius: 6px;
   background: #1b2940;
@@ -371,7 +371,7 @@ nav {
 .element-node strong {
   display: block;
   font-size: 11px;
-  margin-top: 8px;
+  margin-top: 5px;
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
@@ -792,4 +792,58 @@ summary {
   .statusbar span:last-child {
     display: none;
   }
+}
+
+/* Type headings are view controls, not dependency nodes. */
+.artifact-node {
+  position: relative;
+}
+.type-toggle {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  width: 100%;
+  min-height: 30px;
+  padding: 5px 9px;
+  font-size: 11px;
+  text-align: left;
+  background: #243049;
+  border-color: #3a4860;
+}
+.canvas-type {
+  position: absolute;
+  left: 16px;
+  width: 328px;
+  height: 30px;
+}
+.type-count {
+  color: #aab7cd;
+  font-size: 10px;
+  background: #162237;
+  border-radius: 4px;
+  padding: 1px 5px;
+}
+.canvas-source-heading {
+  position: absolute;
+  left: 20px;
+  width: 320px;
+  height: 20px;
+  display: flex;
+  align-items: center;
+  font-size: 9px;
+  color: #9aadc9;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.knowledge-type {
+  margin: 8px 0;
+}
+.knowledge-source {
+  padding: 0 6px;
+}
+.knowledge-source h4 {
+  color: #a4b3ca;
+  font-size: 10px;
 }

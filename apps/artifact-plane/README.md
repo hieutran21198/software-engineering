@@ -20,10 +20,10 @@ All browser assets are bundled locally. The application uses no database, accoun
 
 - Pan by dragging the canvas background. Use the controls to zoom and fit the graph.
 - Select an artifact on the canvas or in the list to see its overview, declared version, change candidates, and upstream/downstream relationships.
-- Expand an artifact with its `+` button to show knowledge elements in place. Select an element to read its Markdown and references. Multiple artifacts can stay expanded.
+- Expand an artifact with its `+` button to show collapsible Requirements, Specifications, Decisions, and Tasks groups with counts. Groups start closed. Open a type to show compact records; current-version records come before change records, each category README comes first, and other filenames use natural numeric order. Select an element to read its Markdown and references. Multiple artifacts and types can stay expanded.
 - Arrows point from upstream knowledge to its consumer. Purple dotted lines show element references. Green dashed lines show proposed additions; red dashed lines mark proposed removals in the established view.
 - Switch to Planning to see the graph after active dependency proposals are applied. Proposals do not change the established graph.
-- Select a resolved reference in the inspector to open its target. Missing targets appear as unresolved markers and diagnostics.
+- Select a resolved reference in the inspector to open its target artifact and type. Missing targets appear as unresolved markers and diagnostics.
 - Use Refresh after external repository edits. Selection and canvas state remain in browser memory only; nothing is saved across page reloads.
 
 ## Supported repository structure

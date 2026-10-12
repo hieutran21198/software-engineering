@@ -1,3 +1,4 @@
+import { orderElements } from "./elements.js";
 import { effectiveEdges } from "./graph.js";
 export { effectiveEdges, relationships } from "./graph.js";
 import { parseDocument } from "yaml";
@@ -184,12 +185,10 @@ export function buildSnapshot(files, repository = {}, inputDiagnostics = []) {
         .match(/^changes\/(change-[^/]+)\//);
       if (match) changes.add(match[1]);
     }
-    a.changes = [...changes]
-      .sort()
-      .map((name) => ({
-        name,
-        readme: files.get(`${prefix}changes/${name}/README.md`) || "",
-      }));
+    a.changes = [...changes].sort().map((name) => ({
+      name,
+      readme: files.get(`${prefix}changes/${name}/README.md`) || "",
+    }));
     if (changes.size === 1) a.activeChange = [...changes][0];
     if (changes.size > 1)
       report(
@@ -230,10 +229,7 @@ export function buildSnapshot(files, repository = {}, inputDiagnostics = []) {
           });
       }
     }
-    a.elements.sort(
-      (x, y) =>
-        x.source.localeCompare(y.source) || x.path.localeCompare(y.path),
-    );
+    a.elements = orderElements(a);
     for (const source of a.dependsOn) {
       edges.push({ source, target: a.id, status: "established" });
       if (!byId.has(source))
