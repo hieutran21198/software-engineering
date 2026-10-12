@@ -1,33 +1,20 @@
-# Change histories and workflow evidence plan
+# Workflow canvas plan
 
-The complete 1.1.0 snapshot is the baseline. Implement in apps/artifact-plane after explicit approval. No upstream artifact implementation prerequisite exists.
+Baseline: established 1.2.0. Implement in apps/artifact-plane only after explicit user approval. No upstream dependency changes.
 
-## Current tasks
+1. [Workflow canvas and inspector](09-workflow-canvas.md).
+2. [Integration validation](10-canvas-validation.md), after task 09.
 
-1. [Separate current knowledge and change histories](06-change-histories.md).
-2. [Read local worktree and workflow evidence](07-worktree-evidence.md).
-3. [Display workflow evidence and validate integration](08-workflow-view.md).
-
-Execute sequentially in the current session. Tasks share reader/model/UI contracts; extra branches or abstractions would add coordination cost. Coordinator owns artifact changes. Task 08 depends on tasks 06 and 07. No background agent is part of the application.
-
-## Governing elements
-
-Requirements 16–20 and B11–B14 in requirements/explorer.md, Histories and worktree evidence contract in specifications/explorer.md, and decision 002-derived-workflow.md in this change govern the work. Contract-Driven Development fixes the API first; BDD supplies behavior examples; targeted regression tests and existing CI validate the result.
+Execute sequentially in the current session. The shared selection and inspector changes make parallel ownership unnecessary. Coordinator owns knowledge updates.
 
 ## Historical tasks
 
-- [Initial reader](01-reader.md)
-- [Initial canvas](02-interface.md)
-- [Initial validation](03-validation.md)
-- [Grouped records](04-element-order.md)
-- [Inspector sizing](05-resize-inspector.md)
+Tasks 01–08 retain earlier evidence. Their checks do not validate the new canvas.
 
-Their copied evidence does not validate this change. Preserve valid records; do not copy Git hashes into knowledge files.
+## Delivery
 
-## Integration and delivery
-
-Run Node tests, production build, and Chromium browser tests. Inspect history and workflow views visually. Verify inspected worktrees remain unchanged. Check documentation hierarchy. After DoD passes, propose a compatible minor version and request confirmation. Prepare a full snapshot, root README, and DAG; push the dedicated branch and open a review PR. Stop for team merge.
+Run Node tests, production build, and Chromium browser tests. Inspect desktop and narrow layouts. Verify documentation links and read-only exploration. After validation, suggest a compatible version for user confirmation, prepare the complete snapshot, and open a review PR. Stop for team merge.
 
 ## Plan self-check
 
-Tasks cover grouping, active declarations, worktree enumeration, bounded commit provenance, baseline comparison, uncertainty, UI, and read-only checks. No new database, framework, dependency, execution control, or persistent state is required. KISS retains plain functions and existing tools. STE names concrete evidence and failures. Implementation awaits user approval.
+Tasks cover requirements 21–23 and B15–B16. Existing inference contracts stay unchanged. KISS uses current tools with no new dependency. STE keeps checks concrete. Implementation awaits explicit approval.
