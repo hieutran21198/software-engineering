@@ -17,14 +17,13 @@ The resources include ADD guidance and role skills, reusable patterns, a project
 
 ## Getting Started
 
-To adopt ADD, build the command with Go 1.25 or later from this repository:
+Download the binary for your operating system and processor, plus `SHA256SUMS`, from [GitHub Releases](https://github.com/hieutran21198/software-engineering/releases). Follow the [download and checksum instructions](src/archs/artifact-driven/05-adoption/README.md#download-the-binary), then run:
 
 ```sh
-go build -o /tmp/se-adopt ./cmd/se-adopt
-/tmp/se-adopt --project /path/to/consumer
+./se-adopt --project /path/to/consumer
 ```
 
-Use `/tmp/se-adopt --list` to see available architectures, or add `--arch artifact-driven` to select ADD explicitly.
+Go and a source checkout are not required. On Windows, use `.\se-adopt.exe` and your consumer workspace path. Use `./se-adopt --list` to see available architectures, or add `--arch artifact-driven` to select ADD explicitly.
 
 The default output is `docs/<architecture>` inside the consumer workspace, currently `docs/artifact-driven`. Use `--dry-run` to preview or `--output` to choose a different relative destination. See the [adoption guide](src/archs/artifact-driven/05-adoption/README.md) and [end-user guidelines](src/archs/artifact-driven/06-guidelines/README.md) for details.
 
