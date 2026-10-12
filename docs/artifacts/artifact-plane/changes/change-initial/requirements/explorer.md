@@ -17,6 +17,7 @@ The inspected repository must remain unchanged. This restriction includes Git me
 7. Report missing targets, cycles, conflicting index data, ambiguous metadata, and multiple active changes. Keep valid portions inspectable without silently fixing repository data.
 8. Display Markdown details safely. Repository content cannot execute browser scripts or cause reads outside the chosen repository through element paths or symlinks.
 9. Opening, inspecting, and refreshing leave repository files and Git state unchanged.
+10. Explore the graph on an interactive canvas: pan, zoom, fit the graph, select nodes, and expand or collapse an artifact to show its element dependencies in place. Canvas actions change only the browser view.
 
 ## Constraints
 
@@ -49,6 +50,10 @@ Given two artifacts with no established edge and an active proposal adds tenant 
 ### B6 — Read-only refresh
 
 Given a repository with tracked and untracked files, when the reader opens, inspects, and refreshes it without external edits, all repository file contents and Git state remain unchanged. An explicit refresh after an external Markdown edit displays the updated working-tree content.
+
+### B7 — Canvas exploration
+
+Given a displayed artifact graph, when the reader pans, zooms, selects an artifact, and expands it, show that artifact's elements and reference connections on the same canvas. Selecting an element shows its details. Collapsing the artifact hides its element nodes while preserving artifact dependency edges. These actions do not change repository data.
 
 ## Input boundary
 
