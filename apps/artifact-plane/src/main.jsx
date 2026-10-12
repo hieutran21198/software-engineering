@@ -278,6 +278,7 @@ function App() {
       setWorkflowSelected(current => refresh && workflowSelection(result.workflow,current) ? current : null);
       setPath(result.repository.path);
       if (!refresh) {
+        setWorkflowMounted(view === "workflow");
         setExpanded(new Set());
         setExpandedTypes(new Set());
         setSelection(null);

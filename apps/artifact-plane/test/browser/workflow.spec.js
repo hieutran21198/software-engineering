@@ -85,6 +85,17 @@ test('B12-B14: workflow branches, evidence commits, unknown approval, worktree o
   await rm(join(other,'docs/artifacts/knowledge/changes/change-next'),{recursive:true,force:true});
   await page.getByRole('button',{name:'Refresh',exact:true}).click();
   await expect(panel.getByRole('heading',{name:'Explore workflow phases'})).toBeVisible();
+  await page.getByRole('button',{name:'Canvas',exact:true}).click();
+  await page.getByLabel('Repository path').fill(fixture.root);
+  await page.getByRole('button',{name:'Open repository'}).click();
+  await expect(page.getByRole('button',{name:'Open repository'})).toBeEnabled();
+  await page.getByRole('button',{name:'Workflow',exact:true}).click();
+  await view.getByTestId('rf__node-'+JSON.stringify([fixture.root,'knowledge','change-next','Specification'])).click();
+  await expect(panel).toContainText('Define new explorer contract');
+  const phaseBox=await view.getByTestId('rf__node-'+JSON.stringify([fixture.root,'knowledge','change-next','Specification'])).boundingBox();
+  const viewBox=await view.boundingBox();
+  expect(phaseBox.x).toBeGreaterThanOrEqual(viewBox.x);
+  expect(phaseBox.y).toBeGreaterThanOrEqual(viewBox.y);
   expect(errors).toEqual([]);
  } finally {await rm(other,{recursive:true,force:true});await fixture.cleanup();}
 });

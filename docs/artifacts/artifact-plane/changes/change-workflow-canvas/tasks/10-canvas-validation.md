@@ -24,3 +24,5 @@ The integrated change passed 24 Node tests, the production build, and all 6 Chro
 ## Version preparation
 
 The user confirmed compatible minor version 1.3.0. Prepare the full snapshot with valid requirements, specifications, decisions, and historical task evidence. Version 1.2.0 remains established on main until the knowledge and implementation merge together.
+
+The final repository-opening regression check passed with the 1.3.0 build: after using Workflow, opening a repository from the artifact tab initializes the next workflow canvas at its visible size. [PR #4](https://github.com/hieutran21198/software-engineering/pull/4) contains the complete knowledge and implementation change. Required CI checks run on the final published revision before handoff.
