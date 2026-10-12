@@ -55,3 +55,17 @@ Add an independent Artifact Plane check job to the existing GitHub Actions workf
 ## Self-check
 
 The contract covers every requirement with one request-driven process. Libraries own YAML, Markdown, sanitization, and graph layout. KISS excludes persistence, plugin interfaces, and runtime coordination. STE checks preserve status distinctions and use explicit rules. Parser conventions are a documented compatibility boundary, not a claim to understand arbitrary prose.
+
+## Logical element ordering
+
+Use one shared ordering rule for the snapshot's elements and both UI views. Source order is the declared current version, the uniquely identified active change, then other change candidates in natural name order. If active change detection is ambiguous, label the change sources as candidates rather than inventing an active source. This correction does not change source discovery or archive detection.
+
+Within each source, category order is `requirements`, `specifications`, `decisions`, `tasks`. Place the direct category `README.md` first. Compare the remaining snapshot-relative paths with natural numeric, case-insensitive ordering and a case-sensitive tie-breaker. Keep stable source-specific element identifiers.
+
+Render visible source headings and category headings in expanded canvas groups and in the inspector's Knowledge elements section. Keep headings presentational: they are not dependency nodes. Omit empty categories. Size expanded artifact groups from the same ordered section data that positions their elements. Reference connections continue to use existing element IDs, including cross-source references. Selection, collapse, and viewport behavior retain their contracts.
+
+Add a shared-fixture B8 regression with deliberately scrambled records, all four categories, category READMEs, nested paths, and task numbers 2 and 10. Check the ordering independently of input insertion order, and check canvas positions and inspector order in the browser. Re-run existing read-only, reference, and viewport checks on the integrated correction.
+
+### Ordering specification self-check
+
+The order follows ADD knowledge reading flow with an established baseline first. No API fields, element identifiers, dependency rules, new libraries, or runtime components are required. The existing local-server decision remains applicable; no new ADR is needed. KISS keeps a shared plain-function ordering rule, and STE checks make the source and category labels explicit. B8 supplies the contract and validation boundary for the new task.
