@@ -10,13 +10,13 @@ Tasks 06 and 07 integrated; user approval. Requirements 17–20 and B12–B14; U
 
 ## Definition of Done
 
-- [ ] Workflow view lists all worktrees, selected marker, branch/path/HEAD, changes, inferred step and reasons, task evidence, and expandable commit IDs/messages.
-- [ ] Open another readable ADD worktree through the existing API; unavailable and unknown states remain visible. Switching views preserves canvas selection and panel width.
-- [ ] Full commit IDs are inspectable; associated commits are distinguished from proven completion; no workflow execution or automatic refresh exists.
-- [ ] Run npm test, npm run build, and npm run test:browser; preserve existing acceptance and API/security checks.
-- [ ] Inspect canvas histories, long worktree paths/messages, workflow uncertainty, and narrow/wide layouts visually. Verify all inspected worktree bytes and Git metadata are unchanged.
+- [x] Workflow view lists all worktrees, selected marker, branch/path/HEAD, changes, inferred step and reasons, task evidence, and expandable commit IDs/messages.
+- [x] Open another readable ADD worktree through the existing API; unavailable and unknown states remain visible. Switching views preserves canvas selection and panel width.
+- [x] Full commit IDs are inspectable; associated commits are distinguished from proven completion; no workflow execution or automatic refresh exists.
+- [x] Run npm test, npm run build, and npm run test:browser; preserve existing acceptance and API/security checks.
+- [x] Inspect canvas histories, long worktree paths/messages, workflow uncertainty, and narrow/wide layouts visually. Verify all inspected worktree bytes and Git metadata are unchanged.
 - [ ] Record evidence and check documentation hierarchy; obtain version confirmation, prepare complete snapshot/root/DAG, and open the review PR with integrated CI evidence. Stop for team merge.
 
 ## Evidence
 
-Implementation has not started.
+The integrated Node suite passed 24 checks; the production build passed; all 6 Chromium browser checks passed. B11 covers proposed references into hidden history and preserving selected details after collapse. Its failing regression found reference-label overlap that intercepted history controls; non-interactive edge labels now allow clicks through. B12–B14 verify registered worktree branch/path, unavailable entries, full completion-evidence IDs and subjects, unknown approval, explicit worktree opening, preserved canvas transform/selection/inspector width, narrow layout, and unchanged file/Git fingerprints. Wide and narrow screenshots were inspected. Vite retains its existing non-blocking bundle/client-directive warnings. Version confirmation and PR handoff remain pending.

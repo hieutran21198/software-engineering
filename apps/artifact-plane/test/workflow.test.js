@@ -96,3 +96,9 @@ test('history cap and shallow evidence are disclosed; non-ADD and unavailable ro
   assert.equal(workflow.worktrees[1].availability,'non-add');assert.equal(workflow.worktrees[2].availability,'unavailable');
   assert.equal(commands.filter(c=>c[0]==='worktree').length,1);assert.ok(commands.find(c=>c[0]==='log').includes('-201'));
 });
+
+test('negative and planned self-check text cannot prove completion', async()=>{
+ const {explicitCompletion}=await import('../server/workflow.js');
+ for(const text of ['## Self-check\nIncomplete.', '## Self-check\nTests have not passed.', '## Plan\nRun self-check and mark complete after approval.', '- [x] One\n- [ ] Next\n## Evidence\nTests passed.']) assert.equal(explicitCompletion(text),false);
+ assert.equal(explicitCompletion('## Self-check\nPassed.'),true);
+});

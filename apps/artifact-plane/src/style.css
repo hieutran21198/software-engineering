@@ -898,3 +898,30 @@ summary {
     display: none;
   }
 }
+
+.workflow-view { position: absolute; inset: 66px 0 0; overflow: auto; padding: 20px; }
+.workflow-view > p { margin: 10px 0; font-size: 12px; }
+.worktree-card { border: 1px solid #35435b; border-radius: 8px; padding: 16px; margin: 16px 0; background: #141e31; overflow-wrap: anywhere; }
+.worktree-card.selected { border-color: #8f81d2; }
+.worktree-head { display: flex; align-items: center; justify-content: space-between; gap: 12px; }
+.worktree-head h3 { margin: 0; font-size: 14px; }
+.worktree-head button { font-size: 11px; flex-shrink: 0; }
+.worktree-path { margin-top: 12px; font-size: 12px; }
+.workflow-diagnostic { color: #e6c994; font-size: 12px; margin-top: 10px; }
+.workflow-change { border-top: 1px solid #35435b; padding-top: 12px; }
+.workflow-change > summary { display: flex; align-items: center; flex-wrap: wrap; gap: 8px; list-style: none; }
+.workflow-change > summary::before { content: "▸"; }
+.workflow-change[open] > summary::before { content: "▾"; }
+.step-badge { background: #292840; color: #cfc6ff; border-radius: 4px; padding: 3px 7px; font-size: 10px; }
+.workflow-change > p { margin-top: 12px; font-size: 12px; }
+.workflow-step { padding: 10px 0; border-bottom: 1px solid #2a354b; }
+.workflow-step summary span { margin-left: 10px; color: #8d9ab1; }
+.workflow-step li { margin: 6px 0; line-height: 1.6; }
+.workflow-step small { display: block; }
+.workflow-task { padding: 8px 0; line-height: 1.6; }
+.workflow-commit { border-left: 2px solid #655b9b; padding-left: 10px; line-height: 1.7; }
+.full-commit { display: block; margin-top: 8px; overflow-wrap: anywhere; user-select: all; }
+@media (max-width: 1150px) { .canvas-toolbar { flex-wrap: wrap; gap: 4px; } .workflow-view { padding: 12px; } }
+
+/* Reference labels can cross group controls; they must not block those controls. */
+.react-flow__edge, .react-flow__edge-text, .react-flow__edge-textbg { pointer-events: none !important; }

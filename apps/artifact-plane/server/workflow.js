@@ -32,8 +32,16 @@ export function checklist(markdown) {
   return { checked, unchecked, state: malformed || !checked && !unchecked ? 'unknown' : 'observed' };
 }
 const prose = text => marked.lexer(text).filter(t => t.type !== 'code').map(t => t.raw).join('\n');
-const explicit = text => { const clean = prose(text), counts = checklist(text); return /(?:self-check|completion)[^]*?(?:passed|complete|verified)/i.test(clean) || counts.checked > 0 && counts.unchecked === 0 && counts.state !== 'unknown' && taskEvidence(clean); };
-const validation = text => { const clean = prose(text); return /(?:npm test|npm run build|playwright|test results|validation|checks?)/i.test(clean) && /(?:passed|passing|verified|\b\d+ tests?\b)/i.test(clean); };
+export const explicitCompletion = text => {
+  const clean = prose(text), counts = checklist(text);
+  const declaration = /^(?:self-check|completion)\s*[:—-]?\s*(?:passed|complete|verified)\.?$/im.test(clean)
+    || /^#{1,6}\s+(?:self-check|completion)\s*\n+\s*(?:Passed|Complete|Verified)\.?(?:\s|$)/im.test(clean);
+  return declaration || counts.checked > 0 && counts.unchecked === 0 && counts.state !== 'unknown' && validation(clean) && taskEvidence(clean);
+};
+const validation = text => {
+  const clean = prose(text);
+  return /\b(?:tests?|checks?|build|suite|validation)\s+(?:passed|passing|verified)\b|\bpassed\s+(?:all|\d+)\s+(?:tests?|checks?)\b/i.test(clean);
+};
 const taskEvidence = text => { const clean = prose(text); const evidence = clean.split(/^##?\s+Evidence\b/im)[1] || ''; return /(?:implementation|commit|verified|passed|tests?|checks?)/i.test(evidence) && !/Implementation has not started\./i.test(evidence); };
 const category = path => path.includes('/requirements/') ? 'Requirement' : /\/(specifications|decisions)\//.test(path) ? 'Specification' : path.includes('/tasks/') ? 'Plan' : null;
 function associations(path, text, previous) {
@@ -116,7 +124,7 @@ async function evidenceFor(root, data, git, head, diagnostics) {
           const s = step(phase);
           if (!s.commits.some(c => c.id === commit.id)) s.commits.push({ id: commit.id, subject: commit.subject });
           s.evidence.push(note('commit', path, 'Git records a distinguishable change to this phase.'));
-          if (explicit(text) && !explicit(previous) && phase !== 'Version preparation') {
+          if (explicitCompletion(text) && !explicitCompletion(previous) && phase !== 'Version preparation') {
             s.state = 'documented-complete';
             const candidates = completionIds.get(phase) || new Map();
             candidates.set(commit.id, { id: commit.id, subject: commit.subject });

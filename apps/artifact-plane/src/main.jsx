@@ -17,6 +17,7 @@ import {
 import { marked } from "marked";
 import DOMPurify from "dompurify";
 import { relationships } from "./graph.js";
+import { Workflow } from "./Workflow.jsx";
 import { canvasGraph } from "./canvas.js";
 import { knowledgeGroups, typeKey, historyKey } from "./elements.js";
 import "@xyflow/react/dist/style.css";
@@ -212,6 +213,7 @@ function App() {
     [selection, setSelection] = useState(null),
     [planning, setPlanning] = useState(false);
   const [expandedTypes, setExpandedTypes] = useState(new Set());
+  const [view, setView] = useState("canvas");
   const [filter, setFilter] = useState("");
   const workspaceRef = useRef(null);
   const [panelWidth, setPanelWidth] = useState(340),
@@ -479,10 +481,11 @@ function App() {
         <main className="canvas-area">
           <div className="canvas-toolbar">
             <div>
-              <strong>Dependency canvas</strong>
-              <small>Upstream → downstream</small>
+              <strong>{view === "canvas" ? "Dependency canvas" : "Workflow evidence"}</strong>
+              <small>{view === "canvas" ? "Upstream → downstream" : "Local worktrees · Git + Markdown"}</small>
             </div>
-            {snapshot && (
+            {snapshot && <div className="view-toggle" role="group" aria-label="Explorer view"><button aria-pressed={view === "canvas"} className={view === "canvas" ? "active" : ""} onClick={()=>setView("canvas")}>Canvas</button><button aria-pressed={view === "workflow"} className={view === "workflow" ? "active" : ""} onClick={()=>setView("workflow")}>Workflow</button></div>}
+            {snapshot && view === "canvas" && (
               <div
                 className="view-toggle"
                 role="group"
@@ -505,6 +508,7 @@ function App() {
               </div>
             )}
           </div>
+          <div style={{ display: view === "canvas" ? "contents" : "none" }}>
           {!snapshot || snapshot.artifacts.length === 0 ? (
             <div className="empty-canvas">
               <div className="empty-symbol">◇ → ◇</div>
@@ -581,6 +585,8 @@ function App() {
               </div>
             </details>
           )}
+          </div>
+          {view === "workflow" && snapshot && <Workflow workflow={snapshot.workflow} busy={busy} onOpen={(root)=>open(root)}/> }
         </main>
         <div
           className="inspector-divider"
