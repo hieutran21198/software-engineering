@@ -296,7 +296,7 @@ function App() {
   },[snapshot?.repository.path,loadedSession]);
   useEffect(()=>()=>{generation.current++;queueRef.current?.close();eventsRef.current?.close();completionController.current?.abort();},[]);
   useEffect(()=>{
-    const root=snapshot?.repository.path,target=unitWorktree;if(!root||!target||target===root||overviewRef.current?.workflow.worktrees.find(w=>w.path===target)?.loadState==='loaded')return;
+    const root=snapshot?.repository.path,target=unitWorktree;if(!root||!target||target===root||overviewRef.current?.workflow.worktrees.find(w=>w.path===target)?.availability!=='readable'||overviewRef.current?.workflow.worktrees.find(w=>w.path===target)?.loadState==='loaded')return;
     const controller=new AbortController(),session=generation.current;
     repositoryQuery({path:root,worktree:target,section:'overview'},controller.signal).then(result=>{if(session!==generation.current)return;const base=overviewRef.current;const next={...base,workflow:{...base.workflow,worktrees:base.workflow.worktrees.map(w=>w.path===target?result.data.workflow.worktrees.find(t=>t.path===target):w.selected?w:{...w,loadState:'not-loaded',unitsOfWork:[]})}};installOverview(next,true);}).catch(error=>{if(error.name!=='AbortError')setError(error.message);});
     return()=>controller.abort();

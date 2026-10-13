@@ -24,7 +24,7 @@ test('overview defers bodies/publication; scoped graphs and conclusions match fu
  }finally{await f.cleanup();}
 });
 test('scoped sources and registered roots reject traversal, aliases and malformed queries',async()=>{
- for(const body of [{path:'/tmp',section:'unknown'},{path:'/tmp',section:'overview',unit:'x'},{path:'/tmp',section:'completion',artifact:'x',change:'change-x'},{path:'/tmp',section:'markdown',unit:'x',source:'../secret'},{path:'/tmp',section:'overview',surprise:true}])assert.throws(()=>validateQuery(body));
+ for(const body of [{path:'relative',section:'overview'},{path:'/tmp',section:'unknown'},{path:'/tmp',section:'overview',unit:'x'},{path:'/tmp',section:'completion',artifact:'x',change:'change-x'},{path:'/tmp',section:'markdown',unit:'x',source:'../secret'},{path:'/tmp',section:'overview',surprise:true}])assert.throws(()=>validateQuery(body));
  const f=await fixtureRepository(changeDeliveryFixture());
  try{
   await assert.rejects(queryRepository({path:f.root,section:'overview',worktree:'/tmp'}),e=>e.status===422);

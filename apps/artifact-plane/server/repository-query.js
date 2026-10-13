@@ -13,8 +13,8 @@ const deferred={state:'not-loaded',reasons:['Evidence not loaded.'],sources:[]};
 const pending=()=>({state:'not-loaded',tasks:[],edges:[],diagnostics:[]});
 const digest=value=>createHash('sha256').update(JSON.stringify(value)).digest('hex');
 export function validateQuery(body){
- if(!body||typeof body!=='object'||Array.isArray(body)||Object.keys(body).some(k=>!keys.includes(k))||!sections.includes(body.section)||typeof body.path!=='string')throw new ExploreError(400,'Supply a repository path and supported section.');
- if(body.worktree!==undefined&&typeof body.worktree!=='string'||body.dependencyMode!==undefined&&!['established','planning'].includes(body.dependencyMode)||body.dependencyMode!==undefined&&body.section!=='artifacts')throw new ExploreError(400,'Invalid worktree or dependency mode.');
+ if(!body||typeof body!=='object'||Array.isArray(body)||Object.keys(body).some(k=>!keys.includes(k))||!sections.includes(body.section)||typeof body.path!=='string'||!isAbsolute(body.path)||body.path.includes('\0'))throw new ExploreError(400,'Supply a repository path and supported section.');
+ if(body.worktree!==undefined&&(typeof body.worktree!=='string'||!isAbsolute(body.worktree)||body.worktree.includes('\0'))||body.dependencyMode!==undefined&&!['established','planning'].includes(body.dependencyMode)||body.dependencyMode!==undefined&&body.section!=='artifacts')throw new ExploreError(400,'Invalid worktree or dependency mode.');
  for(const key of ['unit','artifact','change'])if(body[key]!==undefined&&!safeID(body[key]))throw new ExploreError(400,'Invalid knowledge selector.');
  if(body.change!==undefined&&!body.change.startsWith('change-'))throw new ExploreError(400,'Invalid change selector.');
  const unit=body.unit!==undefined,change=body.artifact!==undefined||body.change!==undefined,artifactOnly=!!body.artifact&&!body.change&&['artifacts','markdown'].includes(body.section);
@@ -45,7 +45,8 @@ function unitSummary(unit,snapshot,root,files,graphs=true){
 async function worktreeList(root,run){
  const list=parseWorktrees(await run(root,['worktree','list','--porcelain','-z'],true));
  for(const entry of list){entry.selected=entry.path===root;entry.loadState='not-loaded';entry.unitsOfWork=[];
-  try{const target=await realpath(entry.path);const knowledge=await realpath(resolve(target,'docs/artifacts'));const rel=relative(target,knowledge);entry.availability=rel!=='..'&&!rel.startsWith('..'+sep)&&!isAbsolute(rel)&&(await stat(knowledge)).isDirectory()?'readable':'non-add';}catch{entry.availability='unavailable';}
+  try{const target=await realpath(entry.path);const knowledge=await realpath(resolve(target,'docs/artifacts')).catch(error=>{if(error.code==='ENOENT')return null;throw error;});const rel=knowledge?relative(target,knowledge):null;entry.availability=knowledge&&rel!=='..'&&!rel.startsWith('..'+sep)&&!isAbsolute(rel)&&!rel.split(sep).includes('.git')&&(await stat(knowledge)).isDirectory()?'readable':'non-add';}catch{entry.availability='unavailable';}
+  if(entry.availability!=='readable')entry.diagnostics.push({code:'worktree-unavailable',path:'',message:entry.availability==='non-add'?'This worktree has no readable ADD directory.':'This registered worktree cannot be read.'});
  }
  return list;
 }
@@ -87,7 +88,7 @@ async function readQuery(body){
     if(!declaredSource&&!artifacts.some(a=>body.source===`docs/artifacts/${a}/README.md`))throw new ExploreError(404,'Source is outside the selected knowledge context.');
     const path=await realpath(resolve(target,body.source)).catch(()=>{throw new ExploreError(404,'Knowledge source no longer exists.');});const rel=relative(target,path);
     if(rel==='..'||rel.startsWith('..'+sep)||isAbsolute(rel)||rel.split(sep).includes('.git'))throw new ExploreError(422,'Unsafe knowledge source.');
-    const taskBase=body.source.match(/^(.*\/(?:changes\/change-[^/]+|versions\/\d+\.\d+\.\d+)\/tasks)\//)?.[1];if(taskBase){const directory=await realpath(resolve(target,taskBase));const taskRel=relative(directory,path);if(taskRel==='..'||taskRel.startsWith('..'+sep)||isAbsolute(taskRel))throw new ExploreError(422,'Unsafe task source.');}
+    const taskBase=body.source.match(/^(.*\/(?:changes\/change-[^/]+|versions\/\d+\.\d+\.\d+)\/tasks)\//)?.[1];if(taskBase){const directory=resolve(target,taskBase);const taskRel=relative(directory,path);if(taskRel==='..'||taskRel.startsWith('..'+sep)||isAbsolute(taskRel))throw new ExploreError(422,'Unsafe task source.');}
     const bytes=await readFile(path),markdown=bytes.toString('utf8');if(!bytes.equals(Buffer.from(markdown)))throw new ExploreError(422,'Knowledge is not valid UTF-8.');data={source:body.source,markdown};documentBytes=digest(markdown);
    }else{
     const detailed=body.section==='artifacts'?overview:await scanRepository(target,{metadata:true,indexOnly:true,full,git:run});
@@ -111,7 +112,7 @@ async function readQuery(body){
   }
   // Resolve protected refs fresh per request, never from immutable-byte cache.
   if(body.section!=='overview'){const current=await scanRepository(target,{metadata:true,indexOnly:true,full:readFull,git});if(current.revision!==readState.revision||current.snapshot.repository.head!==overview.snapshot.repository.head||current.snapshot.repository.status!==overview.snapshot.repository.status)entry.diagnostics.push({code:'stale-response',path:'',message:'Repository changed while loading; reload this section.'});}
-  if(documentBytes!==null){try{const current=await readFile(await realpath(resolve(target,body.source)),'utf8');if(digest(current)!==documentBytes)entry.diagnostics.push({code:'stale-response',path:body.source,message:'Knowledge changed while loading; reload this section.'});}catch{entry.diagnostics.push({code:'stale-response',path:body.source,message:'Knowledge disappeared while loading; reload this section.'});}}
+  if(documentBytes!==null){try{const freshPath=await realpath(resolve(target,body.source)),freshRelative=relative(target,freshPath);if(freshRelative==='..'||freshRelative.startsWith('..'+sep)||isAbsolute(freshRelative)||freshRelative.split(sep).includes('.git'))throw new ExploreError(422,'Unsafe changed source.');const current=await readFile(freshPath,'utf8');if(digest(current)!==documentBytes)entry.diagnostics.push({code:'stale-response',path:body.source,message:'Knowledge changed while loading; reload this section.'});}catch{entry.diagnostics.push({code:'stale-response',path:body.source,message:'Knowledge disappeared while loading; reload this section.'});}}
   const refs=await Promise.all(['main','master'].map(ref=>git(target,['rev-parse','--verify','refs/heads/'+ref]).catch(()=>null)));
   const currentTrees=await git(root,['worktree','list','--porcelain','-z'],true);
   const originalTrees=await run(root,['worktree','list','--porcelain','-z'],true);
