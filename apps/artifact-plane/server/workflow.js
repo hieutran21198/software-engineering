@@ -1,3 +1,4 @@
+import {readUnitsOfWork} from './units-of-work.js';
 import { buildTaskGraph } from './task-graph.js';
 import { parseArtifact } from "../src/model.js";
 import { marked } from "marked";
@@ -173,6 +174,7 @@ export async function readWorkflow(selectedRoot, selectedData, scan, git) {
       const data = entry.selected ? selectedData : await scan(entry.path);
       entry.availability = 'readable';
       entry.changes = await evidenceFor(entry.path, data, git, entry.head, entry.diagnostics);
+      entry.unitsOfWork = await readUnitsOfWork(entry.path, data, entry.changes, git, checklist);
     } catch (error) {
       entry.availability = error.status === 404 && error.message.includes('docs/artifacts') ? 'non-add' : 'unavailable';
       entry.diagnostics.push(diagnostic('worktree-unavailable', entry.availability === 'non-add' ? 'This worktree has no readable ADD directory.' : 'This registered worktree cannot be read.'));

@@ -26,6 +26,7 @@ test("local API response contract and validation reject hostile or malformed req
     "edges",
     "references",
     "repository",
+    "unitsOfWork",
     "workflow",
   ]);
   assert.equal(view.repository.path, fixture.root);

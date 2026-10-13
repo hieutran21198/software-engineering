@@ -14,6 +14,8 @@ import {
   Handle,
   Position,
 } from "@xyflow/react";
+import {UnitList, UnitView, UnitDetails} from './UnitsOfWork.jsx';
+import {unitContext, unitNode} from './unit-canvas.js';
 import Markdown from "./Markdown.jsx";
 import {TaskGraph, TaskGraphDetails} from "./TaskGraph.jsx";
 import {taskSelection} from "./task-canvas.js";
@@ -195,6 +197,7 @@ function App() {
   const [expandedTypes, setExpandedTypes] = useState(new Set());
   const [workflowSelected, setWorkflowSelected] = useState(null);
   const [taskChange, setTaskChange] = useState(null), [taskSelected, setTaskSelected] = useState(null);
+  const [unitSelected,setUnitSelected] = useState(null), [unitNodeSelected,setUnitNodeSelected] = useState(null), [unitWorktree,setUnitWorktree] = useState(null), [unitView,setUnitView] = useState('workflow'), [unitPlanning,setUnitPlanning] = useState(false);
   const [view, setView] = useState("canvas");
   const [workflowMounted,setWorkflowMounted] = useState(false);
   useEffect(()=>{if(view === "workflow") setWorkflowMounted(true);},[view]);
@@ -255,6 +258,11 @@ function App() {
       if (!response.ok)
         throw Error(result.error || "Repository could not be opened.");
       setSnapshot(result);
+      const nextUnit = refresh && unitContext(result,unitSelected,unitNodeSelected);
+      setUnitSelected(nextUnit ? unitSelected : null);
+      setUnitNodeSelected(nextUnit && unitNode(nextUnit,unitView,unitPlanning,unitNodeSelected) ? unitNodeSelected : null);
+      setUnitWorktree(current => refresh && result.workflow?.worktrees.some(w=>w.path===current) ? current : result.repository.path);
+      if (!refresh) {setUnitView('workflow');setUnitPlanning(false);}
       const taskContext = refresh && taskSelection(result.workflow, taskChange, taskSelected);
       setTaskChange(taskContext ? taskChange : null);
       setTaskSelected(taskContext?.task ? taskSelected : null);
@@ -339,6 +347,7 @@ function App() {
   function selectTarget(ref) {
     revealElement(ref.artifact, ref.targetId);
   }
+  const selectedUnit = unitContext(snapshot,unitSelected,unitNodeSelected);
   const taskContext = taskSelection(snapshot?.workflow, taskChange, taskSelected);
   const openTaskGraph = () => {setTaskChange(workflowSelected);setTaskSelected(null);};
   const onNodeClick = (_, node) => {
@@ -427,16 +436,16 @@ function App() {
                 </small>
               </div>
               <label className="sr-only" htmlFor="artifact-filter">
-                Filter artifacts
+                {view === "units" ? "Filter units of work" : "Filter artifacts"}
               </label>
               <input
                 id="artifact-filter"
                 className="filter"
-                placeholder="Filter artifacts…"
+                placeholder={view === "units" ? "Filter units of work…" : "Filter artifacts…"}
                 value={filter}
                 onChange={(e) => setFilter(e.target.value)}
               />
-              <nav aria-label="Artifacts">
+              <nav aria-label="Artifacts" style={{display:view === "units" ? "none" : undefined}}>
                 {snapshot.artifacts
                   .filter((a) =>
                     `${a.id} ${a.title}`
@@ -457,6 +466,7 @@ function App() {
                     </button>
                   ))}
               </nav>
+              {view === "units" && <UnitList snapshot={snapshot} worktreePath={unitWorktree} filter={filter} selected={unitSelected} onWorktree={value=>{setUnitWorktree(value);setUnitSelected(null);setUnitNodeSelected(null);}} onSelect={value=>{setUnitSelected(value);setUnitNodeSelected(null);}}/>}
             </>
           ) : (
             <p className="muted sidebar-help">
@@ -472,10 +482,10 @@ function App() {
         <main className="canvas-area">
           <div className="canvas-toolbar">
             <div>
-              <strong>{view === "canvas" ? "Dependency canvas" : "Workflow canvas"}</strong>
+              <strong>{view === "canvas" ? "Dependency canvas" : view === "units" ? "Units of work" : "Workflow canvas"}</strong>
               <small>{view === "canvas" ? "Upstream → downstream" : "Local worktrees · Git + Markdown"}</small>
             </div>
-            {snapshot && <div className="view-toggle" role="group" aria-label="Explorer view"><button aria-pressed={view === "canvas"} className={view === "canvas" ? "active" : ""} onClick={()=>setView("canvas")}>Dependencies</button><button aria-pressed={view === "workflow"} className={view === "workflow" ? "active" : ""} onClick={()=>setView("workflow")}>Workflow</button></div>}
+            {snapshot && <div className="view-toggle" role="group" aria-label="Explorer view"><button aria-pressed={view === "canvas"} className={view === "canvas" ? "active" : ""} onClick={()=>setView("canvas")}>Dependencies</button><button aria-pressed={view === "workflow"} className={view === "workflow" ? "active" : ""} onClick={()=>setView("workflow")}>Workflow</button><button aria-pressed={view === "units"} className={view === "units" ? "active" : ""} onClick={()=>setView("units")}>Units of work</button></div>}
             <div className="dependency-view-slot">{snapshot && view === "canvas" && (
               <div
                 className="view-toggle"
@@ -578,6 +588,7 @@ function App() {
           )}
           </div>
           {snapshot && workflowMounted && <div style={{display:view === "workflow" ? "contents" : "none"}}><div style={{display:taskContext ? "none" : "contents"}}><Workflow key={snapshot.repository.path} workflow={snapshot.workflow} selection={workflowSelected} onSelect={setWorkflowSelected}/></div>{taskContext && <TaskGraph key={taskChange} context={taskContext} selection={taskSelected} onSelect={setTaskSelected} onBack={()=>{setTaskChange(null);setTaskSelected(null);}}/>}</div>}
+          {snapshot && view === "units" && <UnitView context={selectedUnit} view={unitView} onView={value=>{setUnitView(value);setUnitNodeSelected(null);}} planning={unitPlanning} onPlanning={value=>{setUnitPlanning(value);setUnitNodeSelected(null);}} selection={unitNodeSelected} onSelect={setUnitNodeSelected}/>}
         </main>
         <div
           className="inspector-divider"
@@ -611,7 +622,7 @@ function App() {
           className="details-panel"
           aria-label="Selection details"
         >
-          {view === "workflow" ? taskContext ? <TaskGraphDetails context={taskContext} onClear={()=>setTaskSelected(null)}/> : <WorkflowDetails node={workflowSelection(snapshot?.workflow,workflowSelected)} workflow={snapshot?.workflow} busy={busy} onOpen={root=>open(root)} onClear={()=>setWorkflowSelected(null)} onTaskGraph={openTaskGraph}/> : artifact ? (
+          {view === "units" ? <UnitDetails context={selectedUnit} view={unitView} planning={unitPlanning} selection={unitNodeSelected} onSelect={setUnitNodeSelected}/> : view === "workflow" ? taskContext ? <TaskGraphDetails context={taskContext} onClear={()=>setTaskSelected(null)}/> : <WorkflowDetails node={workflowSelection(snapshot?.workflow,workflowSelected)} workflow={snapshot?.workflow} busy={busy} onOpen={root=>open(root)} onClear={()=>setWorkflowSelected(null)} onTaskGraph={openTaskGraph}/> : artifact ? (
             <>
               <div className="details-heading">
                 <span className="eyebrow">

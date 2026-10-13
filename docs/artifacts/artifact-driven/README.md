@@ -16,7 +16,7 @@ Project knowledge lives here. The canonical local method remains in docs/artifac
 
 None.
 
-The working branch prepares 1.2.0; it becomes established only after required team merges. The current main baseline remains 1.1.0 until then.
+Version 1.2.0 is established after PR #10 merged.
 
 ## Active change
 
