@@ -22,7 +22,7 @@ The version and snapshot links on this branch are proposed until required knowle
 
 ## Active change
 
-- [Codex execution visualization](changes/change-codex-execution/README.md)
+- [Task retention and navigation simplification](changes/change-task-retention/README.md)
 
 ## Knowledge snapshot
 
