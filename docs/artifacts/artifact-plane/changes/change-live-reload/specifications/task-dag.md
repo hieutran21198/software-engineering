@@ -21,7 +21,7 @@ Graph metadata does not change workflow phase inference or existing checklist se
 
 Selecting change delivery details in the Dependencies inspector exposes a View task graph action. Open the existing graph canvas within Dependencies with Back to dependencies and change identity. Reuse React Flow, existing dagre, fit/pan/zoom, and the current inspector. Edges mean task prerequisites; show this legend. Include disconnected nodes and deterministic layout. For invalid, unavailable, or empty graphs, show the reason and readable records without prerequisite edges.
 
-Task selection uses the existing safe Markdown renderer for scope, DoD, and evidence; display ID, source path, explicit prerequisites, and checklist counts. Never render raw Markdown HTML unsanitized. Return to the selected change without resetting history expansion. Retain inspector resize and narrow-layout behavior. Refresh retains selection only while the source still exists; otherwise clear it with the existing behavior. Opening another worktree clears task context. No background polling, file writes, or new browser persistence.
+Task selection uses the existing safe Markdown renderer for scope, DoD, and evidence; display ID, source path, explicit prerequisites, and checklist counts. Never render raw Markdown HTML unsanitized. Return to the selected change without resetting history expansion. Retain inspector resize and narrow-layout behavior. Refresh retains selection only while the source still exists; otherwise clear it with the existing behavior. Opening another worktree clears task context. Repository polling follows live-reload.md. No file writes or new browser persistence.
 
 ## Dependency and validation
 
