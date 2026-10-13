@@ -16,12 +16,11 @@ function UnitNode({data,selected}) {
  </div>;
 }
 const nodeTypes={unit:UnitNode};
-export function UnitList({snapshot,worktreePath,onWorktree,selected,onSelect,filter}) {
+export function UnitList({snapshot,worktreePath,selected,onSelect,filter}) {
  const worktrees=snapshot.workflow?.worktrees||[],worktree=worktrees.find(w=>w.path===worktreePath)||worktrees.find(w=>w.selected);
  return <section className="unit-list">
-  <label htmlFor="unit-worktree">Worktree</label><select id="unit-worktree" value={worktree?.path||''} onChange={e=>onWorktree(e.target.value)}>{worktrees.map(w=><option key={w.path} value={w.path}>{w.branch||'Detached'} · {w.selected?'selected':w.path}</option>)}</select>
   <nav aria-label="Units of work">{(worktree?.unitsOfWork||[]).filter(u=>`${u.id} ${u.title}`.toLowerCase().includes(filter.toLowerCase())).map(unit=><button className={`artifact-list-item ${selected===unitKey(worktree,unit)?'active':''}`} key={unit.id} onClick={()=>onSelect(unitKey(worktree,unit))}><span>{unit.title}</span><small>{unit.members.length} participating changes · {completionLabel(unit.completion)}</small></button>)}</nav>
-  {!worktree?.unitsOfWork?.length&&<p className="muted">No unit-of-work briefs in this worktree. Existing artifact and workflow views remain available.</p>}
+  {!worktree?.unitsOfWork?.length&&<p className="muted">No unit-of-work briefs in this worktree. Explore artifacts and delivery work in Dependencies.</p>}
  </section>;
 }
 export function UnitView({context,view,onView,planning,onPlanning,selection,onSelect,recorded=false}) {

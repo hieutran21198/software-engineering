@@ -29,7 +29,7 @@ All browser assets are bundled locally. The application uses no database, accoun
 
 ## Implementation task graphs
 
-In Workflow, select a change and choose View task graph. Arrows point from prerequisite tasks to dependent tasks. Select a task to read its source, scope, DoD, and documented evidence. Back to workflow preserves the selected change and history expansion.
+In Dependencies, select an artifact, then a delivery change in the inspector, and choose View task graph. Arrows point from prerequisite tasks to dependent tasks. Select a task to read its source, scope, DoD, and documented evidence. Back to dependencies preserves the selected change and history expansion.
 
 Current plan membership comes from the tasks list in YAML front matter in tasks/README.md. Each listed task declares id and depends_on. Unlisted files remain historical knowledge. A plan without a task list shows Task graph unavailable; an explicit empty list shows No planned tasks. Invalid declarations show diagnostics and no execution edges. Checklists are documented evidence; they do not verify completion, approval, or running agents. External artifact gates remain separate.
 
@@ -43,9 +43,13 @@ docs/artifacts/
   tenant/
     README.md
     versions/1.0.0/
+      README.md                 # source_change and delivery_tasks: change
       requirements/*.md
       specifications/*.md
       decisions/*.md
+    changes/change-initial/
+      README.md
+      tasks/README.md           # retained originating plan
       tasks/*.md
     changes/change-next/
       README.md
@@ -55,6 +59,8 @@ docs/artifacts/
       decisions/*.md
       tasks/*.md
 ```
+
+Legacy versions without delivery_tasks may retain their task directories; those records remain readable. New versions link their originating change tasks instead of copying them.
 
 Knowledge directories can contain nested Markdown files. An artifact is an immediate child directory with a root README. Zero change directories means no active change; one is active; multiple are shown as ambiguous candidates. The application does not guess from timestamps or directory version order.
 
@@ -149,17 +155,19 @@ The tests build temporary Git fixtures and check supported formats, graph rules,
 
 Primary type groups contain the current version. Open **Change histories**, a change name, and a type to inspect retained change records. Reference selection opens the correct source automatically.
 
-Use **Dependencies** for the artifact DAG. Select **Workflow** to see registered local worktrees, branches, paths, inferred steps, task evidence, and associated commits. Pan, zoom, or fit the workflow canvas. Each worktree shows current changes with six phases in ADD order: Requirement, Specification, Plan, Implementation, Validation, and Version preparation. Retained changes are under **Change histories**, closed by default. Open that group, then expand a change to see its phases. Histories sort by the latest inspected Git committer timestamp for their change directory, newest first; unknown times sort last. Retained sources do not prove finished execution. Lines show phase order, not completion or artifact dependencies. Select a worktree, change, or phase to inspect details in the resizable panel. Expand a commit to inspect its full ID and message. **Open worktree** opens another readable ADD worktree. Steps can be unknown, and associated commits do not prove approval or successful checks. Copied tasks are marked inherited. Squash commits can appear under several steps. The view reads at most 200 relevant commits per worktree and reports shallow or limited history. Use **Refresh** to read again; the application has no polling or execution controls.
+Use **Dependencies** for the artifact DAG and **Units of work** for grouped outcomes. The standalone Workflow tab has been removed; unit Workflow remains available. The shared sidebar lists registered worktrees with branch, path, HEAD, and unavailable/detached/locked/prunable details. **Open worktree** explicitly opens a readable source. Selecting a worktree alone does not switch Git branches.
+
+Select an artifact to inspect its **Delivery work**. Current changes are visible; delivery histories start closed and sort by bounded Git recency, newest first and unknown last. Select a change to inspect Requirement, Specification, Plan, Implementation, Validation, and Version preparation evidence. Select a phase for evidence and associated commits; expand a commit for its full ID. The inspector preserves evidence through history collapse and view switching. Steps can be unknown; commits, checklists, and retained sources do not prove approval, running agents, or independently verified completion. Squash and limited/shallow history retain uncertainty. At most 200 relevant commits per worktree are inspected. Use **Refresh** to read again.
 
 ## Units of work
 
-Select **Units of work**, choose a local worktree, then select an outcome. Its detail panel shows the brief, participating changes, shared acceptance criteria, recorded check results, and completion reasons. Repositories without briefs retain the existing dependency and workflow views.
+Select **Units of work**, choose a local worktree, then select an outcome. Its detail panel shows the brief, participating changes, shared acceptance criteria, recorded check results, and completion reasons. Repositories without briefs retain dependency exploration and individual delivery evidence/task graphs.
 
 Use **Workflow** for grouped member phase evidence, **Artifacts** for current established/planning dependencies, and **Implementation** for the combined task graph. External prerequisites are not members. Solid task arrows stay within their owning plan; dashed arrows represent version-establishment gates. Phase lines show sequence only. Selecting a node displays its exact knowledge source and evidence. Pan, zoom, and Fit View work in each view.
 
-The reader discovers docs/artifacts/units-of-work/<name>/README.md as outcome knowledge, never as artifact nodes. Each brief has unit_of_work, changes, acceptance, and optional evidence metadata. A delivered version README uses source_change to preserve the originating change. Shared check sources reference safe Markdown paths and optional heading fragments. Invalid or missing knowledge stays visible through diagnostics.
+The reader discovers docs/artifacts/units-of-work/<name>/README.md as outcome knowledge, never as artifact nodes. Each brief has unit_of_work, changes, acceptance, and optional evidence metadata. A delivered version README uses source_change to preserve the originating change. New versions also declare delivery_tasks: change and contain no task copies. Their task graphs and DoD evidence resolve from that exact retained originating change. Versions without the marker retain legacy version-owned task semantics. Shared check sources reference safe Markdown paths and optional heading fragments. Invalid or missing knowledge stays visible through diagnostics.
 
-Completion is supported by documented evidence only when every member has a matching complete delivered snapshot on local main/master, explicit all-required-merge review evidence, and passing shared acceptance/integration checks. A branch-only version is proposed; unavailable proof is unknown. Historical outcomes use delivered versions, including when the original change directory is removed or current artifact versions advance. Check assertions are shown as recorded evidence; the explorer does not run them.
+Completion is supported by documented evidence only when every member has a matching complete delivered snapshot on local main/master, explicit all-required-merge review evidence, and passing shared acceptance/integration checks. A branch-only version is proposed; unavailable proof is unknown. Historical outcomes use exact delivered knowledge and delivery records even when current artifact versions advance. New-layout completion also requires the retained originating task path set and bytes to match protected-ref publication. Missing, modified, invalid, or branch-only sources cannot prove completion. Legacy version-owned evidence remains readable after its original change directory is removed. Check assertions are shown as recorded evidence; the explorer does not run them.
 
 A scoped publication-review paragraph in the brief can name an artifact and delivered version, followed by an explicit assertion that all required knowledge and implementation changes have landed on main/master. This supplies review evidence without changing an established snapshot; it cannot replace protected-ref verification. No outcome status or aggregate DAG is written to disk.
 

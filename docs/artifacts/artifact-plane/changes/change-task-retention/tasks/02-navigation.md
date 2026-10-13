@@ -17,11 +17,15 @@ Requirements R1–R5 in requirements/task-retention.md; specifications/task-rete
 
 ## Definition of Done
 
-- [ ] Browser checks show Dependencies and Units of work without a standalone Workflow button; unit Workflow remains operable.
-- [ ] Repositories with no briefs expose ungrouped change phases, full commits, histories, task graphs, and Back to dependencies.
-- [ ] Explicit worktree opening, detached/unavailable details, refresh/selection reset, inspector resizing, keyboard and narrow-screen controls pass.
-- [ ] Recorded executions, exact task evidence navigation, and read-only fingerprints remain valid.
+- [x] Browser checks show Dependencies and Units of work without a standalone Workflow button; unit Workflow remains operable.
+- [x] Repositories with no briefs expose ungrouped change phases, full commits, histories, task graphs, and Back to dependencies.
+- [x] Explicit worktree opening, detached/unavailable details, refresh/selection reset, inspector resizing, keyboard and narrow-screen controls pass.
+- [x] Recorded executions, exact task evidence navigation, and read-only fingerprints remain valid.
 
 ## Evidence
 
-Not executed. Record check commands, observed results, and relevant implementation references here after approved implementation.
+Ten targeted Chromium browser acceptance cases passed for task graphs, unit views, new-layout retained evidence, history ordering, primary navigation, worktree details/opening, refresh/selection reset, safe Markdown, responsive layout, and read-only fingerprints. Three additional runtime/recorded-history and pointer/keyboard resize cases passed. Commands: PLAYWRIGHT_CHROMIUM_EXECUTABLE_PATH=<installed system Chromium> npx playwright test for workflow, workflow-histories, task-graph, visualization-clarity, units-of-work, runtime, and resize specs. npm run build passed. git diff --check passed.
+
+The initial browser pass caught a selection-reset error on repository opening; the condition was corrected, the production bundle rebuilt, and the affected worktree/task checks passed. Local sockets required sandbox escalation; no test failure was treated as passing. Wide and narrow screenshots were inspected.
+
+The standalone Workflow component/helper and unused state/styles are removed. Delivery.jsx supplies sidebar worktrees and change phase/evidence inspection; existing TaskGraph provides Back to dependencies. Unit Workflow and recorded executions remain. KISS reuses existing graph/rendering/selection and STE labels evidence uncertainty. All navigation DoD criteria are satisfied.
