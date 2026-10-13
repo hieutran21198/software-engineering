@@ -18,4 +18,14 @@ Complete Requirement, Specification, and Plan with self-checks and separate phas
 
 Validate task DoD and the integrated change. Prepare proposed versions and linked PRs for changed repositories, then stop for team review and merge. Never commit directly to `main`, `master`, or another protected branch. A version becomes established only after all required knowledge and code land on `main` or `master`. If a repository has no remote, ask the user how to finish. Derive progress from artifacts, task evidence, Git, and available user approval; do not add a workflow state database.
 
+## Project Units of Work
+
+Use a unit of work for each new ADD outcome in this project, including outcomes with one artifact change. Follow the [unit-of-work format](docs/artifact-driven/06-guidelines/units-of-work.md). Store briefs at docs/artifacts/units-of-work/<name>/README.md with one deliverable outcome, included/excluded scope, structured member changes, shared acceptance criteria, and validation evidence. Each participating change belongs to exactly one unit. The directory contains outcome knowledge, not artifact nodes or a workflow state registry.
+
+The coordinator owns membership and shared evidence. Keep artifact-local requirements, specifications, decisions, and tasks with their owners. Use the existing artifact and implementation task DAGs; membership creates no dependency and does not bypass plan approval or upstream establishment. Derive workflow and completion from knowledge, evidence, Git, and available approvals.
+
+Prepare source_change provenance in each new version README. Preserve delivered versions and referenced evidence for historical outcomes; do not rewrite established legacy snapshots or invent their membership. Record combined checks in the brief and reference delivered task evidence where sufficient. Completion requires all member versions to establish and all shared acceptance/integration criteria to have supporting evidence.
+
+The [current unit of work](docs/artifacts/units-of-work/unit-of-work-exploration/README.md) groups the ADD and Artifact Plane changes for unit-of-work exploration.
+
 Harness setup alone does not authorize a domain change, implementation, commits, pushes, or merges. Preserve existing edits and unrelated instructions.

@@ -18,7 +18,7 @@ If an artifact becomes too large, the user can split it into smaller boundaries.
 
 ## Keep One Active Change per Artifact
 
-Requirements, specifications, ADRs, and tasks form one coordinated change. Parallel implementation tasks can work across applications, services, or repositories when their dependencies allow it. Independent artifacts can also progress in parallel under the artifact DAG.
+Requirements, specifications, ADRs, and tasks form one coordinated artifact change. A unit of work can group changes from several artifacts around one outcome, with shared scope and acceptance criteria. Membership adds no dependency and stores no workflow state. Parallel implementation tasks can work across applications, services, or repositories when their dependencies allow it. Independent artifacts can also progress in parallel under the artifact DAG.
 
 ## Establish Contracts Before Parallel Implementation
 

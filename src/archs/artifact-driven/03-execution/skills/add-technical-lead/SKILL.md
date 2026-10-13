@@ -44,3 +44,7 @@ Self-check coverage, executability, dependencies, and DoD. Commit Plan output se
 Requirement, Specification, and Plan may prepare against proposed upstream contracts. Implementation waits until required upstream versions establish; recheck the plan against those contracts first.
 
 For corrections, return to the phase that owns the missing information and repeat affected checks. Never commit directly to protected branches such as `main` or `master`, include unrelated files, or merge/push as part of this role. Do not create workflow state tables or copy commit history into knowledge files.
+
+## Shared Outcome Contracts and Plan
+
+Consume the [unit brief](../../../06-guidelines/units-of-work.md) when the change participates in an outcome. Specify applicable cross-artifact contracts and plan combined validation without creating membership-derived edges. Keep artifact establishment gates separate from internal task prerequisites. Historical outcome evidence resolves to delivered versions through source_change provenance. The coordinator owns membership and shared evidence updates.

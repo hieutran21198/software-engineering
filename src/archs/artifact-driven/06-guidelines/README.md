@@ -5,6 +5,7 @@ Use these guides to adopt ADD and carry out the first artifact change. They supp
 | Guide | Purpose |
 | --- | --- |
 | [Getting started](getting-started.md) | Choose a knowledge workspace, identify an artifact, and complete the first change. |
+| [Units of work](units-of-work.md) | Group artifact changes around one outcome and record shared validation knowledge. |
 | [Writing artifacts](writing-artifacts.md) | Write root READMEs, requirements, specifications, decisions, and task plans. |
 | [Adopting from a release](adopting-from-git.md) | Download a verified binary, copy ADD, and let the consumer AI set up its harness. Includes an agent-ready request. |
 | [Working with AI](working-with-ai.md) | Required role capabilities, focused project instructions, plan approval, and team merge review. |

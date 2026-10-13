@@ -1,6 +1,6 @@
 # Workflow
 
-An artifact has one active change. Each phase finishes and validates its output before the next phase consumes it. Corrections remain in the same change.
+A unit of work groups artifact changes around one deliverable outcome. Each artifact retains one active change. The coordinator records shared scope, participating changes, acceptance criteria, and combined validation evidence in a unit brief; owning artifacts retain their detailed knowledge. Each phase finishes and validates its output before the next phase consumes it. Corrections remain in the same change.
 
 ## Roles and Phase Gates
 
@@ -35,6 +35,12 @@ The plan produces `tasks/README.md` and task files. Each task records its scope,
 Each assigned developer or AI agent implements a task, adds or updates tests, runs its DoD checks, and records evidence in the task. Parallel tasks must respect their dependencies and established contracts.
 
 The coordinator validates the combined implementation and handles failures across task boundaries. Dependent Implementation begins only after required upstream changes establish their versions and the prepared specifications and plan are rechecked against them.
+
+## Shared Outcome Validation
+
+Validate each member's task DoD and the combined outcome. Completion requires all participating changes to produce established versions, evidence supporting every shared acceptance criterion, and passing required integration checks. Record combined checks in the unit brief; reference delivered task evidence where sufficient. Checked tasks and phase inference alone do not prove establishment or approval.
+
+Dependent implementation still waits for required upstream establishment, even when both artifacts belong to the same unit. Preparing a unit does not bypass the plan approval or team merge gates. Historical completion uses delivered versions and their evidence rather than later current versions. Missing knowledge or merge evidence remains unresolved.
 
 ## Corrections
 

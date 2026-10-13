@@ -6,7 +6,7 @@ Artifact-Driven Development is an approach to software engineering that puts art
 
 An artifact is a structured, versioned unit of knowledge managed through explicit changes. It represents a cohesive business or technical capability. Its knowledge includes requirements, specifications, applicable architectural decisions, and an implementation plan with validation criteria and evidence.
 
-Teams use these artifacts to establish what to build, why it is needed, what it depends on, and how to check the result. The artifacts provide shared context for implementation and coordination.
+Teams use these artifacts to establish what to build, why it is needed, what it depends on, and how to check the result. The artifacts provide shared context for implementation and coordination. A unit of work groups artifact changes around one deliverable outcome. ADD manages knowledge; progress and completion are derived from that knowledge, validation evidence, and Git.
 
 This directory documents the approach.
 

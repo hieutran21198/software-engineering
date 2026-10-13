@@ -7,6 +7,9 @@ The following layout illustrates a project using ADD. It describes project artif
 ```text
 docs/artifacts/
 ├── dag.yaml
+├── units-of-work/
+│   └── <outcome>/
+│       └── README.md
 └── tenant/
     ├── README.md
     ├── changes/
@@ -21,6 +24,7 @@ docs/artifacts/
     │           └── <task>.md
     └── versions/
         └── <major>.<minor>.<patch>/
+            ├── README.md
             ├── requirements/
             ├── specifications/
             ├── decisions/
@@ -30,6 +34,12 @@ docs/artifacts/
 ```
 
 Use `decisions/` when applicable ADRs exist. Use `dependencies.yaml` in an active change when it proposes dependency updates.
+
+## Units of Work
+
+A unit of work groups one or more artifact changes around one deliverable outcome. Each participating change belongs to one unit; the initial format permits one change per artifact in a unit. Shared scope and acceptance criteria belong in its brief. Detailed requirements, contracts, decisions, and tasks remain with the owning artifacts.
+
+The reserved units-of-work directory contains outcome briefs, not artifact roots or DAG nodes. Membership creates no execution edge. Existing artifact and task DAGs remain authoritative. Workflow, dependency projections, implementation gates, and completion are derived views. See [unit-of-work format](../06-guidelines/units-of-work.md).
 
 ## Root README
 
@@ -47,9 +57,11 @@ For each new or materially revised plan, list current task paths in YAML front m
 
 A version contains the complete resulting requirements, specifications, applicable decisions, and implementation plan. Task files retain their DoD checklists and validation evidence. Code and executable tests remain in the relevant implementation locations, with references from tasks where needed.
 
+A newly prepared version README declares source_change in YAML front matter, identifying its originating artifact-local change. One version results from one change; one established version can claim that change. Do not add provenance retroactively to an established snapshot or infer it for legacy knowledge.
+
 A snapshot prepared on a change branch is proposed. It becomes established only after all required knowledge and implementation changes land on `main` or `master`. The coordinator opens the PRs and stops for team review and merge. With no remote, ask the user how to complete integration; do not assume a solo merge.
 
-Old changes and versions serve review purposes only. The current baseline must remain usable if that history is removed. If the current implementation has a defect or lacks required code, tests, or evidence, address it through a new change.
+Versions participating in a retained unit of work preserve its delivered knowledge and evidence. Keep their provenance and referenced evidence readable for historical completion; removing them makes that evidence unavailable. Other old changes and versions serve review purposes only. The current baseline must remain usable if that history is removed. If the current implementation has a defect or lacks required code, tests, or evidence, address it through a new change.
 
 ## Five-Phase Flow
 

@@ -28,3 +28,7 @@ Commit completed Requirement output on the dedicated change branch when operatin
 If the TL finds a requirement blocker, revise and repeat the self-check within the same change, then commit the corrected output. Preserve unaffected valid knowledge.
 
 Use artifacts and Git as evidence. Do not add workflow status tables or an approval database. Hand off completed requirements and any explicit unresolved issues; do not claim completion while blockers remain.
+
+## Shared Outcome Requirements
+
+When assigned a member of a unit of work, consume its outcome scope and shared acceptance criteria from the [unit brief](../../../06-guidelines/units-of-work.md). Keep artifact-local requirements under their owner. Identify affected members and integration needs; do not copy shared criteria into a second authority. The coordinator controls membership and the shared brief.

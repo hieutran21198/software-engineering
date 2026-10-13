@@ -6,7 +6,9 @@
 | Artifact | A structured, versioned unit of knowledge managed through explicit changes. It represents a cohesive unit of knowledge, responsibility, and change. |
 | Actor | A human developer or AI agent that investigates, defines, implements, or validates work. |
 | Established version | The complete knowledge state after a change satisfies its DoD and all required knowledge and implementation changes land on `main` or `master`. Dependencies use the current established version. |
-| Change | One coordinated unit of work within an artifact. It starts as a copy of the current established version and adds, amends, or removes information. An artifact has at most one active change. |
+| Change | An artifact-local revision of knowledge. It starts as a copy of the current established version and adds, amends, or removes information. An artifact has at most one active change. |
+| Unit of work | A documented deliverable outcome that groups changes to one or more artifacts. Each participating change belongs to exactly one unit of work; membership creates no dependency. |
+| Version provenance | The originating artifact-local change named by a version snapshot, preserving membership after establishment. |
 | Requirement | A business or technical need, rule, or constraint that motivates and governs the work. |
 | Specification | Detailed behavior, domain knowledge, and technical contracts that define how requirements will be satisfied. |
 | Architectural Decision Record (ADR) | A record of a necessary architectural decision that required evaluation of multiple options. ADRs belong to Specification. |
