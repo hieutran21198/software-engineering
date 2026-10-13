@@ -23,3 +23,7 @@ Scope and checks cover the governing contract. KISS retains existing tools. STE 
 ## Validation evidence
 
 The integrated change passed 25 Node tests, the production build, and all 7 Chromium browser tests. Real Git fixtures verify six phases, retained versus snapshot-matching history, ambiguous active metadata, committer timestamps, and uncommitted null timestamps. B17–B18 verify newest-first order despite conflicting names, natural ties, unknown times last, closed history and change containers, independent expansion, evidence preservation after collapse, absent Approval nodes, and identical centered switcher positions in both views at desktop and 700-pixel widths. Existing pan/zoom/fit, resize, refresh invalidation, and worktree-opening checks pass. Inspected repository files and Git metadata fingerprints remain unchanged. Desktop and narrow history screenshots were inspected. KISS retains existing libraries and bounded local reads; STE preserves uncertainty and retained-history meaning. Existing Vite client-directive and bundle-size warnings remain non-blocking.
+
+## Version preparation
+
+The user confirmed version 1.4.0. This release adds workflow history navigation and fixes phase presentation and toolbar behavior. The internal workflow payload removes the synthetic Approval entry and adds derived history/recency fields. No external consumer or upstream artifact depends on this local application API. Version 1.3.0 remains established until knowledge and implementation merge together.
