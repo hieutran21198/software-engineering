@@ -10,7 +10,7 @@ R5. Preserve read-only access, explicit refresh, worktree isolation, selection, 
 
 ## Acceptance examples
 
-Opening Plane shows no top-level Workflow button. A selected unit still exposes Workflow, Artifacts, and Implementation. A repository without briefs still exposes change task graphs and phase evidence. A task-free delivered version resolves its retained change plan; an old version with tasks retains its historical graph. Uncommitted changes to delivered evidence prevent supported completion.
+Opening Plane shows no top-level Workflow button. A selected unit still exposes Artifacts, Workflow, and Implementation. A repository without briefs still exposes change task graphs and phase evidence. A task-free delivered version resolves its retained change plan; an old version with tasks retains its historical graph. Uncommitted changes to delivered evidence prevent supported completion.
 
 ## Impact and self-check
 

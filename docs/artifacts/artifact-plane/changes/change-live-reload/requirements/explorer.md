@@ -95,7 +95,7 @@ Compact records, resizing, references, and read-only rules remain valid.
 17. List all local worktrees registered to the opened repository. Show branch, absolute path, HEAD, and selected worktree. Provide an explicit action to open another readable ADD worktree. Represent detached, locked, prunable, unavailable, and non-ADD entries honestly. Do not switch Git branches or scan unrelated repositories.
 18. For each readable ADD worktree, show discovered changes and the best-supported current step: Requirement, Specification, Plan, Implementation, Validation, or Version preparation. Distinguish observed work, inferred progress, documented completion, and unknown state. Show task evidence. A clean tree, filename, directory, or commit message alone must not prove approval, validation, or a running agent.
 19. Show associated commit IDs and messages for each step from that worktree's Git history. Short IDs serve lists; full IDs remain inspectable. When a finished step has documented completion, show its evidence and associated commits. If its exact completion commit cannot be identified, say so. Preserve multiple commits and squash ambiguity.
-20. Read on Open or Refresh only. No polling, execution controls, file writes, database, authentication, AI inference, or background workers. One unavailable worktree must not prevent opening the selected repository.
+20. Read on Open, manual Refresh, or repository invalidation under requirements/live-reload.md. No execution controls, file writes, workflow database, authentication, or AI inference. One unavailable worktree must not prevent opening the selected repository.
 
 ## Additional behavior examples
 
@@ -112,11 +112,11 @@ The scope stays within Artifact Plane. B11–B14 cover source separation, worktr
 
 21. Present registered worktree selection and details in the repository sidebar. Show branch, path, HEAD, availability and detached/locked/prunable states. Opening another readable worktree remains explicit.
 22. In Dependencies, expose change delivery details and phase evidence through the inspector, with full commit IDs, messages, completion evidence, and uncertainty. A change can open its task graph with Back to dependencies. Preserve access in repositories without unit briefs.
-23. Remove the standalone Workflow tab and canvas. Preserve unit Workflow, dependency exploration, worktree/history access, and recorded executions. Add no automatic refresh, execution controls, approval inference, or repository writes.
+23. Remove the standalone Workflow tab and canvas. Preserve unit Workflow, dependency exploration, worktree/history access, and recorded executions. Automatic refresh follows requirements/live-reload.md. Add no execution controls, approval inference, or repository writes.
 
 ### B15 — Delivery evidence exploration
 
-Given local worktrees and changes, the sidebar shows registered sources. Selecting an artifact and change opens its phase evidence and task graph. Selecting a unit still offers Workflow, Artifacts, and Implementation.
+Given local worktrees and changes, the sidebar shows registered sources. Selecting an artifact and change opens its phase evidence and task graph. Selecting a unit still offers Artifacts, Workflow, and Implementation.
 
 ### B16 — View and source safety
 
