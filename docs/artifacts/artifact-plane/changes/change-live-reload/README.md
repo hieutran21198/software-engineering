@@ -13,6 +13,7 @@ All required knowledge and implementation changes for this outcome reside in thi
 - [Unit requirements](requirements/units-of-work.md)
 
 - [Repository update contract](specifications/live-reload.md)
+- [Lazy exploration contract](specifications/lazy-loading.md)
 - [Update mechanism decision](decisions/007-repository-updates.md)
 
 - [Implementation plan](tasks/README.md)

@@ -9,7 +9,7 @@ depends_on: []
 
 Own apps/artifact-plane/server/reader.js, workflow.js, units-of-work.js, reload reuse helpers, and benchmark/reader tests. Record the fixed-corpus baseline before changing code. Implement duplicate-command coalescing, immutable historical byte reuse with a bounded cache, and batched or bounded Git reads. Keep publication conclusions fresh. Do not weaken evidence or skip worktrees.
 
-Repository: software-engineering. Governing artifact-local elements: requirements/live-reload.md, specifications/live-reload.md, and decisions/007-repository-updates.md. Preserve established explorer, task DAG, units-of-work, runtime, and retained-delivery contracts. These element paths identify governing knowledge; they are not links to ancestor documentation.
+Repository: software-engineering. Governing artifact-local elements: requirements/live-reload.md, specifications/live-reload.md, specifications/lazy-loading.md, and decisions/007-repository-updates.md. Preserve established explorer, task DAG, units-of-work, runtime, and retained-delivery contracts. These element paths identify governing knowledge; they are not links to ancestor documentation.
 
 ## Prerequisites
 
