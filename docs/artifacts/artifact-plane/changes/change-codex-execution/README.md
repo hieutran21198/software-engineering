@@ -16,3 +16,5 @@ Baseline knowledge and historical evidence are copied from 1.6.0. They do not va
 
 - [Execution specification](specifications/codex-execution.md)
 - [Observer decision](decisions/006-codex-observer.md)
+
+- [Implementation plan](tasks/README.md)

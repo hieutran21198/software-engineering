@@ -1,46 +1,40 @@
 ---
 tasks:
-  - 17-unit-reader.md
-  - 18-unit-graphs.md
-  - 19-unit-interface.md
-  - 20-unit-integrated-validation.md
+  - 21-runtime-store.md
+  - 22-codex-hooks.md
+  - 23-runtime-api.md
+  - 24-runtime-graphs.md
+  - 25-execution-validation.md
 ---
 
-# Units-of-work implementation plan
+# Codex execution visualization plan
 
-## Current work
+## Current tasks
 
-- [Read unit knowledge and derive establishment evidence](17-unit-reader.md).
-- [Derive aggregate dependency and implementation graphs](18-unit-graphs.md).
-- [Explore units and their three aggregate views](19-unit-interface.md).
-- [Validate integrated outcome and prepare Plane publication](20-unit-integrated-validation.md).
+- [Persist execution observations and exact task bindings](21-runtime-store.md)
+- [Report Codex lifecycle activity and document task binding](22-codex-hooks.md)
+- [Expose local execution queries and SSE invalidation](23-runtime-api.md)
+- [Show artifact ownership and observed concurrent execution](24-runtime-graphs.md)
+- [Validate integrated Codex visibility and prepare publication](25-execution-validation.md)
 
-Copied earlier tasks remain historical/contextual and are excluded from this graph. Their prior test results do not validate this change.
+## Implementation DAG
 
-## Execution and external gates
+runtime-store precedes codex-hooks and runtime-api. runtime-graphs follows runtime-store and runtime-api. execution-validation joins codex-hooks, runtime-api, and runtime-graphs.
 
-All Plane implementation waits for artifact-driven/change-units-of-work to establish. Recheck specifications/units-of-work.md against the owning artifact current established version before execution. Renew approval for material differences. The existing artifact-plane dependency on artifact-driven remains unchanged.
+Hook and API work can proceed independently after storage/binding contracts pass their DoD. Use sequential execution in this session unless independent implementers are explicitly selected under coordinator instructions; parallel implementers require separate worktrees/branches and nonconflicting ownership. All knowledge updates remain under coordinator control. The UI must visualize actual concurrent attempts even when this feature is implemented sequentially.
 
-Execute the task chain sequentially. Its dependencies do not justify parallel implementer worktrees. Preserve all valid knowledge and unrelated implementation. Do not introduce a workflow state registry.
+## Approval and external gates
 
-## Coordination and publication
+Present this plan for explicit user approval before implementation. No approval is claimed. The established artifact-plane dependency on artifact-driven remains unchanged. Recheck task/unit contracts against current established artifact-driven 1.2.0 before dispatch. Material changes return to Specification/Plan and renewed approval.
 
-The shared outcome is unit-of-work grouping and aggregate exploration across ADD and Plane. Create its brief during approved upstream implementation. Publish ADD first; only after team merge and contract recheck may Plane implementation begin. Shared outcome completion waits for both delivered versions and shared acceptance/integration evidence.
+## Delivery and version
 
-Propose 1.6.0 for additive exploration and response fields. The user confirms or overrides versions during Version preparation. Required knowledge/code merges establish versions; PR creation does not. Historical completion remains tied to these delivered versions.
+The shared outcome is codex-execution-visualization with one Artifact Plane member. Runtime observations stay outside Git. Retain historical tasks as unlisted context; copied prior results do not validate this change. Suggest 1.7.0 for the additive observer feature; user confirms/overrides during Version preparation. Preserve complete valid knowledge, prepare source_change: change-codex-execution in the version README, and prepare a PR. Stop for team review and merge.
 
 ## Plan self-check
 
-All new requirements map to tasks and concrete DoD. Internal edges form a sequential acyclic chain; inherited tasks are excluded. Existing artifact DAG remains artifact-driven -> artifact-plane. Knowledge formats, gates, safe discovery, aggregation, browser behavior, and integration validation are covered. KISS reuses current libraries/readers and STE keeps evidence and establishment distinct. The user explicitly approved this plan. ADD 1.2.0 established before dependent execution; the upstream recheck passed. Implementation evidence is recorded in the listed tasks.
+R1–R10 map to storage/binding, lifecycle adapter, runtime API, UI, and integration tasks. Unique IDs, explicit prerequisites, and the validation join form an acyclic executable graph. DoD covers persistence, concurrency, missing-source recovery, runtime freshness, evidence semantics, local boundaries, read-only knowledge, and browser behavior. KISS reuses built-in SQLite and current graph readers; STE keeps observation and completion separate. Current session performs roles sequentially. No Plan blocker remains; implementation awaits approval.
 
-## Preparation evidence
+## Preparation validation
 
-The existing Artifact Plane task parser accepted both new plans: ADD has two tasks and one edge; Plane has four tasks and three edges, with no diagnostics. A local link check resolved all 44 Markdown links in the change snapshots and found no ancestor references. git diff --check passed. No implementation or browser acceptance checks have run.
-
-## Integrated result
-
-All four approved tasks have concrete implementation and check evidence. Node tests (91), production build, Chromium acceptance (13), and repository Go adoption/fidelity checks passed. The user confirmed Plane 1.6.0. Shared outcome checks are recorded in its brief; completion still requires Plane publication. No workflow state or duplicate DAG was introduced.
-
-## Review handoff
-
-[PR #11](https://github.com/hieutran21198/software-engineering/pull/11) contains the validated Plane implementation, shared outcome evidence, and user-confirmed proposed 1.6.0 snapshot. Upstream [ADD PR #10](https://github.com/hieutran21198/software-engineering/pull/10) is merged. Stop for team review and merge; no deployment, tag, automatic merge, or establishment is claimed for Plane.
+Artifact Plane's actual repository reader accepted the new task graph: five tasks, seven prerequisite edges, available state, no task diagnostics. The new unit and its combined implementation graph are available with no unit diagnostics. A preparation check resolved 17 local Markdown links in the copied change and rejected ancestor references; metadata/acyclicity checks passed. git diff --check passed. No feature implementation, runtime integration, or feature browser checks have run.
