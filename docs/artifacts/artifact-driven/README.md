@@ -12,10 +12,6 @@ Project knowledge lives here. The canonical local method remains in docs/artifac
 
 1.0.0
 
-## Proposed initial version
-
-1.0.0 records the recovered existing baseline. Local DoD checks passed and the user confirmed this version. This declaration and the new DAG entry describe proposed post-merge state on the change branch. No initial version is established on main until this knowledge merges; an unmerged snapshot is not established. The artifact version is separate from se-adopt binary release tags and Artifact Plane versions.
-
 ## Established dependencies
 
 None.
@@ -33,7 +29,7 @@ None.
 
 ## Active change
 
-[Recover the existing ADD baseline](changes/change-initial/README.md).
+[Implementation task DAG](changes/change-implementation-task-dag/README.md).
 
 ## Future development
 
