@@ -36,3 +36,7 @@ P1–P5 are covered by additive response, safe parsing, graph state, UI, and evi
 ## Upstream recheck
 
 ADD 1.1.0 is established on main after PR #7 merged. The contract at the owning artifact's current version, element specifications/task-dag.md, matches the proposed format used for this approved plan. Task membership, IDs, prerequisites, validation, and legacy behavior remain unchanged. Dependency and phase self-checks pass; no material plan amendment is required.
+
+## Codex observation extension
+
+The codex-execution contract adds a separate runtime overlay and observation store. Earlier no-polling/no-persistence/no-agent-inference constraints continue to govern knowledge derivation. Explicit runtime events may show observed execution with freshness and reported validation labels; they do not alter knowledge graph, approval, or establishment semantics.

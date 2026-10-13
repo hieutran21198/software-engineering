@@ -13,3 +13,6 @@ Observe Codex through configured lifecycle hooks and explicit session-to-task bi
 - [Execution requirements](requirements/codex-execution.md)
 
 Baseline knowledge and historical evidence are copied from 1.6.0. They do not validate this feature. Version preparation will add source_change provenance to the delivered snapshot.
+
+- [Execution specification](specifications/codex-execution.md)
+- [Observer decision](decisions/006-codex-observer.md)

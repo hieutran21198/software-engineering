@@ -149,3 +149,7 @@ Use a stable toolbar layout with the Dependencies / Workflow switcher horizontal
 ### History specification self-check
 
 Requirements 24–27 and B17–B18 map to phase removal, runtime lifecycle/recency fields, collapsed history controls, and stable toolbar layout. No artifact dependency or new architectural decision is required. KISS adds only derived fields and view state. STE keeps uncertainty and commit-time meaning explicit. No blocker remains for Plan.
+
+## Codex observation extension
+
+The codex-execution contract adds a separate runtime overlay and observation store. Earlier no-polling/no-persistence/no-agent-inference constraints continue to govern knowledge derivation. Explicit runtime events may show observed execution with freshness and reported validation labels; they do not alter knowledge graph, approval, or establishment semantics.
