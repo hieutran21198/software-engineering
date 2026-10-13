@@ -42,3 +42,7 @@ Artifact Plane's actual repository reader accepted the new task graph: five task
 ## Integrated validation
 
 All implementation tasks have recorded evidence. Final runtime revisions passed 103 Node tests, the production build, all 15 Chromium cases, and repository Go test/vet checks. Hook discovery passed on Codex 0.160.1; live model execution remains untested because trust settings were preserved. The user confirmed 1.7.0. No artifact dependency changed. Publication and team merge remain separate from these checks.
+
+## Review handoff
+
+[PR #12](https://github.com/hieutran21198/software-engineering/pull/12) is open for team review. All five task DoD checklists have supporting evidence. The user confirmed 1.7.0. Required merge remains outstanding; neither PR creation nor runtime task completion establishes the version.

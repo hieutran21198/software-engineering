@@ -57,3 +57,7 @@ The integrated fixture covers hook reporting, durable observation writes, SSE up
 Installed Codex 0.160.1 discovered all ten configured hooks with no warnings/errors in a disposable CODEX_HOME. Hooks remained untrusted; no live model turn ran. Actual activation requires the user's /hooks review and explicit task binding. No global configuration or trust settings changed.
 
 Version 1.7.0 is user-confirmed and proposed on this branch. No establishment or completed outcome is claimed before all required merges.
+
+## Review handoff
+
+[PR #12](https://github.com/hieutran21198/software-engineering/pull/12) proposes Artifact Plane 1.7.0 with both knowledge and implementation in this repository. Shared checks are documented above. Team review and merge remain required; no unit completion or version establishment is asserted.
