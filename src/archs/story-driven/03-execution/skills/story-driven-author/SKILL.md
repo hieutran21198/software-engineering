@@ -7,7 +7,7 @@ description: Create linked World, Narrative and applicable Gameplay, Visual or L
 
 ## Required supporting skills
 
-Read [KISS](../../../required-skills/kiss/SKILL.md) and [clear technical writing](../../../required-skills/asd-ste-100/SKILL.md). Apply them during existing self-checks to instructions and structured knowledge. Do not impose technical writing style on creative prose or dialogue. Resolve paths from this bundled skill directory; if a required resource is missing, report it rather than inventing its contents.
+Read `../../../required-skills/kiss/SKILL.md` and `../../../required-skills/asd-ste-100/SKILL.md` from the adopted bundle. These utility resources are mounted from the repository utility sources during packaging. Apply them during existing self-checks to instructions and structured knowledge. Do not impose technical writing style on creative prose or dialogue. Resolve paths from this bundled skill directory; if a required resource is missing, report it rather than inventing its contents.
 
 ## Responsibility
 

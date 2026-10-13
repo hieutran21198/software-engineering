@@ -21,8 +21,8 @@ The declared internal prerequisites must satisfy their DoD. The user has approve
 
 ## Definition of Done
 
-- [ ] Walk through novel and game outputs against shared canon; inspect false beliefs, reveal order, optional clues, consequences and rule-revision impacts; ensure no placeholders remain in examples.
+- [x] Walk through novel and game outputs against shared canon; inspect false beliefs, reveal order, optional clues, consequences and rule-revision impacts; ensure no placeholders remain in examples.
 
 ## Evidence
 
-Checks have not yet run.
+Independent content review traced both compositions, false testimony, knowledge/revelation boundaries, certification and outcome consequences. Corrected the original-inspection versus public-notice guard, made certification for inquiry/release explicit, recorded the novel certification signature, and included the shared arc in rule-impact consumers. Both quest discovery orders work without optional recollection; the novel requires no gameplay/art/level prerequisite. Four adaptable templates and the example have no unfinished scaffold content beyond intentional template prompts. KISS and clear technical writing checked; no remaining structural blocker.
