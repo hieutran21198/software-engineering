@@ -30,6 +30,8 @@ test('scoped sources and registered roots reject traversal, aliases and malforme
   await assert.rejects(queryRepository({path:f.root,section:'overview',worktree:'/tmp'}),e=>e.status===422);
   await assert.rejects(queryRepository({path:f.root,section:'implementation',unit:'absent'}),e=>e.status===404);
   await assert.rejects(queryRepository({path:f.root,section:'markdown',unit:'tenant-login',source:'docs/artifacts/absent/README.md'}),e=>e.status===404);
+  await writeFile(join(f.root,'docs/artifacts/authentication/changes/change-login/private.md'),'Not indexed knowledge');
+  await assert.rejects(queryRepository({path:f.root,section:'markdown',unit:'tenant-login',source:'docs/artifacts/authentication/changes/change-login/private.md'}),e=>e.status===404);
   await symlink(join(f.root,unitPath),join(f.root,'docs/artifacts/authentication/changes/change-login/tasks/alias.md'));
   await assert.rejects(queryRepository({path:f.root,section:'markdown',unit:'tenant-login',source:'docs/artifacts/authentication/changes/change-login/tasks/alias.md'}),e=>e.status===422);
  }finally{await f.cleanup();}
@@ -40,4 +42,8 @@ test('registered worktree overviews load on demand and established artifact Mark
  const selected=await queryRepository({path:f.root,worktree:other,section:'overview'});assert.equal(selected.worktree,other);assert.equal(selected.data.workflow.worktrees.find(w=>w.path===other).loadState,'loaded');
  const doc=await queryRepository({path:f.root,section:'markdown',artifact:'tenant',source:'docs/artifacts/tenant/README.md'});assert.match(doc.data.markdown,/# tenant/);
  }finally{git(f.root,'worktree','remove','--force',other);await f.cleanup();}
+});
+test('metadata overview preserves YAML dependency proposals and reference diagnostics',async()=>{
+ const {sourceFixture}=await import('./fixtures.js');const f=await fixtureRepository(sourceFixture());
+ try{const full=await exploreRepository(f.root),overview=await queryRepository({path:f.root,section:'overview'});assert.deepEqual(overview.data.edges,full.edges);assert.deepEqual(overview.data.references,full.references);assert(overview.data.edges.some(e=>e.status==='proposed-remove'));}finally{await f.cleanup();}
 });

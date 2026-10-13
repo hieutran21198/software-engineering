@@ -1,0 +1,46 @@
+import {test,expect} from '@playwright/test';
+import {writeFile,appendFile} from 'node:fs/promises';import {join} from 'node:path';
+import {fixtureRepository,rootReadme} from '../fixtures.js';
+import {changeDeliveryFixture,unitTask} from '../unit-fixtures.js';
+async function open(page,root){await page.goto('/');await page.getByLabel('Repository path').fill(root);await page.getByRole('button',{name:'Open repository',exact:true}).click();await expect(page.locator('.repo-info strong')).toHaveAttribute('title',root);}
+async function unit(page){await page.getByRole('button',{name:'Units of work',exact:true}).click();await page.getByRole('navigation',{name:'Units of work'}).getByRole('button',{name:/Tenant login/}).click();}
+test('automatic saved edits preserve selection/viewport; offline recovery and manual refresh keep context',async({page,context})=>{
+ const f=await fixtureRepository(changeDeliveryFixture());const errors=[];page.on('pageerror',e=>errors.push(e.message));
+ try{
+  await open(page,f.root);await expect(page.getByLabel('Repository update status')).toHaveText('Current');await unit(page);
+  const controls=page.getByRole('group',{name:'Unit view'});expect(await controls.getByRole('button').allTextContents()).toEqual(['Artifacts','Workflow','Implementation']);await expect(controls.getByRole('button',{name:'Artifacts',exact:true})).toHaveAttribute('aria-pressed','true');
+  const panel=page.getByRole('complementary',{name:'Selection details'});await expect(panel).toContainText('Completion evidence not loaded');
+  await controls.getByRole('button',{name:'Implementation',exact:true}).click();const view=page.getByLabel('Unit of work exploration');await expect(view.locator('.unit-node.task')).toHaveCount(6);
+  const source='docs/artifacts/authentication/changes/change-login/tasks/api.md',key=JSON.stringify([f.root,'tenant-login','authentication','change-login','task',source]);const node=view.getByTestId('rf__node-'+key);await node.click();await expect(panel).toContainText('Behavior checks passed.');await expect(page.getByLabel('Repository update status')).toHaveText('Current');
+  await view.getByRole('button',{name:'Zoom Out',exact:true}).click();const viewport=view.locator('.react-flow__viewport');const transform=await viewport.getAttribute('style');
+  const start=Date.now();await writeFile(join(f.root,source),unitTask('api').replace('[x]','[ ]'));await expect(node).toContainText('0 checked · 1 unchecked',{timeout:5000});expect(Date.now()-start).toBeLessThan(5000);await expect(panel).toContainText('Task ID: api');expect(await viewport.getAttribute('style')).toBe(transform);
+  await context.setOffline(true);await expect(page.getByLabel('Repository update status')).toContainText('Stale');await expect(panel).toContainText('Task ID: api');await context.setOffline(false);await expect(page.getByLabel('Repository update status')).toHaveText('Current',{timeout:5000});expect(await viewport.getAttribute('style')).toBe(transform);
+  await page.getByRole('button',{name:'Refresh',exact:true}).click();await expect(page.getByLabel('Repository update status')).toHaveText('Current');await expect(controls.getByRole('button',{name:'Implementation',exact:true})).toHaveAttribute('aria-pressed','true');await expect(panel).toContainText('Task ID: api');expect(errors).toEqual([]);
+ }finally{await f.cleanup();}
+});
+test('overview requests no detail and a delayed previous repository cannot overwrite a new open',async({page})=>{
+ const first=await fixtureRepository(changeDeliveryFixture()),second=await fixtureRepository(changeDeliveryFixture());let release,held=false;const gate=new Promise(resolve=>release=resolve);const sections=[];
+ await page.route('**/api/repository/query',async route=>{const body=route.request().postDataJSON();sections.push(body.section);if(body.path===first.root&&body.section==='overview'&&!held){held=true;const response=await route.fetch();await gate;try{await route.fulfill({response});}catch{}}else await route.continue();});
+ try{
+  await page.goto('/');await page.getByLabel('Repository path').fill(first.root);await page.getByRole('button',{name:'Open repository',exact:true}).click();await expect.poll(()=>held).toBe(true);
+  await page.getByLabel('Repository path').fill(second.root);await page.getByRole('button',{name:'Open repository',exact:true}).click();await expect(page.locator('.repo-info strong')).toHaveAttribute('title',second.root);release();await expect(page.getByLabel('Repository update status')).toHaveText('Current');await expect(page.locator('.repo-info strong')).toHaveAttribute('title',second.root);expect(sections.every(section=>section==='overview')).toBe(true);
+ }finally{release();await first.cleanup();await second.cleanup();}
+});
+test('twenty unit/view switches keep only active detail and report browser heap',async({page})=>{
+ test.setTimeout(90000);const files=new Map();
+ for(let i=0;i<3;i++){const a='member-'+i,base='docs/artifacts/'+a+'/';files.set(base+'README.md',rootReadme(a,null));files.set(base+'changes/change-next/README.md','# Next');files.set(base+'changes/change-next/tasks/README.md','---\ntasks: [task.md]\n---\n# Plan');files.set(base+'changes/change-next/tasks/task.md',unitTask('task'));files.set(`docs/artifacts/units-of-work/unit-${i}/README.md`,`---\nunit_of_work: unit-${i}\nchanges:\n  - artifact: ${a}\n    change: change-next\nacceptance:\n  - id: check\n    criterion: Check outcome\nevidence: []\n---\n# Unit ${i}`);}
+ const f=await fixtureRepository(files);const memory=[];
+ try{await open(page,f.root);await page.getByRole('button',{name:'Units of work',exact:true}).click();memory.push(await page.evaluate(()=>performance.memory?.usedJSHeapSize??null));
+ for(let i=0;i<20;i++){await page.getByRole('navigation',{name:'Units of work'}).getByRole('button',{name:new RegExp('^Unit '+i%3)}).click();await page.getByRole('group',{name:'Unit view'}).getByRole('button',{name:'Implementation',exact:true}).click();await expect(page.locator('.unit-node.task')).toHaveCount(1);await expect(page.getByLabel('Unit of work exploration').locator('.unit-toolbar')).toContainText('Unit '+i%3);}
+ memory.push(await page.evaluate(()=>performance.memory?.usedJSHeapSize??null));await appendFile('/tmp/artifact-plane-browser-memory.jsonl',JSON.stringify({scenario:'navigation',cycles:20,heapBytes:memory,available:memory.every(v=>v!==null)})+'\n');await test.info().attach('browser-memory.json',{body:JSON.stringify({cycles:20,retainedTaskNodes:await page.locator('.unit-node.task').count(),heapBytes:memory,available:memory.every(value=>value!==null)}),contentType:'application/json'});
+ }finally{await f.cleanup();}
+});
+test('large-corpus browser loads overview and selected detail with measured heap',async({page})=>{
+ test.setTimeout(120000);const {benchmarkFixture}=await import('../../scripts/reload-benchmark.js');const f=await benchmarkFixture({files:5000,worktrees:10});const memory=[];
+ try{const start=Date.now();await open(page,f.root);memory.push(await page.evaluate(()=>performance.memory?.usedJSHeapSize??null));await page.getByRole('button',{name:'Units of work',exact:true}).click();await page.getByRole('navigation',{name:'Units of work'}).getByRole('button',{name:/^Unit 0 /}).click();await page.getByRole('group',{name:'Unit view'}).getByRole('button',{name:'Implementation',exact:true}).click();await expect(page.locator('.unit-node.task')).toHaveCount(1,{timeout:15000});memory.push(await page.evaluate(()=>performance.memory?.usedJSHeapSize??null));await appendFile('/tmp/artifact-plane-browser-memory.jsonl',JSON.stringify({scenario:'large',knowledgeRecords:f.files,worktrees:10,overviewAndSelectedMs:Date.now()-start,heapBytes:memory,available:memory.every(v=>v!==null)})+'\n');await test.info().attach('large-browser-memory.json',{body:JSON.stringify({knowledgeRecords:f.files,worktrees:10,overviewAndSelectedMs:Date.now()-start,heapBytes:memory,available:memory.every(v=>v!==null),taskNodes:await page.locator('.unit-node.task').count()}),contentType:'application/json'});
+ }finally{await f.cleanup();}
+});
+test('dependency proposal edits refresh the active artifact planning view automatically',async({page})=>{
+ const {sourceFixture}=await import('../fixtures.js');const {unitBrief,unitPath}=await import('../unit-fixtures.js');const files=sourceFixture();files.set(unitPath,unitBrief([['authentication','change-login'],['initial','change-initial']],false));const f=await fixtureRepository(files);
+ try{await open(page,f.root);await unit(page);const view=page.getByLabel('Unit of work exploration');await page.getByRole('group',{name:'Unit dependency view'}).getByRole('button',{name:'Planning',exact:true}).click();await expect(view.locator('.react-flow__node-unit')).toHaveCount(2);const start=Date.now();await writeFile(join(f.root,'docs/artifacts/authentication/changes/change-login/dependencies.yaml'),'artifact: authentication\nadd: []\nremove: []\n');await expect(view.locator('.react-flow__node-unit')).toHaveCount(3,{timeout:5000});expect(Date.now()-start).toBeLessThan(5000);await expect(page.getByRole('group',{name:'Unit dependency view'}).getByRole('button',{name:'Planning',exact:true})).toHaveAttribute('aria-pressed','true');}finally{await f.cleanup();}
+});

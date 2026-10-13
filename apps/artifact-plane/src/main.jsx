@@ -16,6 +16,7 @@ import {
 } from "@xyflow/react";
 import {UnitList, UnitView, UnitDetails} from './UnitsOfWork.jsx';
 import {unitContext, unitNode} from './unit-canvas.js';
+import {refreshQueue,repositoryQuery,mergeUnit,mergeChange} from './reload.js';
 import Markdown from "./Markdown.jsx";
 import {RuntimeProvider} from "./Runtime.jsx";
 import {RecordedPicker,RecordedView,RecordedDetails} from "./RecordedExecutions.jsx";
@@ -198,7 +199,7 @@ function App() {
   const [expandedTypes, setExpandedTypes] = useState(new Set());
   const [deliveryChange, setDeliveryChange] = useState(null), [deliveryPhase, setDeliveryPhase] = useState(null);
   const [taskChange, setTaskChange] = useState(null), [taskSelected, setTaskSelected] = useState(null);
-  const [unitSelected,setUnitSelected] = useState(null), [unitNodeSelected,setUnitNodeSelected] = useState(null), [unitWorktree,setUnitWorktree] = useState(null), [unitView,setUnitView] = useState('workflow'), [unitPlanning,setUnitPlanning] = useState(false);
+  const [unitSelected,setUnitSelected] = useState(null), [unitNodeSelected,setUnitNodeSelected] = useState(null), [unitWorktree,setUnitWorktree] = useState(null), [unitView,setUnitView] = useState('artifacts'), [unitPlanning,setUnitPlanning] = useState(false);
   const [view, setView] = useState("canvas");
   const [recordedSelected,setRecordedSelected]=useState(null),[recordedNode,setRecordedNode]=useState(null);
   const [filter, setFilter] = useState("");
@@ -245,45 +246,88 @@ function App() {
       resizePanel(widths[event.key]);
     }
   }
-  async function open(repositoryPath, refresh = false) {
-    setBusy(true);
-    setError("");
-    try {
-      const response = await fetch("/api/explore", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ path: repositoryPath }),
-      });
-      const result = await response.json();
-      if (!response.ok)
-        throw Error(result.error || "Repository could not be opened.");
-      setSnapshot(result);
-      if(!refresh){setRecordedSelected(null);setRecordedNode(null);if(view==='recorded')setView('canvas');}
-      const nextUnit = refresh && unitContext(result,unitSelected,unitNodeSelected);
-      setUnitSelected(nextUnit ? unitSelected : null);
-      setUnitNodeSelected(nextUnit && unitNode(nextUnit,unitView,unitPlanning,unitNodeSelected) ? unitNodeSelected : null);
-      setUnitWorktree(current => refresh && result.workflow?.worktrees.some(w=>w.path===current) ? current : result.repository.path);
-      if (!refresh) {setUnitView('workflow');setUnitPlanning(false);}
-      const taskContext = refresh && taskSelection(result.workflow, taskChange, taskSelected);
-      setTaskChange(taskContext ? taskChange : null);
-      setTaskSelected(taskContext?.task ? taskSelected : null);
-      const nextDelivery = refresh && taskSelection(result.workflow, deliveryChange, null);
-      setDeliveryChange(nextDelivery ? deliveryChange : null);
-      setDeliveryPhase(nextDelivery && nextDelivery.change.steps.some(s=>s.name===deliveryPhase) ? deliveryPhase : null);
-      setPath(result.repository.path);
-      if (!refresh) {
-        setExpanded(new Set());
-        setExpandedTypes(new Set());
-        setSelection(null);
-        setFilter("");
-        setPlanning(false);
-      }
-    } catch (e) {
-      setError(e.message);
-    } finally {
-      setBusy(false);
-    }
+  const snapshotRef=useRef(snapshot),overviewRef=useRef(null),queueRef=useRef(null),queueRoot=useRef(null),eventsRef=useRef(null),generation=useRef(0),reloadRef=useRef(null);
+  snapshotRef.current=snapshot;
+  const [loadedSession,setLoadedSession]=useState(0),[overviewEpoch,setOverviewEpoch]=useState(0),[sectionState,setSectionState]=useState('Not loaded'),[connected,setConnected]=useState(false),[fresh,setFresh]=useState(false),[document,setDocument]=useState(null),[completionOpen,setCompletionOpen]=useState(false),[requestedSource,setRequestedSource]=useState(null);
+  const active=useRef(null);active.current={unitSelected,unitView,unitPlanning,unitWorktree,view,selection,taskChange,taskSelected,deliveryChange,deliveryPhase,unitNodeSelected};
+  const completionController=useRef(null);
+  function installOverview(base,refresh){
+    const current=active.current,previous=snapshotRef.current;
+    overviewRef.current=base;
+    let next=base;
+    if(refresh&&current.unitSelected){const old=unitContext(previous,current.unitSelected);if(old&&unitContext(base,current.unitSelected))next=mergeUnit(base,current.unitSelected,old.unit);else{setUnitSelected(null);setUnitNodeSelected(null);}}
+    if(refresh&&current.taskChange){const old=taskSelection(previous?.workflow,current.taskChange);if(old&&taskSelection(base.workflow,current.taskChange))next=mergeChange(next,current.taskChange,old.change);else{setTaskChange(null);setTaskSelected(null);}}
+    if(refresh&&current.deliveryChange){const old=taskSelection(previous?.workflow,current.deliveryChange);if(old&&taskSelection(base.workflow,current.deliveryChange))next=mergeChange(next,current.deliveryChange,old.change);else{setDeliveryChange(null);setDeliveryPhase(null);}}
+    if(refresh&&current.selection&&!base.artifacts.some(a=>a.id===current.selection.artifact&&(!current.selection.element||a.elements.some(e=>e.id===current.selection.element))))setSelection(null);
+    setSnapshot(next);setOverviewEpoch(value=>value+1);
   }
+  reloadRef.current=async(repositoryPath,refresh,signal,session)=>{
+    setBusy(true);setFresh(false);setError('');
+    try{
+      const result=await repositoryQuery({path:repositoryPath,section:'overview'},signal);
+      if(session!==generation.current)return;
+      let base=result.data;
+      const selected=active.current.unitWorktree;
+      if(refresh&&selected&&selected!==base.repository.path&&base.workflow.worktrees.some(w=>w.path===selected)){
+        const other=await repositoryQuery({path:base.repository.path,section:'overview',worktree:selected},signal);
+        if(session!==generation.current)return;
+        base={...base,workflow:{...base.workflow,worktrees:base.workflow.worktrees.map(w=>w.path===selected?other.data.workflow.worktrees.find(t=>t.path===selected):w)}};
+      }
+      installOverview(base,refresh);setLoadedSession(session);queueRoot.current=base.repository.path;setPath(base.repository.path);setFresh(!result.diagnostics.some(d=>d.code==='stale-response'));
+      if(!refresh){setRecordedSelected(null);setRecordedNode(null);if(active.current.view==='recorded')setView('canvas');setUnitSelected(null);setUnitNodeSelected(null);setUnitWorktree(base.repository.path);setUnitView('artifacts');setUnitPlanning(false);setTaskChange(null);setTaskSelected(null);setDeliveryChange(null);setDeliveryPhase(null);setExpanded(new Set());setExpandedTypes(new Set());setSelection(null);setFilter('');setPlanning(false);setCompletionOpen(false);setDocument(null);}
+    }catch(error){if(session===generation.current&&error.name!=='AbortError'){setError(error.message);setFresh(false);}}
+    finally{if(session===generation.current)setBusy(false);}
+  };
+  function open(repositoryPath,refresh=false){
+    if(refresh&&queueRef.current&&queueRoot.current===repositoryPath)return queueRef.current.request();
+    queueRef.current?.close();eventsRef.current?.close();completionController.current?.abort();const session=++generation.current;setConnected(false);
+    queueRoot.current=repositoryPath;let first=!refresh;const queue=refreshQueue(signal=>{const initial=first;first=false;return reloadRef.current(repositoryPath,!initial,signal,session);});queueRef.current=queue;return queue.request();
+  }
+  useEffect(()=>{
+    const root=snapshot?.repository.path;if(!root)return;const session=generation.current;
+    const refresh=()=>{if(session===generation.current)queueRef.current?.request();};
+    const connect=()=>{eventsRef.current?.close();const source=new EventSource('/api/repository/events?path='+encodeURIComponent(root));eventsRef.current=source;
+      source.onmessage=event=>{if(session!==generation.current||eventsRef.current!==source)return;try{const value=JSON.parse(event.data);setConnected(Boolean(value.available));setFresh(false);if(value.available)refresh();}catch{setConnected(false);setFresh(false);}};
+      source.onerror=()=>{if(session===generation.current){setConnected(false);setFresh(false);}};
+    };
+    const offline=()=>{eventsRef.current?.close();setConnected(false);setFresh(false);};const online=()=>{connect();refresh();};
+    if(navigator.onLine)connect();window.addEventListener('focus',refresh);window.addEventListener('online',online);window.addEventListener('offline',offline);
+    return()=>{eventsRef.current?.close();window.removeEventListener('focus',refresh);window.removeEventListener('online',online);window.removeEventListener('offline',offline);};
+  },[snapshot?.repository.path,loadedSession]);
+  useEffect(()=>()=>{generation.current++;queueRef.current?.close();eventsRef.current?.close();completionController.current?.abort();},[]);
+  useEffect(()=>{
+    const root=snapshot?.repository.path,target=unitWorktree;if(!root||!target||target===root||overviewRef.current?.workflow.worktrees.find(w=>w.path===target)?.loadState==='loaded')return;
+    const controller=new AbortController(),session=generation.current;
+    repositoryQuery({path:root,worktree:target,section:'overview'},controller.signal).then(result=>{if(session!==generation.current)return;const base=overviewRef.current;const next={...base,workflow:{...base.workflow,worktrees:base.workflow.worktrees.map(w=>w.path===target?result.data.workflow.worktrees.find(t=>t.path===target):w.selected?w:{...w,loadState:'not-loaded',unitsOfWork:[]})}};installOverview(next,true);}).catch(error=>{if(error.name!=='AbortError')setError(error.message);});
+    return()=>controller.abort();
+  },[snapshot?.repository.path,unitWorktree]);
+  useEffect(()=>{
+    const root=snapshot?.repository.path,base=overviewRef.current;if(!root||!base)return;
+    const controller=new AbortController(),session=generation.current;let key,body;
+    if(view==='units'&&unitSelected){const [worktree,unit]=JSON.parse(unitSelected);if(!unitContext(base,unitSelected))return;key=unitSelected;body={path:root,worktree,unit,section:unitView,...(unitView==='artifacts'?{dependencyMode:unitPlanning?'planning':'established'}:{})};}
+    else if(view==='canvas'&&(taskChange||deliveryChange)){key=taskChange||deliveryChange;const [worktree,artifact,change]=JSON.parse(key);body={path:root,worktree,artifact,change,section:taskChange?'implementation':'workflow'};}
+    else{setSectionState('Not loaded');setSnapshot(current=>{if(!current)return current;return base;});return;}
+    setSectionState('Loading');
+    repositoryQuery(body,controller.signal).then(result=>{
+      if(session!==generation.current||controller.signal.aborted)return;
+      if(result.diagnostics.some(d=>d.code==='stale-response')){setSectionState('Stale');setFresh(false);setError(result.diagnostics.filter(d=>d.code==='stale-response').map(d=>d.message).join(' '));return;}
+      let unitData=result.data;const existing=body.unit?unitContext(snapshotRef.current,key)?.unit:null;if(existing?.completionEpoch===overviewEpoch)unitData={...unitData,completion:existing.completion,evidence:existing.evidence,completionEpoch:existing.completionEpoch};
+      const next=body.unit?mergeUnit(base,key,unitData):mergeChange(base,key,result.data);
+      setSnapshot(next);setSectionState(result.completeness==='partial'?'Loaded with diagnostics':'Loaded');
+      if(body.unit){if(active.current.unitNodeSelected&&!unitNode(unitContext(next,key),unitView,unitPlanning,active.current.unitNodeSelected))setUnitNodeSelected(null);}
+      else if(active.current.taskSelected&&!taskSelection(next.workflow,key,active.current.taskSelected)?.task)setTaskSelected(null);
+    }).catch(error=>{if(error.name!=='AbortError'&&session===generation.current){setSectionState('Error');setFresh(false);setError(error.message);}});
+    return()=>controller.abort();
+  },[snapshot?.repository.path,overviewEpoch,view,unitSelected,unitView,unitPlanning,taskChange,deliveryChange]);
+  async function loadCompletion(){
+    const key=active.current.unitSelected,root=snapshotRef.current?.repository.path;if(!key||!root)return;
+    completionController.current?.abort();const controller=new AbortController();completionController.current=controller;const session=generation.current,[worktree,unit]=JSON.parse(key);setCompletionOpen(true);
+    try{const result=await repositoryQuery({path:root,worktree,unit,section:'completion'},controller.signal);if(session!==generation.current||active.current.unitSelected!==key||controller.signal.aborted)return;
+      setSnapshot(current=>{const existing=unitContext(current,key);if(!existing)return current;return mergeUnit(current,key,{...existing.unit,completion:result.data.completion,completionEpoch:overviewEpoch,evidence:result.data.evidence,diagnostics:result.data.diagnostics,members:existing.unit.members.map(m=>({...m,establishmentEvidence:result.data.members.find(n=>n.artifact===m.artifact)?.establishmentEvidence||m.establishmentEvidence}))});});
+    }catch(error){if(error.name!=='AbortError')setError(error.message);}
+  }
+  useEffect(()=>{completionController.current?.abort();setCompletionOpen(false);},[unitSelected,view]);
+  useEffect(()=>{if(completionOpen&&view==='units')loadCompletion();},[overviewEpoch]);
   const toggle = useCallback(
     (id) =>
       setExpanded((current) => {
@@ -354,9 +398,29 @@ function App() {
   const taskContext = taskSelection(snapshot?.workflow, taskChange, taskSelected);
   const deliveryContext = taskSelection(snapshot?.workflow, deliveryChange, null);
   const selectedWorktree = snapshot?.workflow?.worktrees.find(w=>w.selected);
+  useEffect(()=>setRequestedSource(null),[unitSelected,unitView,unitNodeSelected,view,selection?.artifact,selection?.element,taskSelected]);
+  const documentSource=requestedSource||(view==='units'?selectedUnit?(unitNode(selectedUnit,unitView,unitPlanning,unitNodeSelected)?.source||unitNode(selectedUnit,unitView,unitPlanning,unitNodeSelected)?.step?.evidence[0]?.file||selectedUnit.unit.path):null:view==='canvas'?taskContext?.task?.path||element?.file||(artifact?`docs/artifacts/${artifact.id}/README.md`:null):null);
+  const documentScope=view==='units'&&selectedUnit?{worktree:selectedUnit.worktree.path,unit:selectedUnit.unit.id}:taskContext?{worktree:taskContext.worktree.path,artifact:taskContext.change.artifact,change:taskContext.change.name}:artifact?{artifact:artifact.id,...(element?.source.startsWith('change:')?{change:element.source.slice(7)}:{})}:null;
+  const documentIdentity=JSON.stringify([snapshot?.repository.path,documentSource,documentScope]);
+  useEffect(()=>{
+    if(!documentSource||!documentScope){setDocument(null);return;}const controller=new AbortController(),session=generation.current;
+    setDocument(current=>current?.identity===documentIdentity?{...current,status:'Loading'}:{source:documentSource,markdown:'',status:'Loading'});
+    repositoryQuery({path:snapshot.repository.path,section:'markdown',source:documentSource,...documentScope},controller.signal).then(result=>{if(!controller.signal.aborted&&session===generation.current)setDocument({...result.data,identity:documentIdentity,status:'Loaded'});}).catch(error=>{if(error.name!=='AbortError'&&session===generation.current)setDocument({source:documentSource,markdown:'',status:'Error',error:error.message});});
+    return()=>controller.abort();
+  },[documentIdentity,overviewEpoch]);
   const deliveryHistoryKey = artifact && historyKey(artifact.id, 'delivery-histories');
   const selectDelivery = key => {setDeliveryChange(key);setDeliveryPhase(null);setTaskChange(null);setTaskSelected(null);};
   const changeList = artifact && <ChangeList worktree={selectedWorktree} artifact={artifact.id} selected={deliveryChange} onSelect={selectDelivery} historiesOpen={expandedTypes.has(deliveryHistoryKey)} onToggleHistories={()=>toggleType(artifact.id,deliveryHistoryKey)}/>;
+  useEffect(()=>{
+    if(!artifact||!selectedWorktree||!expandedTypes.has(deliveryHistoryKey))return;
+    const controller=new AbortController(),session=generation.current,root=snapshot.repository.path;
+    const candidates=selectedWorktree.changes.filter(c=>c.artifact===artifact.id&&c.history&&c.loadState==='not-loaded');
+    (async()=>{for(const c of candidates){if(controller.signal.aborted)return;try{const result=await repositoryQuery({path:root,worktree:selectedWorktree.path,artifact:c.artifact,change:c.name,section:'history'},controller.signal);if(controller.signal.aborted||session!==generation.current)return;
+      const patch=current=>({...current,workflow:{...current.workflow,worktrees:current.workflow.worktrees.map(w=>w.path===selectedWorktree.path?{...w,changes:w.changes.map(change=>change.artifact===c.artifact&&change.name===c.name?{...change,lastCommitAt:result.data.lastCommitAt,historyReason:result.data.historyReason,loadState:'summary-loaded'}:change)}:w)}});
+      overviewRef.current=patch(overviewRef.current);setSnapshot(current=>patch(current));
+    }catch(error){if(error.name!=='AbortError')setError(error.message);}}})();
+    return()=>controller.abort();
+  },[artifact?.id,deliveryHistoryKey,expandedTypes.has(deliveryHistoryKey),overviewEpoch]);
   const openTaskGraph = () => {setTaskChange(deliveryChange);setTaskSelected(null);};
   const onNodeClick = (_, node) => {
     if (node.type === "artifact") selectArtifact(node.data.artifact.id);
@@ -395,16 +459,15 @@ function App() {
           value={path}
           onChange={(e) => setPath(e.target.value)}
           required
-          disabled={busy}
           autoComplete="off"
           spellCheck={false}
         />
-        <button className="primary" disabled={busy}>
-          {busy ? "Reading…" : "Open repository"}
+        <button className="primary" aria-busy={busy}>
+          Open repository
         </button>
         <button
           type="button"
-          disabled={!snapshot || busy}
+          disabled={!snapshot}
           onClick={() => open(snapshot.repository.path, true)}
         >
           Refresh
@@ -476,7 +539,7 @@ function App() {
                   ))}
               </nav>
               <RecordedPicker selected={recordedSelected} onSelect={id=>{setRecordedSelected(id);setRecordedNode(null);if(id)setView('recorded');}}/>
-              {view === "units" && <UnitList snapshot={snapshot} worktreePath={unitWorktree} filter={filter} selected={unitSelected} onSelect={value=>{setUnitSelected(value);setUnitNodeSelected(null);}}/>}
+              {view === "units" && <UnitList snapshot={snapshot} worktreePath={unitWorktree} filter={filter} selected={unitSelected} onSelect={value=>{setUnitSelected(value);setUnitView('artifacts');setUnitNodeSelected(null);}}/>}
             </>
           ) : (
             <p className="muted sidebar-help">
@@ -599,7 +662,7 @@ function App() {
           </div>
           {snapshot && taskContext && <div style={{display:view === "canvas" ? "contents" : "none"}}><TaskGraph key={taskChange} context={taskContext} selection={taskSelected} onSelect={setTaskSelected} onBack={()=>{setTaskChange(null);setTaskSelected(null);}}/></div>}
           {snapshot && view==='recorded' && <RecordedView id={recordedSelected} selection={recordedNode} onSelect={setRecordedNode}/>}
-          {snapshot && view === "units" && <UnitView context={selectedUnit} view={unitView} onView={value=>{setUnitView(value);setUnitNodeSelected(null);}} planning={unitPlanning} onPlanning={value=>{setUnitPlanning(value);setUnitNodeSelected(null);}} selection={unitNodeSelected} onSelect={setUnitNodeSelected}/>}
+          {snapshot && view === "units" && <UnitView loading={sectionState} context={selectedUnit} view={unitView} onView={value=>{setUnitView(value);setUnitNodeSelected(null);}} planning={unitPlanning} onPlanning={value=>{setUnitPlanning(value);setUnitNodeSelected(null);}} selection={unitNodeSelected} onSelect={setUnitNodeSelected}/>}
         </main>
         <div
           className="inspector-divider"
@@ -633,7 +696,7 @@ function App() {
           className="details-panel"
           aria-label="Selection details"
         >
-          {view==='recorded' ? <RecordedDetails id={recordedSelected} selection={recordedNode} onSelect={setRecordedNode}/> : view === "units" ? <UnitDetails context={selectedUnit} view={unitView} planning={unitPlanning} selection={unitNodeSelected} onSelect={setUnitNodeSelected}/> : taskContext ? <TaskGraphDetails context={taskContext} onClear={()=>setTaskSelected(null)}/> : deliveryContext ? <ChangeDetails context={deliveryContext} phase={deliveryPhase} onPhase={setDeliveryPhase} onBack={()=>{setDeliveryChange(null);setDeliveryPhase(null);}} onTaskGraph={openTaskGraph}>{changeList}</ChangeDetails> : artifact ? (
+          {view==='recorded' ? <RecordedDetails id={recordedSelected} selection={recordedNode} onSelect={setRecordedNode}/> : view === "units" ? <UnitDetails onDocument={setRequestedSource} document={document} onCompletion={loadCompletion} context={selectedUnit} view={unitView} planning={unitPlanning} selection={unitNodeSelected} onSelect={setUnitNodeSelected}/> : taskContext ? <TaskGraphDetails document={document} context={taskContext} onClear={()=>setTaskSelected(null)}/> : deliveryContext ? <ChangeDetails context={deliveryContext} phase={deliveryPhase} onPhase={setDeliveryPhase} onBack={()=>{setDeliveryChange(null);setDeliveryPhase(null);}} onTaskGraph={openTaskGraph}>{changeList}</ChangeDetails> : artifact ? (
             <>
               <div className="details-heading">
                 <span className="eyebrow">
@@ -744,7 +807,7 @@ function App() {
               </section>
               <section>
                 <h3>{element ? "Content" : "Overview"}</h3>
-                <Markdown text={element?.markdown || artifact.readme} />
+                <p className="tiny">{document?.status||'Not loaded'}{document?.error&&`: ${document.error}`}</p><Markdown text={document?.markdown||''} />
               </section>
             </>
           ) : (
@@ -767,7 +830,7 @@ function App() {
               ? `${snapshot.artifacts.length} artifacts · ${snapshot.references.length} element references`
               : "Ready to open a repository"}
         </span>
-        <span>Knowledge read-only · live execution observations</span>
+        <span role="status" aria-label="Repository update status">{busy||sectionState==='Loading'?'Updating':snapshot?connected&&fresh&&sectionState!=='Error'&&sectionState!=='Stale'?'Current':'Stale · repository observation disconnected or update unavailable':'Not loaded'}</span>
       </footer>
     </div></RuntimeProvider>
   );

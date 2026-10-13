@@ -59,16 +59,16 @@ export async function queryRepository(input){
 async function readQuery(body){
  const run=gitReads(git,()=>gitMetrics.commands++);
  try{
-  const initial=await scanRepository(body.path,{metadata:true,git:run});const root=initial.snapshot.repository.path;
+  const initial=await scanRepository(body.path,{metadata:true,indexOnly:body.section!=='overview',git:run});const root=initial.snapshot.repository.path;
   const worktrees=await worktreeList(root,run);
   const target=body.worktree===undefined?root:await realpath(body.worktree).catch(()=>null);
   if(!target||!worktrees.some(w=>w.path===target))throw new ExploreError(422,'Select a currently registered worktree.');
   const initialRefs=await Promise.all(['main','master'].map(ref=>run(target,['rev-parse','--verify','refs/heads/'+ref]).catch(()=>null)));
-  let overview=target===root?initial:await scanRepository(target,{metadata:true,git:run});
+  let overview=target===root?initial:await scanRepository(target,{metadata:true,indexOnly:body.section!=='overview',git:run});
   const entry=worktrees.find(w=>w.path===target);entry.changes=changeSummaries(overview.snapshot);
   entry.unitsOfWork=unitBriefs(overview.files).map(unit=>unitSummary(unit,overview.snapshot,target,overview.files,false));entry.loadState='loaded';
   const context=Object.fromEntries(Object.entries(body).filter(([key])=>!['path','section'].includes(key)));
-  let data;
+  let data,readState=overview,readFull=null,documentBytes=null;
   if(body.section==='overview'){
    data=stripBodies(overview.snapshot);data.workflow={worktrees,diagnostics:[],historyLimit:200};data.unitsOfWork=entry.unitsOfWork;data.loadState='loaded';
   }else{
@@ -83,13 +83,15 @@ async function readQuery(body){
     // Metadata indexes establish scope; no arbitrary repository file endpoint.
     const artifacts=unit?unitSummary(unit,overview.snapshot,target,overview.files).artifactGraph.planning.nodes.map(n=>n.id):[body.artifact];
     if(overview.unsafeTaskPaths.has(body.source))throw new ExploreError(422,'Unsafe task source.');
-    if(!overview.files.has(body.source)||!full(body.source)&&!artifacts.some(a=>body.source===`docs/artifacts/${a}/README.md`))throw new ExploreError(404,'Source is outside the selected knowledge context.');
-    const path=await realpath(resolve(target,body.source));const rel=relative(target,path);
+    const declaredSource=body.source===unitPath||unit?.evidence.some(e=>e.source.split('#')[0]===body.source)||prefixes.some(prefix=>body.source===prefix+'README.md'||body.source.startsWith(prefix)&&/^(requirements|specifications|decisions|tasks)\/.+\.md$/.test(body.source.slice(prefix.length)));
+    if(!declaredSource&&!artifacts.some(a=>body.source===`docs/artifacts/${a}/README.md`))throw new ExploreError(404,'Source is outside the selected knowledge context.');
+    const path=await realpath(resolve(target,body.source)).catch(()=>{throw new ExploreError(404,'Knowledge source no longer exists.');});const rel=relative(target,path);
     if(rel==='..'||rel.startsWith('..'+sep)||isAbsolute(rel)||rel.split(sep).includes('.git'))throw new ExploreError(422,'Unsafe knowledge source.');
-    const bytes=await readFile(path),markdown=bytes.toString('utf8');if(!bytes.equals(Buffer.from(markdown)))throw new ExploreError(422,'Knowledge is not valid UTF-8.');data={source:body.source,markdown};
+    const taskBase=body.source.match(/^(.*\/(?:changes\/change-[^/]+|versions\/\d+\.\d+\.\d+)\/tasks)\//)?.[1];if(taskBase){const directory=await realpath(resolve(target,taskBase));const taskRel=relative(directory,path);if(taskRel==='..'||taskRel.startsWith('..'+sep)||isAbsolute(taskRel))throw new ExploreError(422,'Unsafe task source.');}
+    const bytes=await readFile(path),markdown=bytes.toString('utf8');if(!bytes.equals(Buffer.from(markdown)))throw new ExploreError(422,'Knowledge is not valid UTF-8.');data={source:body.source,markdown};documentBytes=digest(markdown);
    }else{
-    const detailed=body.section==='artifacts'?overview:await scanRepository(target,{metadata:true,full,git:run});
-    if(detailed.revision!==overview.revision)entry.diagnostics.push({code:'stale-response',path:'',message:'Repository changed while loading; reload this section.'});
+    const detailed=body.section==='artifacts'?overview:await scanRepository(target,{metadata:true,indexOnly:true,full,git:run});
+    readState=detailed;readFull=body.section==='artifacts'?null:full;
     const filtered={...detailed,snapshot:{...detailed.snapshot,artifacts:detailed.snapshot.artifacts.map(a=>({...a,changes:a.changes.filter(c=>members.some(m=>m.artifact===a.id&&m.change===c.name))}))}};
     const changes=['workflow','history'].includes(body.section)?await evidenceFor(target,filtered,run,detailed.snapshot.repository.head,entry.diagnostics):[];
     if(unit){
@@ -108,12 +110,15 @@ async function readQuery(body){
    }
   }
   // Resolve protected refs fresh per request, never from immutable-byte cache.
-  if(body.section!=='overview'){const current=await scanRepository(target,{metadata:true,git});if(current.revision!==overview.revision||current.snapshot.repository.head!==overview.snapshot.repository.head||current.snapshot.repository.status!==overview.snapshot.repository.status)entry.diagnostics.push({code:'stale-response',path:'',message:'Repository changed while loading; reload this section.'});}
+  if(body.section!=='overview'){const current=await scanRepository(target,{metadata:true,indexOnly:true,full:readFull,git});if(current.revision!==readState.revision||current.snapshot.repository.head!==overview.snapshot.repository.head||current.snapshot.repository.status!==overview.snapshot.repository.status)entry.diagnostics.push({code:'stale-response',path:'',message:'Repository changed while loading; reload this section.'});}
+  if(documentBytes!==null){try{const current=await readFile(await realpath(resolve(target,body.source)),'utf8');if(digest(current)!==documentBytes)entry.diagnostics.push({code:'stale-response',path:body.source,message:'Knowledge changed while loading; reload this section.'});}catch{entry.diagnostics.push({code:'stale-response',path:body.source,message:'Knowledge disappeared while loading; reload this section.'});}}
   const refs=await Promise.all(['main','master'].map(ref=>git(target,['rev-parse','--verify','refs/heads/'+ref]).catch(()=>null)));
   const currentTrees=await git(root,['worktree','list','--porcelain','-z'],true);
-  if(JSON.stringify(refs)!==JSON.stringify(initialRefs)||currentTrees!==await run(root,['worktree','list','--porcelain','-z'],true))entry.diagnostics.push({code:'stale-response',path:'',message:'Git refs or worktrees changed while loading; reload this section.'});
+  const originalTrees=await run(root,['worktree','list','--porcelain','-z'],true);
+  if(JSON.stringify(refs)!==JSON.stringify(initialRefs)){entry.diagnostics.push({code:'stale-response',path:'',message:'Protected refs changed while loading; reload this section.'});}
+  if(currentTrees!==originalTrees){entry.diagnostics.push({code:'stale-response',path:'',message:'Registered worktrees changed while loading; reload this section.'});}
   if(entry.diagnostics.some(d=>d.code==='stale-response')&&data.completion)data.completion={derivation:'unknown',reasons:['Inputs changed while loading.'],sources:[]};
-  const revision=digest([overview.snapshot.repository,refs,overview.revision]);
+  const revision=digest([overview.snapshot.repository,refs,readState.revision,documentBytes]);
   const diagnostics=[...entry.diagnostics,...(data.diagnostics||[])];
   const incomplete=diagnostics.some(d=>/missing|unavailable|unsafe|invalid|ambiguous|stale/.test(d.code))||data.implementationGraph?.state==='invalid'||body.section==='implementation'&&data.implementationGraph?.state==='unavailable';
   return {repository:initial.snapshot.repository,worktree:target,section:body.section,context,revision,completeness:incomplete?'partial':'complete',data,diagnostics};

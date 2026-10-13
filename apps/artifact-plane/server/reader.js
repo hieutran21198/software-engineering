@@ -137,7 +137,7 @@ export async function scanRepository(path, options = {}) {
         return false;
       }
       scanMetrics.files++;
-      const full=!options.metadata || options.full?.(path) || /^docs\/artifacts\/[^/]+\/README\.md$/.test(path);
+      const full=path.endsWith('.yaml') || !options.metadata || options.full?.(path) || /^docs\/artifacts\/[^/]+\/README\.md$/.test(path);
       if(full)scanMetrics.fullBodies++;
       const metadata=()=>{
         const front=markdown.match(/^---\r?\n[\s\S]*?\r?\n---(?:\r?\n|$)/)?.[0]||'';
@@ -154,6 +154,7 @@ export async function scanRepository(path, options = {}) {
   // Traverse only current/candidate knowledge directories. Resolve every path
   // before access; a visited set prevents loops through internal symlinks.
   async function knowledge(path, visited = new Set()) {
+    if(options.indexOnly&&!options.full?.(path+'/'))return;
     const target = await safe(path);
     if (!target || visited.has(target)) return;
     visited.add(target);
@@ -218,6 +219,7 @@ export async function scanRepository(path, options = {}) {
       files.set(`${changePath}/README.md`, "");
       await load(`${changePath}/README.md`);
       await load(`${changePath}/dependencies.yaml`);
+      if(options.indexOnly)await load(`${changePath}/tasks/README.md`);
       for (const kind of [
         "requirements",
         "specifications",

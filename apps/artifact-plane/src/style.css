@@ -1014,3 +1014,6 @@ summary {
 .delivery-phases small { color:#b8c6db; }
 .delivery-phases button[aria-pressed="true"] { border-color:#a99bea; }
 .delivery-details > .details-heading { margin-top:18px; }
+.unit-view > [role="status"] { margin: 4px 12px; color: #b8c1d1; }
+.unit-graph-message { padding: 12px; }
+.statusbar [aria-label="Repository update status"] { color: #b8c1d1; }
