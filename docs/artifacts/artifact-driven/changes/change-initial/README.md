@@ -31,4 +31,8 @@ The source inventory distinguishes existing implementation, documented human pro
 
 ## Implementation plan
 
-[Sequential recovery and validation tasks](tasks/README.md). Implementation awaits explicit user approval.
+[Sequential recovery and validation tasks](tasks/README.md). The approved recovery tasks passed their local DoD; validation evidence is recorded with the tasks.
+
+## Version preparation
+
+Initial artifact version 1.0.0 was confirmed after validation. The full snapshot, root identity and generated dependency index are prepared as proposed state. No implementation behavior, binary release tag or deployment changes. Establishment requires team review and merge to main.
