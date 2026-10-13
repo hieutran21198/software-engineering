@@ -170,7 +170,7 @@ function checkCycles(edges, label, ds) {
 export function buildSnapshot(files, repository = {}, inputDiagnostics = []) {
   const diagnostics = [...inputDiagnostics];
   const artifacts = [...files]
-    .filter(([p]) => /^docs\/artifacts\/[^/]+\/README\.md$/.test(p))
+    .filter(([p]) => /^docs\/artifacts\/[^/]+\/README\.md$/.test(p) && p !== "docs/artifacts/units-of-work/README.md")
     .map(([p, content]) => parseArtifact(p.split("/")[2], content, diagnostics))
     .sort((a, b) => a.id.localeCompare(b.id));
   const byId = new Map(artifacts.map((a) => [a.id, a])),

@@ -33,3 +33,9 @@ Add a Units of work navigation choice beside existing repository views. List nam
 ## Validation and self-check
 
 Fixtures cover multi/single-member units, duplicates, malformed/unsafe briefs, missing artifacts/changes/provenance, retained/removed changes, historical versions, branch-only versions, unavailable main/master, later current versions, shared passed/failed/incomplete evidence, and reserved-directory discovery. Graph fixtures cover fork/join tasks, disconnected/empty/invalid/legacy plans, external/transitive prerequisites, gates, cycles, and repeated local task IDs across units/worktrees. Browser checks cover all three views, exact-source navigation, uncertainty, refresh, legacy access, responsive layouts, and read-only fingerprints. Existing tests remain required. P1–P6 are covered; KISS reuses existing reader/graph/UI libraries and STE labels evidence limits. No Specification blocker remains.
+
+## Upstream recheck
+
+ADD 1.2.0 is established on main after PR #10 merged. Its specifications/units-of-work.md matches the supplying approved contract. Existing artifact and task DAG semantics remain unchanged. The local main reference has been fast-forwarded to the merged upstream commit for read-only establishment checks. No material plan amendment is required. The user's implementation approval remains valid.
+
+For documented merge review, readers recognize an explicit statement that all required knowledge and implementation changes reside in the inspected repository, or that all required knowledge and implementation changes have landed on main/master. Publication still requires identical complete knowledge on a local protected ref; a branch-only statement cannot establish it. Missing review assertions remain unverified. This is a supported prose convention for existing evidence, not a workflow status declaration.

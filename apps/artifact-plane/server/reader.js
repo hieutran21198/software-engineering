@@ -4,6 +4,7 @@ import { execFile } from "node:child_process";
 import { promisify } from "node:util";
 import { buildSnapshot, parseArtifact } from "../src/model.js";
 const execute = promisify(execFile);
+import {unitBriefs, versionClaims, safeKnowledgePath} from "./units-of-work.js";
 import { readWorkflow } from "./workflow.js";
 export class ExploreError extends Error {
   constructor(status, message) {
@@ -71,7 +72,7 @@ export async function scanRepository(path) {
         !contained(target) ||
         relative(root, target).split(sep).includes(".git")
       ) {
-        if (/\/changes\/change-[^/]+\/tasks\//.test(path)) unsafeTaskPaths.add(path);
+        if (/\/(?:changes\/change-[^/]+|versions\/\d+\.\d+\.\d+)\/tasks\//.test(path)) unsafeTaskPaths.add(path);
         diagnostic(
           "unsafe-path",
           path,
@@ -103,7 +104,7 @@ export async function scanRepository(path) {
     if (!target) return false;
     try {
       if (!(await stat(target)).isFile()) return false;
-      const taskDirectory = path.match(/^(.*\/changes\/change-[^/]+\/tasks)\//)?.[1];
+      const taskDirectory = path.match(/^(.*\/(?:changes\/change-[^/]+|versions\/\d+\.\d+\.\d+)\/tasks)\//)?.[1];
       if (taskDirectory) {
         const taskRelative = relative(resolve(root, taskDirectory), target);
         if (taskRelative === '..' || taskRelative.startsWith('..' + sep) || isAbsolute(taskRelative)) {
@@ -149,6 +150,7 @@ export async function scanRepository(path) {
   await load(`${base}/dag.yaml`);
   for (const entry of await directory(base)) {
     const prefix = `${base}/${entry.name}`;
+    if (entry.name === "units-of-work") continue;
     if (!(entry.isDirectory() || entry.isSymbolicLink())) continue;
     if (!(await load(`${prefix}/README.md`))) continue;
     const a = parseArtifact(entry.name, files.get(`${prefix}/README.md`));
@@ -160,6 +162,9 @@ export async function scanRepository(path) {
         "tasks",
       ])
         await knowledge(`${prefix}/versions/${a.currentVersion}/${kind}`);
+    for (const version of await directory(`${prefix}/versions`)) {
+      if (/^\d+\.\d+\.\d+$/.test(version.name)) await load(`${prefix}/versions/${version.name}/README.md`);
+    }
     for (const change of await directory(`${prefix}/changes`)) {
       if (
         !change.name.startsWith("change-") ||
@@ -180,6 +185,16 @@ export async function scanRepository(path) {
       ])
         await knowledge(`${changePath}/${kind}`);
     }
+  }
+  for (const unit of await directory(`${base}/units-of-work`)) {
+    if (unit.isDirectory() || unit.isSymbolicLink()) await load(`${base}/units-of-work/${unit.name}/README.md`);
+  }
+  for (const unit of unitBriefs(files)) {
+    for (const member of unit.members) for (const claim of versionClaims(files, member.artifact, member.change)) {
+      await load(`${claim.prefix}dependencies.yaml`);
+      for (const kind of ['requirements','specifications','decisions','tasks']) await knowledge(`${claim.prefix}${kind}`);
+    }
+    for (const evidence of unit.evidence) if (safeKnowledgePath(evidence.source.split('#')[0])) await load(evidence.source.split('#')[0]);
   }
   let branch, head, status;
   try {
@@ -206,5 +221,6 @@ export async function scanRepository(path) {
 export async function exploreRepository(path) {
   const { snapshot, files, unsafeTaskPaths } = await scanRepository(path);
   snapshot.workflow = await readWorkflow(snapshot.repository.path, { snapshot, files, unsafeTaskPaths }, scanRepository, git);
+  snapshot.unitsOfWork = snapshot.workflow.worktrees.find(w => w.selected)?.unitsOfWork || [];
   return snapshot;
 }
