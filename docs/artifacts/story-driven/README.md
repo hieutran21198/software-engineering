@@ -6,7 +6,7 @@ Repository maintainers own the reusable story knowledge architecture, creative w
 
 ## Current established version
 
-None. Version 1.0.0 is proposed on the dedicated branch and becomes established only after the required team merge.
+1.0.0 — proposed until all required knowledge, implementation and retained delivery evidence land through team review and merge. Before that merge, no version is established.
 
 ## Established dependencies
 

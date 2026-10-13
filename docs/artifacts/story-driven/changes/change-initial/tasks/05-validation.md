@@ -53,3 +53,7 @@ Observed output: a proposal locating the owner in Setting Rules, reviewing depen
 Prepared proposed 1.0.0 with source_change and delivery_tasks markers, complete Requirement/Specification/Decision knowledge, and a link to originating tasks. There are no task copies in the snapshot and no changes to established snapshots. The proposed artifact index agrees with root dependency declarations; no new dependency edge exists. A YAML/Markdown audit passed 34 artifact/version links, evidence anchors, provenance markers, exact snapshot fidelity and exclusion of task copies. The PR title/body is prepared for the dedicated feature branch. Publication is recorded below after handoff; no merge or establishment is claimed.
 
 KISS and clear technical writing checked throughout. Structural and authoring evidence does not claim implemented gameplay, manuscript quality or creator approval of generated fictional examples.
+
+### Publication
+
+[PR 17](https://github.com/hieutran21198/software-engineering/pull/17) is open against main from the dedicated feature branch. The branch was pushed without force. No PR merge, auto-merge, executable release or deployment was performed. Establishment and outcome completion await the required team merge.
