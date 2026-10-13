@@ -18,10 +18,6 @@ This artifact owns the repository explorer and its input interpretation rules.
 
 None.
 
-## Proposed release
-
-Version 1.3.0 is prepared on the change branch. It replaces the text-first Workflow view with an interactive canvas and phase evidence in the resizable inspector. Version 1.2.0 remains established on main until the required knowledge and implementation merge. This section describes proposed state until merge.
-
 ## Knowledge snapshot
 
 - [Requirements](versions/1.3.0/requirements/explorer.md)
@@ -32,4 +28,4 @@ Version 1.3.0 is prepared on the change branch. It replaces the text-first Workf
 
 ## Active change
 
-[Workflow canvas](changes/change-workflow-canvas/README.md)
+[Workflow histories and navigation](changes/change-workflow-histories/README.md)
