@@ -20,7 +20,7 @@ Version 1.2.0 is established after PR #10 merged.
 
 ## Active change
 
-- [Units of work](changes/change-units-of-work/README.md)
+- [Task retention and navigation simplification](changes/change-task-retention/README.md)
 
 ## Knowledge snapshot
 
