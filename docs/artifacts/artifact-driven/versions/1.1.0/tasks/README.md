@@ -33,4 +33,4 @@ A local Node check verified declared task paths, unique IDs, resolved prerequisi
 
 ## Implementation validation
 
-Method guidance and its packaged assets passed task-contract DoD and integrated delivery validation. Go tests, vet, website production build, complete Markdown parity, and bundle-link hierarchy checks passed. Version confirmation and upstream review PR preparation remain. Artifact Plane preparation is preserved on add-implementation-task-dag; its implementation has not started.
+Method guidance and its packaged assets passed task-contract DoD and integrated delivery validation. Go tests, vet, website production build, complete Markdown parity, and bundle-link hierarchy checks passed. The user confirmed ADD 1.1.0; the complete proposed snapshot and review PR are prepared. All task DoD checks passed. Team review and merge remain. Artifact Plane preparation is preserved on add-implementation-task-dag; its implementation has not started.
