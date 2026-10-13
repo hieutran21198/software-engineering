@@ -23,7 +23,7 @@ Explicit user approval of this plan and recheck of established artifact-driven 2
 - [x] Exercise end-to-end save bursts, reconnection/server restart, worktree changes, protected-ref movement, manual recovery, and canvas preservation.
 - [x] Verify read-only repository fingerprints, documentation link targets/hierarchy, valid task/unit metadata, and unchanged runtime/evidence contracts.
 - [x] Record shared acceptance evidence in the unit brief with references to originating tasks; do not assert establishment before required merge.
-- [ ] After version confirmation, prepare complete task-free knowledge with source_change/delivery_tasks provenance, consistent root/DAG updates, and a review PR; stop before merge.
+- [x] After version confirmation, prepare complete task-free knowledge with source_change/delivery_tasks provenance, consistent root/DAG updates, and a review PR; stop before merge.
 
 ## Evidence
 
@@ -53,4 +53,4 @@ node --expose-gc scripts/request-memory-benchmark.js sampled request memory ever
 
 ## Review handoff
 
-The user confirmed 1.9.0. Complete snapshot content matches the change requirements, specifications, and decisions; no tasks are copied. Snapshot links resolve, package metadata is 1.9.0, and artifact dependency edges remain unchanged. Automatic approval review rejected publication to the configured public GitHub repository pending destination authorization. The local PR draft is prepared; the review PR and final delivery checkbox remain pending. No merge or deployment occurred.
+The user confirmed 1.9.0. Complete snapshot content matches the change requirements, specifications, and decisions; no tasks are copied. Snapshot links resolve, package metadata is 1.9.0, and artifact dependency edges remain unchanged. The user explicitly authorized publication to the public hieutran21198/software-engineering repository. [Review PR #15](https://github.com/hieutran21198/software-engineering/pull/15) contains the implementation, proposed version, and retained evidence. Team review and merge remain pending. No merge or deployment occurred.

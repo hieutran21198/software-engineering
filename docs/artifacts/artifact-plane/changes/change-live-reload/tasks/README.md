@@ -40,3 +40,7 @@ The initial task parser accepted four tasks and three edges. The extended parser
 ## Validated delivery
 
 The user approved the extended five-task plan and confirmed proposed version 1.9.0 after implementation and integrated checks. The complete task-free snapshot retains originating change provenance and delivery evidence. Review and merge remain pending.
+
+## Review handoff
+
+[Review PR #15](https://github.com/hieutran21198/software-engineering/pull/15) proposes Artifact Plane 1.9.0 with implementation and validation evidence. The user confirmed the version and public repository publication. Establishment and unit completion require team review and merge on main. No merge or deployment occurred.
