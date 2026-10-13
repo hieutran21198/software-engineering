@@ -50,3 +50,7 @@ The final integrated Chromium run recorded 20 navigation cycles with heap sample
 ## Sampled request peaks
 
 node --expose-gc scripts/request-memory-benchmark.js sampled request memory every 20 ms without repeating full-response timing comparisons. Small corpus: 19 samples, peak sampled RSS 103,305,216 bytes and heap 16,287,816 bytes; released heap 10,322,624 bytes. Large corpus: 144 samples, peak sampled RSS 143,470,592 bytes and heap 34,364,544 bytes; released heap 11,067,400 bytes. This separate run excludes the full legacy-response serialization, which can allocate much more memory. Sampling can miss brief allocations between timer callbacks; the values are observed peaks, not a guaranteed upper bound.
+
+## Review handoff
+
+The user confirmed 1.9.0. Complete snapshot content matches the change requirements, specifications, and decisions; no tasks are copied. Snapshot links resolve, package metadata is 1.9.0, and artifact dependency edges remain unchanged. Automatic approval review rejected publication to the configured public GitHub repository pending destination authorization. The local PR draft is prepared; the review PR and final delivery checkbox remain pending. No merge or deployment occurred.
