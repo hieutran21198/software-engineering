@@ -10,7 +10,11 @@ Project knowledge lives here. The canonical local method remains in docs/artifac
 
 ## Current established version
 
-1.0.0
+1.1.0
+
+## Proposed release
+
+On this branch, the 1.1.0 declaration and snapshot describe proposed post-merge state. Version 1.0.0 remains established on main until team merge. Version 1.1.0 adds explicit plan membership and task dependencies while preserving legacy-plan readability. Artifact Plane visualization is a separate downstream change and is not included in this release.
 
 ## Established dependencies
 
@@ -18,14 +22,16 @@ None.
 
 ## Knowledge snapshot
 
-- [Requirements](versions/1.0.0/requirements/baseline.md)
-- [Source inventory and capability limits](versions/1.0.0/requirements/evidence.md)
-- [Knowledge and execution contract](versions/1.0.0/specifications/knowledge.md)
-- [Adoption and publishing contract](versions/1.0.0/specifications/delivery.md)
-- [Knowledge and boundary decision](versions/1.0.0/decisions/001-knowledge-and-boundary.md)
-- [Embedded adoption decision](versions/1.0.0/decisions/002-embedded-safe-adoption.md)
-- [Publishing decision](versions/1.0.0/decisions/003-derived-documentation.md)
-- [Plan and validation evidence](versions/1.0.0/tasks/README.md)
+- [Requirements](versions/1.1.0/requirements/baseline.md)
+- [Source inventory and capability limits](versions/1.1.0/requirements/evidence.md)
+- [Knowledge and execution contract](versions/1.1.0/specifications/knowledge.md)
+- [Adoption and publishing contract](versions/1.1.0/specifications/delivery.md)
+- [Knowledge and boundary decision](versions/1.1.0/decisions/001-knowledge-and-boundary.md)
+- [Embedded adoption decision](versions/1.1.0/decisions/002-embedded-safe-adoption.md)
+- [Publishing decision](versions/1.1.0/decisions/003-derived-documentation.md)
+- [Task DAG contract](versions/1.1.0/specifications/task-dag.md)
+- [Derived task graph decision](versions/1.1.0/decisions/004-derived-task-graph.md)
+- [Plan and validation evidence](versions/1.1.0/tasks/README.md)
 
 ## Active change
 
@@ -33,4 +39,4 @@ None.
 
 ## Future development
 
-Version 1.0.0 is established on main. Start future ADD changes from its full snapshot. Retain valid requirements, contracts, decisions and evidence; amend affected knowledge and add required tasks. Follow Requirement → Specification → Plan → Implementation → Version with explicit plan approval and team merge. Preserve the reusable bundle; do not treat these project artifacts as another copy of its guidance.
+After 1.1.0 merges, start future ADD changes from its full snapshot. Retain valid requirements, contracts, decisions and evidence; amend affected knowledge and add required tasks. Follow Requirement → Specification → Plan → Implementation → Version with explicit plan approval and team merge. Preserve the reusable bundle; do not treat these project artifacts as another copy of its guidance.

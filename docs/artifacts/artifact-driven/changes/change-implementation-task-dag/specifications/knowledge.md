@@ -1,6 +1,6 @@
 # Knowledge and execution contract
 
-Governs R1–R4, R6, R8–R9 and A1–A4, A7 in [baseline requirements](../requirements/baseline.md). Evidence is identified in [the inventory](../requirements/evidence.md). This recovers current behavior and instructions, not a new workflow design.
+Governs R1–R4, R6, R8–R9 and A1–A4, A7 in [baseline requirements](../requirements/baseline.md). Evidence is identified in [the inventory](../requirements/evidence.md). This retains the recovered baseline. The implementation task DAG extension is defined in specifications/task-dag.md.
 
 ## Owned concepts and responsibilities
 
@@ -18,13 +18,13 @@ These are internal implementation relationships, not artifact DAG edges. Artifac
 
 ## Knowledge layout
 
-Project identity is docs/artifacts/artifact-driven/README.md. Detailed knowledge is in changes/change-initial/{requirements,specifications,decisions,tasks}; a validated complete copy becomes versions/1.0.0. Root README links to the current snapshot and one active change. Later changes copy the full current snapshot and retain valid knowledge and task evidence. Obsolete material is removed or amended. Snapshots do not require replaying old changes and are not edited to fix later defects.
+Project identity is docs/artifacts/artifact-driven/README.md. Detailed proposed knowledge is in changes/change-implementation-task-dag/{requirements,specifications,decisions,tasks}; its validated complete copy becomes versions/1.1.0. Established 1.0.0 remains the baseline until required merges. Root README links to the current snapshot and one active change. Later changes copy the full current snapshot and retain valid knowledge and task evidence. Obsolete material is removed or amended. Snapshots do not require replaying old changes and are not edited to fix later defects.
 
 The root owns purpose, scope, owner, established version and dependency names. docs/artifacts/dag.yaml indexes roots as artifacts: <id>: {path: <relative artifact path>, depends_on: [<ids>]}. It is derived, not independently authoritative. A new unestablished artifact has no current version and is not inserted into the established graph during phase preparation. Publication prepares consistent root and index changes as proposed state until merge.
 
 Within a consumer element, references entries contain artifact, element and requires. Element paths are relative to the owning artifact snapshot; established references resolve through its root's current version, not a pinned historical directory. Proposed references explicitly identify their supplying active change. dependencies.yaml inside a change uses artifact, add and remove lists for proposed edges. Planning combines roots with proposals, preserving their distinction and checking cycles/missing artifacts. Dependent Implementation waits for required upstream establishment and then rechecks contracts.
 
-ADD's initial artifact has no required external artifact contract. The canonical reusable bundle is evidence and an implementation deliverable, not an upstream project artifact. Do not create a self-dependency to govern ADD with ADD. No proposal file is needed for an unchanged empty dependency list.
+ADD has no required external artifact contract. The canonical reusable bundle is evidence and an implementation deliverable, not an upstream project artifact. Do not create a self-dependency to govern ADD with ADD. No proposal file is needed for an unchanged empty dependency list.
 
 ## Phase contract
 
