@@ -30,3 +30,7 @@ All D requirements map to concrete work and checks. The graph has task-contract 
 ## Preparation checks
 
 A local Node check verified declared task paths, unique IDs, resolved prerequisites, acyclicity, and exclusion of historical tasks for both plans. All 31 Markdown links in the two complete change snapshots resolve and do not link to ancestors. git diff --check passed. Implementation checks have not run.
+
+## Implementation validation
+
+Method guidance and its packaged assets passed task-contract DoD and integrated delivery validation. Go tests, vet, website production build, complete Markdown parity, and bundle-link hierarchy checks passed. Version confirmation and upstream review PR preparation remain. Artifact Plane preparation is preserved on add-implementation-task-dag; its implementation has not started.

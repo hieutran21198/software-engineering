@@ -17,14 +17,14 @@ No external artifact prerequisite. Explicit user approval of this plan is requir
 
 ## Definition of Done
 
-- [ ] Guidance defines plan membership, stable IDs, depends_on, edge direction, validation failures, historical exclusion, and legacy unavailability consistently.
-- [ ] Artifact DAG rules remain artifact-level; task DAG rules remain local to each change. Approval and upstream establishment gates remain explicit.
-- [ ] Canonical affected Markdown and packaged copies match. All bundle references and required skills remain intact.
-- [ ] Examples cover a fork/join, single task, and exclusion of retained task evidence. New links resolve and obey documentation hierarchy.
+- [x] Guidance defines plan membership, stable IDs, depends_on, edge direction, validation failures, historical exclusion, and legacy unavailability consistently.
+- [x] Artifact DAG rules remain artifact-level; task DAG rules remain local to each change. Approval and upstream establishment gates remain explicit.
+- [x] Canonical affected Markdown and packaged copies match. All bundle references and required skills remain intact.
+- [x] Examples cover a fork/join, single task, and exclusion of retained task evidence. New links resolve and obey documentation hierarchy.
 
 ## Evidence
 
-Implementation has not started. Record actual commands, results, and source/test references after execution.
+Implemented eight canonical guidance files and mirrored their packaged copies. Reviewed D1–D7 against the approved specification, including fork/join, single/empty plans, legacy unavailability, invalid declarations, historical exclusion, and separate approval/establishment gates. A local Node parity/link check verified all 32 canonical/package Markdown pairs and 57 bundle links, with no missing or ancestor references. go test ./..., go vet ./..., and the website npm run build passed. Existing embedded-filesystem and adoption tests cover delivery bytes; no redundant test or standalone validator was added. KISS keeps one dependency source and existing checks. STE preserves gates, formats, and uncertainty.
 
 ## Self-check
 

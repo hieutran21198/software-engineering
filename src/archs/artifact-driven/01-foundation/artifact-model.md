@@ -43,6 +43,8 @@ The first change, `change-initial`, establishes version `1.0.0`. Subsequent chan
 
 Within a change, retain valid information, amend affected information, remove obsolete information, and add new information. Carry forward applicable completed tasks as historical context. Add new tasks for new implementation work and required validation.
 
+For each new or materially revised plan, list current task paths in YAML front matter in `tasks/README.md`. Each listed task declares a stable `id` and a `depends_on` list. These declarations define the change's implementation task DAG. Unlisted task files remain historical or contextual knowledge. Replace the copied plan's task list with the current change's work; do not include inherited tasks automatically. Preserve the task list and declarations in the complete version snapshot. See [task format](../06-guidelines/writing-artifacts.md#implementation-plan-and-tasks).
+
 A version contains the complete resulting requirements, specifications, applicable decisions, and implementation plan. Task files retain their DoD checklists and validation evidence. Code and executable tests remain in the relevant implementation locations, with references from tasks where needed.
 
 A snapshot prepared on a change branch is proposed. It becomes established only after all required knowledge and implementation changes land on `main` or `master`. The coordinator opens the PRs and stops for team review and merge. With no remote, ask the user how to complete integration; do not assume a solo merge.
