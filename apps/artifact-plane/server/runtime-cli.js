@@ -8,7 +8,7 @@ export async function run(args,input){
  if(command==='hook'){
   let store;try{
    const data=JSON.parse(input);if(typeof data.cwd!=='string')throw Error('Hook cwd missing');
-   const identity=repositoryIdentity(data.cwd);store=new RuntimeStore({stateDir:options['state-dir'],roots:identity.roots});
+   const identity=repositoryIdentity(data.cwd,{allowNested:true});store=new RuntimeStore({stateDir:options['state-dir'],roots:identity.roots});
    const event=store.observe({...data,event_id:randomUUID()});
    if(data.hook_event_name==='SessionStart')return {hookSpecificOutput:{hookEventName:'SessionStart',additionalContext:`Artifact Plane observer session: ${event.session}. Before implementing an approved ADD task, explicitly bind this session (and each child agent separately) using runtime-cli bind --root <checkout> --unit <unit> --artifact <artifact> --change <change> --task <listed-task> --session ${event.session}. Observations do not approve work or validate DoD.`}};
    return {};

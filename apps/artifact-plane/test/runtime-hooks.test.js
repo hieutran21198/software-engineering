@@ -10,6 +10,7 @@ test('hook command is nonblocking, valid JSON and allowlists lifecycle fields',a
   const invoke=data=>JSON.parse(execFileSync(process.execPath,['server/runtime-cli.js','hook','--state-dir',f.stateDir],{cwd:new URL('../',import.meta.url),input:JSON.stringify(data),encoding:'utf8',stdio:['pipe','pipe','ignore']}));
   const common={session_id:'session',cwd:f.root,turn_id:'turn'};
   assert.match(invoke({...common,hook_event_name:'SessionStart'}).hookSpecificOutput.additionalContext,/session/);
+  assert.match(invoke({...common,cwd:f.root+'/docs/artifacts/demo',hook_event_name:'SessionStart'}).hookSpecificOutput.additionalContext,/session/);
   for(const kind of ['UserPromptSubmit','PreToolUse','PostToolUse','PermissionRequest','Stop','Interrupt','SessionEnd'])assert.deepEqual(invoke({...common,hook_event_name:kind,tool_name:'Bash',prompt:'SECRET',tool_input:'SECRET'}),{});
   for(const kind of ['SubagentStart','SubagentStop'])assert.deepEqual(invoke({...common,hook_event_name:kind,agent_id:'child'}),{});
   assert.deepEqual(invoke({cwd:'/missing',hook_event_name:'Stop'}),{});

@@ -14,12 +14,12 @@ const inside = (root,p) => { const r=relative(root,p); return !r || (!r.startsWi
 export const digest = value => createHash('sha256').update(value).digest('hex');
 function git(root,args) { return execFileSync('git',['-c','core.fsmonitor=false','-C',root,...args],{encoding:'utf8',timeout:5000,stdio:['ignore','pipe','ignore'],env:{...process.env,GIT_OPTIONAL_LOCKS:'0'}}).trim(); }
 function canonical(p) { p=resolve(p); let parent=p; const suffix=[]; while(!existsSync(parent)){suffix.unshift(parent.split('/').at(-1));const next=dirname(parent);if(next===parent)throw Error('Invalid runtime path');parent=next;} return join(realpathSync(parent),...suffix); }
-export function repositoryIdentity(root) {
+export function repositoryIdentity(root,{allowNested=false}={}) {
  root=realpathSync(root);const top=realpathSync(git(root,['rev-parse','--show-toplevel']));
- if(root!==top)throw Error('Select a Git worktree root');
+ if(root!==top&&!allowNested)throw Error('Select a Git worktree root');
  const common=realpathSync(git(root,['rev-parse','--path-format=absolute','--git-common-dir']));
  const roots=git(root,['worktree','list','--porcelain','-z']).split('\0').filter(l=>l.startsWith('worktree ')).map(l=>canonical(l.slice(9)));
- return {root,common,roots};
+ return {root:top,common,roots};
 }
 function guardDirectory(dir,roots=[]) {
  const p=canonical(dir);if(roots.some(root=>inside(canonical(root),p)))throw Error('Runtime store must be outside repositories and worktrees');

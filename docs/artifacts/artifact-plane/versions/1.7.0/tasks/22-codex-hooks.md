@@ -27,3 +27,5 @@ Explicit user approval of this plan; upstream contracts rechecked; internal depe
 ## Evidence
 
 node --test test/runtime-hooks.test.js passed two CLI/hook fixtures. All configured main/subagent lifecycle forms returned valid nonblocking JSON; sensitive fields were excluded; explicit bind/report commands worked. Installed codex-cli 0.160.1 App Server initialized in a disposable CODEX_HOME and hooks/list discovered all ten handlers with no warnings/errors. All remained untrusted, as expected. No trust settings or global configuration were changed, and no live model turn was executed. Actual activation requires the user to review/trust hooks through /hooks. Setup, identity, binding, reporting, state directory and archived-history instructions are in apps/artifact-plane/integration/README.md. KISS/STE checks passed.
+
+Final hook fixture also verifies sessions started from a nested repository directory. Only hook cwd discovery accepts nested paths; explicit --root bindings still require a worktree root. The full Node suite passed 103 tests after this correction.
