@@ -10,6 +10,10 @@ acceptance:
     criterion: Relevant repository and registered-worktree changes update the views automatically with recovery and preserved user context.
   - id: performance
     criterion: Repeatable reload measurements meet the design targets without weakening evidence correctness.
+  - id: lazy-loading
+    criterion: Overview loads before deferred detail; only selected views and required evidence load, unloaded evidence remains explicit, and inactive detail is released.
+  - id: memory
+    criterion: Fixed-corpus measurements report server/browser memory, payload size, and idle polling costs and verify bounded detail retention.
   - id: integration
     criterion: Integrated reader and browser checks preserve read-only behavior, history, publication evidence, runtime observation, and manual recovery.
     integration: true
@@ -24,7 +28,7 @@ Keep Artifact Plane views current with repository evidence and make reloads resp
 
 ## Included scope
 
-Unit tab order and initial view; repository change detection and browser updates; reload performance; recovery and integrated correctness checks.
+Unit tab order and initial view; repository change detection and browser updates; reload performance and lazy loading; memory measurement; recovery and integrated correctness checks.
 
 ## Excluded scope
 

@@ -20,6 +20,12 @@ R6. Measure cold and repeated reload duration and Git command counts against a f
 
 R7. Keep exploration read-only, local-origin checks and path containment. Release observation resources when clients disconnect or switch repositories. Do not persist a workflow state registry or cache in the inspected repository.
 
+R8. Open a lightweight selected-worktree overview first. Load the selected unit/view, other worktrees, full Markdown, and detailed commit history on demand. Unopened detail must not block the overview or consume detailed evidence memory. Loading remains read-only and supports ungrouped artifacts/changes and recorded executions.
+
+R9. Show Not loaded, Loading, Loaded, Stale, and Error for deferred sections. Absence of loaded evidence must not imply no dependencies, no tasks, completion, establishment, or approval. Load all necessary evidence for a requested conclusion; no partial publication check may establish a version or complete an outcome.
+
+R10. Release deferred data on repository/worktree/unit switches and invalidate it when relevant inputs change. Measure server and browser memory, response bytes, loaded worktree/file counts, and idle polling cost on small and large fixed corpora. Distinguish the historical cache budget from total process memory. Loaded data must remain scoped to the active view and required dependencies rather than accumulating every previously opened section.
+
 ## Acceptance examples
 
 - Editing a task checkbox updates the implementation view without clicking Refresh.
@@ -29,10 +35,15 @@ R7. Keep exploration read-only, local-origin checks and path containment. Releas
 - Disconnecting shows stale state; reconnecting reads current evidence before indicating a current snapshot.
 - Modifying delivered task evidence or moving main removes any unsupported establishment conclusion.
 
+- Opening a repository shows artifact identities/dependencies, unit membership, and worktree availability before detailed workflow/history processing.
+- Opening one unit's Implementation view loads its plan and required upstream gate evidence without loading unrelated unit histories.
+- A deferred section shows Not loaded; opening it loads current evidence and cannot use an older repository response.
+- Navigating repeatedly between units releases inactive detail; measurements expose remaining memory use rather than treating 32 MiB as a total memory limit.
+
 ## Excluded scope
 
 Workflow canvas redesign, new phase inference or approval rules, runtime execution controls, source-code HMR, deployment, automatic merging, version changes to ADD, and historical evidence edits.
 
 ## Requirement self-check
 
-R1–R7 cover the requested outcome and observable recovery behavior. Only Artifact Plane changes; existing ADD contracts supply the unchanged dependency. KISS limits scope to navigation and repository updates. STE preserves the distinction between observed edits, documented evidence, and establishment. No Requirement blocker remains.
+R1–R10 cover the requested outcome and observable recovery behavior. Only Artifact Plane changes; existing ADD contracts supply the unchanged dependency. KISS limits scope to navigation and repository updates. STE preserves the distinction between observed edits, documented evidence, and establishment. Lazy loading extends the approved preparation scope at the user’s request; implementation still requires plan approval. No Requirement blocker remains.
