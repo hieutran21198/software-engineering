@@ -1016,3 +1016,5 @@ summary {
 .recorded-picker select { width:100%; }
 .recorded-meta { font-size:11px; color:#b9c4d9; padding:8px 12px; overflow-wrap:anywhere; }
 .recorded-picker select { padding:10px; border:1px solid #3c4c68; border-radius:7px; background:#18263b; color:#dbe4f5; }
+.prerequisite-toggle { display:flex; align-items:center; gap:6px; font-size:11px; color:#c8d4e8; }
+.prerequisite-toggle input { width:auto; }

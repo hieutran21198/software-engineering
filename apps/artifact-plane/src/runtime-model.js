@@ -1,4 +1,4 @@
-export const stateLabels={waiting:'Waiting',processing:'Processing',validating:'Validating',done:'Done (reported)',blocked:'Blocked',failed:'Failed',interrupted:'Interrupted',unknown:'Unknown'};
+export const stateLabels={waiting:'No recorded execution',processing:'Processing',validating:'Validating',done:'Done (reported)',blocked:'Blocked',failed:'Failed',interrupted:'Interrupted',unknown:'Unknown'};
 export const identityKey=(artifact,change,path)=>JSON.stringify([artifact,change,path]);
 export async function signatureFor(task){const bytes=new TextEncoder().encode(JSON.stringify([task.id,task.path,task.title,task.dependsOn,task.body]));const hash=await crypto.subtle.digest('SHA-256',bytes);return Array.from(new Uint8Array(hash),b=>b.toString(16).padStart(2,'0')).join('');}
 export function taskRuntime(runtime,{artifact,change,path,signature,contextId}){
@@ -12,3 +12,5 @@ export function taskRuntime(runtime,{artifact,change,path,signature,contextId}){
  return {state,attempts,events:(runtime?.data?.events||[]).filter(e=>attempts.some(a=>a.id===e.attempt)),mixed:states.size>1};
 }
 export const elapsedLabel=ms=>ms<60000?`${Math.floor(ms/1000)}s`:`${Math.floor(ms/60000)}m ${Math.floor(ms/1000)%60}s`;
+
+export const checklistLabel=task=>`${task.checked>0&&task.unchecked===0?'Documented checklist complete':'Documented checklist'}: ${task.checked||0} checked · ${task.unchecked||0} unchecked`;

@@ -11,6 +11,8 @@ acceptance:
   - id: integration
     criterion: Hook, storage, API, graph, browser, and read-only checks pass without changing ADD approval or establishment semantics.
     integration: true
+  - id: visualization-clarity
+    criterion: Unobserved completed tasks have honest labels and implementation canvases simplify redundant task edges without changing declared prerequisites or gates.
 evidence:
   - criterion: live-visibility
     method: Run browser acceptance for artifact identity, state transitions, agents, concurrent branches, and reconnect behavior.
@@ -24,6 +26,10 @@ evidence:
     method: Run integrated Node, build, Chromium, repository fidelity, and installed hook discovery checks.
     result: passed
     source: docs/artifacts/units-of-work/codex-execution-visualization/README.md#combined-checks
+  - criterion: visualization-clarity
+    method: Run graph projection checks and screenshot-specific browser acceptance in both graph views.
+    result: passed
+    source: docs/artifacts/artifact-plane/versions/1.7.0/tasks/26-visualization-clarity.md#evidence
 ---
 
 # Codex execution visualization
@@ -61,3 +67,7 @@ Version 1.7.0 is user-confirmed and proposed on this branch. No establishment or
 ## Review handoff
 
 [PR #12](https://github.com/hieutran21198/software-engineering/pull/12) proposes Artifact Plane 1.7.0 with both knowledge and implementation in this repository. Shared checks are documented above. Team review and merge remain required; no unit completion or version establishment is asserted.
+
+## Visualization correction checks
+
+The user requested and approved the two screenshot corrections. 105 Node tests and the build passed. All 15 existing browser cases passed; the additional browser case verified both view toggles, exact inspector declarations, unobserved complete checklists, and read-only fingerprints. Its initial test-only ambiguous selector was corrected and the focused case passed. The proposed snapshot now includes task 26. No established snapshot or execution prerequisite was changed.

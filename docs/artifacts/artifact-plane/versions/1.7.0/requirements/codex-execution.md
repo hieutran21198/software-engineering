@@ -9,7 +9,7 @@ The first release observes work started in Codex through lifecycle hooks and exp
 ## Acceptance criteria
 
 - R1: Implementation nodes show artifact identity, change identity, and readable task titles. Gates show artifact identity and retain establishment labels.
-- R2: Bound tasks show Waiting, Processing, Validating, Done, Blocked, Failed, Interrupted, or Unknown with text and distinct colors. Waiting describes no observed attempt, not inferred readiness or approval.
+- R2: Bound tasks show No recorded execution, Processing, Validating, Done, Blocked, Failed, Interrupted, or Unknown with text and distinct colors. No recorded execution describes an absent matching attempt, not readiness or approval.
 - R3: Attempts show agent/session identity, elapsed time, last observed activity, and freshness. Independent active tasks remain visible together without changing DAG edges.
 - R4: Bindings identify repository, unit, artifact, originating change, task path, agent, and attempt. Identical task IDs across plans cannot collide. Retries remain separate attempts.
 - R5: History survives browser reload, Plane restart, and implementation worktree removal. Missing sources retain recorded graph context with an archived-source label, never an establishment claim.
@@ -22,3 +22,11 @@ The first release observes work started in Codex through lifecycle hooks and exp
 ## Impact and self-check
 
 Artifact Plane owns this observer/UI. Established artifact-driven contracts continue to govern task membership, dependencies, provenance, approval, and establishment. No ADD contract or artifact dependency change is required. Observations are execution evidence, not a workflow state registry. KISS reuses existing DAGs; STE distinguishes execution and delivery. No Requirement blocker remains for Specification.
+
+## Approved visualization correction
+
+R11: Completed documented checklists remain visible independently of runtime observation. An unobserved task must not look queued or be labeled Waiting.
+
+R12: Implementation views hide transitively redundant task prerequisites by default and offer Show all prerequisites. Preserve all declared prerequisites in knowledge and inspectors, retain version gates, and preserve reachability.
+
+The user requested these two concrete corrections with do the fix and reaffirmed retry. They amend this still-proposed delivery rather than create a separate outcome. Requirement self-check: the corrections address the screenshot without reconstructing agent history or changing execution authorization. KISS and STE preserve distinct evidence labels.

@@ -15,11 +15,11 @@ execution-validation has recorded DoD evidence. The user approved both concrete 
 
 ## Definition of Done
 
-- [ ] Unobserved tasks show No recorded execution and completed documented checklists remain visibly distinct from runtime Done.
-- [ ] Pure graph checks cover transitive paths, fork/join, disconnected graphs, unchanged input, all-edge restoration, cycles, and preserved establishment gates.
-- [ ] Browser acceptance verifies simplified/all prerequisites toggling in individual and unit views, exact inspector prerequisites, and unobserved completed checklists.
-- [ ] Applicable Node/browser checks and build pass; proposed snapshot and shared evidence are updated in PR #12 without changing established versions.
+- [x] Unobserved tasks show No recorded execution and completed documented checklists remain visibly distinct from runtime Done.
+- [x] Pure graph checks cover transitive paths, fork/join, disconnected graphs, unchanged input, all-edge restoration, cycles, and preserved establishment gates.
+- [x] Browser acceptance verifies simplified/all prerequisites toggling in individual and unit views, exact inspector prerequisites, and unobserved completed checklists.
+- [x] Applicable Node/browser checks and build pass; proposed snapshot and shared evidence are updated in PR #12 without changing established versions.
 
 ## Evidence
 
-Validation pending.
+npm test passed 105 Node tests and npm run build passed. The 15 existing Chromium acceptance cases passed; the new screenshot-specific browser case passed after correcting its ambiguous test navigation selector. Checks confirm No recorded execution, separate documented checklist completion, default transitive reduction, restoration of all declared edges in both individual and unit canvases, unchanged inspector prerequisites, preserved gates, input immutability, cyclic fallback, and unchanged repository fingerprints. The acceptance screenshot was inspected. KISS uses one shared display projection; STE keeps runtime absence and documented completion distinct. The user approved this correction explicitly.
