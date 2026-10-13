@@ -120,7 +120,7 @@ B11–B14 govern new behavior. Add Git fixtures for two worktrees, uncommitted p
 
 Replace the Workflow card list with React Flow using the existing library. Consume snapshot.workflow unchanged. No server or inference contract changes. Derive nodes and positions in memory using plain functions.
 
-Each registered worktree is a labeled group with branch, path, short HEAD, availability, and selected marker. Each change occupies a row inside its worktree. Show change identity and the existing inferred step or Historical/Unknown label. Phase nodes follow source steps in order: Requirement, Specification, Plan, Approval, Implementation, Validation, Version preparation. Display evidence state and highlight the current inferred phase. Use distinct text as well as color. Connecting lines indicate phase order only; they do not assert completed prerequisites or artifact dependencies. Show a legend for this meaning.
+Each registered worktree is a labeled group with branch, path, short HEAD, availability, and selected marker. Each change occupies a row inside its worktree. Show change identity and the existing inferred step or Historical/Unknown label. Phase nodes follow source steps in order: Requirement, Specification, Plan, Implementation, Validation, Version preparation. Display evidence state and highlight the current inferred phase. Use distinct text as well as color. Connecting lines indicate phase order only; they do not assert completed prerequisites or artifact dependencies. Show a legend for this meaning.
 
 Use deterministic positions and group dimensions derived from row counts. Keep nodes fixed in layout; allow pan, zoom, fit, and selection. No new graph layout dependency. Empty or unavailable groups remain visible with diagnostics. Fit initially and provide a manual fit control; do not reset the viewport on each selection.
 
@@ -131,3 +131,21 @@ Worktree inspector shows branch, path, full HEAD, availability, diagnostics, and
 ### Canvas specification self-check
 
 Requirements 21–23 and B15–B16 map to layout, selection, evidence inspection, and source safety. No API, artifact DAG, upstream dependency, or inference change is needed. Existing ADRs remain valid. KISS reuses React Flow and plain functions. STE distinguishes sequence lines from dependency or completion claims. No blockers remain for Plan.
+
+## Workflow history and navigation contract
+
+Phase records and canvas nodes contain six phases: Requirement, Specification, Plan, Implementation, Validation, Version preparation. Remove the synthetic Approval record and its node. This does not infer actual approval. Preserve existing evidence inference and commit associations for the remaining phases.
+
+Add runtime change fields history (boolean), historyReason (text), and lastCommitAt (nullable integer Unix seconds). A change belongs to history when a valid active declaration names a different change, or when its category knowledge matches the current snapshot under the existing comparison. The first case describes retained source, not verified completion. The second describes no distinguishable ongoing work. A declared change differing from the current snapshot stays primary. Without a valid active declaration, unmatched candidates stay primary with existing uncertainty reasons. Do not infer lifecycle from branch names, clean status, directory names, or commit subjects.
+
+Read committer timestamps with the existing bounded Git log. lastCommitAt is the maximum valid timestamp among inspected reachable commits touching files in that change directory. Version-only, unrelated root, and unrelated artifact commits do not reorder histories. Unknown or unavailable timestamps remain null and sort last. Sort equal timestamps by artifact identifier and natural change name. Preserve the existing 200-commit cap, shallow-history diagnostics, and read-only Git environment. Do not scan additional repositories or store timestamps in Markdown.
+
+Each worktree has primary change rows followed by a Change histories toggle showing the retained count. Histories start closed. Opening the group shows retained change headings ordered by lastCommitAt descending. Each retained change starts closed; opening it reveals its phase row. Expansion keys include worktree path, artifact, and change. Keep independent expansion in browser memory; do not write it to disk. Recalculate group height and row positions from visible records. Use the existing React Flow and fixed layout functions. Sequence edges connect only visible phases in one change. Phase order does not imply completion or dependency edges.
+
+Resolve selected evidence from the complete payload, independently of canvas visibility. Collapse preserves details; refresh clears a missing source. Reopening another repository resets history expansion. Switching views preserves viewport, expansion, selection, and inspector width. The inspector describes retained-history reasons and timestamp limits without calling all history records finished.
+
+Use a stable toolbar layout with the Dependencies / Workflow switcher horizontally centered in the canvas area. Reserve left and right regions in both views; hiding Established / Planning does not move the switcher. At narrow widths use a centered separate row when space is insufficient. Existing keyboard controls, canvas actions, and read-only behavior remain valid.
+
+### History specification self-check
+
+Requirements 24–27 and B17–B18 map to phase removal, runtime lifecycle/recency fields, collapsed history controls, and stable toolbar layout. No artifact dependency or new architectural decision is required. KISS adds only derived fields and view state. STE keeps uncertainty and commit-time meaning explicit. No blocker remains for Plan.
