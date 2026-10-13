@@ -9,7 +9,7 @@ The artifact DAG determines execution order. Detailed element references explain
 | Artifact | Authentication depends on tenant. | Established dependencies in artifact root READMEs, indexed in `docs/artifacts/dag.yaml`. |
 | Element | Login behavior uses tenant identity rules. | References in the consuming requirements, specifications, ADRs, or tasks. |
 
-Elements, changes, and versions do not become separate execution DAG nodes.
+Elements, changes, versions, and tasks do not become nodes in the artifact DAG. A separate implementation task DAG orders work within one change.
 
 ## Element References
 
@@ -47,6 +47,16 @@ Before dependent Implementation starts:
 
 Independent artifacts can progress in parallel. Within one artifact, implementation tasks can run concurrently when their task dependencies allow it.
 
+## Implementation Task DAG
+
+Each new or materially revised change plan declares its current tasks in `tasks/README.md`. Each listed task owns its stable `id` and `depends_on` list. Derive edges from these declarations, with arrows from prerequisite to dependent. The [task format](../06-guidelines/writing-artifacts.md#implementation-plan-and-tasks) defines membership and validation rules.
+
+A listed task can start only after its internal prerequisites satisfy their applicable DoD, the plan has explicit user approval, and required upstream artifact contracts are established. No internal prerequisite does not mean the task is authorized or externally unblocked. Tasks in one change can run concurrently when these conditions allow it. Integration and validation tasks express the joins needed after independent work.
+
+Validate task paths, declarations, unique IDs, prerequisite resolution, and acyclicity during Plan self-checks. Invalid declarations prevent treating the plan as executable. Do not infer dependencies from prose, filenames, Git order, or checklist state. Legacy plans without a task list remain readable; their task graph is unavailable. Unlisted historical tasks do not enter the current graph.
+
+Task graphs and artifact graphs record relationships, not live execution status. Keep evidence in task files and Git; do not introduce another DAG file, approval registry, or workflow database.
+
 ## Coordination State
 
 The DAG records relationships, not live completion status. The coordinator also needs each artifact's active change, current phase, upstream completion status, and whether required contracts are proposed or established.
@@ -63,4 +73,4 @@ Before establishment, validate that referenced elements exist and required contr
 
 Generate Mermaid `flowchart TD` diagrams from the graph for reading. Draw arrows from upstream artifact to dependent artifact, and dashed arrows for proposed dependencies. Group element-level views by artifact to explain specific references without changing the execution DAG's node model.
 
-The YAML index remains the machine-readable graph. Diagrams are derived views, not competing sources of truth.
+The YAML index remains the machine-readable artifact graph. Derive task diagrams from the plan task list and task declarations. Include single and disconnected tasks. A reader must show diagnostics for invalid plans and must not present them as valid execution order. Show graph unavailable for legacy plans and no planned tasks for an explicit empty list. Task diagram arrows mean task prerequisites; phase sequence and external artifact gates have different meanings. Diagrams are derived views, not competing sources of truth.

@@ -35,6 +35,8 @@ Requirement, Specification, and Plan may use proposed upstream contracts if thei
 
 Combine established DAG edges with active `dependencies.yaml` proposals for planning, keeping their status distinct. Check cycles and missing dependencies. The graph has artifact nodes; element references explain its edges. Track coordination through existing artifacts and Git, not a new knowledge-base state layer.
 
+Within a change, derive the implementation task DAG from the current task paths in `tasks/README.md` and each listed task's `id` and `depends_on`. Apply the [task format](../../../06-guidelines/writing-artifacts.md#implementation-plan-and-tasks) during Plan checks and dispatch. Reject invalid membership, declarations, unresolved prerequisites, and cycles. Unlisted historical tasks are excluded. Legacy plans without metadata remain readable with graph unavailable. Internal prerequisites must satisfy their applicable DoD before dependent tasks start; explicit plan approval and required upstream establishment remain separate gates. Do not maintain a separate task DAG or status database.
+
 ## Implement and Integrate
 
 Use [CI guidance](../../../04-patterns/continuous-integration.md) when coordinating automated evidence across branches and repositories. Verify checks cover the integrated revisions; do not introduce additional workflow state or automatic merge gates.

@@ -37,6 +37,8 @@ Produce `tasks/README.md` and task files from completed requirements, specificat
 
 Keep applicable completed tasks as historical context; revise or remove obsolete tasks and add new work. Historical evidence does not prove changed behavior passes. Do not reopen unaffected completed tasks without a reason.
 
+Declare current task paths in YAML front matter in `tasks/README.md`; each listed task declares a stable `id` and an explicit `depends_on` list. Apply the [task format](../../../06-guidelines/writing-artifacts.md#implementation-plan-and-tasks). Replace inherited plan membership with current work, excluding unlisted historical tasks. Include integration and validation joins. Check task paths, metadata, unique IDs, resolved prerequisites, and acyclicity; an invalid graph is not executable. Preserve artifact-level establishment gates separately.
+
 Self-check coverage, executability, dependencies, and DoD. Commit Plan output separately. Present the plan for explicit user review and approval; do not start implementation. A new plan or material amendment requires renewed approval.
 
 Requirement, Specification, and Plan may prepare against proposed upstream contracts. Implementation waits until required upstream versions establish; recheck the plan against those contracts first.

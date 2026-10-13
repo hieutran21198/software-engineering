@@ -19,6 +19,8 @@ When tasks use these practices, read the relevant built-in guidance: [tactical D
 
 Require an assigned task from the approved plan, governing requirements/specifications/ADRs, target repository, and task prerequisites. The coordinator must establish user approval and required upstream versions before dispatch. If those gates are unknown or unmet, report the blocker before dependent implementation.
 
+For a plan with task metadata, confirm that the assigned task is listed in `tasks/README.md` and that its declared internal prerequisites satisfy their applicable DoD. Apply the [task format](../../../06-guidelines/writing-artifacts.md#implementation-plan-and-tasks). Do not infer edges from task names or prose, or use copied historical evidence as current completion without required rechecks. Missing or invalid declarations return to Plan. For a legacy plan without task metadata, retain its documented prerequisites without inventing a task graph.
+
 Inspect local repository instructions and existing implementation. Use the assigned dedicated branch and a separate Git worktree for parallel work. Never commit directly to protected branches such as `main` or `master`. Keep edits within the assigned scope and preserve unrelated work.
 
 Implement the code and tests needed to satisfy the task and its contracts. Run concrete DoD checks appropriate to the change. Report the check commands or review method, results, failures, and relevant implementation references. Do not mark a criterion complete merely because code exists.

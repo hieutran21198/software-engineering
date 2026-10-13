@@ -52,6 +52,47 @@ Use `tasks/README.md` to organize tasks and their dependencies. Each task states
 
 For example, a task to implement tenant-scoped login might check that allowed login succeeds, login without membership is denied, and the defined response contract is satisfied. Choose exact checks from the confirmed requirements and specifications.
 
+### Task Membership and Dependencies
+
+For each new or materially revised plan, declare current task paths in YAML front matter in `tasks/README.md`:
+
+```yaml
+---
+tasks:
+  - 01-api.md
+  - 02-interface.md
+  - 03-integration.md
+  - 04-validation.md
+---
+```
+
+Paths are unique strings relative to `tasks/`, use forward slashes, and end in `.md`. Nested task paths are allowed. Each listed path must identify a readable Markdown task file inside the change's task directory. Reject `README.md` as a task, absolute paths, dot segments, backslashes, NUL, and paths that leave that directory. Unlisted files remain historical or contextual knowledge and do not enter the current graph.
+
+Each listed task has YAML front matter with a stable ID and explicit internal prerequisites. For example, `03-integration.md` declares:
+
+```yaml
+---
+id: integration
+depends_on: [api, interface]
+---
+```
+
+An ID is a nonempty string matching `[a-z0-9][a-z0-9-]*`. IDs are unique within the plan and remain stable when a task file is renamed. `depends_on` is a required list of unique task ID strings. Each prerequisite must resolve to a listed task in the same change. Use `depends_on: []` when there is no internal prerequisite. Unknown metadata keys do not define edges.
+
+In this example, task `api` and task `interface` each declare `depends_on: []`. Task `integration` depends on both. Task `validation` declares `depends_on: [integration]`. The derived graph has four nodes and three edges, with arrows from prerequisite to dependent.
+
+A one-task plan lists only that task, whose `depends_on` is empty. An explicit `tasks: []` is a valid empty plan. A copied completed task, such as `old-validation.md`, is excluded unless the plan explicitly lists it. Replace copied plan membership with the new change's current work. If reused work or prerequisites changed, verify its DoD again before using its evidence.
+
+### Validate the Task Graph
+
+Validate membership first, resolve task prerequisites, then check for cycles. Reject malformed YAML or declarations, duplicate YAML mapping keys, wrong field types, missing listed files or metadata, duplicate task paths or IDs, duplicate prerequisites, absent prerequisite IDs, self-dependencies, and cycles. An invalid plan is not executable. Do not guess dependencies from prose, filenames, or Git order. Graph readers retain safely readable records and diagnostics without displaying invalid edges as execution order.
+
+A legacy plan without a `tasks` declaration remains readable historical knowledge; its task graph is unavailable. A malformed declaration is invalid, not legacy unavailability. No standalone runner or CLI validator is required: authors and coordinators apply these rules in existing phase self-checks, and graph readers report diagnostics.
+
+### External Gates and Evidence
+
+Keep external artifact references and their reasons in specifications and task prerequisites. Do not put cross-artifact task IDs in `depends_on`. Required upstream established versions and explicit user approval still gate implementation. A task with no internal prerequisite can remain blocked by those gates. Preserve membership and task metadata in the complete version snapshot.
+
 Record commands or review methods, results, and relevant code/test references with tasks. Keep failed and incomplete checks visible. Historical completed tasks remain only while applicable; recheck evidence when its covered behavior changes.
 
 ## Version Snapshot
