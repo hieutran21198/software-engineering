@@ -21,8 +21,8 @@ The declared internal prerequisites must satisfy their DoD. The user has approve
 
 ## Definition of Done
 
-- [ ] Verify filesystem completeness, all Markdown links and hierarchy, architecture selection/listing, custom output, dry run, repeated adoption and consumer conflict protection.
+- [x] Verify filesystem completeness, all Markdown links and hierarchy, architecture selection/listing, custom output, dry run, repeated adoption and consumer conflict protection.
 
 ## Evidence
 
-Checks have not yet run.
+`GOCACHE=/tmp/story-driven-go-cache go test ./...` passed, including filesystem invariants, source/bundle fidelity, canonical utility mounting, portable targets/anchors, downward navigation, creative skill discovery, and actual CLI adoption behavior. Tests cover listing, selection, default/custom output, no-write dry run, repeat adoption and preflight preservation of consumer edits. `go vet` and the CLI build passed with the same writable cache. Two fresh temporary projects adopted all 58 files without any source workspace dependency. The website production build passed. Existing ADD adoption prose was updated only to remove the obsolete single-architecture claim, consistently in canonical and packaged guidance; no ADD contract or snapshot changed. KISS and clear technical writing checked.

@@ -23,6 +23,7 @@ const config = {
     navbar: {title: 'Software Engineering', items: [
       {to: '/', label: 'Overview', position: 'left'},
       {to: '/src/archs/artifact-driven/', label: 'Artifact-Driven Development', position: 'left'},
+      {to: '/src/archs/story-driven/', label: 'Story-Driven Knowledge', position: 'left'},
       ...(repository ? [{href: `https://github.com/${repository}`, label: 'GitHub', position: 'right'}] : []),
     ]},
     footer: {style: 'dark', copyright: 'Software Engineering — knowledge, templates, and seed files.'},
