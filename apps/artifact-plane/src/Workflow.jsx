@@ -43,7 +43,7 @@ export function Workflow({workflow,selection,onSelect}) {
 function Commit({commit}) {
  return <details className="workflow-commit"><summary><code>{commit.id.slice(0,8)}</code> {commit.subject}</summary><code className="full-commit">{commit.id}</code></details>;
 }
-export function WorkflowDetails({node,workflow,busy,onOpen,onClear}) {
+export function WorkflowDetails({node,workflow,busy,onOpen,onClear,onTaskGraph}) {
  if(!node) return <div className="empty-details"><span className="eyebrow">Workflow inspector</span><h2>Explore workflow phases</h2><p>Select a worktree, change, or phase to inspect its evidence. Steps are inferred from Markdown and Git. Approval and running agents are not detected. Refresh reads again.</p><p>At most {workflow?.historyLimit || 200} artifact commits per worktree.</p>{workflow?.diagnostics.map((d,i)=><p className="workflow-diagnostic" key={i}>{d.message}</p>)}</div>;
  const {worktree:w,change:c,step:s}=node.data;
  return <div className="workflow-details">
@@ -52,6 +52,7 @@ export function WorkflowDetails({node,workflow,busy,onOpen,onClear}) {
   <div className="details-meta"><span>{w.branch || 'Detached HEAD'}</span><span>{w.path}</span>{c&&<span>{c.artifact} / {c.name}</span>}</div>
   {!c&&<><p className="muted">{w.availability}{w.selected?' · Selected worktree':''}{w.locked?' · Locked':''}{w.prunable?' · Prunable':''}</p>{w.head&&<><p className="tiny">Full HEAD ID</p><code className="full-commit">{w.head}</code></>}{!w.selected&&<button disabled={busy || w.availability!=='readable'} onClick={()=>onOpen(w.path)}>Open worktree</button>}{w.diagnostics.map((d,i)=><p className="workflow-diagnostic" key={i}>{d.message}</p>)}</>}
   {c&&<>{c.history&&<p className="muted">{c.historyReason}</p>}<p className="tiny">Latest inspected change commit: {c.lastCommitAt === null ? 'Unknown' : new Date(c.lastCommitAt*1000).toISOString()} · limited to local bounded history</p><p className="muted">{c.inferenceReason}</p>{c.declaredActive&&<p className="tiny">Declared change; this does not prove ongoing execution.</p>}</>}
+  {c && !s && <button onClick={onTaskGraph}>View task graph</button>}
   {s?<section><h3>{stateLabel(s.state)}</h3>{s.evidence.length?<ul>{s.evidence.map((e,i)=><li key={i}>{e.explanation}{e.file&&<small>{e.file}</small>}</li>)}</ul>:<p className="muted">No completion evidence available.</p>}{s.completionCommit?<><p className="tiny">Commit introducing completion evidence</p><Commit commit={s.completionCommit}/></>:<p className="tiny">Exact completion commit unknown.</p>}<h3>Associated commits</h3>{s.commits.length?s.commits.map(commit=><Commit key={commit.id} commit={commit}/>):<p className="muted">None.</p>}</section>:c&&<section><h3>Task evidence ({c.tasks.length})</h3>{c.tasks.map(task=><div className="workflow-task" key={task.path}><p>{task.path}</p><small>{task.checked} checked · {task.unchecked} unchecked · {task.state}{task.inherited?' · Inherited / historical':''}</small></div>)}</section>}
  </div>;
 }

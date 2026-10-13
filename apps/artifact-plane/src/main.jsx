@@ -14,8 +14,9 @@ import {
   Handle,
   Position,
 } from "@xyflow/react";
-import { marked } from "marked";
-import DOMPurify from "dompurify";
+import Markdown from "./Markdown.jsx";
+import {TaskGraph, TaskGraphDetails} from "./TaskGraph.jsx";
+import {taskSelection} from "./task-canvas.js";
 import { relationships } from "./graph.js";
 import { workflowSelection } from "./workflow-canvas.js";
 import { Workflow, WorkflowDetails } from "./Workflow.jsx";
@@ -123,28 +124,6 @@ const nodeTypes = {
   missing: MissingNode,
 };
 
-function Markdown({ text }) {
-  const html = useMemo(() => {
-    const content = text.replace(/^---\r?\n[\s\S]*?\r?\n---(?:\r?\n|$)/, "");
-    return DOMPurify.sanitize(marked.parse(content), {
-      // Details have no external resources or navigation; references use UI buttons.
-      FORBID_TAGS: [
-        "img",
-        "svg",
-        "math",
-        "iframe",
-        "form",
-        "input",
-        "button",
-        "style",
-      ],
-      FORBID_ATTR: ["href", "src", "style", "id", "name", "target"],
-    });
-  }, [text]);
-  return (
-    <div className="markdown" dangerouslySetInnerHTML={{ __html: html }} />
-  );
-}
 function DependencyList({ title, value, onSelect }) {
   return (
     <div className="relationship">
@@ -215,6 +194,7 @@ function App() {
     [planning, setPlanning] = useState(false);
   const [expandedTypes, setExpandedTypes] = useState(new Set());
   const [workflowSelected, setWorkflowSelected] = useState(null);
+  const [taskChange, setTaskChange] = useState(null), [taskSelected, setTaskSelected] = useState(null);
   const [view, setView] = useState("canvas");
   const [workflowMounted,setWorkflowMounted] = useState(false);
   useEffect(()=>{if(view === "workflow") setWorkflowMounted(true);},[view]);
@@ -275,6 +255,9 @@ function App() {
       if (!response.ok)
         throw Error(result.error || "Repository could not be opened.");
       setSnapshot(result);
+      const taskContext = refresh && taskSelection(result.workflow, taskChange, taskSelected);
+      setTaskChange(taskContext ? taskChange : null);
+      setTaskSelected(taskContext?.task ? taskSelected : null);
       setWorkflowSelected(current => refresh && workflowSelection(result.workflow,current) ? current : null);
       setPath(result.repository.path);
       if (!refresh) {
@@ -356,6 +339,8 @@ function App() {
   function selectTarget(ref) {
     revealElement(ref.artifact, ref.targetId);
   }
+  const taskContext = taskSelection(snapshot?.workflow, taskChange, taskSelected);
+  const openTaskGraph = () => {setTaskChange(workflowSelected);setTaskSelected(null);};
   const onNodeClick = (_, node) => {
     if (node.type === "artifact") selectArtifact(node.data.artifact.id);
     else if (node.type === "element")
@@ -592,7 +577,7 @@ function App() {
             </details>
           )}
           </div>
-          {snapshot && workflowMounted && <div style={{display:view === "workflow" ? "contents" : "none"}}><Workflow key={snapshot.repository.path} workflow={snapshot.workflow} selection={workflowSelected} onSelect={setWorkflowSelected}/></div>}
+          {snapshot && workflowMounted && <div style={{display:view === "workflow" ? "contents" : "none"}}><div style={{display:taskContext ? "none" : "contents"}}><Workflow key={snapshot.repository.path} workflow={snapshot.workflow} selection={workflowSelected} onSelect={setWorkflowSelected}/></div>{taskContext && <TaskGraph key={taskChange} context={taskContext} selection={taskSelected} onSelect={setTaskSelected} onBack={()=>{setTaskChange(null);setTaskSelected(null);}}/>}</div>}
         </main>
         <div
           className="inspector-divider"
@@ -626,7 +611,7 @@ function App() {
           className="details-panel"
           aria-label="Selection details"
         >
-          {view === "workflow" ? <WorkflowDetails node={workflowSelection(snapshot?.workflow,workflowSelected)} workflow={snapshot?.workflow} busy={busy} onOpen={root=>open(root)} onClear={()=>setWorkflowSelected(null)}/> : artifact ? (
+          {view === "workflow" ? taskContext ? <TaskGraphDetails context={taskContext} onClear={()=>setTaskSelected(null)}/> : <WorkflowDetails node={workflowSelection(snapshot?.workflow,workflowSelected)} workflow={snapshot?.workflow} busy={busy} onOpen={root=>open(root)} onClear={()=>setWorkflowSelected(null)} onTaskGraph={openTaskGraph}/> : artifact ? (
             <>
               <div className="details-heading">
                 <span className="eyebrow">

@@ -17,14 +17,14 @@ Task task-graph-reader must pass; established ADD gate remains required. Explici
 
 ## Definition of Done
 
-- [ ] Change selection offers View task graph; Back preserves selected change and history expansion. Graph layout shows correct direction, disconnected/single nodes, and prerequisite legend.
-- [ ] Task inspector shows ID, source, prerequisites, scope, DoD, evidence, and counts using safe Markdown rendering without claims of approval or independently verified completion.
-- [ ] Invalid/unavailable/empty plans show clear states and safely readable task records without execution edges.
-- [ ] Desktop and narrow layouts support fit/pan/zoom, inspector resize, refresh invalidation, and explicit worktree opening. Focused layout/browser checks pass.
+- [x] Change selection offers View task graph; Back preserves selected change and history expansion. Graph layout shows correct direction, disconnected/single nodes, and prerequisite legend.
+- [x] Task inspector shows ID, source, prerequisites, scope, DoD, evidence, and counts using safe Markdown rendering without claims of approval or independently verified completion.
+- [x] Invalid/unavailable/empty plans show clear states and safely readable task records without execution edges.
+- [x] Desktop and narrow layouts support fit/pan/zoom, inspector resize, refresh invalidation, and explicit worktree opening. Focused layout/browser checks pass.
 
 ## Evidence
 
-Implementation has not started. Record actual commands, results, and source/test references after execution.
+Implemented the task canvas and details, namespaced selection, Back navigation, refresh invalidation, and shared sanitized Markdown rendering. All 60 Node tests and the Vite production build passed. The three focused Chromium acceptance cases passed using the installed Chromium executable selected with PLAYWRIGHT_CHROMIUM_EXECUTABLE_PATH. They verify fork/join arrows, historical exclusion, scope/DoD/evidence, script/resource sanitization, return/history context, inspector resize, desktop/narrow layout, legacy/empty/invalid graphs, worktree isolation, refresh invalidation, and unchanged fingerprints. The downloaded Chromium initially could not launch because libnspr4.so was unavailable; the installed Nix Chromium supplied its dependencies. Desktop and narrow screenshots were inspected. Existing Vite directive/chunk-size warnings remain nonblocking. KISS reuses existing readers/libraries and no stored workflow state. STE keeps prerequisites and evidence distinct from authorization and verification.
 
 ## Self-check
 

@@ -32,3 +32,7 @@ Use real temporary-repository fixtures for valid fork/join, disconnected/single/
 ## Specification self-check
 
 P1–P5 are covered by additive response, safe parsing, graph state, UI, and evidence rules. Existing local-server and derived-workflow decisions remain valid; the upstream metadata decision supplies the graph source. KISS reuses libraries and readers. STE distinguishes prerequisites from phase order and evidence from verification. No blocker remains for Plan.
+
+## Upstream recheck
+
+ADD 1.1.0 is established on main after PR #7 merged. The contract at the owning artifact's current version, element specifications/task-dag.md, matches the proposed format used for this approved plan. Task membership, IDs, prerequisites, validation, and legacy behavior remain unchanged. Dependency and phase self-checks pass; no material plan amendment is required.

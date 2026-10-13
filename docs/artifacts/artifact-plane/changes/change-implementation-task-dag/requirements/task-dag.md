@@ -19,3 +19,7 @@ A fork/join plan shows independent nodes leading to integration and validation. 
 ## Impact and self-check
 
 ADD supplies the upstream proposed contract. Implementation waits for establishment. KISS reuses local reading and graph libraries. STE separates task prerequisites, phase order, and evidence. No Requirement blocker remains.
+
+## Upstream recheck
+
+ADD 1.1.0 is established on main after PR #7 merged. The contract at the owning artifact's current version, element specifications/task-dag.md, matches the proposed format used for this approved plan. Task membership, IDs, prerequisites, validation, and legacy behavior remain unchanged. Dependency and phase self-checks pass; no material plan amendment is required.
