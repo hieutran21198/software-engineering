@@ -6,6 +6,8 @@ import (
 	"path/filepath"
 	"testing"
 	"testing/fstest"
+
+	artifactdriven "software-engineering/src/archs/artifact-driven"
 )
 
 const DefaultOutput = "docs/artifact-driven"
@@ -124,5 +126,37 @@ func TestAddMissingFilePreservesUnrelatedFiles(t *testing.T) {
 	}
 	if data, err := os.ReadFile(unrelated); err != nil || string(data) != "notes" {
 		t.Fatalf("unrelated file changed: %q, %v", data, err)
+	}
+}
+
+func TestAdoptFullBundlePreservesKnowledge(t *testing.T) {
+	workspace := t.TempDir()
+	result, err := Copy(artifactdriven.Bundle, workspace, DefaultOutput, false)
+	if err != nil {
+		t.Fatal(err)
+	}
+	err = fs.WalkDir(artifactdriven.Bundle, ".", func(name string, entry fs.DirEntry, err error) error {
+		if err != nil || entry.IsDir() {
+			return err
+		}
+		want, err := fs.ReadFile(artifactdriven.Bundle, name)
+		if err != nil {
+			return err
+		}
+		got, err := os.ReadFile(filepath.Join(result.Destination, filepath.FromSlash(name)))
+		if err != nil {
+			return err
+		}
+		if string(got) != string(want) {
+			t.Errorf("adoption changed knowledge: %s", name)
+		}
+		return nil
+	})
+	if err != nil {
+		t.Fatal(err)
+	}
+	// Grouping is project knowledge, never a generated artifact or state store.
+	if _, err := os.Stat(filepath.Join(workspace, "docs/artifacts")); !os.IsNotExist(err) {
+		t.Fatalf("adoption created project knowledge: %v", err)
 	}
 }

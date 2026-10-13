@@ -23,3 +23,7 @@ ADD owns definitions, brief/provenance contracts, author and role guidance, and 
 ## Requirement self-check
 
 The user confirmed scopes 1–5. Outcome, cardinality, ownership, evidence, and compatibility are explicit. KISS retains a single authority per fact; STE checks preserve obligations and observable examples. Schema choices belong to Specification. No unresolved requirement blocker remains.
+
+## Project adoption
+
+U6. During approved implementation the user explicitly requested adoption in this project as well. Apply the new convention to future project ADD outcomes, create the current shared brief, and preserve established legacy snapshots without retroactive membership or provenance edits.

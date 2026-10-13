@@ -13,7 +13,11 @@ acceptance:
   - id: integration
     criterion: Shared fixtures pass reader, graph, browser, delivery, and read-only checks against the established ADD contract.
     integration: true
-evidence: []
+evidence:
+  - criterion: knowledge-contract
+    method: Review the delivered contract, validate YAML examples, and run full Go adoption/fidelity tests and the website build.
+    result: passed
+    source: docs/artifacts/artifact-driven/versions/1.2.0/tasks/18-unit-delivery-validation.md#evidence
 ---
 
 # Unit-of-work grouping and exploration
@@ -28,4 +32,4 @@ Include the ADD knowledge contract and delivered guidance, version provenance, s
 
 ## Combined validation evidence
 
-The approved plans define the required checks. No combined implementation checks have passed yet. Member tasks retain their own evidence; shared check results will be recorded here when available.
+The ADD knowledge and delivery checks passed; its proposed version task contains the actual results. Artifact Plane implementation and combined integration checks have not started. This unit has no completion claim while those checks and required merges remain outstanding.

@@ -52,3 +52,7 @@ Update definitions, artifact model, author/getting-started guidance, and coordin
 ## Impact and self-check
 
 ADD has no upstream artifact prerequisite. Plane consumes this proposed contract after its establishment. Preserve documentation waterfall links, full required skills, bundle/adoption fidelity, and existing task DAG semantics. U1–U5 map to membership, provenance, evidence, compatibility, and diagnostics. KISS uses two small metadata extensions and references; STE distinguishes recorded evidence from verified establishment. No blocker remains for Plan.
+
+## Project adoption extension
+
+Apply U6 through the repository AGENTS.md: new project ADD outcomes use a unit brief, including single-member outcomes. The coordinator owns membership/shared evidence. Existing task, approval, and upstream gates remain valid. The current brief groups artifact-driven/change-units-of-work and artifact-plane/change-units-of-work. The user directly authorized this adoption during implementation; it adds project instructions and no new implementation dependency.

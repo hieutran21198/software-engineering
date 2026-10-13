@@ -32,3 +32,11 @@ All new requirements map to tasks and concrete DoD. Internal edges form a sequen
 ## Preparation evidence
 
 The existing Artifact Plane task parser accepted both new plans: ADD has two tasks and one edge; Plane has four tasks and three edges, with no diagnostics. A local link check resolved all 44 Markdown links in the change snapshots and found no ancestor references. git diff --check passed. No implementation or browser acceptance checks have run.
+
+## Authorized project adoption
+
+The user requested project adoption during implementation. AGENTS.md now requires unit briefs for new project ADD outcomes, keeps existing gates, and links the current shared outcome. Established legacy snapshots remain unchanged. This narrow instruction/documentation extension is directly user-authorized and needs no separate implementation task. Link and format checks cover the project instructions and shared brief.
+
+## ADD implementation result
+
+Both upstream tasks have their concrete check results recorded. The user confirmed proposed ADD 1.2.0. Project adoption is in AGENTS.md and the current unit brief. Plane tasks remain unimplemented behind the upstream team-merge gate. Shared outcome completion is not supported until both member versions and combined checks establish.

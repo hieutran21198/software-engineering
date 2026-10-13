@@ -10,24 +10,33 @@ Project knowledge lives here. The canonical local method remains in docs/artifac
 
 ## Current established version
 
-1.1.0
+1.2.0
 
 ## Established dependencies
 
 None.
 
+The working branch prepares 1.2.0; it becomes established only after required team merges. The current main baseline remains 1.1.0 until then.
+
+## Active change
+
+- [Units of work](changes/change-units-of-work/README.md)
+
 ## Knowledge snapshot
 
-- [Requirements](versions/1.1.0/requirements/baseline.md)
-- [Source inventory and capability limits](versions/1.1.0/requirements/evidence.md)
-- [Knowledge and execution contract](versions/1.1.0/specifications/knowledge.md)
-- [Adoption and publishing contract](versions/1.1.0/specifications/delivery.md)
-- [Knowledge and boundary decision](versions/1.1.0/decisions/001-knowledge-and-boundary.md)
-- [Embedded adoption decision](versions/1.1.0/decisions/002-embedded-safe-adoption.md)
-- [Publishing decision](versions/1.1.0/decisions/003-derived-documentation.md)
-- [Task DAG contract](versions/1.1.0/specifications/task-dag.md)
-- [Derived task graph decision](versions/1.1.0/decisions/004-derived-task-graph.md)
-- [Plan and validation evidence](versions/1.1.0/tasks/README.md)
+- [Requirements](versions/1.2.0/requirements/baseline.md)
+- [Source inventory and capability limits](versions/1.2.0/requirements/evidence.md)
+- [Knowledge and execution contract](versions/1.2.0/specifications/knowledge.md)
+- [Adoption and publishing contract](versions/1.2.0/specifications/delivery.md)
+- [Knowledge and boundary decision](versions/1.2.0/decisions/001-knowledge-and-boundary.md)
+- [Embedded adoption decision](versions/1.2.0/decisions/002-embedded-safe-adoption.md)
+- [Publishing decision](versions/1.2.0/decisions/003-derived-documentation.md)
+- [Task DAG contract](versions/1.2.0/specifications/task-dag.md)
+- [Derived task graph decision](versions/1.2.0/decisions/004-derived-task-graph.md)
+- [Plan and validation evidence](versions/1.2.0/tasks/README.md)
+
+- [Unit-of-work requirements](versions/1.2.0/requirements/units-of-work.md)
+- [Unit-of-work contract](versions/1.2.0/specifications/units-of-work.md)
 
 ## Future development
 
