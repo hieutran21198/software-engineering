@@ -40,3 +40,7 @@ The user requested project adoption during implementation. AGENTS.md now require
 ## ADD implementation result
 
 Both upstream tasks have their concrete check results recorded. The user confirmed proposed ADD 1.2.0. Project adoption is in AGENTS.md and the current unit brief. Plane tasks remain unimplemented behind the upstream team-merge gate. Shared outcome completion is not supported until both member versions and combined checks establish.
+
+## Review handoff
+
+[PR #10](https://github.com/hieutran21198/software-engineering/pull/10) contains the validated ADD implementation and project adoption. Stop for team review and merge. The downstream Plane plan retains its existing user approval but cannot execute until upstream establishment and recheck.

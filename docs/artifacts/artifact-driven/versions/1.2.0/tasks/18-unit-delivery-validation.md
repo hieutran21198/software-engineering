@@ -27,7 +27,7 @@ Internal prerequisites must satisfy applicable DoD before this task starts.
 - [x] Check canonical/packaged fidelity and local Markdown links; record actual results with tasks.
 - [x] Create the agreed outcome brief for these two changes and record applicable shared validation criteria using the new contract.
 - [x] Propose ADD 1.2.0 for user confirmation; prepare full snapshot with source_change, root, and index consistently.
-- [ ] Open the upstream PR and stop for team merge; do not treat proposed publication as establishment.
+- [x] Open the upstream PR and stop for team merge; do not treat proposed publication as establishment.
 
 ## Evidence
 
@@ -37,4 +37,4 @@ TestCanonicalBundleFidelity checks every canonical file against the embedded bun
 
 The user confirmed ADD 1.2.0. The full proposed snapshot declares source_change: change-units-of-work. Root links are prepared consistently; ADD dependencies remain empty and the established DAG requires no edge change. Source-change provenance in a branch remains proposed until team merge. KISS and STE self-checks passed. Plane implementation and shared integration checks have not started because upstream establishment is required.
 
-PR handoff will be recorded after publication; no merge, deployment, or tag is authorized.
+Published branch change-units-of-work and opened [PR #10](https://github.com/hieutran21198/software-engineering/pull/10) for team review. No merge, deployment, or tag was performed. ADD 1.2.0 remains proposed until required team merges; Plane implementation remains gated.
