@@ -36,3 +36,7 @@ R1 maps to browser-updates; R2/R4/R7 map to repository-observation and browser-u
 ## Preparation validation
 
 The initial task parser accepted four tasks and three edges. The extended parser check accepts five tasks and four prerequisite edges with no diagnostics. The unit brief parser accepted the member and shared criteria without diagnostics. All relative Markdown links in the new change and brief resolved, with no ancestor README links. git diff --check passed. Self-check removed copied manual-only refresh restrictions from the new baseline; established snapshots remain intact. These results validate preparation, not implemented automatic updates or performance targets.
+
+## Validated delivery
+
+The user approved the extended five-task plan and confirmed proposed version 1.9.0 after implementation and integrated checks. The complete task-free snapshot retains originating change provenance and delivery evidence. Review and merge remain pending.

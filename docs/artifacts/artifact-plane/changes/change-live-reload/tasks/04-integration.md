@@ -37,7 +37,7 @@ The 60-second large-corpus idle observation sample and its limitation remain rec
 
 Preparation/integration parsers accepted the five-task/four-edge DAG and all unit briefs without diagnostics. Fourteen actual relative Markdown links resolved with no ancestor README links; code examples are excluded from documentation-link checks. git diff --check passed. Canonical ADD bundle files and established legacy snapshots remain unchanged. Final server memory/payload measurements and version/PR handoff follow below after confirmation.
 
-KISS keeps one active detail context, bounded immutable reuse and existing transport/renderers. STE keeps unloaded, stale, documented and established evidence distinct. Implementation approval came from the user's explicit approval of the extended plan; version preparation still requires the requested version confirmation.
+KISS keeps one active detail context, bounded immutable reuse and existing transport/renderers. STE keeps unloaded, stale, documented and established evidence distinct. Implementation approval came from the user's explicit approval of the extended plan; the user confirmed proposed version 1.9.0 after integrated validation.
 
 ## Final memory and payload measurements
 
