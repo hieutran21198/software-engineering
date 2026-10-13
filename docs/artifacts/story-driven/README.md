@@ -6,7 +6,7 @@ Repository maintainers own the reusable story knowledge architecture, creative w
 
 ## Current established version
 
-None. Initial delivery is proposed on the dedicated change branch.
+None. Version 1.0.0 is proposed on the dedicated branch and becomes established only after the required team merge.
 
 ## Established dependencies
 
@@ -16,3 +16,11 @@ None. ADD governs delivery of this capability; it is not a runtime or creative-a
 
 - [Initial framework](changes/change-initial/README.md)
 
+
+## Proposed knowledge snapshot
+
+- [Version 1.0.0](versions/1.0.0/README.md)
+- [Requirements](versions/1.0.0/requirements/framework.md)
+- [Specification](versions/1.0.0/specifications/framework.md)
+- [Decision](versions/1.0.0/decisions/001-shared-knowledge.md)
+- [Retained delivery evidence](changes/change-initial/tasks/README.md)

@@ -63,14 +63,14 @@ src/
 └── utils/
     ├── agents/
     │   └── skills/
-    │   │   ├── kiss/
-    │   │   │   ├── SKILL.md
-    │   │   │   └── agents/
-    │   │   │   │   └── openai.yaml
-    │   │   └── asd-ste-100/
-    │   │       ├── SKILL.md
-    │   │       └── agents/
-    │   │           └── openai.yaml
+    │       ├── kiss/
+    │       │   ├── SKILL.md
+    │       │   └── agents/
+    │       │       └── openai.yaml
+    │       └── asd-ste-100/
+    │           ├── SKILL.md
+    │           └── agents/
+    │               └── openai.yaml
     └── project/
         └── assets/
             └── templates/

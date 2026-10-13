@@ -8,7 +8,7 @@ Creators need a knowledge architecture and workflow to develop coherent story sk
 
 Include domain guidance, dependencies, iterative authoring and revision, three creative skills, four templates, a dual-medium example, safe adoption, and website documentation. Exclude manuscript production, game engines, asset production, workflow databases, and automatic artistic-quality scoring.
 
-The proposed artifact has no established dependencies. Existing ADD and Artifact Plane knowledge and established snapshots remain unchanged.
+The proposed artifact has no established dependencies. Existing ADD and Artifact Plane contracts and established snapshots remain unchanged.
 
 ## Knowledge
 
