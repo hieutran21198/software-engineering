@@ -14,7 +14,7 @@ npm start
 
 Open `http://127.0.0.1:4310`. Enter the absolute path to a Git worktree root that contains `docs/artifacts`. The path refers to the computer running the server. To use a different port, set `PORT` before starting the app.
 
-All browser assets are bundled locally. The application uses no database, account, AI service, background worker, or external runtime service.
+All browser assets are bundled locally. Knowledge exploration needs no account, AI service, or external runtime service. Repository observation runs in the local server.
 
 ## Explore
 
@@ -25,7 +25,7 @@ All browser assets are bundled locally. The application uses no database, accoun
 - Switch to Planning to see the graph after active dependency proposals are applied. Proposals do not change the established graph.
 - Select a resolved reference in the inspector to open its target artifact and type. Missing targets appear as unresolved markers and diagnostics.
 - Drag the divider at the left edge of the inspector to resize it. When the divider has keyboard focus, Arrow Left widens the panel, Arrow Right narrows it, and Home/End select its minimum/maximum width. On narrow screens, the inspector sits below the canvas.
-- Use Refresh after external repository edits. Selection, type expansion, panel width, and canvas state remain in browser memory only; nothing is saved across page reloads.
+- Repository edits update open views automatically. Use Refresh to retry or reconcile the current view. Selection, type expansion, panel width, and canvas state remain in browser memory only; nothing is saved across page reloads.
 
 ## Implementation task graphs
 
@@ -33,7 +33,7 @@ In Dependencies, select an artifact, then a delivery change in the inspector, an
 
 Current plan membership comes from the tasks list in YAML front matter in tasks/README.md. Each listed task declares id and depends_on. Unlisted files remain historical knowledge. A plan without a task list shows Task graph unavailable; an explicit empty list shows No planned tasks. Invalid declarations show diagnostics and no execution edges. Checklists are documented evidence; they do not verify completion, approval, or running agents. External artifact gates remain separate.
 
-Refresh rereads the graph and clears task selection if its source disappears. Opening another worktree clears task context. The graph uses the same local read-only inputs as the other views.
+Automatic updates and Refresh reread the active graph and clear task selection only if its source disappears. Opening another worktree clears task context. The graph uses the same local read-only inputs as the other views.
 
 ## Supported repository structure
 
@@ -157,13 +157,13 @@ Primary type groups contain the current version. Open **Change histories**, a ch
 
 Use **Dependencies** for the artifact DAG and **Units of work** for grouped outcomes. The standalone Workflow tab has been removed; unit Workflow remains available. The shared sidebar lists registered worktrees with branch, path, HEAD, and unavailable/detached/locked/prunable details. **Open worktree** explicitly opens a readable source. Selecting a worktree alone does not switch Git branches.
 
-Select an artifact to inspect its **Delivery work**. Current changes are visible; delivery histories start closed and sort by bounded Git recency, newest first and unknown last. Select a change to inspect Requirement, Specification, Plan, Implementation, Validation, and Version preparation evidence. Select a phase for evidence and associated commits; expand a commit for its full ID. The inspector preserves evidence through history collapse and view switching. Steps can be unknown; commits, checklists, and retained sources do not prove approval, running agents, or independently verified completion. Squash and limited/shallow history retain uncertainty. At most 200 relevant commits per worktree are inspected. Use **Refresh** to read again.
+Select an artifact to inspect its **Delivery work**. Current changes are visible; delivery histories start closed and sort by bounded Git recency, newest first and unknown last. Select a change to inspect Requirement, Specification, Plan, Implementation, Validation, and Version preparation evidence. Select a phase for evidence and associated commits; expand a commit for its full ID. The inspector preserves evidence through history collapse and view switching. Steps can be unknown; commits, checklists, and retained sources do not prove approval, running agents, or independently verified completion. Squash and limited/shallow history retain uncertainty. At most 200 relevant commits per worktree are inspected. History details load when opened. Automatic updates refresh the requested context; **Refresh** provides manual recovery.
 
 ## Units of work
 
-Select **Units of work**, choose a local worktree, then select an outcome. Its detail panel shows the brief, participating changes, shared acceptance criteria, recorded check results, and completion reasons. Repositories without briefs retain dependency exploration and individual delivery evidence/task graphs.
+Select **Units of work**, choose a local worktree, then select an outcome. Its detail panel shows the brief, participating changes, and shared acceptance criteria. Choose **Load completion evidence** to read all required publication and shared check evidence; deferred evidence is shown as not loaded. Repositories without briefs retain dependency exploration and individual delivery evidence/task graphs.
 
-Use **Workflow** for grouped member phase evidence, **Artifacts** for current established/planning dependencies, and **Implementation** for the combined task graph. External prerequisites are not members. Solid task arrows stay within their owning plan; dashed arrows represent version-establishment gates. Phase lines show sequence only. Selecting a node displays its exact knowledge source and evidence. Pan, zoom, and Fit View work in each view.
+The tabs are **Artifacts → Workflow → Implementation**. A newly selected unit starts with Artifacts. Use **Artifacts** for current established/planning dependencies, **Workflow** for grouped member phase evidence, and **Implementation** for the combined task graph. External prerequisites are not members. Solid task arrows stay within their owning plan; dashed arrows represent version-establishment gates. Phase lines show sequence only. Selecting a node displays its exact knowledge source and evidence. Pan, zoom, and Fit View work in each view.
 
 The reader discovers docs/artifacts/units-of-work/<name>/README.md as outcome knowledge, never as artifact nodes. Each brief has unit_of_work, changes, acceptance, and optional evidence metadata. A delivered version README uses source_change to preserve the originating change. New versions also declare delivery_tasks: change and contain no task copies. Their task graphs and DoD evidence resolve from that exact retained originating change. Versions without the marker retain legacy version-owned task semantics. Shared check sources reference safe Markdown paths and optional heading fragments. Invalid or missing knowledge stays visible through diagnostics.
 
@@ -174,3 +174,15 @@ A scoped publication-review paragraph in the brief can name an artifact and deli
 ## Codex execution observer
 
 Implementation nodes show artifact/change ownership. An optional local Codex hook observer adds execution state, agents, elapsed time, and concurrent activity. See [observer setup and semantics](integration/README.md). Recorded execution history persists outside worktrees; current knowledge remains read-only. The observer does not launch agents, approve tasks, or establish versions.
+
+## Automatic updates and lazy loading
+
+The overview loads first. Unit views, other worktrees, Markdown, history, and completion evidence load when requested. Updates preserve the active view, valid selection, expansion, filters, inspector width, pan, and zoom. Removing a selected source clears that selection. Inactive detail is released instead of retaining every visited unit.
+
+The footer shows **Updating**, **Current**, or **Stale**. Current means the latest requested reads succeeded and repository observation is connected. On a connection or read failure, the previous view remains usable. Reconnecting or focusing the browser reconciles current inputs. Refresh remains available for recovery. These states describe loaded knowledge, not approval or live agent activity.
+
+The server samples relevant knowledge bytes, refs, status, and registered worktrees, then waits two seconds before the next sample. Unchanged samples skip history and publication derivation. Full-content polling has a cost: a measured ten-worktree corpus with about 100,000 sampled files took about 4.4 seconds per scan, so very large repositories can update less frequently and use substantial idle I/O/CPU. The interval starts after a scan completes; scans do not overlap.
+
+Historical file bytes are reused in server memory by repository identity and immutable commit ID. The cache has a process-wide 32 MiB byte budget and a 4,096-entry limit. Other memory includes overview metadata, active detail, Git buffers, and browser graphs; total application memory is not capped at 32 MiB. A new browser session can reuse cached bytes while the server stays running. Restarting the server clears this cache. Current files, status, refs, and publication conclusions are read again. No exploration cache or workflow registry is written to the inspected repository.
+
+For repeatable measurements, run `node scripts/reload-benchmark.js` for equal-work full reload comparisons, `node --expose-gc scripts/lazy-benchmark.js` for payload/server memory, `node --expose-gc scripts/request-memory-benchmark.js` for sampled request peaks, and `node scripts/observation-benchmark.js` for a 60-second large-corpus idle sample. They create and remove temporary fixture repositories outside the inspected project. The scoped query API preserves the complete explore endpoint for existing consumers; the browser uses scoped reads.

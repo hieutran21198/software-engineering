@@ -109,11 +109,11 @@ function evidenceDetail(markdown, fragment) {
   const section=tokens.slice(start+1,end);
   return section.some(t=>t.type!=='space') ? section.map(t=>t.raw).join('') : null;
 }
-export async function readUnitsOfWork(root, data, changes, git, checklist) {
+export async function readUnitsOfWork(root, data, changes, git, checklist, options = {}) {
   const {files,snapshot,unsafeTaskPaths} = data, units=unitBriefs(files), owners=new Map(), publicationCache=new Map();
   for(const unit of units)for(const m of unit.members){const key=JSON.stringify([m.artifact,m.change]);const list=owners.get(key)||[];list.push(unit);owners.set(key,list);}
   for(const list of owners.values())if(new Set(list).size>1)for(const unit of new Set(list))unit.diagnostics.push({code:'duplicate-membership',path:unit.path,message:'This change is claimed by multiple units of work.'});
-  for(const unit of units){
+  for(const unit of units.filter(u=>!options.unit || u.id===options.unit)){
     for(const member of unit.members){
       const base=`docs/artifacts/${member.artifact}/`,changePath=`${base}changes/${member.change}/`,claims=versionClaims(files,member.artifact,member.change);
       const artifact=snapshot.artifacts.find(a=>a.id===member.artifact);
@@ -131,7 +131,7 @@ export async function readUnitsOfWork(root, data, changes, git, checklist) {
         const metadata = frontMatter(body);
         if (metadata.error || (metadata.value?.source_change !== undefined || metadata.value?.delivery_tasks !== undefined) && !changeName(metadata.value.source_change)) unit.diagnostics.push({code:'invalid-provenance',path,message:'Version provenance must be valid YAML naming a safe originating change.'});
       }
-      if(member.deliveredVersion){
+      if(member.deliveredVersion && !options.deferPublication){
         const key=JSON.stringify([member.sourcePath,member.deliveryPath,unit.path]);
         if(delivery.diagnostic)member.establishmentEvidence={state:'unknown',reasons:['Delivered task source cannot be resolved.'],sources:[]};
         else {if(!publicationCache.has(key))publicationCache.set(key,await publication(root,member.sourcePath,files,git,unit.markdown.split('\n').filter(line=>line.startsWith(`${member.artifact} ${member.deliveredVersion}: `)).join('\n'),unit.path,claims[0].deliveryTasks==='change'?member.deliveryPath:null));member.establishmentEvidence=publicationCache.get(key);}
@@ -159,5 +159,5 @@ export async function readUnitsOfWork(root, data, changes, git, checklist) {
     const unknown=unit.diagnostics.length>0 || unit.members.some(m=>['unknown','unverified'].includes(m.establishmentEvidence.state));
     unit.completion={derivation:unknown?'unknown':missing.length || unit.members.some(m=>m.establishmentEvidence.state!=='established')?'incomplete':'documented-complete',reasons,sources:unit.members.flatMap(m=>m.establishmentEvidence.sources)};
   }
-  return units.map(unit=>buildUnitGraphs(unit,snapshot,root,files));
+  return units.filter(u=>!options.unit || u.id===options.unit).map(unit=>buildUnitGraphs(unit,snapshot,root,files));
 }

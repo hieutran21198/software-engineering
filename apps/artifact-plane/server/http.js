@@ -3,6 +3,8 @@ import { readFile, realpath } from "node:fs/promises";
 import { resolve, relative, isAbsolute, sep, extname } from "node:path";
 import { fileURLToPath } from "node:url";
 import { exploreRepository } from "./reader.js";
+import {repositoryService} from './repository-events.js';
+import {queryRepository} from './repository-query.js';
 import { runtimeService } from "./runtime-api.js";
 const DIST = fileURLToPath(new URL("../dist/", import.meta.url));
 const mime = {
@@ -28,6 +30,7 @@ function json(res, status, data) {
 }
 export function createAppServer(options = {}) {
   const runtime = runtimeService(options);
+  const repositories=repositoryService(options.repositoryObservation);
   const server = createServer(async (req, res) => {
     try {
       const host = `127.0.0.1:${req.socket.localPort}`;
@@ -38,12 +41,17 @@ export function createAppServer(options = {}) {
       )
         return json(res, 403, { error: "Use the local application origin." });
       const url = new URL(req.url, `http://${host}`);
+      if(url.pathname==='/api/repository/events'){
+        if(req.method!=='GET')return json(res,405,{error:'Use GET for events.'});
+        if([...url.searchParams.keys()].some(k=>k!=='path')||url.searchParams.getAll('path').length!==1)return json(res,400,{error:'Supply one repository path.'});
+        await repositories.subscribe(req,res,security,url.searchParams.get('path'));return;
+      }
       if (url.pathname === "/api/runtime/events") {
         if (req.method !== "GET") return json(res, 405, {error: "Use GET for events."});
         if (!runtime.subscribe(req, res, security)) return json(res, 429, {error: "Too many observation clients."});
         return;
       }
-      if (["/api/explore", "/api/runtime/query"].includes(url.pathname)) {
+      if (["/api/explore", "/api/runtime/query", "/api/repository/query"].includes(url.pathname)) {
         if (req.method !== "POST")
           return json(res, 405, { error: "Use POST to explore a repository." });
         if (
@@ -69,6 +77,7 @@ export function createAppServer(options = {}) {
           if (typeof body?.path !== "string" || !body.path || body.context !== undefined && typeof body.context !== "string") return json(res, 400, {error: "Supply a repository path and optional context ID."});
           return json(res, 200, runtime.query(body.path, body.context));
         }
+        if(url.pathname==='/api/repository/query')return json(res,200,await queryRepository(body));
         return json(res, 200, await exploreRepository(body?.path));
       }
       if (!["GET", "HEAD"].includes(req.method))
@@ -113,7 +122,9 @@ export function createAppServer(options = {}) {
       });
     }
   });
-  server.on("close", () => runtime.close());
+  const close=server.close.bind(server);
+  server.close=(...args)=>{runtime.close();repositories.close();return close(...args);};
   server.runtime = runtime;
+  server.repositories=repositories;
   return server;
 }

@@ -1,7 +1,7 @@
 import React, {useMemo} from "react";
 import {marked} from "marked";
 import DOMPurify from "dompurify";
-export default function Markdown({ text }) {
+export default function Markdown({ text = "" }) {
   const html = useMemo(() => {
     const content = text.replace(/^---\r?\n[\s\S]*?\r?\n---(?:\r?\n|$)/, "");
     return DOMPurify.sanitize(marked.parse(content), {

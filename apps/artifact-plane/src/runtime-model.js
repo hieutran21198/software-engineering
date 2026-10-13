@@ -1,6 +1,6 @@
 export const stateLabels={waiting:'No recorded execution',processing:'Processing',validating:'Validating',done:'Done (reported)',blocked:'Blocked',failed:'Failed',interrupted:'Interrupted',unknown:'Unknown'};
 export const identityKey=(artifact,change,path)=>JSON.stringify([artifact,change,path]);
-export async function signatureFor(task){const bytes=new TextEncoder().encode(JSON.stringify([task.id,task.path,task.title,task.dependsOn,task.body]));const hash=await crypto.subtle.digest('SHA-256',bytes);return Array.from(new Uint8Array(hash),b=>b.toString(16).padStart(2,'0')).join('');}
+export async function signatureFor(task){if(task.signature)return task.signature;const bytes=new TextEncoder().encode(JSON.stringify([task.id,task.path,task.title,task.dependsOn,task.body]));const hash=await crypto.subtle.digest('SHA-256',bytes);return Array.from(new Uint8Array(hash),b=>b.toString(16).padStart(2,'0')).join('');}
 export function taskRuntime(runtime,{artifact,change,path,signature,contextId}){
  const candidates=(runtime?.data?.attempts||[]).filter(a=>a.artifact===artifact&&a.change===change&&a.path===path&&a.signature===signature&&(!contextId||a.context===contextId));
  const latest=new Map();for(const a of candidates){const key=JSON.stringify([a.session,a.agent]);const previous=latest.get(key);if(!previous||a.startedAt>=previous.startedAt)latest.set(key,a);}

@@ -1,9 +1,15 @@
+import {createHash} from 'node:crypto';
 import { readdir, readFile, realpath, stat } from "node:fs/promises";
 import { relative, resolve, isAbsolute, sep } from "node:path";
 import { execFile } from "node:child_process";
 import { promisify } from "node:util";
+import {marked} from 'marked';
 import { buildSnapshot, parseArtifact } from "../src/model.js";
 const execute = promisify(execFile);
+import {gitReads} from './git-reads.js';
+import {gitSlot} from './git-process.js';
+export const gitMetrics = {commands:0};
+export const scanMetrics={files:0,fullBodies:0,scans:0};
 import {frontMatter,unitBriefs, versionClaims, safeKnowledgePath} from "./units-of-work.js";
 import { readWorkflow } from "./workflow.js";
 export class ExploreError extends Error {
@@ -13,6 +19,9 @@ export class ExploreError extends Error {
   }
 }
 export async function git(root, args, raw = false) {
+  const release=await gitSlot();
+  try {
+  gitMetrics.commands++;
   const { stdout } = await execute(
     "git",
     [
@@ -32,8 +41,11 @@ export async function git(root, args, raw = false) {
     },
   );
   return raw ? stdout : stdout.trim();
+  }finally{release();}
 }
-export async function scanRepository(path) {
+export async function scanRepository(path, options = {}) {
+  const runGit = options.git || git;
+  scanMetrics.scans++;
   if (typeof path !== "string" || !isAbsolute(path) || path.includes("\0"))
     throw new ExploreError(400, "Enter an absolute repository path.");
   let root;
@@ -47,7 +59,7 @@ export async function scanRepository(path) {
   }
   let top;
   try {
-    top = await git(root, ["rev-parse", "--show-toplevel"]);
+    top = await runGit(root, ["rev-parse", "--show-toplevel"]);
   } catch {
     throw new ExploreError(422, "Select a readable Git worktree root.");
   }
@@ -56,6 +68,8 @@ export async function scanRepository(path) {
       422,
       "Select the Git worktree root, not a nested directory.",
     );
+  const contentHash=createHash('sha256');
+  const loadedPaths=new Set();
   const files = new Map(),
     diagnostics = [],
     unsafeTaskPaths = new Set();
@@ -101,6 +115,7 @@ export async function scanRepository(path) {
     }
   }
   async function load(path) {
+    if(loadedPaths.has(path))return true;
     const target = await safe(path);
     if (!target) return false;
     try {
@@ -115,12 +130,21 @@ export async function scanRepository(path) {
         }
       }
       const bytes = await readFile(target);
+      contentHash.update(JSON.stringify(path));contentHash.update(bytes);
       const markdown = bytes.toString("utf8");
       if (!bytes.equals(Buffer.from(markdown, "utf8"))) {
         diagnostic("unreadable-path", path, "Knowledge file is not valid UTF-8; skipped.");
         return false;
       }
-      files.set(path, markdown);
+      scanMetrics.files++;
+      const full=path.endsWith('.yaml') || !options.metadata || options.full?.(path) || /^docs\/artifacts\/[^/]+\/README\.md$/.test(path);
+      if(full)scanMetrics.fullBodies++;
+      const metadata=()=>{
+        const front=markdown.match(/^---\r?\n[\s\S]*?\r?\n---(?:\r?\n|$)/)?.[0]||'';
+        const tokens=marked.lexer(markdown.slice(front.length));
+        return front+tokens.filter(t=>t.type==='heading'&&t.depth===1||t.type==='code'&&/^ya?ml$/i.test(t.lang||'')).map(t=>t.raw).join('\n');
+      };
+      files.set(path,full?markdown:metadata());loadedPaths.add(path);
       return true;
     } catch {
       diagnostic("unreadable-path", path, "File cannot be read.");
@@ -130,6 +154,7 @@ export async function scanRepository(path) {
   // Traverse only current/candidate knowledge directories. Resolve every path
   // before access; a visited set prevents loops through internal symlinks.
   async function knowledge(path, visited = new Set()) {
+    if(options.indexOnly&&!options.full?.(path+'/'))return;
     const target = await safe(path);
     if (!target || visited.has(target)) return;
     visited.add(target);
@@ -194,6 +219,7 @@ export async function scanRepository(path) {
       files.set(`${changePath}/README.md`, "");
       await load(`${changePath}/README.md`);
       await load(`${changePath}/dependencies.yaml`);
+      if(options.indexOnly)await load(`${changePath}/tasks/README.md`);
       for (const kind of [
         "requirements",
         "specifications",
@@ -215,11 +241,11 @@ export async function scanRepository(path) {
   }
   let branch, head, status;
   try {
-    branch = await git(root, ["symbolic-ref", "--short", "HEAD"]).catch(
+    branch = await runGit(root, ["symbolic-ref", "--short", "HEAD"]).catch(
       () => "detached",
     );
-    head = await git(root, ["rev-parse", "--verify", "HEAD"]).catch(() => null);
-    status = await git(root, [
+    head = await runGit(root, ["rev-parse", "--verify", "HEAD"]).catch(() => null);
+    status = await runGit(root, [
       "status",
       "--porcelain=v1",
       "--untracked-files=normal",
@@ -232,12 +258,23 @@ export async function scanRepository(path) {
     { path: root, branch, head, dirty: Boolean(status), status },
     diagnostics,
   );
-  return { snapshot, files, unsafeTaskPaths };
+  return { snapshot, files, unsafeTaskPaths, revision:contentHash.digest('hex') };
 }
 
-export async function exploreRepository(path) {
-  const { snapshot, files, unsafeTaskPaths } = await scanRepository(path);
-  snapshot.workflow = await readWorkflow(snapshot.repository.path, { snapshot, files, unsafeTaskPaths }, scanRepository, git);
-  snapshot.unitsOfWork = snapshot.workflow.worktrees.find(w => w.selected)?.unitsOfWork || [];
-  return snapshot;
+const inFlight = new Map();
+export async function exploreRepository(path, {legacy=false}={}) {
+  const identity=typeof path==='string'?await realpath(path).catch(()=>path):path;
+  if(!legacy && inFlight.has(identity))return inFlight.get(identity);
+  const work=(async()=>{
+    const reads=legacy?git:gitReads(git,()=>gitMetrics.commands++);
+    try{
+      const scan=root=>scanRepository(root,{git:reads});
+      const {snapshot,files,unsafeTaskPaths}=await scan(path);
+      snapshot.workflow=await readWorkflow(snapshot.repository.path,{snapshot,files,unsafeTaskPaths},scan,reads);
+      snapshot.unitsOfWork=snapshot.workflow.worktrees.find(w=>w.selected)?.unitsOfWork||[];
+      return snapshot;
+    }finally{reads.close?.();}
+  })();
+  if(!legacy)inFlight.set(identity,work);
+  try{return await work;}finally{if(inFlight.get(identity)===work)inFlight.delete(identity);}
 }
