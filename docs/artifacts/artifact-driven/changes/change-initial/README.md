@@ -22,3 +22,9 @@ No new artifact dependency is proposed. Internal packaging relationships belong 
 - [Source inventory](requirements/evidence.md)
 
 The source inventory distinguishes existing implementation, documented human procedures, unverified evidence, and absent capabilities. Recovery does not certify autonomous workflow enforcement or claim that current checks have passed.
+
+- [Knowledge and execution contract](specifications/knowledge.md)
+- [Adoption and publishing contract](specifications/delivery.md)
+- [Knowledge and boundary decision](decisions/001-knowledge-and-boundary.md)
+- [Embedded adoption decision](decisions/002-embedded-safe-adoption.md)
+- [Publishing decision](decisions/003-derived-documentation.md)
