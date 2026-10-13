@@ -19,3 +19,7 @@ Users must enable and trust hooks in Codex and explicitly bind agent sessions. H
 ## Source
 
 [Official Codex lifecycle hook contract](https://learn.chatgpt.com/docs/hooks). The installed CLI is 0.160.1; its generated protocol schema confirms hook metadata and agent/session types, but actual hook execution still needs implementation smoke validation.
+
+## Applicability in this change
+
+Specifications/task-retention.md replaces standalone Workflow canvas/navigation requirements and delivered task-source rules. Unit Workflow and derived workflow evidence remain supported.

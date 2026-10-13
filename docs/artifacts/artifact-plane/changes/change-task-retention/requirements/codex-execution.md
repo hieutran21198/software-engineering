@@ -30,3 +30,7 @@ R11: Completed documented checklists remain visible independently of runtime obs
 R12: Implementation views hide transitively redundant task prerequisites by default and offer Show all prerequisites. Preserve all declared prerequisites in knowledge and inspectors, retain version gates, and preserve reachability.
 
 The user requested these two concrete corrections with do the fix and reaffirmed retry. They amend this still-proposed delivery rather than create a separate outcome. Requirement self-check: the corrections address the screenshot without reconstructing agent history or changing execution authorization. KISS and STE preserve distinct evidence labels.
+
+## Applicability in this change
+
+Specifications/task-retention.md replaces standalone Workflow canvas/navigation requirements and delivered task-source rules. Unit Workflow and derived workflow evidence remain supported.

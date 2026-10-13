@@ -15,3 +15,7 @@ Mermaid suits generated diagrams, but the user's interactive-canvas preference c
 ## Consequences
 
 Readers start one local process and enter a repository path. All assets run locally without a CDN. The HTTP boundary requires loopback binding, request-origin checks, and containment checks. The app reads a repository on the server's computer. A prepared release remains proposed until the required changes merge to main.
+
+## Applicability in this change
+
+Specifications/task-retention.md replaces standalone Workflow canvas/navigation requirements and delivered task-source rules. Unit Workflow and derived workflow evidence remain supported.

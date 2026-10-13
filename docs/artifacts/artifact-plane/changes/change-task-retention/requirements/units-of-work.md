@@ -39,3 +39,7 @@ Consume proposed artifact-driven/change-units-of-work, element specifications/un
 ## Requirement self-check
 
 The user confirmed scopes 1–5. Outcome, cardinality, ownership, evidence, and compatibility are explicit. KISS retains a single authority per fact; STE checks preserve obligations and observable examples. Schema choices belong to Specification. No unresolved requirement blocker remains.
+
+## Applicability in this change
+
+Specifications/task-retention.md replaces standalone Workflow canvas/navigation requirements and delivered task-source rules. Unit Workflow and derived workflow evidence remain supported.

@@ -144,3 +144,7 @@ At a fixed desktop width, switching Dependencies to Workflow and back leaves the
 ### History requirement self-check
 
 The change affects only Artifact Plane. B17 and B18 cover history separation, recency, phases, and toolbar stability. KISS retains Git/Markdown and existing libraries. STE distinguishes retained history from proof of completed execution. No Requirement blocker remains.
+
+## Applicability in this change
+
+Specifications/task-retention.md replaces standalone Workflow canvas/navigation requirements and delivered task-source rules. Unit Workflow and derived workflow evidence remain supported.

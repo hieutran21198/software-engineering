@@ -153,3 +153,7 @@ Requirements 24–27 and B17–B18 map to phase removal, runtime lifecycle/recen
 ## Codex observation extension
 
 The codex-execution contract adds a separate runtime overlay and observation store. Earlier no-polling/no-persistence/no-agent-inference constraints continue to govern knowledge derivation. Explicit runtime events may show observed execution with freshness and reported validation labels; they do not alter knowledge graph, approval, or establishment semantics.
+
+## Applicability in this change
+
+Specifications/task-retention.md replaces standalone Workflow canvas/navigation requirements and delivered task-source rules. Unit Workflow and derived workflow evidence remain supported.
