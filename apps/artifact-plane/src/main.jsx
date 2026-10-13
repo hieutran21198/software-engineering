@@ -490,8 +490,8 @@ function App() {
               <strong>{view === "canvas" ? "Dependency canvas" : "Workflow canvas"}</strong>
               <small>{view === "canvas" ? "Upstream → downstream" : "Local worktrees · Git + Markdown"}</small>
             </div>
-            {snapshot && <div className="view-toggle" role="group" aria-label="Explorer view"><button aria-pressed={view === "canvas"} className={view === "canvas" ? "active" : ""} onClick={()=>setView("canvas")}>Canvas</button><button aria-pressed={view === "workflow"} className={view === "workflow" ? "active" : ""} onClick={()=>setView("workflow")}>Workflow</button></div>}
-            {snapshot && view === "canvas" && (
+            {snapshot && <div className="view-toggle" role="group" aria-label="Explorer view"><button aria-pressed={view === "canvas"} className={view === "canvas" ? "active" : ""} onClick={()=>setView("canvas")}>Dependencies</button><button aria-pressed={view === "workflow"} className={view === "workflow" ? "active" : ""} onClick={()=>setView("workflow")}>Workflow</button></div>}
+            <div className="dependency-view-slot">{snapshot && view === "canvas" && (
               <div
                 className="view-toggle"
                 role="group"
@@ -513,7 +513,7 @@ function App() {
                 </button>
               </div>
             )}
-          </div>
+          </div></div>
           <div style={{ display: view === "canvas" ? "contents" : "none" }}>
           {!snapshot || snapshot.artifacts.length === 0 ? (
             <div className="empty-canvas">

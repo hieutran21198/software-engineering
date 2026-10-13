@@ -932,3 +932,18 @@ summary {
 .workflow-details ul { padding-left:18px; }
 .workflow-details li { margin:10px 0; }
 .workflow-details li small { display:block; color:#8fa2bf; }
+
+/* Stable equal side regions keep the explorer switcher centered in both views. */
+.canvas-toolbar { display:grid; grid-template-columns:minmax(0,1fr) auto minmax(0,1fr); }
+.canvas-toolbar > [aria-label="Explorer view"] { justify-self:center; }
+.dependency-view-slot { justify-self:end; }
+.workflow-history-toggle { width:100%; height:100%; display:flex; align-items:center; gap:10px; text-align:left; background:#243049; border-color:#506080; }
+.workflow-history-toggle span { margin-left:auto; color:#b8c6db; }
+.workflow-row button { padding:0; min-width:24px; height:24px; font-size:18px; }
+@media (max-width:1150px) {
+ .canvas-toolbar { height:88px; grid-template-columns:minmax(0,1fr) minmax(0,1fr); grid-template-rows:24px 36px; }
+ .canvas-toolbar > [aria-label="Explorer view"] { grid-column:1/-1; grid-row:2; }
+ .dependency-view-slot { grid-column:2; grid-row:1; }
+ .canvas-surface,.workflow-view { top:88px; }
+ .diagnostics { top:100px; }
+}

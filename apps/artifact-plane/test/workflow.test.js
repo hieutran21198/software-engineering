@@ -40,7 +40,7 @@ test('B12-B14: real registered worktrees, inherited criteria, phase commits and 
   assert.deepEqual(await fingerprint(f.root),before); assert.deepEqual(await fingerprint(other),otherBefore);
   assert.equal(view.workflow.historyLimit,200); assert.equal(view.workflow.worktrees.length,2);
   const selected = view.workflow.worktrees.find(w=>w.selected); const c = selected.changes[0];
-  assert.equal(c.currentStep,'Requirement'); assert.equal(c.steps.find(s=>s.name==='Approval').state,'unknown');
+  assert.equal(c.currentStep,'Requirement'); assert.equal(c.steps.some(s=>s.name==='Approval'),false); assert.equal(c.steps.length,6);
   assert.ok(c.steps.find(s=>s.name==='Requirement').commits.some(c=>c.id===requirementId));
   assert.ok(c.steps.find(s=>s.name==='Specification').commits.some(c=>c.id===specId));
   assert.equal(c.tasks[0].inherited,true); assert.equal(c.steps.find(s=>s.name==='Implementation').state,'unknown');
@@ -101,4 +101,33 @@ test('negative and planned self-check text cannot prove completion', async()=>{
  const {explicitCompletion}=await import('../server/workflow.js');
  for(const text of ['## Self-check\nIncomplete.', '## Self-check\nTests have not passed.', '## Plan\nRun self-check and mark complete after approval.', '- [x] One\n- [ ] Next\n## Evidence\nTests passed.']) assert.equal(explicitCompletion(text),false);
  assert.equal(explicitCompletion('## Self-check\nPassed.'),true);
+});
+
+test('B17: retained lifecycle and recency come from declarations, snapshots and real commit times', async t => {
+ const f=await setup(t);
+ const current=`${base}changes/change-next/`,older=`${base}changes/change-zolder/`,newer=`${base}changes/change-anewer/`;
+ await put(f.root,`${base}README.md`,'# Demo\n\n## Current version\n1.0.0\n\n## Active change\n[Next](changes/change-next/README.md)');
+ for(const prefix of [current,older,newer]) {await put(f.root,prefix+'README.md','# Change');await put(f.root,prefix+'requirements/main.md','# Distinct '+prefix);}
+ commit(f.root,'initial change records');
+ await put(f.root,older+'requirements/main.md','# Older history');
+ const oldId=commit(f.root,'old update');
+ await put(f.root,newer+'requirements/main.md','# Newer history');
+ const newId=commit(f.root,'new update');
+ const before=await fingerprint(f.root);
+ const changes=(await exploreRepository(f.root)).workflow.worktrees[0].changes;
+ assert.equal(changes.find(c=>c.name==='change-next').history,false);
+ for(const [name,id] of [['change-zolder',oldId],['change-anewer',newId]]) {
+  const c=changes.find(c=>c.name===name);assert.equal(c.history,true);assert.match(c.historyReason,/does not prove completion/);
+  assert.equal(c.lastCommitAt,Number(git(f.root,'show','-s','--format=%ct',id)));
+ }
+ assert.deepEqual(await fingerprint(f.root),before);
+ await put(f.root,current+'requirements/main.md','# Requirements\n\n## Self-check\nPassed.');
+ const view=await exploreRepository(f.root);
+ assert.equal(view.workflow.worktrees[0].changes.find(c=>c.name==='change-next').history,true);
+ await put(f.root,`${base}README.md`,'# Demo\n\n## Current version\n1.0.0');
+ const ambiguous=(await exploreRepository(f.root)).workflow.worktrees[0].changes;
+ assert.equal(ambiguous.find(c=>c.name==='change-zolder').history,false);
+ await put(f.root,`${base}changes/change-uncommitted/README.md`,'# Uncommitted');
+ await put(f.root,`${base}changes/change-uncommitted/requirements/main.md`,'# New');
+ assert.equal((await exploreRepository(f.root)).workflow.worktrees[0].changes.find(c=>c.name==='change-uncommitted').lastCommitAt,null);
 });
