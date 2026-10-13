@@ -40,7 +40,7 @@ The coordinator validates the combined implementation and handles failures acros
 
 Validate each member's task DoD and the combined outcome. Completion requires all participating changes to produce established versions, evidence supporting every shared acceptance criterion, and passing required integration checks. Record combined checks in the unit brief; reference delivered task evidence where sufficient. Checked tasks and phase inference alone do not prove establishment or approval.
 
-Dependent implementation still waits for required upstream establishment, even when both artifacts belong to the same unit. Preparing a unit does not bypass the plan approval or team merge gates. Historical completion uses delivered versions and their evidence rather than later current versions. Missing knowledge or merge evidence remains unresolved.
+Dependent implementation still waits for required upstream establishment, even when both artifacts belong to the same unit. Preparing a unit does not bypass the plan approval or team merge gates. Historical completion uses delivered versions and their linked originating delivery records rather than later current versions. New versions exclude tasks and declare source_change plus delivery_tasks: change; retain the originating change and verify publication before using its evidence. Missing knowledge or merge evidence remains unresolved.
 
 ## Corrections
 

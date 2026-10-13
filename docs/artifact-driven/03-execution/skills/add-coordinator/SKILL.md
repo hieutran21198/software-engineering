@@ -17,7 +17,7 @@ Interview the user carefully about the need, scope, desired outcomes, constraint
 
 Identify the knowledge repository and implementation repositories. Support either separate repositories or one Git repository containing knowledge and multiple apps or services. Inspect local instructions, current branches, remotes, and uncommitted work. Preserve unrelated work; never commit directly to protected branches such as `main` or `master`.
 
-An artifact is a cohesive business or technical capability with a root README and complete knowledge snapshots. Its root README owns established identity and dependencies. `docs/artifacts/dag.yaml` indexes those dependencies. Each artifact has one active change under `changes/change-<name>/`, copied from its current version; `change-initial` starts the first version.
+An artifact is a cohesive business or technical capability with a root README and complete knowledge snapshots. Its root README owns established identity and dependencies. `docs/artifacts/dag.yaml` indexes those dependencies. Each artifact has one active change under `changes/change-<name>/`, started from its current version knowledge without task copies or delivered provenance; `change-initial` starts the first version.
 
 ## Drive the Pipeline
 
@@ -47,9 +47,9 @@ Workers return code commits and validation evidence. Coordinate knowledge-file u
 
 ## Prepare Version and PRs
 
-After all applicable DoD and combined checks pass, suggest `<major>.<minor>.<patch>` with compatibility reasons; let the user confirm or override. Start with `1.0.0`. Preserve the full valid requirements, specifications, applicable decisions, and plan/tasks with evidence in the snapshot. Amend or remove obsolete content. Code and tests remain in implementation repositories.
+After all applicable DoD and combined checks pass, suggest `<major>.<minor>.<patch>` with compatibility reasons; let the user confirm or override. Start with `1.0.0`. Preserve the full valid requirements, specifications, and applicable decisions in the snapshot, excluding tasks/. Retain the plan/tasks and evidence in the originating change. Set source_change and delivery_tasks: change in the new version README and link to that retained plan. New changes create fresh plans. Preserve established legacy snapshots and evidence. Amend or remove obsolete content. Code and tests remain in implementation repositories.
 
-Prepare the snapshot, root README, and regenerated DAG consistently on the working branch. Until merge they represent proposed state. Only knowledge and required implementation changes that have landed on `main` or `master` establish the version.
+Prepare the snapshot, root README, and regenerated DAG consistently on the working branch. Until merge they represent proposed state. Only knowledge, the retained originating delivery record, and required implementation changes that have landed on `main` or `master` establish the version. Verify delivery path sets and contents against protected refs before using change-owned evidence for completion.
 
 For each changed repository with a remote, push the dedicated branch and open a PR. Cross-link companion PRs and explain merge dependencies. Always stop for team review and merge. Do not merge PRs, enable auto-merge, deploy, force-push, or treat PR creation as establishment.
 
@@ -59,4 +59,4 @@ When resuming, verify all required merges before allowing downstream Implementat
 
 ## Coordinate a Unit of Work
 
-For a shared outcome, record a brief using the [unit-of-work format](../../../06-guidelines/units-of-work.md). Record one deliverable outcome, included/excluded scope, participating artifact changes, shared acceptance criteria, and combined validation evidence. Each member belongs to one unit; membership never creates a dependency or bypasses upstream establishment. Keep detailed knowledge and tasks with their owners. Derive aggregate views from existing knowledge and evidence without a status registry. Create source_change provenance during version preparation and retain the delivered versions needed for historical evidence. Missing or ambiguous merge evidence prevents a verified completion claim.
+For a shared outcome, record a brief using the [unit-of-work format](../../../06-guidelines/units-of-work.md). Record one deliverable outcome, included/excluded scope, participating artifact changes, shared acceptance criteria, and combined validation evidence. Each member belongs to one unit; membership never creates a dependency or bypasses upstream establishment. Keep detailed knowledge and tasks with their owners. Derive aggregate views from existing knowledge and evidence without a status registry. Create source_change provenance during version preparation and retain the delivered versions and their referenced originating changes needed for historical evidence. Missing or ambiguous merge evidence prevents a verified completion claim.

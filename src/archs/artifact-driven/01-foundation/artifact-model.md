@@ -27,10 +27,7 @@ docs/artifacts/
             ├── README.md
             ├── requirements/
             ├── specifications/
-            ├── decisions/
-            └── tasks/
-                ├── README.md
-                └── <task>.md
+            └── decisions/
 ```
 
 Use `decisions/` when applicable ADRs exist. Use `dependencies.yaml` in an active change when it proposes dependency updates.
@@ -49,19 +46,19 @@ Proposed identity or dependency updates belong in the active change's README and
 
 ## Changes and Versions
 
-The first change, `change-initial`, establishes version `1.0.0`. Subsequent changes start as complete copies of the current version.
+The first change, `change-initial`, establishes version `1.0.0`. Subsequent changes start from the complete current version knowledge, excluding any legacy tasks directory and delivered provenance metadata. Each change creates a fresh plan.
 
-Within a change, retain valid information, amend affected information, remove obsolete information, and add new information. Carry forward applicable completed tasks as historical context. Add new tasks for new implementation work and required validation.
+Within a change, retain valid information, amend affected information, remove obsolete information, and add new information. Keep previous completed tasks in their original changes. Add tasks for the current implementation work and required validation; do not inherit task copies.
 
-For each new or materially revised plan, list current task paths in YAML front matter in `tasks/README.md`. Each listed task declares a stable `id` and a `depends_on` list. These declarations define the change's implementation task DAG. Unlisted task files remain historical or contextual knowledge. Replace the copied plan's task list with the current change's work; do not include inherited tasks automatically. Preserve the task list and declarations in the complete version snapshot. See [task format](../06-guidelines/writing-artifacts.md#implementation-plan-and-tasks).
+For each new or materially revised plan, list current task paths in YAML front matter in `tasks/README.md`. Each listed task declares a stable `id` and a `depends_on` list. These declarations define the change's implementation task DAG. Unlisted task files remain historical or contextual knowledge. List only the current change's work. Preserve its task list, declarations, DoD results, and evidence in the originating change; do not copy them into versions. See [task format](../06-guidelines/writing-artifacts.md#implementation-plan-and-tasks).
 
-A version contains the complete resulting requirements, specifications, applicable decisions, and implementation plan. Task files retain their DoD checklists and validation evidence. Code and executable tests remain in the relevant implementation locations, with references from tasks where needed.
+A version contains the complete resulting requirements, specifications, and applicable decisions. It links to the retained originating change's implementation plan. Task files remain in that change with their DoD checklists and validation evidence. Code and executable tests remain in the relevant implementation locations, with references from tasks where needed.
 
-A newly prepared version README declares source_change in YAML front matter, identifying its originating artifact-local change. One version results from one change; one established version can claim that change. Do not add provenance retroactively to an established snapshot or infer it for legacy knowledge.
+A newly prepared version README declares source_change and delivery_tasks: change in YAML front matter, identifying its originating artifact-local change and its retained task source. Link to ../../changes/<source_change>/tasks/README.md. The marker is a literal value, not an arbitrary path. One version results from one change; one established version can claim that change. Do not add provenance retroactively to an established snapshot or infer it for legacy knowledge.
 
-A snapshot prepared on a change branch is proposed. It becomes established only after all required knowledge and implementation changes land on `main` or `master`. The coordinator opens the PRs and stops for team review and merge. With no remote, ask the user how to complete integration; do not assume a solo merge.
+A snapshot prepared on a change branch is proposed. It becomes established only after all required knowledge and implementation changes, including its retained delivery record, land on `main` or `master`. The coordinator opens the PRs and stops for team review and merge. With no remote, ask the user how to complete integration; do not assume a solo merge.
 
-Versions participating in a retained unit of work preserve its delivered knowledge and evidence. Keep their provenance and referenced evidence readable for historical completion; removing them makes that evidence unavailable. Other old changes and versions serve review purposes only. The current baseline must remain usable if that history is removed. If the current implementation has a defect or lacks required code, tests, or evidence, address it through a new change.
+Retain delivered changes and their tasks while any version or outcome references them. Their plans must not be overwritten by later changes. Preserve all established legacy snapshots and their task evidence. Versions without delivery_tasks keep legacy version-owned task semantics; invalid marker values are diagnostic failures. Version knowledge remains complete without replaying old changes, while historical completion also requires its retained delivery evidence. Removing a required record makes that evidence unavailable. If the current implementation has a defect or lacks required code, tests, or evidence, address it through a new change.
 
 ## Five-Phase Flow
 

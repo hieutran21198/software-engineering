@@ -35,9 +35,9 @@ Self-check behavior, contracts, ADR sufficiency, impact analysis, and blockers f
 
 Produce `tasks/README.md` and task files from completed requirements, specifications, and decisions. Cover all required work with task scope, repository/location, governing element references, prerequisites, and concrete DoD validation criteria. Identify safe opportunities for parallel implementation and required integration checks.
 
-Keep applicable completed tasks as historical context; revise or remove obsolete tasks and add new work. Historical evidence does not prove changed behavior passes. Do not reopen unaffected completed tasks without a reason.
+Create a fresh task plan for the current change. Previous completed tasks and evidence remain in their original changes; do not copy, overwrite, or reopen them for new work. Historical evidence does not prove changed behavior passes.
 
-Declare current task paths in YAML front matter in `tasks/README.md`; each listed task declares a stable `id` and an explicit `depends_on` list. Apply the [task format](../../../06-guidelines/writing-artifacts.md#implementation-plan-and-tasks). Replace inherited plan membership with current work, excluding unlisted historical tasks. Include integration and validation joins. Check task paths, metadata, unique IDs, resolved prerequisites, and acyclicity; an invalid graph is not executable. Preserve artifact-level establishment gates separately.
+Declare current task paths in YAML front matter in `tasks/README.md`; each listed task declares a stable `id` and an explicit `depends_on` list. Apply the [task format](../../../06-guidelines/writing-artifacts.md#implementation-plan-and-tasks). Declare current work without inherited task copies; existing legacy unlisted tasks stay excluded. Include integration and validation joins. Check task paths, metadata, unique IDs, resolved prerequisites, and acyclicity; an invalid graph is not executable. Preserve artifact-level establishment gates separately.
 
 Self-check coverage, executability, dependencies, and DoD. Commit Plan output separately. Present the plan for explicit user review and approval; do not start implementation. A new plan or material amendment requires renewed approval.
 
@@ -47,4 +47,4 @@ For corrections, return to the phase that owns the missing information and repea
 
 ## Shared Outcome Contracts and Plan
 
-Consume the [unit brief](../../../06-guidelines/units-of-work.md) when the change participates in an outcome. Specify applicable cross-artifact contracts and plan combined validation without creating membership-derived edges. Keep artifact establishment gates separate from internal task prerequisites. Historical outcome evidence resolves to delivered versions through source_change provenance. The coordinator owns membership and shared evidence updates.
+Consume the [unit brief](../../../06-guidelines/units-of-work.md) when the change participates in an outcome. Specify applicable cross-artifact contracts and plan combined validation without creating membership-derived edges. Keep artifact establishment gates separate from internal task prerequisites. Historical outcome evidence resolves through source_change provenance and delivery_tasks: change to the retained originating change. Legacy versions retain their version-owned task evidence. The coordinator owns membership and shared evidence updates.

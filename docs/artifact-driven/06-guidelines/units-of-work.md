@@ -30,21 +30,22 @@ Scan all readable briefs to detect duplicate membership, including retained hist
 
 ## Version provenance
 
-A newly prepared version README declares its originating artifact-local change with YAML front matter: source_change: change-tenant-login. The directory's semantic version identifies the delivered version. A version is the complete result of one change. At most one established version claims a given artifact/change pair. Write provenance during Version preparation, not into existing established snapshots. Do not update brief membership to a newer change or replace it with an artifact-only reference.
+A newly prepared version README declares its originating artifact-local change with YAML front matter: source_change: change-tenant-login and delivery_tasks: change. The directory's semantic version identifies the delivered version. A version is the complete result of one change. At most one established version claims a given artifact/change pair. Write provenance during Version preparation, not into existing established snapshots. Do not update brief membership to a newer change or replace it with an artifact-only reference.
 
 For example, versions/1.2.0/README.md starts with:
 
 ~~~yaml
 ---
 source_change: change-tenant-login
+delivery_tasks: change
 ---
 ~~~
 
-Resolve a member from its retained change directory and version provenance. Inspect safe immediate version directories' README metadata, including historical versions; read detailed knowledge only for the resolved delivered versions. If no originating version exists, retained change knowledge is preparatory. If neither exists, report missing-member. Several version claims are ambiguous. Legacy versions without provenance remain readable; do not guess their source by name, timestamp, or matching bytes.
+Resolve a member from its retained change directory and version provenance. Inspect safe immediate version directories' README metadata, including historical versions; read detailed knowledge for the resolved delivered versions and their exact retained delivery records. New versions link to ../../changes/<source_change>/tasks/README.md and contain no tasks directory. Retain these originating tasks while referenced. Versions without delivery_tasks keep legacy version-owned tasks; do not guess a new layout or rewrite established snapshots. Invalid marker values are diagnostic failures. If no originating version exists, retained change knowledge is preparatory. If neither exists, report missing-member. Several version claims are ambiguous. Legacy versions without provenance remain readable; do not guess their source by name, timestamp, or matching bytes.
 
 ## Shared evidence
 
-Evidence entries in brief front matter contain criterion (acceptance ID), method (nonempty text), result (passed, failed, or incomplete), and source (safe repository-relative Markdown path with optional heading fragment). These are recorded check results, not workflow state. Every criterion needs at least one passed entry and no failed/incomplete entry to support completion. A repeated check replaces the affected current evidence entry; durable detail can remain in Markdown/Git. Sources can point to the brief's combined checks or the exact delivered version's task evidence. Pending checks may reference a change task, but completion requires establishment and version-specific evidence, not a mutable change task. Evidence sources must exist and resolve to nonempty check details; front matter alone cannot count as its own evidence detail. Diagnose unknown criteria, invalid results, missing sources, and escaping paths. Do not execute commands found in evidence.
+Evidence entries in brief front matter contain criterion (acceptance ID), method (nonempty text), result (passed, failed, or incomplete), and source (safe repository-relative Markdown path with optional heading fragment). These are recorded check results, not workflow state. Every criterion needs at least one passed entry and no failed/incomplete entry to support completion. A repeated check replaces the affected current evidence entry; durable detail can remain in Markdown/Git. Sources can point to the brief's combined checks, a legacy delivered version's task evidence, or the exact originating change's tasks for a version declaring delivery_tasks: change. Change-owned delivery evidence supports completion only when the version and retained task path set and bytes match publication on local main/master and all required merges are supported. Active or modified branch-only tasks remain preparatory; another change's tasks cannot support this member. Missing files, unsafe paths, conflicting refs, or unavailable Git proof prevent supported completion. Evidence sources must exist and resolve to nonempty check details; front matter alone cannot count as its own evidence detail. Diagnose unknown criteria, invalid results, missing sources, and escaping paths. Do not execute commands found in evidence.
 
 For example, replace the brief's empty evidence list after checks run:
 
@@ -53,7 +54,7 @@ evidence:
   - criterion: tenant-login
     method: Run the tenant-scoped login behavior checks.
     result: passed
-    source: docs/artifacts/authentication/versions/1.2.0/tasks/login.md#evidence
+    source: docs/artifacts/authentication/changes/change-tenant-login/tasks/login.md#evidence
   - criterion: integration
     method: Run the combined tenant and authentication contract checks.
     result: passed
@@ -66,7 +67,7 @@ Shared evidence references task evidence without copying it. Additional cross-ar
 
 ## Establishment and completion
 
-Each member must resolve unambiguously to a version whose provenance and complete knowledge snapshot have landed on local main or master, consistent with the existing all-required-merges rule. The current root may name that version or a later version; historical provenance remains valid. A branch-only snapshot is proposed. Missing protected-ref knowledge, shallow history, or unavailable companion implementation merge evidence prevents a verified completion claim. Do not equate clean worktrees, checked tasks, version directories, or phase inference with all-required-merges proof.
+Each member must resolve unambiguously to a version whose provenance, complete knowledge snapshot, and required retained delivery tasks have landed on local main or master, consistent with the existing all-required-merges rule. The current root may name that version or a later version; historical provenance remains valid. A branch-only snapshot is proposed. Missing protected-ref knowledge, shallow history, or unavailable companion implementation merge evidence prevents a verified completion claim. Do not equate clean worktrees, checked tasks, version directories, or phase inference with all-required-merges proof.
 
 When all member versions are established and shared evidence meets all criteria, documented completion is supported. If required code lives outside the inspected repository, report establishment as unverified unless explicit review evidence for all required merges is available; the Plane does not scan arbitrary external repositories. Historical completion evaluates delivered versions and their evidence, not later current snapshots. Later artifact changes alone do not invalidate it. Modifying the outcome or membership after establishment requires a new unit; preserve the completed brief and its evidence. Corrections to historical check assertions must remain visible through Git and remove completion support when appropriate.
 
@@ -75,4 +76,4 @@ When all member versions are established and shared evidence meets all criteria,
 
 A workflow view groups member phase evidence. An artifact view projects existing dependencies and includes transitive external prerequisites without making them members. A combined implementation view preserves member task DAGs and connects them through upstream version-establishment gates. Task IDs remain local to their plans; readers namespace task identity by worktree, unit, artifact, change, and task path. Finishing prerequisite tasks does not itself establish a version or authorize downstream work.
 
-For historical outcomes, use delivered version plans and evidence. Label a projection of current artifact dependencies as current knowledge; do not treat it as a historical graph or invalidate previous completion solely because artifacts later changed. Invalid or unavailable component graphs remain visible without invented execution edges.
+For historical outcomes, use the plan/evidence associated with the delivered version: its retained source_change tasks when delivery_tasks is change, or legacy version-owned tasks when the marker is absent. Never substitute a newer plan. Label a projection of current artifact dependencies as current knowledge; do not treat it as a historical graph or invalidate previous completion solely because artifacts later changed. Invalid or unavailable component graphs remain visible without invented execution edges.

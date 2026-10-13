@@ -17,7 +17,7 @@ Own what is needed and why. Inspect the user's brief and existing knowledge, the
 
 For business boundary discovery, read [strategic DDD](../../../04-patterns/strategic-domain-driven-design.md). When examples clarify acceptance criteria, read [BDD](../../../04-patterns/behavior-driven-development.md). These are built-in knowledge references in the full ADD bundle; they do not require additional tools or phases.
 
-Work in the artifact's single active `changes/change-<name>/`. A change starts as a complete copy of the current established version; initial work uses `change-initial`. Preserve valid requirements, amend affected ones, remove obsolete ones, and add new needs.
+Work in the artifact's single active `changes/change-<name>/`. A change starts from complete current established version knowledge, excluding legacy tasks and delivered provenance metadata; initial work uses `change-initial`. Previous delivery tasks remain in their original changes. Plan creates a fresh task list. Preserve valid requirements, amend affected ones, remove obsolete ones, and add new needs.
 
 Record the reason for the change in its README. Requirements define the need, scope, business or technical rules, and observable acceptance criteria. Identify potentially affected artifacts and knowledge dependencies for impact analysis. Domain terms belong to their owning artifact; avoid duplicating another artifact's definitions.
 
