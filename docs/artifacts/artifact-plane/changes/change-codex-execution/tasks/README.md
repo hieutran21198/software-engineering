@@ -25,7 +25,7 @@ Hook and API work can proceed independently after storage/binding contracts pass
 
 ## Approval and external gates
 
-Present this plan for explicit user approval before implementation. No approval is claimed. The established artifact-plane dependency on artifact-driven remains unchanged. Recheck task/unit contracts against current established artifact-driven 1.2.0 before dispatch. Material changes return to Specification/Plan and renewed approval.
+Present this plan for explicit user approval before implementation. The user explicitly approved this plan before implementation. The established artifact-plane dependency on artifact-driven remains unchanged. Recheck task/unit contracts against current established artifact-driven 1.2.0 before dispatch. Material changes return to Specification/Plan and renewed approval.
 
 ## Delivery and version
 
@@ -33,8 +33,12 @@ The shared outcome is codex-execution-visualization with one Artifact Plane memb
 
 ## Plan self-check
 
-R1–R10 map to storage/binding, lifecycle adapter, runtime API, UI, and integration tasks. Unique IDs, explicit prerequisites, and the validation join form an acyclic executable graph. DoD covers persistence, concurrency, missing-source recovery, runtime freshness, evidence semantics, local boundaries, read-only knowledge, and browser behavior. KISS reuses built-in SQLite and current graph readers; STE keeps observation and completion separate. Current session performs roles sequentially. No Plan blocker remains; implementation awaits approval.
+R1–R10 map to storage/binding, lifecycle adapter, runtime API, UI, and integration tasks. Unique IDs, explicit prerequisites, and the validation join form an acyclic executable graph. DoD covers persistence, concurrency, missing-source recovery, runtime freshness, evidence semantics, local boundaries, read-only knowledge, and browser behavior. KISS reuses built-in SQLite and current graph readers; STE keeps observation and completion separate. Current session performs roles sequentially. No Plan blocker remains; the user approved implementation.
 
 ## Preparation validation
 
 Artifact Plane's actual repository reader accepted the new task graph: five tasks, seven prerequisite edges, available state, no task diagnostics. The new unit and its combined implementation graph are available with no unit diagnostics. A preparation check resolved 17 local Markdown links in the copied change and rejected ancestor references; metadata/acyclicity checks passed. git diff --check passed. No feature implementation, runtime integration, or feature browser checks have run.
+
+## Integrated validation
+
+All implementation tasks have recorded evidence. Final runtime revisions passed 103 Node tests, the production build, all 15 Chromium cases, and repository Go test/vet checks. Hook discovery passed on Codex 0.160.1; live model execution remains untested because trust settings were preserved. The user confirmed 1.7.0. No artifact dependency changed. Publication and team merge remain separate from these checks.

@@ -1,12 +1,11 @@
 import { DatabaseSync } from 'node:sqlite';
-import { mkdirSync, chmodSync, realpathSync, existsSync, statSync, readFileSync } from 'node:fs';
+import { mkdirSync, openSync, closeSync, realpathSync, existsSync, statSync, readFileSync } from 'node:fs';
 import { resolve, dirname, relative, isAbsolute, join } from 'node:path';
 import { homedir } from 'node:os';
 import { execFileSync } from 'node:child_process';
 import { randomUUID, createHash } from 'node:crypto';
 import { exploreRepository } from './reader.js';
 
-const fsPrivate=p=>chmodSync(p,0o600);
 export const FRESHNESS_MS = 10 * 60 * 1000;
 const terminal = new Set(['done','failed','interrupted','superseded']);
 const safeName = v => typeof v === 'string' && /^[a-z0-9][a-z0-9-]*$/.test(v);
@@ -50,9 +49,9 @@ export class RuntimeStore {
   }
   // Containment must also hold for a pre-existing database symlink.
   if(existsSync(this.path)&&canonical(this.path)!==this.path)throw Error('Runtime database must not be a symlink');
+  if(create&&!existsSync(this.path)){try{closeSync(openSync(this.path,'wx',0o600));}catch(error){if(error.code!=='EEXIST')throw error;}}
   if(existsSync(this.path)&& (statSync(this.path).mode & 0o077))throw Error('Runtime database must be private (0600)');
   this.db=new DatabaseSync(this.path,{readOnly:!create});
-  if(create)fsPrivate(this.path);
   const version=Number(this.db.prepare('PRAGMA user_version').get().user_version);
   if(version>1){this.db.close();throw Error('Unsupported newer runtime schema');}
   if(!create&&version!==1){this.db.close();throw Error('Runtime schema unavailable');}

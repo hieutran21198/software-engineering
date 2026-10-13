@@ -11,7 +11,19 @@ acceptance:
   - id: integration
     criterion: Hook, storage, API, graph, browser, and read-only checks pass without changing ADD approval or establishment semantics.
     integration: true
-evidence: []
+evidence:
+  - criterion: live-visibility
+    method: Run browser acceptance for artifact identity, state transitions, agents, concurrent branches, and reconnect behavior.
+    result: passed
+    source: docs/artifacts/artifact-plane/versions/1.7.0/tasks/24-runtime-graphs.md#evidence
+  - criterion: durable-history
+    method: Run restart and removed-worktree fixtures plus archived browser navigation.
+    result: passed
+    source: docs/artifacts/artifact-plane/versions/1.7.0/tasks/21-runtime-store.md#evidence
+  - criterion: integration
+    method: Run integrated Node, build, Chromium, repository fidelity, and installed hook discovery checks.
+    result: passed
+    source: docs/artifacts/units-of-work/codex-execution-visualization/README.md#combined-checks
 ---
 
 # Codex execution visualization
@@ -34,4 +46,14 @@ Artifact Plane adds observation and visualization against established ADD contra
 
 ## Validation evidence
 
-No feature implementation or feature acceptance checks have run. Record combined checks here after implementation; delivered tasks supply detailed evidence.
+Shared acceptance checks passed; detailed evidence lives in the proposed 1.7.0 snapshot. Member establishment still awaits required team merge.
+
+## Combined checks
+
+At apps/artifact-plane, npm test passed 103 Node tests, npm run build passed, and npm run test:browser passed all 15 Chromium cases. System Chromium was selected through PLAYWRIGHT_CHROMIUM_EXECUTABLE_PATH; browser runtime state was isolated outside the fixtures. Root GOCACHE=/tmp/software-engineering-codex-go-cache go test ./... and go vet ./... passed.
+
+The integrated fixture covers hook reporting, durable observation writes, SSE updates, concurrent nodes, permission waits, returned execution, explicit validation, interruption/failure/Unknown states, offline/online recovery, preserved graph selection/viewport, and archived graphs after worktree removal and reload. Repository fingerprints remain unchanged. Wide/narrow/archived screenshots were inspected and layout spacing was corrected.
+
+Installed Codex 0.160.1 discovered all ten configured hooks with no warnings/errors in a disposable CODEX_HOME. Hooks remained untrusted; no live model turn ran. Actual activation requires the user's /hooks review and explicit task binding. No global configuration or trust settings changed.
+
+Version 1.7.0 is user-confirmed and proposed on this branch. No establishment or completed outcome is claimed before all required merges.
