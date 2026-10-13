@@ -55,3 +55,5 @@ Fixtures cover exact originating task sources, task-free version knowledge, lega
 ## Publication review
 
 artifact-driven 2.0.0: All required knowledge and implementation changes have landed on main after PR #13. The user reported the merge; Git verified the version and retained originating tasks on main before Plane implementation. Plane 1.8.0 remains proposed until required review/merge.
+
+Plane 1.8.0 is proposed in [PR #14](https://github.com/hieutran21198/software-engineering/pull/14), linked to established ADD [PR #13](https://github.com/hieutran21198/software-engineering/pull/13). Shared acceptance checks passed; completion still waits for the downstream required merge.
