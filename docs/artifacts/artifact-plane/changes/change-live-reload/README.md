@@ -15,4 +15,6 @@ All required knowledge and implementation changes for this outcome reside in thi
 - [Repository update contract](specifications/live-reload.md)
 - [Update mechanism decision](decisions/007-repository-updates.md)
 
-Implementation requires explicit approval of the completed plan.
+- [Implementation plan](tasks/README.md)
+
+Implementation requires explicit approval of this completed plan.
