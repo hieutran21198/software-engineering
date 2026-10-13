@@ -19,10 +19,10 @@ Explicit user approval of this plan; upstream contracts rechecked; internal depe
 
 ## Definition of Done
 
-- [ ] HTTP tests cover origin/host restrictions, payload limits, contained root/context query, missing runtime storage, and no mutation or arbitrary file-read route.
-- [ ] SSE tests verify initial invalidation, concurrent changes, reconnect refetch, client limits, cleanup, and no watcher when clients disconnect.
-- [ ] Restart and archived-context queries recover observations without the removed worktree; repository/Git fingerprints remain unchanged.
+- [x] HTTP tests cover origin/host restrictions, payload limits, contained root/context query, missing runtime storage, and no mutation or arbitrary file-read route.
+- [x] SSE tests verify initial invalidation, concurrent changes, reconnect refetch, client limits, cleanup, and no watcher when clients disconnect.
+- [x] Restart and archived-context queries recover observations without the removed worktree; repository/Git fingerprints remain unchanged.
 
 ## Evidence
 
-No implementation or task validation has run.
+node --test test/runtime-api.test.js passed both API fixtures. Checks cover host/origin validation, payload limits, query semantics, initial/live SSE invalidation, client limits/disconnect cleanup, restart freshness, unavailable runtime storage, no mutation route, and repository fingerprints. Full npm test also passed 102 tests after integration. KISS uses one watcher only while SSE clients exist; STE retains Unknown semantics.

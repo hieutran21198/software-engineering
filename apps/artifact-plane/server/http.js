@@ -3,6 +3,7 @@ import { readFile, realpath } from "node:fs/promises";
 import { resolve, relative, isAbsolute, sep, extname } from "node:path";
 import { fileURLToPath } from "node:url";
 import { exploreRepository } from "./reader.js";
+import { runtimeService } from "./runtime-api.js";
 const DIST = fileURLToPath(new URL("../dist/", import.meta.url));
 const mime = {
   ".html": "text/html; charset=utf-8",
@@ -25,8 +26,9 @@ function json(res, status, data) {
   });
   res.end(JSON.stringify(data));
 }
-export function createAppServer() {
-  return createServer(async (req, res) => {
+export function createAppServer(options = {}) {
+  const runtime = runtimeService(options);
+  const server = createServer(async (req, res) => {
     try {
       const host = `127.0.0.1:${req.socket.localPort}`;
       if (
@@ -36,7 +38,12 @@ export function createAppServer() {
       )
         return json(res, 403, { error: "Use the local application origin." });
       const url = new URL(req.url, `http://${host}`);
-      if (url.pathname === "/api/explore") {
+      if (url.pathname === "/api/runtime/events") {
+        if (req.method !== "GET") return json(res, 405, {error: "Use GET for events."});
+        if (!runtime.subscribe(req, res, security)) return json(res, 429, {error: "Too many observation clients."});
+        return;
+      }
+      if (["/api/explore", "/api/runtime/query"].includes(url.pathname)) {
         if (req.method !== "POST")
           return json(res, 405, { error: "Use POST to explore a repository." });
         if (
@@ -57,6 +64,10 @@ export function createAppServer() {
           body = JSON.parse(Buffer.concat(chunks).toString("utf8"));
         } catch {
           return json(res, 400, { error: "Request must contain valid JSON." });
+        }
+        if (url.pathname === "/api/runtime/query") {
+          if (typeof body?.path !== "string" || !body.path || body.context !== undefined && typeof body.context !== "string") return json(res, 400, {error: "Supply a repository path and optional context ID."});
+          return json(res, 200, runtime.query(body.path, body.context));
         }
         return json(res, 200, await exploreRepository(body?.path));
       }
@@ -102,4 +113,7 @@ export function createAppServer() {
       });
     }
   });
+  server.on("close", () => runtime.close());
+  server.runtime = runtime;
+  return server;
 }
