@@ -5,6 +5,7 @@ tasks:
   - 23-runtime-api.md
   - 24-runtime-graphs.md
   - 25-execution-validation.md
+  - 26-visualization-clarity.md
 ---
 
 # Codex execution visualization plan
@@ -46,3 +47,7 @@ All implementation tasks have recorded evidence. Final runtime revisions passed 
 ## Review handoff
 
 [PR #12](https://github.com/hieutran21198/software-engineering/pull/12) is open for team review. All five task DoD checklists have supporting evidence. The user confirmed 1.7.0. Required merge remains outstanding; neither PR creation nor runtime task completion establishes the version.
+
+## Approved correction plan
+
+[Clarify runtime absence and simplify prerequisite display](26-visualization-clarity.md) follows the validated delivery task. The user explicitly approved the two corrections described in the conversation. Its scope is labels and a non-mutating view projection; no dependency, authorization, or establishment contract changes. Plan self-check confirms unique membership, resolvable prerequisites, acyclicity, and coverage of both requested fixes.
