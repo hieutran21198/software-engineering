@@ -10,3 +10,4 @@ Artifact Plane consumes the ADD task contract and displays change task graphs, d
 
 - [Requirements](requirements/task-dag.md)
 - [Task graph specification](specifications/task-dag.md)
+- [Implementation plan](tasks/README.md)

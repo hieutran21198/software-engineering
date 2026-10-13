@@ -33,4 +33,4 @@ None.
 
 ## Future development
 
-After merge establishes 1.0.0, start future ADD changes from its full snapshot. Retain valid requirements, contracts, decisions and evidence; amend affected knowledge and add required tasks. Follow Requirement → Specification → Plan → Implementation → Version with explicit plan approval and team merge. Preserve the reusable bundle; do not treat these project artifacts as another copy of its guidance.
+Version 1.0.0 is established on main. Start future ADD changes from its full snapshot. Retain valid requirements, contracts, decisions and evidence; amend affected knowledge and add required tasks. Follow Requirement → Specification → Plan → Implementation → Version with explicit plan approval and team merge. Preserve the reusable bundle; do not treat these project artifacts as another copy of its guidance.
