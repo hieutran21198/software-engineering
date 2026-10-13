@@ -95,7 +95,13 @@ Keep external artifact references and their reasons in specifications and task p
 
 Record commands or review methods, results, and relevant code/test references with tasks. Keep failed and incomplete checks visible. Historical completed tasks remain only while applicable; recheck evidence when its covered behavior changes.
 
+## Unit-of-Work Brief
+
+Use the [unit-of-work format](units-of-work.md) for outcome scope, structured membership, shared acceptance criteria, and combined evidence. Do not copy task plans or dependency graphs into the brief. Keep each fact under its owning artifact or outcome.
+
 ## Version Snapshot
+
+Set source_change in the new version README YAML front matter to the originating change name. Do not edit an established snapshot to add provenance.
 
 After validation, copy the full resulting requirements, specifications, applicable decisions, and tasks with evidence into the proposed version. The snapshot must not require replaying old changes. Code and executable tests remain in implementation repositories.
 

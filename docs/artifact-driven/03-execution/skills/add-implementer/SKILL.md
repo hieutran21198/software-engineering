@@ -30,3 +30,7 @@ In delegated work, commit code in the assigned worktree and return commits and e
 Fix code defects and repeat affected checks. If a task gap, contract gap, or requirement problem appears, report it to the coordinator and pause affected work. Do not independently amend governing contracts or expand the approved plan. A material change or new plan requires renewed user approval.
 
 Task completion does not prove integrated change completion. Return remaining integration dependencies and failed checks clearly. Do not publish, merge PRs, establish versions, deploy, or remove worktrees containing unintegrated work as part of this role.
+
+## Shared Outcome Evidence
+
+For a member change, read the [unit brief](../../../06-guidelines/units-of-work.md) and governing contracts. Record task checks under the owning artifact; return combined check results to the coordinator for shared evidence. Do not amend central membership, bypass an establishment gate, or treat a checked task as completed outcome evidence.

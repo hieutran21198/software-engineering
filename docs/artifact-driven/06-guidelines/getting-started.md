@@ -14,6 +14,10 @@ Create a dedicated branch for the work. Do not commit directly to `main` or `mas
 
 For an existing artifact, resolve its current version from the root README and copy its complete snapshot into the single active change. Retain valid knowledge and tasks, amend affected items, remove obsolete items, and add required work.
 
+## Group the Outcome
+
+For work that spans artifact changes, write a [unit-of-work brief](units-of-work.md). Identify one deliverable outcome, included/excluded scope, participating changes, and shared acceptance criteria. A unit can have one member. Each participating change belongs to one unit, and each artifact retains its existing ownership and single-active-change rule. Existing projects can continue without briefs; do not invent legacy membership.
+
 ## Complete the Change
 
 1. The PO interviews stakeholders, writes requirements, self-checks, and commits the completed phase.
@@ -21,7 +25,7 @@ For an existing artifact, resolve its current version from the root README and c
 3. The TL writes the implementation plan in the same working session. Declare current task paths in `tasks/README.md` and stable `id` and `depends_on` fields in each listed task. Check membership, prerequisite resolution, and acyclicity, then commit the completed Plan.
 4. The user reviews and explicitly approves the plan before implementation.
 5. Implementers complete tasks and record DoD evidence. The coordinator integrates results and validates the combined change.
-6. Prepare a complete proposed version, root README updates, and the established DAG's proposed update. Open the required PRs and stop for team review and merge.
+6. Record shared integration evidence where applicable. Prepare a complete proposed version with source_change provenance, root README updates, and the established DAG's proposed update. Open the required PRs and stop for team review and merge.
 
 The first version is `1.0.0`. Later versions use semantic versioning with a suggested compatibility level confirmed by the user. A version establishes only when all required knowledge and implementation changes land on `main` or `master`.
 
