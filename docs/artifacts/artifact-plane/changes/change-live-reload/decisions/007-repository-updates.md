@@ -17,3 +17,7 @@ Choose option 3 with a two-second polling interval and 250 ms grouping. Avoid hi
 ## Consequences
 
 Automatic updates have a sampling delay. Save/revert pairs entirely between samples can be missed. Polling costs safe input reads while subscribed, but avoids repeated expensive history processing and ends when no subscribers remain. Tests must cover staleness, recovery, resource release, and exact evidence equality. A native watcher is reconsidered only if measured polling cost warrants it; the current plan does not require both mechanisms.
+
+## Lazy loading extension
+
+Eager caching alone retains broad snapshots and does unnecessary first-load work. Use a lightweight overview plus one scoped query endpoint for selected views, Markdown, history, and complete requested conclusions. Keep the complete explore endpoint for compatibility and equal-work benchmarks. Release inactive detail instead of caching every visited section. Idle polling hashes inputs incrementally without retaining full knowledge maps. This adds explicit loading/error states and scoped API validation, but avoids a growing browser snapshot cache or disk persistence.

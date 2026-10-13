@@ -145,3 +145,7 @@ The codex-execution contract adds a separate runtime overlay and observation sto
 ## Repository updates
 
 The live-reload.md contract in this specification directory defines automatic repository updates, reload reuse, recovery, and preserved user context. It changes refresh transport and unit tab order without changing evidence interpretation.
+
+## Deferred exploration
+
+The lazy-loading.md contract in this directory defines on-demand views and detail. Deferred evidence remains Not loaded and never substitutes for complete establishment or completion checks. Existing complete response shapes remain available through the legacy explore endpoint.
