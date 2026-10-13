@@ -22,7 +22,7 @@ Version 1.8.0 and its snapshot links on this branch are proposed until required 
 
 ## Active change
 
-- [Task retention and navigation simplification](changes/change-task-retention/README.md)
+- [Automatic updates and faster reloads](changes/change-live-reload/README.md)
 
 ## Knowledge snapshot
 
