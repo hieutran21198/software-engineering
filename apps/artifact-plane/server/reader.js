@@ -55,7 +55,8 @@ export async function scanRepository(path) {
       "Select the Git worktree root, not a nested directory.",
     );
   const files = new Map(),
-    diagnostics = [];
+    diagnostics = [],
+    unsafeTaskPaths = new Set();
   const diagnostic = (code, path, message) =>
     diagnostics.push({ code, path, message });
   const contained = (target) =>
@@ -70,6 +71,7 @@ export async function scanRepository(path) {
         !contained(target) ||
         relative(root, target).split(sep).includes(".git")
       ) {
+        if (/\/changes\/change-[^/]+\/tasks\//.test(path)) unsafeTaskPaths.add(path);
         diagnostic(
           "unsafe-path",
           path,
@@ -101,6 +103,15 @@ export async function scanRepository(path) {
     if (!target) return false;
     try {
       if (!(await stat(target)).isFile()) return false;
+      const taskDirectory = path.match(/^(.*\/changes\/change-[^/]+\/tasks)\//)?.[1];
+      if (taskDirectory) {
+        const taskRelative = relative(resolve(root, taskDirectory), target);
+        if (taskRelative === '..' || taskRelative.startsWith('..' + sep) || isAbsolute(taskRelative)) {
+          unsafeTaskPaths.add(path);
+          diagnostic('unsafe-path', path, 'Task path leaves the task directory; skipped.');
+          return false;
+        }
+      }
       files.set(path, await readFile(target, "utf8"));
       return true;
     } catch {
@@ -189,11 +200,11 @@ export async function scanRepository(path) {
     { path: root, branch, head, dirty: Boolean(status), status },
     diagnostics,
   );
-  return { snapshot, files };
+  return { snapshot, files, unsafeTaskPaths };
 }
 
 export async function exploreRepository(path) {
-  const { snapshot, files } = await scanRepository(path);
-  snapshot.workflow = await readWorkflow(snapshot.repository.path, { snapshot, files }, scanRepository, git);
+  const { snapshot, files, unsafeTaskPaths } = await scanRepository(path);
+  snapshot.workflow = await readWorkflow(snapshot.repository.path, { snapshot, files, unsafeTaskPaths }, scanRepository, git);
   return snapshot;
 }
