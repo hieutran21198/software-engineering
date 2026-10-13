@@ -36,3 +36,7 @@ All new requirements map to tasks and concrete DoD. Internal edges form a sequen
 ## Preparation evidence
 
 The existing Artifact Plane task parser accepted both new plans: ADD has two tasks and one edge; Plane has four tasks and three edges, with no diagnostics. A local link check resolved all 44 Markdown links in the change snapshots and found no ancestor references. git diff --check passed. No implementation or browser acceptance checks have run.
+
+## Integrated result
+
+All four approved tasks have concrete implementation and check evidence. Node tests (91), production build, Chromium acceptance (13), and repository Go adoption/fidelity checks passed. The user confirmed Plane 1.6.0. Shared outcome checks are recorded in its brief; completion still requires Plane publication. No workflow state or duplicate DAG was introduced.
