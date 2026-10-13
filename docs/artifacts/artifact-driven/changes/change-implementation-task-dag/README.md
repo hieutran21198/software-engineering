@@ -9,3 +9,4 @@ ADD owns task metadata, graph validation, plan membership, and delivered bundle 
 ## Proposed knowledge
 
 - [Requirements](requirements/task-dag.md)
+- [Task graph specification](specifications/task-dag.md)
