@@ -26,7 +26,7 @@ Event records include event ID, repository ID when resolved, session/agent ident
 
 ## Derived states
 
-- Waiting: no matching attempt; no readiness or approval assertion.
+- No recorded execution (internal waiting state): no matching attempt; no readiness or approval assertion.
 - Processing: bound UserPromptSubmit or PreToolUse observed; show last tool label and event time. SessionStart alone is idle/unknown.
 - Blocked: PermissionRequest observed; next corresponding activity can clear this observation. Also allow explicit blocked reports with a bounded reason label.
 - Validating: Stop or SubagentStop observed, or explicit execution-returned report. Neither hook proves success. Labels say execution returned / DoD pending.
@@ -43,10 +43,18 @@ Reuse existing loopback host/origin checks. Add POST /api/runtime/query with a c
 
 ## UI
 
-Apply common runtime rendering to individual task and combined unit implementation graphs. Artifact name is prominent, change identity secondary, and task title wraps without the current one-line truncation. Gates retain artifact-specific establishment labels. Show state text and colors: gray Waiting/Unknown, blue Processing, amber Validating/Blocked (distinct icons), green Done (reported), red Failed, and neutral Interrupted. Show agent label, elapsed time, last observed activity, and freshness for bound nodes. Clock updates are browser-local and do not imply harness liveness. Keep checklist counts labeled documented checklist, separate from validation reports.
+Apply common runtime rendering to individual task and combined unit implementation graphs. Artifact name is prominent, change identity secondary, and task title wraps without the current one-line truncation. Gates retain artifact-specific establishment labels. Show state text and colors: gray No recorded execution/Unknown, blue Processing, amber Validating/Blocked (distinct icons), green Done (reported), red Failed, and neutral Interrupted. Show agent label, elapsed time, last observed activity, and freshness for bound nodes. Clock updates are browser-local and do not imply harness liveness. Keep checklist counts labeled documented checklist, separate from validation reports.
 
 Inspectors expose attempts, ordered activity, source references, and archived context diagnostics without sensitive payloads. Multiple processing nodes show observed concurrency on existing branches; do not invent edges or readiness. Preserve selection/pan/zoom during runtime updates. Runtime disconnection is visible and does not freeze stale nodes as Processing. Add a Recorded executions selector independent of current worktree selection, reachable from a surviving checkout. Responsive layouts and keyboard access remain supported. Artifact lanes may be deferred; ownership labels are required.
 
 ## Baseline amendments and self-check
 
 Execution observation is the explicit exception to the inherited no-database/no-background-update constraints. Existing knowledge read-only behavior, graph parsing, and completion semantics remain applicable. Local-server and derived-workflow ADRs govern knowledge exploration; the new observer ADR governs the separate runtime extension. External ADD contract references resolve to current established artifact-driven 1.2.0. R1–R10 have contracts covering identity, transport, persistence, errors, recovery, and visual semantics. KISS uses built-in SQLite and existing readers/canvases; STE separates observations, assertions, and establishment. No blocker remains for Plan.
+
+## Visualization correction contract
+
+When no matching attempt exists, render No recorded execution. A nonempty checklist with zero unchecked items adds a Documented checklist complete label; this does not imply runtime Done or verification.
+
+In individual, unit, and recorded implementation views, hide a task edge only when another path of task-prerequisite edges connects its source to its target. Never use establishment edges to justify removing a task edge, and never hide establishment edges. Cyclic or invalid graphs retain their existing diagnostic behavior without reduction. Use a keyboard-accessible Show all prerequisites checkbox, default unchecked. The toggle affects canvas edges/layout only. Declared metadata, inspector prerequisites, runtime matching, node identities, and source data remain unchanged.
+
+Specification self-check: R11/R12 have precise labels, edge semantics, failure behavior, and input-preservation rules. No upstream contract change or new ADR is needed. KISS uses a shared pure display projection; STE distinguishes recorded execution and documented checklists.
