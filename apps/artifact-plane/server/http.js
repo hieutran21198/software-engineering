@@ -3,6 +3,7 @@ import { readFile, realpath } from "node:fs/promises";
 import { resolve, relative, isAbsolute, sep, extname } from "node:path";
 import { fileURLToPath } from "node:url";
 import { exploreRepository } from "./reader.js";
+import {queryRepository} from './repository-query.js';
 import { runtimeService } from "./runtime-api.js";
 const DIST = fileURLToPath(new URL("../dist/", import.meta.url));
 const mime = {
@@ -43,7 +44,7 @@ export function createAppServer(options = {}) {
         if (!runtime.subscribe(req, res, security)) return json(res, 429, {error: "Too many observation clients."});
         return;
       }
-      if (["/api/explore", "/api/runtime/query"].includes(url.pathname)) {
+      if (["/api/explore", "/api/runtime/query", "/api/repository/query"].includes(url.pathname)) {
         if (req.method !== "POST")
           return json(res, 405, { error: "Use POST to explore a repository." });
         if (
@@ -69,6 +70,7 @@ export function createAppServer(options = {}) {
           if (typeof body?.path !== "string" || !body.path || body.context !== undefined && typeof body.context !== "string") return json(res, 400, {error: "Supply a repository path and optional context ID."});
           return json(res, 200, runtime.query(body.path, body.context));
         }
+        if(url.pathname==='/api/repository/query')return json(res,200,await queryRepository(body));
         return json(res, 200, await exploreRepository(body?.path));
       }
       if (!["GET", "HEAD"].includes(req.method))

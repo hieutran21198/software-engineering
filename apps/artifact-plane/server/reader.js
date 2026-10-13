@@ -1,12 +1,15 @@
+import {createHash} from 'node:crypto';
 import { readdir, readFile, realpath, stat } from "node:fs/promises";
 import { relative, resolve, isAbsolute, sep } from "node:path";
 import { execFile } from "node:child_process";
 import { promisify } from "node:util";
+import {marked} from 'marked';
 import { buildSnapshot, parseArtifact } from "../src/model.js";
 const execute = promisify(execFile);
 import {gitReads} from './git-reads.js';
 import {gitSlot} from './git-process.js';
 export const gitMetrics = {commands:0};
+export const scanMetrics={files:0,fullBodies:0,scans:0};
 import {frontMatter,unitBriefs, versionClaims, safeKnowledgePath} from "./units-of-work.js";
 import { readWorkflow } from "./workflow.js";
 export class ExploreError extends Error {
@@ -42,6 +45,7 @@ export async function git(root, args, raw = false) {
 }
 export async function scanRepository(path, options = {}) {
   const runGit = options.git || git;
+  scanMetrics.scans++;
   if (typeof path !== "string" || !isAbsolute(path) || path.includes("\0"))
     throw new ExploreError(400, "Enter an absolute repository path.");
   let root;
@@ -64,6 +68,8 @@ export async function scanRepository(path, options = {}) {
       422,
       "Select the Git worktree root, not a nested directory.",
     );
+  const contentHash=createHash('sha256');
+  const loadedPaths=new Set();
   const files = new Map(),
     diagnostics = [],
     unsafeTaskPaths = new Set();
@@ -109,6 +115,7 @@ export async function scanRepository(path, options = {}) {
     }
   }
   async function load(path) {
+    if(loadedPaths.has(path))return true;
     const target = await safe(path);
     if (!target) return false;
     try {
@@ -123,12 +130,21 @@ export async function scanRepository(path, options = {}) {
         }
       }
       const bytes = await readFile(target);
+      contentHash.update(JSON.stringify(path));contentHash.update(bytes);
       const markdown = bytes.toString("utf8");
       if (!bytes.equals(Buffer.from(markdown, "utf8"))) {
         diagnostic("unreadable-path", path, "Knowledge file is not valid UTF-8; skipped.");
         return false;
       }
-      files.set(path, markdown);
+      scanMetrics.files++;
+      const full=!options.metadata || options.full?.(path) || /^docs\/artifacts\/[^/]+\/README\.md$/.test(path);
+      if(full)scanMetrics.fullBodies++;
+      const metadata=()=>{
+        const front=markdown.match(/^---\r?\n[\s\S]*?\r?\n---(?:\r?\n|$)/)?.[0]||'';
+        const tokens=marked.lexer(markdown.slice(front.length));
+        return front+tokens.filter(t=>t.type==='heading'&&t.depth===1||t.type==='code'&&/^ya?ml$/i.test(t.lang||'')).map(t=>t.raw).join('\n');
+      };
+      files.set(path,full?markdown:metadata());loadedPaths.add(path);
       return true;
     } catch {
       diagnostic("unreadable-path", path, "File cannot be read.");
@@ -240,7 +256,7 @@ export async function scanRepository(path, options = {}) {
     { path: root, branch, head, dirty: Boolean(status), status },
     diagnostics,
   );
-  return { snapshot, files, unsafeTaskPaths };
+  return { snapshot, files, unsafeTaskPaths, revision:contentHash.digest('hex') };
 }
 
 const inFlight = new Map();
