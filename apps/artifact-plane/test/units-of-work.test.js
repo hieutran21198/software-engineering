@@ -2,10 +2,11 @@ import test from 'node:test';
 import assert from 'node:assert/strict';
 import {writeFile,mkdir,symlink,rm} from 'node:fs/promises';
 import {join} from 'node:path';
-import {parseUnitBrief,frontMatter} from '../server/units-of-work.js';
-import {exploreRepository} from '../server/reader.js';
+import {parseUnitBrief,frontMatter,readUnitsOfWork} from '../server/units-of-work.js';
+import {exploreRepository,scanRepository} from '../server/reader.js';
+import {checklist} from "../server/workflow.js";
 import {fixtureRepository,fingerprint,git,rootReadme} from './fixtures.js';
-import {unitPath,unitBrief,unitFixture,unitTask} from './unit-fixtures.js';
+import {unitPath,unitBrief,unitFixture,unitTask,changeDeliveryFixture} from './unit-fixtures.js';
 const codes=unit=>unit.diagnostics.map(d=>d.code);
 test('published delivered versions and documented shared checks support completion without writes',async t=>{
  const fixture=await fixtureRepository(unitFixture());t.after(fixture.cleanup);
@@ -98,4 +99,50 @@ test('duplicate member rows retain readable knowledge without duplicate node ide
 
 test('member-scoped review evidence supports published versions but cannot establish branch-only knowledge',async t=>{
  const files=unitFixture();for(const [p,body]of files)files.set(p,body.replaceAll('All required knowledge and implementation changes are in this repository.',''));files.set(unitPath,files.get(unitPath)+'\n## Publication review\n\ntenant 1.0.0: All required knowledge and implementation changes have landed on main.\n\nauthentication 1.0.0: All required knowledge and implementation changes have landed on main.\n');const f=await fixtureRepository(files);t.after(f.cleanup);let unit=(await exploreRepository(f.root)).unitsOfWork[0];assert.equal(unit.completion.derivation,'documented-complete');assert.ok(unit.members.every(m=>m.establishmentEvidence.sources.some(s=>s.kind==='documented-merge-review')));git(f.root,'switch','-qc','proposed');await writeFile(join(f.root,'docs/artifacts/tenant/versions/1.0.0/tasks/api.md'),unitTask('api')+'Proposed difference');unit=(await exploreRepository(f.root)).unitsOfWork[0];assert.equal(unit.members[0].establishmentEvidence.state,'proposed');assert.equal(unit.completion.derivation,'incomplete');
+});
+
+test('change-owned delivery resolves exact task identities, shared evidence and published history without writes',async t=>{
+ const files=changeDeliveryFixture();
+ for(const a of ['tenant','authentication']){
+  const p=`docs/artifacts/${a}/changes/change-next/`;
+  files.set(`${p}README.md`,'# Next');files.set(`${p}tasks/README.md`,'---\ntasks: [new.md]\n---\n# New plan');files.set(`${p}tasks/new.md`,unitTask('new'));
+ }
+ const f=await fixtureRepository(files);t.after(f.cleanup);const before=await fingerprint(f.root),view=await exploreRepository(f.root),u=view.unitsOfWork[0];
+ assert.equal(u.completion.derivation,'documented-complete');assert.deepEqual(u.diagnostics,[]);
+ for(const m of u.members){assert.equal(m.deliveryPath,`docs/artifacts/${m.artifact}/changes/change-login/`);assert.match(m.sourcePath,/versions\/1.0.0\/$/);assert.deepEqual(m.taskGraph.tasks.map(t=>t.id).sort(),['api','integration','ui']);assert.ok(m.taskGraph.tasks.every(t=>t.path.startsWith(m.deliveryPath)));assert.equal(m.workflow.history,true);assert.equal(m.workflow.currentStep,null);assert.ok(m.workflow.steps.find(s=>s.name==='Version preparation').commits.length);}
+ assert.ok(u.evidence.every(e=>e.deliveredSource));assert.deepEqual(await fingerprint(f.root),before);
+});
+for(const mutation of ['modified','deleted','added','membership','branch'])test(`change-owned ${mutation} task evidence cannot establish delivery`,async t=>{
+ const f=await fixtureRepository(changeDeliveryFixture());t.after(f.cleanup);
+ const p='docs/artifacts/authentication/changes/change-login/tasks/';
+ if(mutation==='deleted')await rm(join(f.root,p,'ui.md'));
+ else if(mutation==='added')await writeFile(join(f.root,p,'extra.md'),unitTask('extra'));
+ else if(mutation==='membership')await writeFile(join(f.root,p,'README.md'),'---\ntasks: [api.md]\n---\n# Changed plan');
+ else await writeFile(join(f.root,p,'api.md'),unitTask('api')+'\nDifferent evidence.\n');
+ if(mutation==='branch'){git(f.root,'switch','-qc','branch');git(f.root,'add','.');git(f.root,'-c','user.name=Fixture','-c','user.email=f@example.invalid','commit','-qm','branch evidence');}
+ const u=(await exploreRepository(f.root)).unitsOfWork[0],m=u.members.find(m=>m.artifact==='authentication');assert.notEqual(u.completion.derivation,'documented-complete');assert.equal(m.establishmentEvidence.state,'proposed');assert.equal(u.evidence[0].deliveredSource,false);
+});
+for(const marker of ['other','../change-login','null','[change]'])test(`invalid delivery marker ${marker} never falls back`,async t=>{
+ const files=changeDeliveryFixture();const p='docs/artifacts/authentication/versions/1.0.0/README.md';files.set(p,files.get(p).replace('delivery_tasks: change',`delivery_tasks: ${marker}`));const f=await fixtureRepository(files);t.after(f.cleanup);const u=(await exploreRepository(f.root)).unitsOfWork[0];assert.ok(codes(u).includes('invalid-delivery-marker'));assert.equal(u.members[1].taskGraph.state,'unavailable');assert.equal(u.completion.derivation,'unknown');
+});
+test('missing retained source and missing retained plan never use newer tasks',async t=>{
+ for(const missing of ['tasks/README.md','']){const f=await fixtureRepository(changeDeliveryFixture());t.after(f.cleanup);await rm(join(f.root,'docs/artifacts/authentication/changes/change-login',missing),{recursive:true});const u=(await exploreRepository(f.root)).unitsOfWork[0];assert.ok(codes(u).includes('missing-delivery-source'));assert.equal(u.completion.derivation,'unknown');assert.equal(u.members[1].deliveryPath,null);}
+});
+test('conflicting retained tasks on protected refs remain unknown',async t=>{
+ const f=await fixtureRepository(changeDeliveryFixture());t.after(f.cleanup);git(f.root,'switch','-qc','master');await writeFile(join(f.root,'docs/artifacts/authentication/changes/change-login/tasks/ui.md'),unitTask('ui')+'Conflict');git(f.root,'add','.');git(f.root,'-c','user.name=Fixture','-c','user.email=f@example.invalid','commit','-qm','different tasks');const u=(await exploreRepository(f.root)).unitsOfWork[0];assert.equal(u.members[1].establishmentEvidence.state,'unknown');assert.equal(u.completion.derivation,'unknown');
+});
+test('unavailable publication, missing marker/source and invalid retained metadata cannot establish delivery',async t=>{
+ const f=await fixtureRepository(changeDeliveryFixture());t.after(f.cleanup);
+ const p='docs/artifacts/authentication/versions/1.0.0/README.md';
+ await writeFile(join(f.root,p),'---\nsource_change: change-login\n---\n# Legacy layout without copied tasks');let u=(await exploreRepository(f.root)).unitsOfWork[0];assert.notEqual(u.completion.derivation,'documented-complete');assert.match(u.members[1].deliveryPath,/versions\/1.0.0/);
+ await writeFile(join(f.root,p),'---\ndelivery_tasks: change\n---\n# Missing source');u=(await exploreRepository(f.root)).unitsOfWork[0];assert.ok(codes(u).includes('invalid-provenance'));assert.equal(u.completion.derivation,'unknown');
+ const data=await scanRepository(f.root);const units=await readUnitsOfWork(f.root,data,[],async()=>{throw Error('Git unavailable');},checklist);assert.equal(units[0].completion.derivation,'unknown');
+ const files=changeDeliveryFixture();files.set('docs/artifacts/authentication/changes/change-login/tasks/README.md','---\ntasks: [absent.md]\n---\n# Broken published plan');const bad=await fixtureRepository(files);t.after(bad.cleanup);u=(await exploreRepository(bad.root)).unitsOfWork[0];assert.ok(codes(u).includes('invalid-delivery-plan'));assert.equal(u.completion.derivation,'unknown');
+});
+test('retained evidence bytes remain distinct even when invalid UTF-8 decodes alike',async t=>{
+ const files=changeDeliveryFixture(),p='docs/artifacts/authentication/changes/change-login/tasks/api.md';files.set(p,Buffer.concat([Buffer.from(unitTask('api')),Buffer.from([0xff])]));const f=await fixtureRepository(files);t.after(f.cleanup);await writeFile(join(f.root,p),unitTask('api')+'\uFFFD');const u=(await exploreRepository(f.root)).unitsOfWork[0];assert.notEqual(u.completion.derivation,'documented-complete');assert.equal(u.members[1].establishmentEvidence.state,'proposed');
+});
+test('ungrouped invalid delivery markers are diagnostic and publication failures keep history uncertain',async t=>{
+ const files=changeDeliveryFixture();files.delete(unitPath);const p='docs/artifacts/authentication/versions/1.0.0/README.md';files.set(p,files.get(p).replace('delivery_tasks: change','delivery_tasks: elsewhere'));const f=await fixtureRepository(files);t.after(f.cleanup);let view=await exploreRepository(f.root);assert.ok(view.diagnostics.some(d=>d.code==='invalid-delivery-marker'));assert.ok(view.workflow.worktrees[0].diagnostics.some(d=>d.code==='invalid-delivery-marker'));
+ await writeFile(join(f.root,p),files.get(p).replace('elsewhere','change'));await writeFile(join(f.root,'docs/artifacts/authentication/changes/change-login/tasks/api.md'),unitTask('api')+'Modified');view=await exploreRepository(f.root);const change=view.workflow.worktrees[0].changes.find(c=>c.artifact==='authentication'&&c.name==='change-login');assert.equal(change.history,false);assert.ok(view.workflow.worktrees[0].diagnostics.some(d=>d.code==='delivery-publication-unverified'));
 });

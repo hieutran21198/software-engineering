@@ -9,7 +9,7 @@ function cyclic(edges) {
 }
 export function buildUnitGraphs(unit, snapshot, worktree, files = new Map()) {
  const members=new Map(unit.members.map(m=>[m.artifact,m]));
- const diagnostics=(unit.diagnostics || []).filter(d=>['invalid-unit','invalid-membership','duplicate-membership','missing-member','ambiguous-provenance','invalid-provenance'].includes(d.code));
+ const diagnostics=(unit.diagnostics || []).filter(d=>['invalid-unit','invalid-membership','duplicate-membership','missing-member','ambiguous-provenance','invalid-provenance','invalid-delivery-marker','missing-delivery-source','invalid-delivery-plan'].includes(d.code));
  // Explicit unit-selected changes supply their own proposals. External artifact
  // proposals retain the existing snapshot interpretation.
  let edges=snapshot.edges.filter(e=>e.status==='established' || !members.has(e.target));

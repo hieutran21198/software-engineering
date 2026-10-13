@@ -57,10 +57,20 @@ export function versionClaims(files, artifact, change) {
   return [...files].filter(([p,body])=>{
     const match = p.match(/^docs\/artifacts\/([^/]+)\/versions\/(\d+\.\d+\.\d+)\/README\.md$/);
     return match && match[1]===artifact && frontMatter(body).value?.source_change===change;
-  }).map(([path])=>({version:path.split('/')[4], prefix:path.slice(0,-'README.md'.length)}));
+  }).map(([path, body])=>({version:path.split('/')[4], prefix:path.slice(0,-'README.md'.length), deliveryTasks:frontMatter(body).value.delivery_tasks}));
+}
+export function deliverySource(files, artifact, change, retainedChangePath) {
+  const claims = versionClaims(files, artifact, change);
+  if (claims.length !== 1) return {claims, deliveryPath:retainedChangePath, diagnostic:null};
+  const claim = claims[0];
+  if (claim.deliveryTasks === undefined) return {claims, deliveryPath:claim.prefix, diagnostic:null};
+  if (claim.deliveryTasks !== 'change') return {claims, deliveryPath:null, diagnostic:'invalid-delivery-marker'};
+  if (!retainedChangePath || !files.has(`${retainedChangePath}tasks/README.md`)) return {claims, deliveryPath:null, diagnostic:'missing-delivery-source'};
+  return {claims, deliveryPath:retainedChangePath, diagnostic:null};
 }
 // Only local protected refs establish knowledge. Branch files are never proof.
-async function publication(root, prefix, files, git, reviewText = '', reviewSource = null) {
+export async function publication(root, prefix, files, git, reviewText = '', reviewSource = null, deliveryPath = null) {
+  const prefixes = [prefix, ...(deliveryPath ? [`${deliveryPath}tasks/`] : [])];
   const refs = [];
   for (const ref of ['refs/heads/main','refs/heads/master']) {
     try {await git(root,['rev-parse','--verify',ref]);refs.push(ref);} catch { /* Missing local ref is not publication. */ }
@@ -69,19 +79,18 @@ async function publication(root, prefix, files, git, reviewText = '', reviewSour
   const observed = [], sources = [];
   try {
     for (const ref of refs) {
-      const paths = (await git(root,['ls-tree','-r','--name-only',ref,'--',prefix])).split('\n').filter(Boolean);
-      if (!paths.length) continue;
+      const paths = (await git(root,['ls-tree','-r','--name-only',ref,'--',...prefixes])).split('\n').filter(Boolean);
       const contents = new Map();
-      for (const path of paths) contents.set(path,await git(root,['show',`${ref}:${path}`],true));
+      for (const path of paths) contents.set(path,Buffer.from(await git(root,['show',`${ref}:${path}`],'bytes')).toString('base64'));
       observed.push(contents);
-      const selected = [...files].filter(([p])=>p.startsWith(prefix));
-      if (contents.size===selected.length && selected.every(([p,body])=>contents.get(p)===body)) sources.push({ref,path:`${prefix}README.md`});
+      const selected = [...files].filter(([p])=>prefixes.some(prefix=>p.startsWith(prefix)));
+      if (contents.size>0 && contents.size===selected.length && selected.every(([p,body])=>contents.get(p)===Buffer.from(body).toString('base64'))) sources.push({ref,path:`${prefix}README.md`}, ...(deliveryPath ? [{ref,path:`${deliveryPath}tasks/README.md`}] : []));
     }
     if (observed.length > 1 && [...observed[0]].some(([p,body])=>observed[1].get(p)!==body) || observed.length > 1 && observed[0].size!==observed[1].size) return {state:'unknown',reasons:['Protected refs disagree about delivered knowledge.'],sources:[]};
-    if (!sources.length) return {state:'proposed',reasons:['Delivered snapshot is not identical to knowledge on local main or master.'],sources:[]};
+    if (!sources.length) return {state:'proposed',reasons:['Delivered knowledge or task records do not match local main or master.'],sources:[]};
     // Merge evidence remains an author assertion. Require an explicit statement
     // of the all-required-merges boundary rather than guessing from task checks.
-    const review = [...files].filter(([p])=>p.startsWith(prefix)).map(([,body])=>marked.lexer(body).filter(t=>t.type!=='code').map(t=>t.raw).join('\n')).join('\n') + '\n' + reviewText;
+    const review = [...files].filter(([p])=>prefixes.some(prefix=>p.startsWith(prefix))).map(([,body])=>marked.lexer(body).filter(t=>t.type!=='code').map(t=>t.raw).join('\n')).join('\n') + '\n' + reviewText;
     const localBoundary = /all required (?:knowledge and (?:code|implementation)|implementation and knowledge) changes (?:are|live|reside) in this repository\b/i.test(review);
     const mergedBoundary = /all required (?:knowledge and (?:code|implementation)|implementation and knowledge) (?:changes |merges )?(?:have landed|have merged|are merged|landed) (?:on|into) (?:main|master)\b/i.test(review);
     if ((localBoundary || mergedBoundary) && reviewText && reviewSource) sources.push({path:reviewSource,kind:'documented-merge-review'});
@@ -109,6 +118,9 @@ export async function readUnitsOfWork(root, data, changes, git, checklist) {
       const base=`docs/artifacts/${member.artifact}/`,changePath=`${base}changes/${member.change}/`,claims=versionClaims(files,member.artifact,member.change);
       const artifact=snapshot.artifacts.find(a=>a.id===member.artifact);
       member.retainedChangePath=artifact?.changes.some(c=>c.name===member.change)?changePath:null;
+      const delivery=deliverySource(files,member.artifact,member.change,member.retainedChangePath);
+      member.deliveryPath=delivery.deliveryPath;
+      if(delivery.diagnostic)unit.diagnostics.push({code:delivery.diagnostic,path:claims[0]?.prefix || changePath,message:'Delivered tasks require a valid marker and the exact retained originating plan.'});
       member.deliveredVersion=claims.length===1?claims[0].version:null;
       member.sourcePath=member.deliveredVersion?claims[0].prefix:member.retainedChangePath;
       member.workflow=changes.find(c=>c.artifact===member.artifact && c.name===member.change)||null;
@@ -117,19 +129,27 @@ export async function readUnitsOfWork(root, data, changes, git, checklist) {
       for (const [path,body] of files) {
         if (!path.startsWith(`${base}versions/`) || !/^docs\/artifacts\/[^/]+\/versions\/\d+\.\d+\.\d+\/README\.md$/.test(path)) continue;
         const metadata = frontMatter(body);
-        if (metadata.error || metadata.value?.source_change !== undefined && !changeName(metadata.value.source_change)) unit.diagnostics.push({code:'invalid-provenance',path,message:'Version provenance must be valid YAML naming a safe originating change.'});
+        if (metadata.error || (metadata.value?.source_change !== undefined || metadata.value?.delivery_tasks !== undefined) && !changeName(metadata.value.source_change)) unit.diagnostics.push({code:'invalid-provenance',path,message:'Version provenance must be valid YAML naming a safe originating change.'});
       }
-      if(member.deliveredVersion){if(!publicationCache.has(member.sourcePath))publicationCache.set(member.sourcePath,await publication(root,member.sourcePath,files,git,unit.markdown.split('\n').filter(line=>line.startsWith(`${member.artifact} ${member.deliveredVersion}: `)).join('\n'),unit.path));member.establishmentEvidence=publicationCache.get(member.sourcePath);}
+      if(member.deliveredVersion){
+        const key=JSON.stringify([member.sourcePath,member.deliveryPath,unit.path]);
+        if(delivery.diagnostic)member.establishmentEvidence={state:'unknown',reasons:['Delivered task source cannot be resolved.'],sources:[]};
+        else {if(!publicationCache.has(key))publicationCache.set(key,await publication(root,member.sourcePath,files,git,unit.markdown.split('\n').filter(line=>line.startsWith(`${member.artifact} ${member.deliveredVersion}: `)).join('\n'),unit.path,claims[0].deliveryTasks==='change'?member.deliveryPath:null));member.establishmentEvidence=publicationCache.get(key);}
+      }
       member.knowledge=[...files].filter(([p])=>member.sourcePath && p.startsWith(member.sourcePath) || member.retainedChangePath && p.startsWith(member.retainedChangePath)).map(([path,markdown])=>({path,markdown}));
       member.markdown=files.get(`${member.sourcePath}README.md`)||'';
-      member.taskGraph=member.sourcePath?buildTaskGraph(files,member.sourcePath,checklist,unsafeTaskPaths):{state:'unavailable',tasks:[],edges:[],diagnostics:[]};
+      member.taskGraph=member.deliveryPath?buildTaskGraph(files,member.deliveryPath,checklist,unsafeTaskPaths):{state:'unavailable',tasks:[],edges:[],diagnostics:[]};
+      if(claims[0]?.deliveryTasks==='change' && member.taskGraph.state!=='available'){
+        unit.diagnostics.push({code:'invalid-delivery-plan',path:member.deliveryPath || changePath,message:'The retained delivery plan cannot supply a valid task graph.'});
+        if(member.establishmentEvidence.state==='established')member.establishmentEvidence={state:'unknown',reasons:['Retained delivery plan is missing, unsafe, or invalid.'],sources:[]};
+      }
     }
     for(const evidence of unit.evidence){
       const [source,fragment]=evidence.source.split('#'),body=files.get(source);
       evidence.markdown=body===undefined?null:evidenceDetail(body,fragment);
       evidence.resolved=!!evidence.markdown;
-      // A source in mutable change knowledge cannot support historical completion.
-      evidence.deliveredSource=source===unit.path || unit.members.some(m=>m.deliveredVersion && source.startsWith(m.sourcePath));
+      // Retained task evidence needs the exact published delivery association.
+      evidence.deliveredSource=source===unit.path || unit.members.some(m=>m.deliveredVersion && (source.startsWith(m.sourcePath) || m.deliveryPath===m.retainedChangePath && m.establishmentEvidence.state==='established' && source.startsWith(`${m.deliveryPath}tasks/`)));
       if(!evidence.resolved)unit.diagnostics.push({code:'missing-evidence',path:evidence.source,message:'Evidence source or nonempty check details cannot be resolved.'});
     }
     const reasons=[];
