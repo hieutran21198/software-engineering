@@ -20,7 +20,7 @@ This artifact owns the repository explorer and its input interpretation rules.
 
 ## Active change
 
-- [Units of work](changes/change-units-of-work/README.md)
+- [Codex execution visualization](changes/change-codex-execution/README.md)
 
 ## Knowledge snapshot
 
