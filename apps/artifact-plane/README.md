@@ -162,3 +162,7 @@ The reader discovers docs/artifacts/units-of-work/<name>/README.md as outcome kn
 Completion is supported by documented evidence only when every member has a matching complete delivered snapshot on local main/master, explicit all-required-merge review evidence, and passing shared acceptance/integration checks. A branch-only version is proposed; unavailable proof is unknown. Historical outcomes use delivered versions, including when the original change directory is removed or current artifact versions advance. Check assertions are shown as recorded evidence; the explorer does not run them.
 
 A scoped publication-review paragraph in the brief can name an artifact and delivered version, followed by an explicit assertion that all required knowledge and implementation changes have landed on main/master. This supplies review evidence without changing an established snapshot; it cannot replace protected-ref verification. No outcome status or aggregate DAG is written to disk.
+
+## Codex execution observer
+
+Implementation nodes show artifact/change ownership. An optional local Codex hook observer adds execution state, agents, elapsed time, and concurrent activity. See [observer setup and semantics](integration/README.md). Recorded execution history persists outside worktrees; current knowledge remains read-only. The observer does not launch agents, approve tasks, or establish versions.

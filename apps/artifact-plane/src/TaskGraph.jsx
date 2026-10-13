@@ -1,13 +1,16 @@
-import React, {useMemo} from 'react';
+import React, {useMemo,useState} from 'react';
 import {ReactFlow, ReactFlowProvider, Background, Controls, Handle, Position} from '@xyflow/react';
 import {taskCanvas} from './task-canvas.js';
 import Markdown from './Markdown.jsx';
+import {checklistLabel} from './runtime-model.js';
+import {useTaskRuntime,RuntimeBadge,RuntimeDetails,RuntimeConnection} from './Runtime.jsx';
 function TaskNode({data, selected}) {
  const task = data.task;
- return <div className={'task-node' + (selected ? ' selected' : '')}>
+ const execution=useTaskRuntime(data.artifact,data.change,task.path);
+ return <div className={'task-node state-'+execution.state + (selected ? ' selected' : '')}>
   <Handle type="target" position={Position.Left} isConnectable={false}/>
-  <small>{task.id || 'Invalid declaration'}</small><strong title={task.title}>{task.title}</strong>
-  <span>{task.checked} checked · {task.unchecked} unchecked</span>
+  <small className="artifact-label">{data.artifact}</small><small className="change-label">{data.change}</small><strong title={task.title}>{task.title}</strong>
+  <RuntimeBadge value={execution}/><span className="checklist-label">{checklistLabel(task)}</span>
   <Handle type="source" position={Position.Right} isConnectable={false}/>
  </div>;
 }
@@ -20,19 +23,21 @@ function GraphMessages({graph}) {
 }
 export function TaskGraph({context, selection, onSelect, onBack}) {
  const {worktree, change} = context;
- const graph = useMemo(()=>taskCanvas(worktree, change, selection),[worktree, change, selection]);
+ const [showAll,setShowAll]=useState(false);
+ const graph = useMemo(()=>taskCanvas(worktree, change, selection,showAll),[worktree, change, selection,showAll]);
  return <div className="task-graph-view" aria-label="Implementation task graph">
-  <div className="task-graph-toolbar"><button onClick={onBack}>Back to workflow</button><strong>{change.artifact} / {change.name}</strong></div>
+  <div className="task-graph-toolbar"><button onClick={onBack}>Back to workflow</button><strong>{change.artifact} / {change.name}</strong><RuntimeConnection/><label className="prerequisite-toggle"><input type="checkbox" checked={showAll} onChange={e=>setShowAll(e.target.checked)}/>Show all prerequisites</label></div>
   <div className="task-graph-surface"><ReactFlowProvider><ReactFlow nodes={graph.nodes} edges={graph.edges} nodeTypes={nodeTypes} onNodeClick={(_,node)=>onSelect(node.id)} fitView fitViewOptions={{padding:0.15}} minZoom={0.15} maxZoom={2} nodesDraggable={false} nodesConnectable={false} edgesReconnectable={false} deleteKeyCode={null} colorMode="dark">
    <Background color="#334059" gap={24}/><Controls showInteractive={false}/>
   </ReactFlow></ReactFlowProvider></div>
   {!graph.nodes.length && <div className="task-graph-empty"><GraphMessages graph={change.taskGraph}/></div>}
-  <div className="workflow-legend">Arrows show task prerequisites · Checklists are documented evidence</div>
+  <div className="workflow-legend">Arrows show task prerequisites · Redundant task edges hidden unless all prerequisites are shown · Checklists are documented evidence</div>
  </div>;
 }
 export function TaskGraphDetails({context, onClear}) {
  const {worktree, change, task} = context;
  const inherited = task && change.tasks.find(t => t.path === task.path)?.inherited;
+ const execution=useTaskRuntime(change.artifact,change.name,task?.path);
  return <div className="workflow-details task-details">
   <div className="details-heading"><span className="eyebrow">{task ? 'Task details' : 'Implementation task graph'}</span>{task && <button aria-label="Clear task selection" onClick={onClear}>×</button>}</div>
   <h2>{task?.title || change.artifact + ' / ' + change.name}</h2>
@@ -41,7 +46,7 @@ export function TaskGraphDetails({context, onClear}) {
   {task ? <>
    <section><h3>Task metadata</h3><p>ID: {task.id || 'Invalid declaration'}</p><p className="tiny">{task.path}</p><p>Prerequisites: {task.dependsOn.length ? task.dependsOn.join(', ') : change.taskGraph.state === 'invalid' ? 'See declaration and diagnostics' : 'None within this plan'}</p></section>
    <section><h3>Documented checklist</h3><p>{task.checked} checked · {task.unchecked} unchecked · {task.state}{inherited ? ' · Inherited / historical evidence' : ''}</p><p className="muted">This evidence does not verify completion, plan approval, or running agents. External artifact gates still apply.</p></section>
-   <Markdown text={task.body}/>
+   <RuntimeDetails value={execution}/><Markdown text={task.body}/>
   </> : <p className="muted">Select a task to inspect its scope, prerequisites, DoD, and evidence.</p>}
  </div>;
 }

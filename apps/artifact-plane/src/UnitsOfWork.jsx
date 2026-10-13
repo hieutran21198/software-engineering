@@ -1,14 +1,17 @@
-import React,{useMemo} from 'react';
+import React,{useMemo,useState} from 'react';
 import {ReactFlow,ReactFlowProvider,Background,Controls,Handle,Position} from '@xyflow/react';
 import {unitCanvas,unitNode,unitKey} from './unit-canvas.js';
 import Markdown from './Markdown.jsx';
+import {checklistLabel} from './runtime-model.js';
+import {useTaskRuntime,RuntimeBadge,RuntimeDetails,RuntimeConnection} from './Runtime.jsx';
 export const completionLabel = completion => completion.derivation==='documented-complete'?'Completion supported by documented evidence':completion.derivation==='incomplete'?'Incomplete':'Completion unknown';
 function UnitNode({data,selected}) {
+ const execution=useTaskRuntime(data.artifact,data.change,data.task?.path,data.recorded);
  const label=data.kind==='gate'?'Version establishment gate':data.kind==='task'?'Implementation task':data.kind==='phase'?'Workflow phase':data.kind==='member'?'Participating change':data.external?'External prerequisite':'Participating artifact';
- return <div className={`unit-node ${data.kind} ${data.external?'external':''} ${selected?'selected':''}`}>
+ return <div className={`unit-node ${data.kind} ${data.kind==='task'?'state-'+execution.state:''} ${data.external?'external':''} ${selected?'selected':''}`}>
   <Handle type="target" position={Position.Left} isConnectable={false}/>
-  <small>{label}</small><strong title={data.title}>{data.title}</strong>
-  <span>{data.kind==='phase'?data.step.state:data.kind==='gate'?data.establishmentEvidence.state:data.kind==='task'?`${data.task.checked||0} checked · ${data.task.unchecked||0} unchecked`:data.member?.deliveredVersion?`Delivered v${data.member.deliveredVersion}`:data.member?.change||data.artifact}</span>
+  <small>{label}</small>{['task','gate'].includes(data.kind)&&<><small className="artifact-label">{data.artifact}</small>{data.change&&<small className="change-label">{data.change}</small>}</>}<strong title={data.title}>{data.title}</strong>
+  {data.kind==='task'&&<RuntimeBadge value={execution}/>}<span className="checklist-label">{data.kind==='phase'?data.step.state:data.kind==='gate'?data.establishmentEvidence.state:data.kind==='task'?checklistLabel(data.task):data.member?.deliveredVersion?`Delivered v${data.member.deliveredVersion}`:data.member?.change||data.artifact}</span>
   <Handle type="source" position={Position.Right} isConnectable={false}/>
  </div>;
 }
@@ -21,13 +24,14 @@ export function UnitList({snapshot,worktreePath,onWorktree,selected,onSelect,fil
   {!worktree?.unitsOfWork?.length&&<p className="muted">No unit-of-work briefs in this worktree. Existing artifact and workflow views remain available.</p>}
  </section>;
 }
-export function UnitView({context,view,onView,planning,onPlanning,selection,onSelect}) {
- const graph=useMemo(()=>context?unitCanvas(context,view,planning,selection):{nodes:[],edges:[]},[context,view,planning,selection]);
+export function UnitView({context,view,onView,planning,onPlanning,selection,onSelect,recorded=false}) {
+ const [showAll,setShowAll]=useState(false);
+ const graph=useMemo(()=>context?unitCanvas(context,view,planning,selection,showAll):{nodes:[],edges:[]},[context,view,planning,selection,showAll]);
  if(!context)return <div className="empty-canvas"><h2>Select a unit of work</h2><p>Choose an outcome to explore its participating changes and evidence.</p></div>;
  const {unit}=context;
  const diagnostics=view==='artifacts'?unit.artifactGraph[planning?'planning':'established'].diagnostics:view==='implementation'?unit.implementationGraph.diagnostics:unit.diagnostics;
  return <div className="unit-view" aria-label="Unit of work exploration">
-  <div className="unit-toolbar"><strong>{unit.title}</strong><div role="group" aria-label="Unit view" className="view-toggle">{['workflow','artifacts','implementation'].map(value=><button key={value} aria-pressed={view===value} className={view===value?'active':''} onClick={()=>onView(value)}>{value[0].toUpperCase()+value.slice(1)}</button>)}</div>{view==='artifacts'&&<div role="group" aria-label="Unit dependency view" className="view-toggle"><button aria-pressed={!planning} onClick={()=>onPlanning(false)}>Established</button><button aria-pressed={planning} onClick={()=>onPlanning(true)}>Planning</button></div>}</div>
+  <div className="unit-toolbar"><strong>{unit.title}</strong><div role="group" aria-label="Unit view" className="view-toggle">{(recorded?['implementation']:['workflow','artifacts','implementation']).map(value=><button key={value} aria-pressed={view===value} className={view===value?'active':''} onClick={()=>onView?.(value)}>{value[0].toUpperCase()+value.slice(1)}</button>)}</div>{view==='artifacts'&&<div role="group" aria-label="Unit dependency view" className="view-toggle"><button aria-pressed={!planning} onClick={()=>onPlanning(false)}>Established</button><button aria-pressed={planning} onClick={()=>onPlanning(true)}>Planning</button></div>}{view==='implementation'&&<><RuntimeConnection/><label className="prerequisite-toggle"><input type="checkbox" checked={showAll} onChange={e=>setShowAll(e.target.checked)}/>Show all prerequisites</label></>}</div>
   <div className="unit-surface"><ReactFlowProvider><ReactFlow key={`${context.worktree.path}/${unit.id}/${view}`} nodes={graph.nodes} edges={graph.edges} nodeTypes={nodeTypes} onNodeClick={(_,n)=>onSelect(n.id)} fitView fitViewOptions={{padding:0.15}} minZoom={0.1} maxZoom={2} nodesDraggable={false} nodesConnectable={false} edgesReconnectable={false} deleteKeyCode={null} colorMode="dark"><Background color="#334059" gap={24}/><Controls showInteractive={false}/></ReactFlow></ReactFlowProvider></div>
   <div className="unit-legend">{view==='workflow'?'Lines show phase sequence, not dependencies or approval':view==='artifacts'?'Current artifact dependency knowledge · External prerequisites are not members':'Solid arrows: task prerequisites · Dashed arrows: version establishment gates · Plan approval remains required'}</div>
   {diagnostics.length>0&&<details className="unit-diagnostics"><summary>{diagnostics.length} graph diagnostics</summary>{diagnostics.map((d,i)=><p key={i}>{d.code}: {d.message}</p>)}</details>}
@@ -44,7 +48,7 @@ export function UnitDetails({context,view,planning,selection,onSelect}) {
    <section><h3>Governing knowledge</h3><p className="tiny">{node.source||`${node.member.artifact} / ${node.member.change}`}</p>{node.kind==='task'&&<p>Task ID: {node.task.id||'Invalid'} · Prerequisites: {node.task.dependsOn.join(', ')||'None within this plan'}</p>}
    {node.kind==='gate'&&<><p>{node.establishmentEvidence.state}</p>{node.establishmentEvidence.reasons.map((reason,i)=><p key={i}>{reason}</p>)}<p className="muted">Task checks alone do not establish this gate or authorize implementation.</p></>}
    {node.kind==='phase'&&<><p>Documented phase evidence: {node.step.state}</p>{node.step.evidence.map((e,i)=><div className="workflow-task" key={i}><p>{e.explanation}</p><p className="tiny">{e.file}</p><Markdown text={node.member.knowledge?.find(k=>k.path===e.file)?.markdown||''}/></div>)}{node.step.commits.map(c=><details key={c.id}><summary>{c.subject}</summary><code>{c.id}</code></details>)}{!node.step.evidence.length&&<p>No phase evidence available; no completion or approval is inferred.</p>}</>}
-   <Markdown text={node.markdown||''}/></section>
+   {node.kind==='task'&&<UnitExecution node={node}/>}<Markdown text={node.markdown||''}/></section>
   </>:<>
    <section><h3>Completion evidence</h3><p>{completionLabel(unit.completion)}</p>{unit.completion.reasons.map((reason,i)=><p key={i}>{reason}</p>)}<p className="muted">Recorded check results and publication evidence are shown; tests are not executed by this explorer.</p></section>
    <section><h3>Participating changes</h3>{unit.members.map(m=><div className="workflow-task" key={`${m.artifact}/${m.change}`}><strong>{m.artifact} / {m.change}</strong><p>{m.deliveredVersion?`Delivered v${m.deliveredVersion}`:'No delivered version'} · {m.establishmentEvidence.state}</p><p className="tiny">{m.sourcePath||'Unresolved knowledge source'}</p></div>)}</section>
@@ -54,3 +58,5 @@ export function UnitDetails({context,view,planning,selection,onSelect}) {
   {unit.diagnostics.length>0&&<section><h3>Knowledge diagnostics</h3>{unit.diagnostics.map((d,i)=><p key={i}><strong>{d.code}</strong> · {d.path}<br/>{d.message}</p>)}</section>}
  </div>;
 }
+
+function UnitExecution({node}){const value=useTaskRuntime(node.artifact,node.change,node.task.path,node.recorded);return <RuntimeDetails value={value}/>;}

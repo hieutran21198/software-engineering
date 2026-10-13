@@ -986,3 +986,35 @@ summary {
 .unit-details details { margin-top:12px; }
 @media (max-width:1150px) { .unit-view { top:88px; } }
 @media (max-width:450px) { .unit-toolbar .view-toggle button { padding:7px; font-size:10px; } }
+
+/* Runtime observations are separate from knowledge checklist evidence. */
+.task-node, .unit-node.task { min-height:220px; }
+.unit-node.task strong, .unit-node.gate strong, .task-node strong { white-space:normal; overflow:visible; overflow-wrap:anywhere; line-height:1.35; }
+.unit-node small.artifact-label, .task-node small.artifact-label { display:block; font-weight:700; color:#edf2ff; font-size:14px; margin-top:5px; }
+.change-label { display:block; overflow-wrap:anywhere; color:#aab9d0!important; font-size:10px!important; }
+.runtime-badge { display:flex; flex-direction:column; gap:3px; margin:7px 0; font-size:12px; }
+.runtime-badge span, .runtime-badge small { display:block; overflow-wrap:anywhere; font-size:10px; }
+.checklist-label { display:block; font-size:10px; margin-top:5px; }
+.state-waiting, .state-unknown { border-color:#758196!important; }
+.runtime-badge.state-waiting b, .runtime-badge.state-unknown b { color:#b1bed0; }
+.task-node.state-processing, .unit-node.state-processing { border-color:#64adff!important; background:#172e4c; }
+.runtime-badge.state-processing b { color:#7dbaff; }
+.runtime-badge.state-processing b::before { content:'● '; }
+.task-node.state-validating, .unit-node.state-validating, .task-node.state-blocked, .unit-node.state-blocked { border-color:#edbd75!important; background:#342b1c; }
+.runtime-badge.state-validating b, .runtime-badge.state-blocked b { color:#ffd083; }
+.runtime-badge.state-blocked b::before { content:'⏸ '; }
+.task-node.state-done, .unit-node.state-done { border-color:#72d9a4!important; background:#173629; }
+.runtime-badge.state-done b { color:#8ce4b5; }
+.task-node.state-failed, .unit-node.state-failed { border-color:#ff8892!important; background:#3c222b; }
+.runtime-badge.state-failed b { color:#ff9da5; }
+.runtime-badge.state-interrupted b { color:#c4b5e7; }
+.runtime-connection { font-size:11px; color:#dbba86; }
+.runtime-connection.connected { color:#91cfb2; }
+.runtime-details details { margin-top:10px; padding:8px; border:1px solid #394761; border-radius:6px; overflow-wrap:anywhere; }
+.runtime-details summary { cursor:pointer; }
+.recorded-picker { display:flex; flex-direction:column; gap:7px; margin:16px 0; padding-top:12px; border-top:1px solid #354059; }
+.recorded-picker select { width:100%; }
+.recorded-meta { font-size:11px; color:#b9c4d9; padding:8px 12px; overflow-wrap:anywhere; }
+.recorded-picker select { padding:10px; border:1px solid #3c4c68; border-radius:7px; background:#18263b; color:#dbe4f5; }
+.prerequisite-toggle { display:flex; align-items:center; gap:6px; font-size:11px; color:#c8d4e8; }
+.prerequisite-toggle input { width:auto; }
