@@ -32,3 +32,7 @@ The existing Artifact Plane task parser accepted both plans: ADD has two tasks a
 ## Upstream delivery checks
 
 ADD guidance task DoD passed. Go test/vet and the website production build passed for the updated bundle. The user confirmed proposed 2.0.0. Its snapshot excludes tasks and links this retained plan. Artifact Plane remains unimplemented behind upstream team merge and contract recheck.
+
+## Review handoff
+
+[PR #13](https://github.com/hieutran21198/software-engineering/pull/13) contains the upstream delivery. Both ADD tasks have concrete evidence. The user-approved Plane plan remains in the preparation branch. Stop for required team review/merge, then recheck ADD 2.0.0 before dependent implementation.
