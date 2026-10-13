@@ -12,10 +12,6 @@ Project knowledge lives here. The canonical local method remains in docs/artifac
 
 1.1.0
 
-## Proposed release
-
-On this branch, the 1.1.0 declaration and snapshot describe proposed post-merge state. Version 1.0.0 remains established on main until team merge. Version 1.1.0 adds explicit plan membership and task dependencies while preserving legacy-plan readability. Artifact Plane visualization is a separate downstream change and is not included in this release.
-
 ## Established dependencies
 
 None.
@@ -33,10 +29,6 @@ None.
 - [Derived task graph decision](versions/1.1.0/decisions/004-derived-task-graph.md)
 - [Plan and validation evidence](versions/1.1.0/tasks/README.md)
 
-## Active change
-
-[Implementation task DAG](changes/change-implementation-task-dag/README.md).
-
 ## Future development
 
-After 1.1.0 merges, start future ADD changes from its full snapshot. Retain valid requirements, contracts, decisions and evidence; amend affected knowledge and add required tasks. Follow Requirement → Specification → Plan → Implementation → Version with explicit plan approval and team merge. Preserve the reusable bundle; do not treat these project artifacts as another copy of its guidance.
+Start future ADD changes from the complete current established snapshot. Retain valid requirements, contracts, decisions and evidence; amend affected knowledge and add required tasks. Follow Requirement → Specification → Plan → Implementation → Version with explicit plan approval and team merge. Preserve the reusable bundle; do not treat these project artifacts as another copy of its guidance.
