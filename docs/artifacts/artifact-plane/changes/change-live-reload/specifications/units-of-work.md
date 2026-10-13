@@ -41,3 +41,7 @@ ADD 1.2.0 is established on main after PR #10 merged. Its specifications/units-o
 For documented merge review, readers recognize an explicit statement that all required knowledge and implementation changes reside in the inspected repository, or that all required knowledge and implementation changes have landed on main/master. Publication still requires identical complete knowledge on a local protected ref; a branch-only statement cannot establish it. Missing review assertions remain unverified. This is a supported prose convention for existing evidence, not a workflow status declaration.
 
 A shared brief can record a publication-review paragraph prefixed with artifact identifier and delivered version (for example, artifact-driven 1.2.0:), followed by the explicit all-required-merges assertion. The reader applies it only to that member/version and still verifies identical protected-ref knowledge. This supports merged upstream members without editing their immutable snapshots.
+
+## Repository updates
+
+The live-reload.md contract in this specification directory defines automatic repository updates, reload reuse, recovery, and preserved user context. It changes refresh transport and unit tab order without changing evidence interpretation.

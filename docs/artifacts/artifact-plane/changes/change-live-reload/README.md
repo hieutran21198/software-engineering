@@ -12,4 +12,7 @@ All required knowledge and implementation changes for this outcome reside in thi
 - [Explorer requirements](requirements/explorer.md)
 - [Unit requirements](requirements/units-of-work.md)
 
-Specification and a fresh implementation plan follow Requirement. Implementation requires explicit approval of the completed plan.
+- [Repository update contract](specifications/live-reload.md)
+- [Update mechanism decision](decisions/007-repository-updates.md)
+
+Implementation requires explicit approval of the completed plan.

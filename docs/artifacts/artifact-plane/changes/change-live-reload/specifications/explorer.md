@@ -4,7 +4,7 @@
 
 Use a Node.js process with a small HTTP server and static browser UI. Bind to `127.0.0.1`. A path input opens an absolute path on the server's computer. The approved interaction uses a repository path input. No repository picker service or installation into the inspected repository is required.
 
-`POST /api/explore` accepts JSON `{ "path": "/absolute/repository" }`. Each request reads the working tree and returns a fresh in-memory snapshot. No selected-repository state is persisted. Reject non-JSON requests, foreign origins, and unexpected Host headers. Browser requests originate from the local application. Do not expose filesystem content through generic static routes.
+`POST /api/explore` accepts JSON `{ "path": "/absolute/repository" }`. Each request reads mutable working-tree and Git inputs and returns a current in-memory snapshot. Immutable history reads may be reused under the repository update contract. No selected-repository state is persisted. Reject non-JSON requests, foreign origins, and unexpected Host headers. Browser requests originate from the local application. Do not expose filesystem content through generic static routes.
 
 Use Git read commands with argument arrays, no shell interpolation, and optional locks disabled. Verify the selected directory is a Git worktree root. Return branch, HEAD, and dirty status as context; the working tree supplies current file contents. Never run mutating Git commands.
 
@@ -12,7 +12,7 @@ Return 400 for invalid input, 404 for a missing repository or ADD directory, and
 
 ## Implementation boundaries
 
-Apply Ports and Adapters through plain modules and functions. The repository reader owns filesystem access and read-only Git commands. It produces source records with relative paths and contents. Parsing and graph functions consume those records to calculate metadata, edges, reference resolution, diagnostics, and reachability without filesystem, Git, HTTP, or browser calls. The HTTP handler validates requests and returns the calculated snapshot. The browser consumes that snapshot and owns selection, rendering, and explicit refresh.
+Apply Ports and Adapters through plain modules and functions. The repository reader owns filesystem access and read-only Git commands. It produces source records with relative paths and contents. Parsing and graph functions consume those records to calculate metadata, edges, reference resolution, diagnostics, and reachability without filesystem, Git, HTTP, or browser calls. The HTTP handler validates requests and returns the calculated snapshot. The browser consumes that snapshot and owns selection, rendering, and automatic/manual refresh under the repository update contract.
 
 Use ordinary objects and arrays for Artifact, Element, Reference, Edge, and Diagnostic records. Stable identifiers and explicit established/proposed status preserve domain meaning. Do not add aggregate classes, repository interfaces, dependency-injection containers, or alternative adapters without a demonstrated need. Test graph rules directly and test the real reader against temporary Git repositories.
 
@@ -141,3 +141,7 @@ Requirements 24–27 and B17–B18 map to phase removal, runtime lifecycle/recen
 ## Codex observation extension
 
 The codex-execution contract adds a separate runtime overlay and observation store. Earlier no-polling/no-persistence/no-agent-inference constraints continue to govern knowledge derivation. Explicit runtime events may show observed execution with freshness and reported validation labels; they do not alter knowledge graph, approval, or establishment semantics.
+
+## Repository updates
+
+The live-reload.md contract in this specification directory defines automatic repository updates, reload reuse, recovery, and preserved user context. It changes refresh transport and unit tab order without changing evidence interpretation.
