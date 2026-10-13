@@ -10,11 +10,11 @@ Discover artifact knowledge and visualize artifact and element dependencies. Ins
 
 This artifact owns the repository explorer and its input interpretation rules.
 
-The version and snapshot links on this branch are proposed until required knowledge and implementation changes merge.
+Version 1.8.0 and its snapshot links on this branch are proposed until required team merge. Version 1.7.0 remains established until then.
 
 ## Current established version
 
-1.7.0
+1.8.0
 
 ## Established dependencies
 
@@ -26,16 +26,19 @@ The version and snapshot links on this branch are proposed until required knowle
 
 ## Knowledge snapshot
 
-- [Requirements](versions/1.7.0/requirements/explorer.md)
-- [Specification](versions/1.7.0/specifications/explorer.md)
-- [Local server decision](versions/1.7.0/decisions/001-local-server.md)
-- [Derived workflow decision](versions/1.7.0/decisions/002-derived-workflow.md)
-- [Task graph requirements](versions/1.7.0/requirements/task-dag.md)
-- [Task graph specification](versions/1.7.0/specifications/task-dag.md)
-- [Unit-of-work requirements](versions/1.7.0/requirements/units-of-work.md)
-- [Unit-of-work contract](versions/1.7.0/specifications/units-of-work.md)
-- [Implementation evidence](versions/1.7.0/tasks/README.md)
+- [Requirements](versions/1.8.0/requirements/explorer.md)
+- [Specification](versions/1.8.0/specifications/explorer.md)
+- [Local server decision](versions/1.8.0/decisions/001-local-server.md)
+- [Derived workflow decision](versions/1.8.0/decisions/002-derived-workflow.md)
+- [Task graph requirements](versions/1.8.0/requirements/task-dag.md)
+- [Task graph specification](versions/1.8.0/specifications/task-dag.md)
+- [Unit-of-work requirements](versions/1.8.0/requirements/units-of-work.md)
+- [Unit-of-work contract](versions/1.8.0/specifications/units-of-work.md)
+- [Implementation evidence](changes/change-task-retention/tasks/README.md)
 
-- [Codex execution requirements](versions/1.7.0/requirements/codex-execution.md)
-- [Codex execution contract](versions/1.7.0/specifications/codex-execution.md)
-- [Codex observer decision](versions/1.7.0/decisions/006-codex-observer.md)
+- [Codex execution requirements](versions/1.8.0/requirements/codex-execution.md)
+- [Codex execution contract](versions/1.8.0/specifications/codex-execution.md)
+- [Codex observer decision](versions/1.8.0/decisions/006-codex-observer.md)
+
+- [Task retention and navigation requirements](versions/1.8.0/requirements/task-retention.md)
+- [Retained delivery and navigation contract](versions/1.8.0/specifications/task-retention.md)

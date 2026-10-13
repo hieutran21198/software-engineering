@@ -14,7 +14,7 @@ U5. Preserve repositories without unit documents. Diagnose invalid, ambiguous, m
 
 ## Acceptance examples
 
-A tenant login outcome groups tenant, authentication, and audit changes without creating edges. Two briefs claiming the same change produce a membership diagnostic. A version with explicit change provenance keeps the outcome traceable after its original change directory is removed. A later artifact version does not replace the delivered version in historical evidence.
+A tenant login outcome groups tenant, authentication, and audit changes without creating edges. Two briefs claiming the same change produce a membership diagnostic. A new version links exact retained originating tasks; missing delivery records prevent supported completion. Legacy version-owned evidence remains readable after the original change directory is removed. A later artifact version does not replace the delivered version in historical evidence.
 
 ## Scope and impact
 

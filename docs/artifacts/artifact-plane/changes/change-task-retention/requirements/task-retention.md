@@ -14,4 +14,4 @@ Opening Plane shows no top-level Workflow button. A selected unit still exposes 
 
 ## Impact and self-check
 
-Consumes proposed artifact-driven/change-task-retention, element specifications/task-retention.md. Implementation waits for upstream establishment and recheck. Task filtering and loading changes are excluded. KISS reuses current graph/reader/inspector mechanisms; STE separates phase evidence from permission. No Requirement blocker remains.
+Consumes established artifact-driven 2.0.0, element specifications/task-retention.md, originating change change-task-retention. Upstream establishment and recheck passed before implementation. Task filtering and loading changes are excluded. KISS reuses current graph/reader/inspector mechanisms; STE separates phase evidence from permission. No Requirement blocker remains.

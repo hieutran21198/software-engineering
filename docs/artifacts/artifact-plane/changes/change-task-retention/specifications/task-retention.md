@@ -1,6 +1,6 @@
 # Change-owned evidence and simplified navigation contract
 
-Governs R1–R5 in requirements/task-retention.md. Consume proposed artifact-driven/change-task-retention, element specifications/task-retention.md. Existing artifact-driven edge remains unchanged. Recheck the established upstream before implementation.
+Governs R1–R5 in requirements/task-retention.md. Consume established artifact-driven 2.0.0, element specifications/task-retention.md, originating change change-task-retention. Existing artifact-driven edge remains unchanged. Recheck the established upstream before implementation.
 
 ## Delivery source resolution
 
