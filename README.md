@@ -106,6 +106,8 @@ Keep its knowledge under `src/archs/<name>/` and expose an embedded `fs.FS` bund
 
 ## Documentation
 
+- [ADD project artifact](https://github.com/hieutran21198/software-engineering/blob/main/docs/artifacts/artifact-driven/README.md): Recovered ADD requirements, contracts, decisions, and validation evidence for future changes.
+
 - [Artifact-Driven Development](src/archs/artifact-driven/README.md): Foundation, methodology, execution skills, and reusable patterns for coordinating artifact-centered work.
 - [Project README template](src/utils/project/assets/templates/README.md): A starting structure for documenting a project's purpose, responsibilities, setup, and development workflow.
 - [ASD-STE100 principles skill](src/utils/agents/skills/asd-ste-100/SKILL.md): Guidance for writing new documents or rewriting existing documents with Simplified Technical English principles. It improves readability and removes filler while preserving technical meaning. It does not certify compliance with ASD-STE100.

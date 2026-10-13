@@ -27,3 +27,7 @@ The canonical reusable bundle and delivered source tree remain authoritative evi
 ## Plan self-check
 
 Tasks cover scope, contracts, source evidence, concrete checks, dependencies and combined validation. Only project knowledge and a parent navigation link are allowed edits; the generated DAG changes during version preparation. Existing checks are reused. KISS/STE checks pass. Explicit user approval is required before executing these tasks.
+
+## Integrated result
+
+All three recovery tasks passed their local DoD. Source fidelity, existing behavior and delivery checks passed without implementation changes. The baseline is ready for initial version confirmation. No version is established; snapshot publication and final PR CI remain before team handoff.
