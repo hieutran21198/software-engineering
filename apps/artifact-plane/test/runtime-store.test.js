@@ -48,10 +48,24 @@ test('containment, symlink aliases, private modes and schema rejection',async()=
   const db=new DatabaseSync(join(f.stateDir,'runtime.sqlite'));db.exec('PRAGMA user_version=99');db.close();assert.throws(()=>new RuntimeStore({stateDir:f.stateDir}),/newer/);
  }finally{await f.cleanup();}
 });
+test('startup waits for a schema lock before reading the version',async()=>{
+ const f=await runtimeFixture(),initial=new RuntimeStore({stateDir:f.stateDir});initial.close();
+ const setup=new DatabaseSync(join(f.stateDir,'runtime.sqlite'));setup.exec('PRAGMA journal_mode=DELETE');setup.close();
+ const code=`import {DatabaseSync} from 'node:sqlite';const db=new DatabaseSync(process.env.TEST_DATABASE);db.exec('BEGIN EXCLUSIVE');process.send('locked');setTimeout(()=>{db.exec('COMMIT');db.close();process.disconnect();},250);`;
+ const writer=spawn(process.execPath,['--input-type=module','-e',code],{env:{...process.env,TEST_DATABASE:join(f.stateDir,'runtime.sqlite')},stdio:['ignore','ignore','pipe','ipc']});
+ let stderr='';writer.stderr.setEncoding('utf8');writer.stderr.on('data',chunk=>{stderr+=chunk;});
+ const exited=new Promise((resolve,reject)=>{writer.on('error',reject);writer.on('close',n=>n===0?resolve():reject(Error(`Lock writer exit ${n}: ${stderr}`)));});
+ try{
+  await new Promise((resolve,reject)=>{writer.once('message',resolve);writer.once('error',reject);writer.once('exit',()=>reject(Error('Lock writer exited before ready: '+stderr)));});
+  const store=new RuntimeStore({stateDir:f.stateDir});try{assert.equal(store.sequence(),0);}finally{store.close();}
+  await exited;
+ }finally{if(writer.exitCode===null)writer.kill();await exited.catch(()=>{});await f.cleanup();}
+});
+
 test('concurrent processes persist every event',async()=>{
  const f=await runtimeFixture(),s=new RuntimeStore({stateDir:f.stateDir});try{
   await bind(s,f.root);s.close();const code=`import {RuntimeStore} from './server/runtime-store.js';const s=new RuntimeStore({stateDir:process.env.TEST_STATE});for(let i=0;i<20;i++)s.observe({session_id:'session',hook_event_name:'PreToolUse',turn_id:'turn'});s.close();`;
-  await Promise.all([1,2,3].map(()=>new Promise((resolve,reject)=>{const p=spawn(process.execPath,['--input-type=module','-e',code],{cwd:new URL('../',import.meta.url),env:{...process.env,TEST_STATE:f.stateDir},stdio:'ignore'});p.on('error',reject);p.on('exit',n=>n?reject(Error('Writer exit '+n)):resolve());})));
+  await Promise.all([1,2,3].map(()=>new Promise((resolve,reject)=>{const p=spawn(process.execPath,['--input-type=module','-e',code],{cwd:new URL('../',import.meta.url),env:{...process.env,TEST_STATE:f.stateDir},stdio:['ignore','ignore','pipe']});let stderr='';p.stderr.setEncoding('utf8');p.stderr.on('data',chunk=>{stderr+=chunk;});p.on('error',reject);p.on('close',(n,signal)=>n!==0?reject(Error(`Writer exit ${n} (${signal||'no signal'}): ${stderr}`)):resolve());})));
   const read=new RuntimeStore({stateDir:f.stateDir,create:false});assert.equal(read.sequence(),61);read.close();
  }finally{await f.cleanup();}
 });

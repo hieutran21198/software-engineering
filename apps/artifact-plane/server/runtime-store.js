@@ -52,11 +52,13 @@ export class RuntimeStore {
   if(create&&!existsSync(this.path)){try{closeSync(openSync(this.path,'wx',0o600));}catch(error){if(error.code!=='EEXIST')throw error;}}
   if(existsSync(this.path)&& (statSync(this.path).mode & 0o077))throw Error('Runtime database must be private (0600)');
   this.db=new DatabaseSync(this.path,{readOnly:!create});
+  // Schema reads can contend with another process recovering the WAL.
+  this.db.exec('PRAGMA busy_timeout=2000;');
   const version=Number(this.db.prepare('PRAGMA user_version').get().user_version);
   if(version>1){this.db.close();throw Error('Unsupported newer runtime schema');}
   if(!create&&version!==1){this.db.close();throw Error('Runtime schema unavailable');}
   if(create){
-   this.db.exec('PRAGMA busy_timeout=2000; PRAGMA journal_mode=WAL;');
+   this.db.exec('PRAGMA journal_mode=WAL;');
    if(!version)this.db.exec(`BEGIN; CREATE TABLE IF NOT EXISTS repositories(id TEXT PRIMARY KEY, common TEXT UNIQUE, root TEXT);
     CREATE TABLE IF NOT EXISTS contexts(id TEXT PRIMARY KEY, repository TEXT, digest TEXT, capturedAt INTEGER, json TEXT);
     CREATE TABLE IF NOT EXISTS attempts(id TEXT PRIMARY KEY, repository TEXT, context TEXT, task TEXT, session TEXT, agent TEXT, json TEXT);
