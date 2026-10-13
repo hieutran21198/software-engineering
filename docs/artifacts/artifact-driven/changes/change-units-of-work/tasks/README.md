@@ -1,36 +1,34 @@
 ---
 tasks:
-  - 04-task-contract.md
-  - 05-delivery-checks.md
+  - 17-unit-knowledge.md
+  - 18-unit-delivery-validation.md
 ---
 
-# Implementation task DAG plan
+# Units-of-work implementation plan
 
-Baseline: established 1.0.0. Tasks 01–03 are retained historical context and excluded from this plan. This plan uses the proposed task contract in specifications/task-dag.md; it does not claim that contract is established.
+## Current work
 
-## Execution
+- [Define and deliver unit-of-work knowledge](17-unit-knowledge.md).
+- [Validate ADD delivery and prepare upstream publication](18-unit-delivery-validation.md).
 
-1. [Update method and delivered guidance](04-task-contract.md).
-2. [Validate bundle delivery and prepare publication](05-delivery-checks.md), after task-contract.
+Copied earlier tasks remain historical/contextual and are excluded from this graph. Their prior test results do not validate this change.
 
-Execute sequentially because delivery validation consumes the updated guidance. The coordinator owns knowledge and evidence. Independent useful work can use delegated implementers after approval, with isolated worktrees; no concurrent task is necessary for this two-task chain.
+## Execution and external gates
 
-## Coverage and validation
+No upstream artifact prerequisite. Explicit user plan approval gates implementation.
 
-Task-contract covers D1–D7 through foundation, methodology, writing, role, and packaged guidance. Delivery-checks verifies canonical/packaged parity, required skill references, legacy rules, task examples, documentation hierarchy, Go adoption, and website publishing. Reuse existing tests; do not add a standalone workflow runner or status store.
+Execute the task chain sequentially. Its dependencies do not justify parallel implementer worktrees. Preserve all valid knowledge and unrelated implementation. Do not introduce a workflow state registry.
 
-## Publication and downstream gate
+## Coordination and publication
 
-After DoD passes, propose ADD 1.1.0 for user confirmation: an additive task format with historical-plan compatibility. Prepare its complete snapshot and consistent root/index updates, then push a dedicated branch and open the upstream PR. Stop for team review and merge. Keep prepared Artifact Plane knowledge on a companion branch/PR rather than including unimplemented Plane release state in the ADD release. It may be reviewed as preparation, but no Plane implementation starts before the required ADD version lands on main. No merges or deployments are authorized.
+The shared outcome is unit-of-work grouping and aggregate exploration across ADD and Plane. Create its brief during approved upstream implementation. Publish ADD first; only after team merge and contract recheck may Plane implementation begin. Shared outcome completion waits for both delivered versions and shared acceptance/integration evidence.
+
+Propose 1.2.0 for the additive opt-in knowledge contract. The user confirms or overrides versions during Version preparation. Required knowledge/code merges establish versions; PR creation does not. Historical completion remains tied to these delivered versions.
 
 ## Plan self-check
 
-All D requirements map to concrete work and checks. The graph has task-contract -> delivery-checks, no missing IDs or cycles, and excludes copied historical tasks. There is no ADD upstream artifact gate. KISS uses the existing bundle and validation commands. STE preserves proposed/established distinctions. Plan is complete and awaits explicit user approval.
+All new requirements map to tasks and concrete DoD. Internal edges form a sequential acyclic chain; inherited tasks are excluded. Existing artifact DAG remains artifact-driven -> artifact-plane. Knowledge formats, gates, safe discovery, aggregation, browser behavior, and integration validation are covered. KISS reuses current libraries/readers and STE keeps evidence and establishment distinct. This plan awaits explicit user approval. Implementation checks have not run.
 
-## Preparation checks
+## Preparation evidence
 
-A local Node check verified declared task paths, unique IDs, resolved prerequisites, acyclicity, and exclusion of historical tasks for both plans. All 31 Markdown links in the two complete change snapshots resolve and do not link to ancestors. git diff --check passed. Implementation checks have not run.
-
-## Implementation validation
-
-Method guidance and its packaged assets passed task-contract DoD and integrated delivery validation. Go tests, vet, website production build, complete Markdown parity, and bundle-link hierarchy checks passed. The user confirmed ADD 1.1.0; the complete proposed snapshot and review PR are prepared. All task DoD checks passed. Team review and merge remain. Artifact Plane preparation is preserved on add-implementation-task-dag; its implementation has not started.
+The existing Artifact Plane task parser accepted both new plans: ADD has two tasks and one edge; Plane has four tasks and three edges, with no diagnostics. A local link check resolved all 44 Markdown links in the change snapshots and found no ancestor references. git diff --check passed. No implementation or browser acceptance checks have run.
