@@ -28,3 +28,7 @@ The source inventory distinguishes existing implementation, documented human pro
 - [Knowledge and boundary decision](decisions/001-knowledge-and-boundary.md)
 - [Embedded adoption decision](decisions/002-embedded-safe-adoption.md)
 - [Publishing decision](decisions/003-derived-documentation.md)
+
+## Implementation plan
+
+[Sequential recovery and validation tasks](tasks/README.md). Implementation awaits explicit user approval.
