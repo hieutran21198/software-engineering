@@ -19,10 +19,10 @@ Explicit user approval of this plan; upstream contracts rechecked; internal depe
 
 ## Definition of Done
 
-- [ ] Canvas tests verify exact identity overlays, readable artifact/change labels, wrapped titles, preserved prerequisite/establishment edges, and separate checklist/report evidence.
-- [ ] Browser fixtures show concurrent Processing nodes on fork branches, agent/elapsed/freshness labels, all state labels/colors, multiple attempts, and inspector activity.
-- [ ] Browser tests verify live SSE refresh, reconnect/Unknown behavior, archived history after source removal, preserved viewport/selection, keyboard access, and narrow layouts.
+- [x] Canvas tests verify exact identity overlays, readable artifact/change labels, wrapped titles, preserved prerequisite/establishment edges, and separate checklist/report evidence.
+- [x] Browser fixtures show concurrent Processing nodes on fork branches, agent/elapsed/freshness labels, all state labels/colors, multiple attempts, and inspector activity.
+- [x] Browser tests verify live SSE refresh, reconnect/Unknown behavior, archived history after source removal, preserved viewport/selection, keyboard access, and narrow layouts.
 
 ## Evidence
 
-No implementation or task validation has run.
+Canvas/model checks passed: browser/server signatures agree, overlays isolate task revisions and identities, retries remain separate, mixed results stay honest, and prerequisites/gates remain unchanged. Full Chromium suite passed 15 cases; after the final offline fix, both focused runtime cases passed again. Tests cover concurrent branches, all specified state labels, artifact/change ownership, inspector attempts, reported validation, SSE updates, offline/online reconnection, stale observations, archived graphs after worktree removal and reload, selection/viewport preservation, narrow layout, and repository fingerprints. Wide/narrow/archived screenshots were inspected; a node-spacing defect was corrected and rechecked. KISS reuses existing graph components; STE distinguishes runtime and checklist evidence.

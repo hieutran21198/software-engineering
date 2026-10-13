@@ -17,6 +17,8 @@ import {
 import {UnitList, UnitView, UnitDetails} from './UnitsOfWork.jsx';
 import {unitContext, unitNode} from './unit-canvas.js';
 import Markdown from "./Markdown.jsx";
+import {RuntimeProvider} from "./Runtime.jsx";
+import {RecordedPicker,RecordedView,RecordedDetails} from "./RecordedExecutions.jsx";
 import {TaskGraph, TaskGraphDetails} from "./TaskGraph.jsx";
 import {taskSelection} from "./task-canvas.js";
 import { relationships } from "./graph.js";
@@ -199,6 +201,7 @@ function App() {
   const [taskChange, setTaskChange] = useState(null), [taskSelected, setTaskSelected] = useState(null);
   const [unitSelected,setUnitSelected] = useState(null), [unitNodeSelected,setUnitNodeSelected] = useState(null), [unitWorktree,setUnitWorktree] = useState(null), [unitView,setUnitView] = useState('workflow'), [unitPlanning,setUnitPlanning] = useState(false);
   const [view, setView] = useState("canvas");
+  const [recordedSelected,setRecordedSelected]=useState(null),[recordedNode,setRecordedNode]=useState(null);
   const [workflowMounted,setWorkflowMounted] = useState(false);
   useEffect(()=>{if(view === "workflow") setWorkflowMounted(true);},[view]);
   const [filter, setFilter] = useState("");
@@ -258,6 +261,7 @@ function App() {
       if (!response.ok)
         throw Error(result.error || "Repository could not be opened.");
       setSnapshot(result);
+      if(!refresh){setRecordedSelected(null);setRecordedNode(null);if(view==='recorded')setView('canvas');}
       const nextUnit = refresh && unitContext(result,unitSelected,unitNodeSelected);
       setUnitSelected(nextUnit ? unitSelected : null);
       setUnitNodeSelected(nextUnit && unitNode(nextUnit,unitView,unitPlanning,unitNodeSelected) ? unitNodeSelected : null);
@@ -359,7 +363,7 @@ function App() {
       });
   };
   return (
-    <div className="app">
+    <RuntimeProvider snapshot={snapshot}><div className="app">
       <header className="topbar">
         <div className="brand">
           <span className="brand-icon">⌘</span>
@@ -466,6 +470,7 @@ function App() {
                     </button>
                   ))}
               </nav>
+              <RecordedPicker selected={recordedSelected} onSelect={id=>{setRecordedSelected(id);setRecordedNode(null);if(id)setView('recorded');}}/>
               {view === "units" && <UnitList snapshot={snapshot} worktreePath={unitWorktree} filter={filter} selected={unitSelected} onWorktree={value=>{setUnitWorktree(value);setUnitSelected(null);setUnitNodeSelected(null);}} onSelect={value=>{setUnitSelected(value);setUnitNodeSelected(null);}}/>}
             </>
           ) : (
@@ -482,7 +487,7 @@ function App() {
         <main className="canvas-area">
           <div className="canvas-toolbar">
             <div>
-              <strong>{view === "canvas" ? "Dependency canvas" : view === "units" ? "Units of work" : "Workflow canvas"}</strong>
+              <strong>{view === "canvas" ? "Dependency canvas" : view === "units" ? "Units of work" : view==='recorded' ? "Recorded executions" : "Workflow canvas"}</strong>
               <small>{view === "canvas" ? "Upstream → downstream" : "Local worktrees · Git + Markdown"}</small>
             </div>
             {snapshot && <div className="view-toggle" role="group" aria-label="Explorer view"><button aria-pressed={view === "canvas"} className={view === "canvas" ? "active" : ""} onClick={()=>setView("canvas")}>Dependencies</button><button aria-pressed={view === "workflow"} className={view === "workflow" ? "active" : ""} onClick={()=>setView("workflow")}>Workflow</button><button aria-pressed={view === "units"} className={view === "units" ? "active" : ""} onClick={()=>setView("units")}>Units of work</button></div>}
@@ -588,6 +593,7 @@ function App() {
           )}
           </div>
           {snapshot && workflowMounted && <div style={{display:view === "workflow" ? "contents" : "none"}}><div style={{display:taskContext ? "none" : "contents"}}><Workflow key={snapshot.repository.path} workflow={snapshot.workflow} selection={workflowSelected} onSelect={setWorkflowSelected}/></div>{taskContext && <TaskGraph key={taskChange} context={taskContext} selection={taskSelected} onSelect={setTaskSelected} onBack={()=>{setTaskChange(null);setTaskSelected(null);}}/>}</div>}
+          {snapshot && view==='recorded' && <RecordedView id={recordedSelected} selection={recordedNode} onSelect={setRecordedNode}/>}
           {snapshot && view === "units" && <UnitView context={selectedUnit} view={unitView} onView={value=>{setUnitView(value);setUnitNodeSelected(null);}} planning={unitPlanning} onPlanning={value=>{setUnitPlanning(value);setUnitNodeSelected(null);}} selection={unitNodeSelected} onSelect={setUnitNodeSelected}/>}
         </main>
         <div
@@ -622,7 +628,7 @@ function App() {
           className="details-panel"
           aria-label="Selection details"
         >
-          {view === "units" ? <UnitDetails context={selectedUnit} view={unitView} planning={unitPlanning} selection={unitNodeSelected} onSelect={setUnitNodeSelected}/> : view === "workflow" ? taskContext ? <TaskGraphDetails context={taskContext} onClear={()=>setTaskSelected(null)}/> : <WorkflowDetails node={workflowSelection(snapshot?.workflow,workflowSelected)} workflow={snapshot?.workflow} busy={busy} onOpen={root=>open(root)} onClear={()=>setWorkflowSelected(null)} onTaskGraph={openTaskGraph}/> : artifact ? (
+          {view==='recorded' ? <RecordedDetails id={recordedSelected} selection={recordedNode} onSelect={setRecordedNode}/> : view === "units" ? <UnitDetails context={selectedUnit} view={unitView} planning={unitPlanning} selection={unitNodeSelected} onSelect={setUnitNodeSelected}/> : view === "workflow" ? taskContext ? <TaskGraphDetails context={taskContext} onClear={()=>setTaskSelected(null)}/> : <WorkflowDetails node={workflowSelection(snapshot?.workflow,workflowSelected)} workflow={snapshot?.workflow} busy={busy} onOpen={root=>open(root)} onClear={()=>setWorkflowSelected(null)} onTaskGraph={openTaskGraph}/> : artifact ? (
             <>
               <div className="details-heading">
                 <span className="eyebrow">
@@ -755,9 +761,9 @@ function App() {
               ? `${snapshot.artifacts.length} artifacts · ${snapshot.references.length} element references`
               : "Ready to open a repository"}
         </span>
-        <span>Local files · explicit refresh · no writes</span>
+        <span>Knowledge read-only · live execution observations</span>
       </footer>
-    </div>
+    </div></RuntimeProvider>
   );
 }
 createRoot(document.getElementById("root")).render(
