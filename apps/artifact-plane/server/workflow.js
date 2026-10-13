@@ -1,7 +1,7 @@
 import { parseArtifact } from "../src/model.js";
 import { marked } from "marked";
 // Runtime evidence only. No state is stored in the inspected repository.
-const phases = ['Requirement', 'Specification', 'Plan', 'Approval', 'Implementation', 'Validation', 'Version preparation'];
+const phases = ['Requirement', 'Specification', 'Plan', 'Implementation', 'Validation', 'Version preparation'];
 const note = (kind, file, explanation) => ({ kind, file, explanation });
 const diagnostic = (code, message) => ({ code, path: '', message });
 export function parseWorktrees(raw) {
@@ -62,7 +62,7 @@ function parseHistory(raw) {
   for (let i = 0; i < parts.length; i++) {
     const token = parts[i].replace(/^\n/, '');
     if (/^[a-f0-9]{40,64}$/.test(token)) {
-      current = { id: token, subject: parts[++i] || '', paths: [] }; records.push(current);
+      current = { id: token, subject: parts[++i] || '', time: /^\d+$/.test(parts[i+1] || '') ? Number(parts[++i]) : null, paths: [] }; records.push(current);
     } else if (current && token) current.paths.push(token);
   }
   return records;
@@ -71,7 +71,7 @@ async function evidenceFor(root, data, git, head, diagnostics) {
   const { files, snapshot } = data;
   let history = [], dirty = [];
   try {
-    history = parseHistory(await git(root, ['log', '-201', '--format=%H%x00%s', '-z', '--name-only', '--', 'docs/artifacts'], true));
+    history = parseHistory(await git(root, ['log', '-201', '--format=%H%x00%s%x00%ct', '-z', '--name-only', '--', 'docs/artifacts'], true));
     if (history.length > 200) { history.length = 200; diagnostics.push(diagnostic('history-limited', 'Only the latest 200 commits touching docs/artifacts are inspected.')); }
     if (await git(root, ['rev-parse', '--is-shallow-repository']) === 'true') diagnostics.push(diagnostic('shallow-history', 'This worktree has shallow Git history. Exact completion evidence may be unavailable.'));
     dirty = (await git(root, ['status', '--porcelain=v1', '-z', '--untracked-files=all'], true)).split('\0').filter(Boolean).map(line => line.slice(3));
@@ -105,8 +105,11 @@ async function evidenceFor(root, data, git, head, diagnostics) {
     const tasks = owned.filter(([path]) => path.includes('/tasks/')).map(([path, text]) => ({ path, ...checklist(text), inherited: !distinct.some(file => file.path === path && !file.inherited) }));
     const change = { artifact: artifact.id, name, declaredActive: artifact.activeChange === name, currentStep: null, inferenceReason: 'No distinguishable ongoing change: current snapshot contains the same knowledge.', steps, tasks };
     changes.push(change);
-    step("Approval").evidence.push(note("unknown", "", "Approval cannot be inferred from Git or Markdown."));
     const ongoing = distinct.length > 0;
+    change.history = !ongoing || !!artifact.activeChange && !change.declaredActive;
+    change.historyReason = !ongoing ? 'Current snapshot contains the same category knowledge.' : change.history ? 'Retained change; the artifact declares another active change. This does not prove completion.' : '';
+    const timestamps = history.filter(commit => commit.paths.some(path => path.startsWith(prefix))).map(commit => commit.time).filter(time => Number.isSafeInteger(time) && time >= 0 && time <= 8640000000000);
+    change.lastCommitAt = timestamps.length ? Math.max(...timestamps) : null;
     if (ongoing) change.inferenceReason = 'No current phase can be inferred from distinguishable evidence.';
     // Older copied tasks can remain different from the current snapshot. They are not new progress.
     for (const commit of history) {
