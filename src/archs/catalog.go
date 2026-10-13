@@ -5,6 +5,7 @@ import (
 	"io/fs"
 
 	artifactdriven "software-engineering/src/archs/artifact-driven"
+	storydriven "software-engineering/src/archs/story-driven"
 )
 
 const Default = "artifact-driven"
@@ -20,6 +21,7 @@ type Architecture struct {
 func Available() []Architecture {
 	return []Architecture{
 		{Name: "artifact-driven", Description: "Artifact-Driven Development (ADD)", Bundle: artifactdriven.Bundle},
+		{Name: "story-driven", Description: "Story-Driven Knowledge Framework", Bundle: storydriven.Bundle},
 	}
 }
 

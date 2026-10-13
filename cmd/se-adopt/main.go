@@ -31,7 +31,7 @@ func run(args []string, stdout, stderr io.Writer) error {
 	flags.Usage = func() {
 		fmt.Fprintln(stderr, "Usage: se-adopt [--arch name] [--project directory] [--output relative-path] [--dry-run]")
 		fmt.Fprintln(stderr, "       se-adopt --list")
-		fmt.Fprintln(stderr, "Copy a bundled software architecture into a consumer workspace.")
+		fmt.Fprintln(stderr, "Copy a bundled knowledge architecture into a consumer workspace.")
 		flags.PrintDefaults()
 	}
 	if err := flags.Parse(args); err != nil {

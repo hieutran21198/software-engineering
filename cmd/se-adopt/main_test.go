@@ -9,6 +9,7 @@ import (
 	"testing"
 
 	artifactdriven "software-engineering/src/archs/artifact-driven"
+	storydriven "software-engineering/src/archs/story-driven"
 )
 
 func TestCommandCopiesCompleteEmbeddedBundle(t *testing.T) {
@@ -109,6 +110,84 @@ func TestAdoptionIncludesRequiredUtilitySkills(t *testing.T) {
 			if !bytes.Equal(got, want) {
 				t.Errorf("required skill differs from canonical source: %s", relative)
 			}
+		}
+	}
+}
+
+func TestStoryDrivenAdoptionContract(t *testing.T) {
+	workspace := t.TempDir()
+	var stdout, stderr bytes.Buffer
+	if err := run([]string{"--list"}, &stdout, &stderr); err != nil {
+		t.Fatal(err)
+	}
+	if !strings.Contains(stdout.String(), "story-driven") {
+		t.Fatal("story-driven missing from catalog")
+	}
+	args := []string{"--arch", "story-driven", "--project", workspace}
+	if err := run(append(append([]string{}, args...), "--dry-run"), &stdout, &stderr); err != nil {
+		t.Fatal(err)
+	}
+	if entries, err := os.ReadDir(workspace); err != nil || len(entries) != 0 {
+		t.Fatalf("dry run wrote files: %v, %v", entries, err)
+	}
+	if err := run(args, &stdout, &stderr); err != nil {
+		t.Fatal(err)
+	}
+	destination := filepath.Join(workspace, "docs/story-driven")
+	if err := fs.WalkDir(storydriven.Bundle, ".", func(name string, entry fs.DirEntry, err error) error {
+		if err != nil || entry.IsDir() {
+			return err
+		}
+		want, err := fs.ReadFile(storydriven.Bundle, name)
+		if err != nil {
+			return err
+		}
+		got, err := os.ReadFile(filepath.Join(destination, filepath.FromSlash(name)))
+		if err != nil {
+			return err
+		}
+		if !bytes.Equal(got, want) {
+			t.Errorf("adoption changed %s", name)
+		}
+		return nil
+	}); err != nil {
+		t.Fatal(err)
+	}
+	stdout.Reset()
+	if err := run(args, &stdout, &stderr); err != nil {
+		t.Fatal(err)
+	}
+	if !strings.Contains(stdout.String(), "0 new files") {
+		t.Fatal("repeat adoption is not idempotent")
+	}
+	// A partially populated destination with a consumer edit must not be filled.
+	conflictWorkspace := t.TempDir()
+	conflictFile := filepath.Join(conflictWorkspace, "docs/story-driven/README.md")
+	if err := os.MkdirAll(filepath.Dir(conflictFile), 0755); err != nil {
+		t.Fatal(err)
+	}
+	if err := os.WriteFile(conflictFile, []byte("creator edits"), 0644); err != nil {
+		t.Fatal(err)
+	}
+	if err := run([]string{"--arch", "story-driven", "--project", conflictWorkspace}, &stdout, &stderr); err == nil {
+		t.Fatal("conflict was accepted")
+	}
+	if got, err := os.ReadFile(conflictFile); err != nil || string(got) != "creator edits" {
+		t.Fatalf("creator edit changed: %q, %v", got, err)
+	}
+	if entries, err := os.ReadDir(filepath.Dir(conflictFile)); err != nil || len(entries) != 1 {
+		t.Fatalf("conflict wrote new bundle files: %v, %v", entries, err)
+	}
+	customWorkspace := t.TempDir()
+	if err := run([]string{"--arch", "story-driven", "--project", customWorkspace, "--output", "guidance/story"}, &stdout, &stderr); err != nil {
+		t.Fatal(err)
+	}
+	if _, err := os.Stat(filepath.Join(customWorkspace, "guidance/story/05-examples/narrative/novel.md")); err != nil {
+		t.Fatal(err)
+	}
+	for _, unexpected := range []string{"docs", ".agents", "AGENTS.md"} {
+		if _, err := os.Stat(filepath.Join(customWorkspace, unexpected)); !os.IsNotExist(err) {
+			t.Errorf("adoption created %s: %v", unexpected, err)
 		}
 	}
 }

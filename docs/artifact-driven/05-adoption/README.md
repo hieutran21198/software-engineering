@@ -1,6 +1,6 @@
 # Adoption
 
-`se-adopt` is an architecture-aware Go command that copies a selected knowledge and role-skill bundle into a consumer workspace. ADD (`artifact-driven`) is currently the only available architecture and the default selection. The default destination is `docs/<architecture>`, which is `docs/artifact-driven` for ADD.
+`se-adopt` is an architecture-aware Go command that copies a selected knowledge and role-skill bundle into a consumer workspace. ADD (`artifact-driven`) is the default selection. Use `se-adopt --list` to see the architectures included in your binary. The default destination is `docs/<architecture>`, which is `docs/artifact-driven` for ADD.
 
 ## Download the Binary
 

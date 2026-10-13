@@ -6,3 +6,6 @@ artifacts:
     path: artifact-plane
     depends_on:
       - artifact-driven
+  story-driven:
+    path: story-driven
+    depends_on: []
