@@ -10,3 +10,4 @@ Baseline knowledge comes from 1.7.0. The task-copy rule in that baseline is supe
 
 - [Requirements](requirements/task-retention.md)
 - [Delivery and navigation contract](specifications/task-retention.md)
+- [Implementation plan](tasks/README.md)

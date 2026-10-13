@@ -1,0 +1,27 @@
+---
+id: integration
+depends_on: ["navigation"]
+---
+
+# Validate integrated Plane and prepare delivery
+
+## Scope and ownership
+
+Repository: this repository. Locations: apps/artifact-plane test/build, Plane member knowledge, and coordinator-owned unit brief.
+
+Run the full integrated regression suites against the established ADD contract. Record shared evidence centrally. After user version confirmation, prepare the task-free Plane snapshot with linked retained plan and proposed root/DAG. Open the downstream PR and stop for team review.
+
+## Governing contracts and prerequisites
+
+Requirements R1–R5 in requirements/task-retention.md; specifications/task-retention.md. Requires established ADD specifications/task-retention.md from change-task-retention and a recorded contract recheck before any implementation. Explicit plan approval is also required. Internal prerequisites: navigation. Required predecessor DoD must pass before starting.
+
+## Definition of Done
+
+- [ ] npm test, npm run build, and npm run test:browser in apps/artifact-plane pass on the integrated revision.
+- [ ] Repository go test ./..., go vet ./..., website build and contract/link checks pass where affected; no required CI check is skipped.
+- [ ] Unit shared evidence references retained member tasks and combined integration details; historical outcomes/snapshots remain untouched.
+- [ ] Proposed version has no tasks directory, has valid source_change/delivery_tasks, and resolves its delivered plan; publication is not claimed before merge.
+
+## Evidence
+
+Not executed. Record check commands, observed results, and relevant implementation references here after approved implementation.
