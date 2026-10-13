@@ -4,6 +4,9 @@ import { execFile } from "node:child_process";
 import { promisify } from "node:util";
 import { buildSnapshot, parseArtifact } from "../src/model.js";
 const execute = promisify(execFile);
+import {gitReads} from './git-reads.js';
+import {gitSlot} from './git-process.js';
+export const gitMetrics = {commands:0};
 import {frontMatter,unitBriefs, versionClaims, safeKnowledgePath} from "./units-of-work.js";
 import { readWorkflow } from "./workflow.js";
 export class ExploreError extends Error {
@@ -13,6 +16,9 @@ export class ExploreError extends Error {
   }
 }
 export async function git(root, args, raw = false) {
+  const release=await gitSlot();
+  try {
+  gitMetrics.commands++;
   const { stdout } = await execute(
     "git",
     [
@@ -32,8 +38,10 @@ export async function git(root, args, raw = false) {
     },
   );
   return raw ? stdout : stdout.trim();
+  }finally{release();}
 }
-export async function scanRepository(path) {
+export async function scanRepository(path, options = {}) {
+  const runGit = options.git || git;
   if (typeof path !== "string" || !isAbsolute(path) || path.includes("\0"))
     throw new ExploreError(400, "Enter an absolute repository path.");
   let root;
@@ -47,7 +55,7 @@ export async function scanRepository(path) {
   }
   let top;
   try {
-    top = await git(root, ["rev-parse", "--show-toplevel"]);
+    top = await runGit(root, ["rev-parse", "--show-toplevel"]);
   } catch {
     throw new ExploreError(422, "Select a readable Git worktree root.");
   }
@@ -215,11 +223,11 @@ export async function scanRepository(path) {
   }
   let branch, head, status;
   try {
-    branch = await git(root, ["symbolic-ref", "--short", "HEAD"]).catch(
+    branch = await runGit(root, ["symbolic-ref", "--short", "HEAD"]).catch(
       () => "detached",
     );
-    head = await git(root, ["rev-parse", "--verify", "HEAD"]).catch(() => null);
-    status = await git(root, [
+    head = await runGit(root, ["rev-parse", "--verify", "HEAD"]).catch(() => null);
+    status = await runGit(root, [
       "status",
       "--porcelain=v1",
       "--untracked-files=normal",
@@ -235,9 +243,20 @@ export async function scanRepository(path) {
   return { snapshot, files, unsafeTaskPaths };
 }
 
-export async function exploreRepository(path) {
-  const { snapshot, files, unsafeTaskPaths } = await scanRepository(path);
-  snapshot.workflow = await readWorkflow(snapshot.repository.path, { snapshot, files, unsafeTaskPaths }, scanRepository, git);
-  snapshot.unitsOfWork = snapshot.workflow.worktrees.find(w => w.selected)?.unitsOfWork || [];
-  return snapshot;
+const inFlight = new Map();
+export async function exploreRepository(path, {legacy=false}={}) {
+  const identity=typeof path==='string'?await realpath(path).catch(()=>path):path;
+  if(!legacy && inFlight.has(identity))return inFlight.get(identity);
+  const work=(async()=>{
+    const reads=legacy?git:gitReads(git,()=>gitMetrics.commands++);
+    try{
+      const scan=root=>scanRepository(root,{git:reads});
+      const {snapshot,files,unsafeTaskPaths}=await scan(path);
+      snapshot.workflow=await readWorkflow(snapshot.repository.path,{snapshot,files,unsafeTaskPaths},scan,reads);
+      snapshot.unitsOfWork=snapshot.workflow.worktrees.find(w=>w.selected)?.unitsOfWork||[];
+      return snapshot;
+    }finally{reads.close?.();}
+  })();
+  if(!legacy)inFlight.set(identity,work);
+  try{return await work;}finally{if(inFlight.get(identity)===work)inFlight.delete(identity);}
 }

@@ -69,7 +69,7 @@ function parseHistory(raw) {
   }
   return records;
 }
-async function evidenceFor(root, data, git, head, diagnostics) {
+export async function evidenceFor(root, data, git, head, diagnostics) {
   const { files, snapshot } = data;
   let history = [], dirty = [];
   try {
@@ -81,9 +81,11 @@ async function evidenceFor(root, data, git, head, diagnostics) {
   const cache = new Map();
   async function content(revision, path) {
     const key = `${revision}:${path}`;
-    if (!cache.has(key)) cache.set(key, await git(root, ['show', key], true).catch(() => ''));
+    if (!cache.has(key)) cache.set(key, git(root, ['show', key], true).catch(() => ''));
     return cache.get(key);
   }
+  const completionCache = new Map();
+  const complete = text => {if(!completionCache.has(text))completionCache.set(text,explicitCompletion(text));return completionCache.get(text);};
   const changes = [];
   for (const artifact of snapshot.artifacts) for (const { name } of artifact.changes) {
     const prefix = `docs/artifacts/${artifact.id}/changes/${name}/`;
@@ -123,6 +125,7 @@ async function evidenceFor(root, data, git, head, diagnostics) {
     const timestamps = history.filter(commit => commit.paths.some(path => path.startsWith(prefix))).map(commit => commit.time).filter(time => Number.isSafeInteger(time) && time >= 0 && time <= 8640000000000);
     change.lastCommitAt = timestamps.length ? Math.max(...timestamps) : null;
     if (ongoing) change.inferenceReason = 'No current phase can be inferred from distinguishable evidence.';
+    const versionChecks = new Map();
     // Older copied tasks can remain different from the current snapshot. They are not new progress.
     for (const commit of history) {
       for (const path of commit.paths.filter(path => path.startsWith(prefix) || path.startsWith(versionPrefix) || claim && path.startsWith(claim.prefix) || path === `docs/artifacts/${artifact.id}/README.md`)) {
@@ -133,18 +136,22 @@ async function evidenceFor(root, data, git, head, diagnostics) {
           // Version evidence must include this change's knowledge, not an unrelated release.
           const match = path.match(/^(docs\/artifacts\/[^/]+\/versions\/[^/]+\/)/);
           const version = match?.[1] || versionPrefix;
-          const metadata = frontMatter(await content(commit.id, `${version}README.md`));
-          const retained = metadata.value?.delivery_tasks === 'change' && metadata.value.source_change === name;
-          if (metadata.value?.delivery_tasks !== undefined && !retained) continue;
-          const knowledge = retained ? owned.filter(([file])=>category(file)!=='Plan') : owned;
-          if (!knowledge.length || !(await Promise.all(knowledge.map(async ([file, value]) => await content(commit.id, `${version}${file.slice(prefix.length)}`) === value))).every(Boolean)) continue;
-          if (retained && !(await Promise.all(owned.filter(([file])=>category(file)==='Plan').map(async ([file,value])=>await content(commit.id,file)===value))).every(Boolean)) continue;
+          const checkKey=commit.id+':'+version;
+          if(!versionChecks.has(checkKey))versionChecks.set(checkKey,(async()=>{
+            const metadata=frontMatter(await content(commit.id,`${version}README.md`));
+            const retained=metadata.value?.delivery_tasks==='change'&&metadata.value.source_change===name;
+            if(metadata.value?.delivery_tasks!==undefined&&!retained)return false;
+            const knowledge=retained?owned.filter(([file])=>category(file)!=='Plan'):owned;
+            if(!knowledge.length||!(await Promise.all(knowledge.map(async([file,value])=>await content(commit.id,`${version}${file.slice(prefix.length)}`)===value))).every(Boolean))return false;
+            return !retained||(await Promise.all(owned.filter(([file])=>category(file)==='Plan').map(async([file,value])=>await content(commit.id,file)===value))).every(Boolean);
+          })());
+          if(!await versionChecks.get(checkKey))continue;
         }
         for (const phase of associations(path, text, previous)) {
           const s = step(phase);
           if (!s.commits.some(c => c.id === commit.id)) s.commits.push({ id: commit.id, subject: commit.subject });
           s.evidence.push(note('commit', path, 'Git records a distinguishable change to this phase.'));
-          if (explicitCompletion(text) && !explicitCompletion(previous) && phase !== 'Version preparation') {
+          if (complete(text) && !complete(previous) && phase !== 'Version preparation') {
             s.state = 'documented-complete';
             const candidates = completionIds.get(phase) || new Map();
             candidates.set(commit.id, { id: commit.id, subject: commit.subject });
@@ -193,7 +200,7 @@ export async function readWorkflow(selectedRoot, selectedData, scan, git) {
     } catch (error) {
       entry.availability = error.status === 404 && error.message.includes('docs/artifacts') ? 'non-add' : 'unavailable';
       entry.diagnostics.push(diagnostic('worktree-unavailable', entry.availability === 'non-add' ? 'This worktree has no readable ADD directory.' : 'This registered worktree cannot be read.'));
-    }
+    }finally{git.release?.(entry.path);}
   }
   return workflow;
 }
