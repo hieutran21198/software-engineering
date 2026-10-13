@@ -11,7 +11,3 @@ A persisted workflow registry would create a second source of truth and violate 
 ## Consequences
 
 Progress is inferred and can be unknown. History is bounded and may be shallow. Existing declarations may be stale. The UI must explain these limits without converting them into completion or approval claims.
-
-## Applicability in this change
-
-Specifications/task-retention.md replaces standalone Workflow canvas/navigation requirements and delivered task-source rules. Unit Workflow and derived workflow evidence remain supported.

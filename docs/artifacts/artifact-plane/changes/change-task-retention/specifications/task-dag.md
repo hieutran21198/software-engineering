@@ -19,7 +19,7 @@ Graph metadata does not change workflow phase inference or existing checklist se
 
 ## Interface
 
-Selecting a Workflow change exposes a View task graph action. Open a dedicated graph canvas within Workflow with a Back to workflow control and change identity. Reuse React Flow, existing dagre, fit/pan/zoom, and the current inspector. Edges mean task prerequisites; show this legend. Include disconnected nodes and deterministic layout. For invalid, unavailable, or empty graphs, show the reason and readable records without prerequisite edges.
+Selecting change delivery details in the Dependencies inspector exposes a View task graph action. Open the existing graph canvas within Dependencies with Back to dependencies and change identity. Reuse React Flow, existing dagre, fit/pan/zoom, and the current inspector. Edges mean task prerequisites; show this legend. Include disconnected nodes and deterministic layout. For invalid, unavailable, or empty graphs, show the reason and readable records without prerequisite edges.
 
 Task selection uses the existing safe Markdown renderer for scope, DoD, and evidence; display ID, source path, explicit prerequisites, and checklist counts. Never render raw Markdown HTML unsanitized. Return to the selected change without resetting history expansion. Retain inspector resize and narrow-layout behavior. Refresh retains selection only while the source still exists; otherwise clear it with the existing behavior. Opening another worktree clears task context. No background polling, file writes, or new browser persistence.
 
@@ -40,7 +40,3 @@ ADD 1.1.0 is established on main after PR #7 merged. The contract at the owning 
 ## Codex observation extension
 
 The codex-execution contract adds a separate runtime overlay and observation store. Earlier no-polling/no-persistence/no-agent-inference constraints continue to govern knowledge derivation. Explicit runtime events may show observed execution with freshness and reported validation labels; they do not alter knowledge graph, approval, or establishment semantics.
-
-## Applicability in this change
-
-Specifications/task-retention.md replaces standalone Workflow canvas/navigation requirements and delivered task-source rules. Unit Workflow and derived workflow evidence remain supported.

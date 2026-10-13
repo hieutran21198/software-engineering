@@ -29,3 +29,7 @@ Unit Workflow, Artifacts, and Implementation controls remain. Preserve recorded 
 Reader fixtures cover new task-free versions, retained delivered tasks, next-change isolation, legacy versions with/without retained changes, missing/invalid delivery markers, missing tasks, branch-only evidence, modified/deleted/added task files, conflicting protected refs, and inaccessible Git. Workflow fixtures cover established history classification and version-preparation associations. Browser checks assert no top-level Workflow button, retained unit Workflow, worktree opening and unavailable states, ungrouped task access, commit details, refresh, runtime history, responsive layout, and read-only fingerprints.
 
 KISS retains one delivery source and existing graph components; STE preserves evidence uncertainty. All R1–R5 are covered and no Specification blocker remains. Upstream establishment remains a separate gate.
+
+## Upstream recheck
+
+ADD 2.0.0 is established on main after PR #13 merged. Its specifications/task-retention.md matches the supplying contract used for this plan. The version declares source_change and delivery_tasks: change and retains the published originating tasks. All required upstream knowledge and implementation live in this repository. User plan approval remains valid; no material amendment is required.

@@ -108,43 +108,35 @@ Compact records, resizing, references, and read-only rules remain valid.
 
 The scope stays within Artifact Plane. B11–B14 cover source separation, worktrees, progress uncertainty, and commit provenance. No execution engine or workflow state is added. KISS and STE checks preserve simple sources and clear evidence limits.
 
-## Workflow canvas
+## Worktree and delivery navigation
 
-21. Present local worktrees, changes, and ADD phases on an interactive canvas with pan, zoom, and fit. Show branch, selected worktree, change identity, current inferred step, and phase evidence state without a long text list.
-22. Selecting a worktree, change, or phase shows its existing details in the resizable inspector. Phase details include full commit IDs, messages, completion evidence, and uncertainty. Preserve the explicit Open worktree action.
-23. Keep registered unavailable and detached worktrees visible. Preserve historical and unknown states. Add no automatic refresh, execution controls, approval inference, or repository writes.
+21. Present registered worktree selection and details in the repository sidebar. Show branch, path, HEAD, availability and detached/locked/prunable states. Opening another readable worktree remains explicit.
+22. In Dependencies, expose change delivery details and phase evidence through the inspector, with full commit IDs, messages, completion evidence, and uncertainty. A change can open its task graph with Back to dependencies. Preserve access in repositories without unit briefs.
+23. Remove the standalone Workflow tab and canvas. Preserve unit Workflow, dependency exploration, worktree/history access, and recorded executions. Add no automatic refresh, execution controls, approval inference, or repository writes.
 
-### B15 — Visual workflow exploration
+### B15 — Delivery evidence exploration
 
-Given two worktrees with discovered changes, opening Workflow shows each worktree and its changes with phases in ADD order. Pan, zoom, and fit work. Selecting Validation shows its evidence and commits in the inspector. Unknown evidence remains unknown.
+Given local worktrees and changes, the sidebar shows registered sources. Selecting an artifact and change opens its phase evidence and task graph. Selecting a unit still offers Workflow, Artifacts, and Implementation.
 
 ### B16 — View and source safety
 
 Switching views or resizing preserves valid selection. Refresh preserves valid selection or clears it when its source disappears. Opening another worktree remains explicit. Canvas interactions leave files and Git state unchanged.
-
-### Canvas requirement self-check
-
-Only Artifact Plane presentation changes. B15 and B16 cover navigation, evidence, uncertainty, and read-only behavior. KISS retains current sources and excludes runtime infrastructure. STE checks preserve clear observable criteria. No blockers remain.
 
 ## Workflow histories and navigation
 
 24. Remove Approval from the displayed workflow phase sequence. The explorer still does not infer user approval or run workflows.
 25. In each worktree, keep current changes separate from retained changes. Put retained changes in Change histories, closed by default. Readers can expand histories and individual changes to inspect their phases and evidence. A declared change already represented by the current snapshot belongs in histories. Ambiguous active metadata must remain visible as uncertain rather than proving completion.
 26. Order Change histories by the latest Git commit time for each change, descending. Unknown times sort last with deterministic ties. Do not use directory name or filesystem modification time as recency evidence.
-27. Label the view switcher Dependencies / Workflow. Keep its horizontal position centered and unchanged when switching at a fixed viewport width. The Established / Planning controls remain specific to Dependencies. Maintain usable controls on narrow layouts.
+27. Label the top-level view switcher Dependencies / Units of work. Keep its horizontal position centered and unchanged when switching at a fixed viewport width. The Established / Planning controls remain specific to Dependencies. Maintain usable controls on narrow layouts.
 
 ### B17 — Workflow history exploration
 
-Given a current declared change and two retained changes committed at different times, opening Workflow shows the current change and a closed Change histories group. Expanding histories shows the newer change first. Expanding one history shows its six phases without Approval. Selecting a phase preserves evidence, full IDs, and uncertainty in the inspector. Collapsing histories does not replace selected evidence with another source.
+Given a current declared change and two retained changes committed at different times, the dependency inspector exposes the current change and a closed delivery history group. Expanding histories shows the newer change first. Selecting a history shows its six phases without Approval. Phase evidence preserves full IDs and uncertainty.
 
 ### B18 — Stable navigation
 
-At a fixed desktop width, switching Dependencies to Workflow and back leaves the switcher centered at the same position. Labels are Dependencies and Workflow. At narrow widths, controls remain readable and operable.
+At a fixed desktop width, switching Dependencies to Units of work and back leaves the switcher centered at the same position. Labels are Dependencies and Units of work. At narrow widths, controls remain readable and operable.
 
 ### History requirement self-check
 
 The change affects only Artifact Plane. B17 and B18 cover history separation, recency, phases, and toolbar stability. KISS retains Git/Markdown and existing libraries. STE distinguishes retained history from proof of completed execution. No Requirement blocker remains.
-
-## Applicability in this change
-
-Specifications/task-retention.md replaces standalone Workflow canvas/navigation requirements and delivered task-source rules. Unit Workflow and derived workflow evidence remain supported.

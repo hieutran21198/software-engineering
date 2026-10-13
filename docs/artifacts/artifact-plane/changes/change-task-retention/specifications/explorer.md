@@ -110,27 +110,15 @@ Current step prioritizes relevant uncommitted file changes, then the latest dist
 
 ### UI and failures
 
-Add a Workflow view beside the dependency canvas. Group worktrees and their changes on the interactive canvas, with a selected-worktree indicator. Node selection shows inferred step, evidence reasons, tasks, expandable phase commits, and the explicit Open action in the inspector. Full IDs and subjects are plain text. Keep canvas selection and inspector width during view switching. Empty, unreadable, shallow, ambiguous, and history-limited states must remain visible. Worktree metadata failure does not remove the existing artifact graph.
+Show worktree selection and source details in the shared sidebar. Change delivery selection in Dependencies shows inferred step, evidence reasons, tasks, and expandable phase commits in the inspector. Keep the explicit Open worktree action. Full IDs and subjects are plain text. Keep canvas selection and inspector width during view switching. Empty, unreadable, shallow, ambiguous, and history-limited states must remain visible. Worktree metadata failure does not remove the existing artifact graph.
 
 ### Validation and impact self-check
 
 B11–B14 govern new behavior. Add Git fixtures for two worktrees, uncommitted phase edits, inherited completed tasks, distinct phase commits, squash commits, declared versus stale active changes, detached/unavailable worktrees, and history limits. Fingerprint all inspected files and Git metadata before/after. Retain existing API protections and DAG/reference checks. Only Artifact Plane changes; no new artifact dependency. Contract-Driven Development supplies the additive API and evidence rules, BDD supplies examples, and existing CI supplies integrated validation. KISS uses plain functions and existing libraries; STE separates evidence from claims.
 
-## Workflow canvas contract
+## Delivery navigation contract
 
-Replace the Workflow card list with React Flow using the existing library. Consume snapshot.workflow unchanged. No server or inference contract changes. Derive nodes and positions in memory using plain functions.
-
-Each registered worktree is a labeled group with branch, path, short HEAD, availability, and selected marker. Each change occupies a row inside its worktree. Show change identity and the existing inferred step or Unknown label for primary changes; retained changes show History. Phase nodes follow source steps in order: Requirement, Specification, Plan, Implementation, Validation, Version preparation. Display evidence state and highlight the current inferred phase only for primary changes. Use distinct text as well as color. Connecting lines indicate phase order only; they do not assert completed prerequisites or artifact dependencies. Show a legend for this meaning.
-
-Use deterministic positions and group dimensions derived from row counts. Keep nodes fixed in layout; allow pan, zoom, fit, and selection. No new graph layout dependency. Empty or unavailable groups remain visible with diagnostics. Fit initially and provide a manual fit control; do not reset the viewport on each selection.
-
-Node IDs encode worktree path, artifact, change, and phase using structured string tuples. Keep selection separate from artifact canvas selection. Switching views preserves each selection. Refresh resolves workflow selection by ID against the new snapshot; missing IDs clear selection. Opening another repository clears workflow selection. Inspector width uses the existing shared resize control.
-
-Worktree inspector shows branch, path, full HEAD, availability, diagnostics, and explicit Open worktree action when readable and not selected. Change inspector shows inference reason, declared-active caveat, and task evidence. Phase inspector shows state, evidence, associated commits and exact completion commit or unknown. Preserve full IDs and messages, safely rendered as text. At narrow widths use the existing stacked inspector behavior. No polling, persistent browser storage, Git mutations, or background work.
-
-### Canvas specification self-check
-
-Requirements 21–23 and B15–B16 map to layout, selection, evidence inspection, and source safety. No API, artifact DAG, upstream dependency, or inference change is needed. Existing ADRs remain valid. KISS reuses React Flow and plain functions. STE distinguishes sequence lines from dependency or completion claims. No blockers remain for Plan.
+The workflow data reader remains available for unit views and inspectors. Worktree selection lives in the shared sidebar; phase evidence and full commits live in change delivery details. A change can open its existing task graph within Dependencies. Remove standalone canvas mounting and selection state. specifications/task-retention.md defines selection, refresh, legacy access, and worktree behavior.
 
 ## Workflow history and navigation contract
 
@@ -140,11 +128,11 @@ Add runtime change fields history (boolean), historyReason (text), and lastCommi
 
 Read committer timestamps with the existing bounded Git log. lastCommitAt is the maximum valid timestamp among inspected reachable commits touching files in that change directory. Version-only, unrelated root, and unrelated artifact commits do not reorder histories. Unknown or unavailable timestamps remain null and sort last. Sort equal timestamps by artifact identifier and natural change name. Preserve the existing 200-commit cap, shallow-history diagnostics, and read-only Git environment. Do not scan additional repositories or store timestamps in Markdown.
 
-Each worktree has primary change rows followed by a Change histories toggle showing the retained count. Histories start closed. Opening the group shows retained change headings ordered by lastCommitAt descending. Each retained change starts closed; opening it reveals its phase row. Expansion keys include worktree path, artifact, and change. Keep independent expansion in browser memory; do not write it to disk. Recalculate group height and row positions from visible records. Use the existing React Flow and fixed layout functions. Sequence edges connect only visible phases in one change. Phase order does not imply completion or dependency edges.
+For the selected artifact/worktree, show current delivery changes and a closed history group in the dependency inspector. Histories sort by bounded lastCommitAt descending, unknown last, with deterministic natural ties. Selecting a change opens its phase evidence and task graph action. Expansion and selection remain in browser memory, namespaced by worktree/artifact/change. Phase sequence never creates task dependencies.
 
 Resolve selected evidence from the complete payload, independently of canvas visibility. Collapse preserves details; refresh clears a missing source. Reopening another repository resets history expansion. Switching views preserves viewport, expansion, selection, and inspector width. The inspector describes retained-history reasons and timestamp limits without calling all history records finished.
 
-Use a stable toolbar layout with the Dependencies / Workflow switcher horizontally centered in the canvas area. Reserve left and right regions in both views; hiding Established / Planning does not move the switcher. At narrow widths use a centered separate row when space is insufficient. Existing keyboard controls, canvas actions, and read-only behavior remain valid.
+Use a stable toolbar layout with the Dependencies / Units of work switcher horizontally centered in the canvas area. Reserve left and right regions in both views; hiding Established / Planning does not move the switcher. At narrow widths use a centered separate row when space is insufficient. Existing keyboard controls, canvas actions, and read-only behavior remain valid.
 
 ### History specification self-check
 
@@ -153,7 +141,3 @@ Requirements 24–27 and B17–B18 map to phase removal, runtime lifecycle/recen
 ## Codex observation extension
 
 The codex-execution contract adds a separate runtime overlay and observation store. Earlier no-polling/no-persistence/no-agent-inference constraints continue to govern knowledge derivation. Explicit runtime events may show observed execution with freshness and reported validation labels; they do not alter knowledge graph, approval, or establishment semantics.
-
-## Applicability in this change
-
-Specifications/task-retention.md replaces standalone Workflow canvas/navigation requirements and delivered task-source rules. Unit Workflow and derived workflow evidence remain supported.

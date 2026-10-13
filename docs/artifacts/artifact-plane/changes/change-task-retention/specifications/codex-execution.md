@@ -58,7 +58,3 @@ When no matching attempt exists, render No recorded execution. A nonempty checkl
 In individual, unit, and recorded implementation views, hide a task edge only when another path of task-prerequisite edges connects its source to its target. Never use establishment edges to justify removing a task edge, and never hide establishment edges. Cyclic or invalid graphs retain their existing diagnostic behavior without reduction. Use a keyboard-accessible Show all prerequisites checkbox, default unchecked. The toggle affects canvas edges/layout only. Declared metadata, inspector prerequisites, runtime matching, node identities, and source data remain unchanged.
 
 Specification self-check: R11/R12 have precise labels, edge semantics, failure behavior, and input-preservation rules. No upstream contract change or new ADR is needed. KISS uses a shared pure display projection; STE distinguishes recorded execution and documented checklists.
-
-## Applicability in this change
-
-Specifications/task-retention.md replaces standalone Workflow canvas/navigation requirements and delivered task-source rules. Unit Workflow and derived workflow evidence remain supported.

@@ -1,6 +1,6 @@
 # Aggregated unit-of-work exploration contract
 
-Governs P1–P6 and U1–U5 in requirements/units-of-work.md. Consume established artifact-driven 1.2.0, element specifications/units-of-work.md, originating change change-units-of-work. The upstream recheck passed before implementation. Existing explorer and task-graph contracts remain valid except the reserved units-of-work directory is explicitly excluded from artifact discovery. No new artifact edge is needed.
+Governs P1–P6 and U1–U5 in requirements/units-of-work.md. Consume established artifact-driven 2.0.0, elements specifications/units-of-work.md and specifications/task-retention.md, originating change change-task-retention. The upstream recheck passed before implementation. Existing explorer and task-graph contracts remain valid except the reserved units-of-work directory is explicitly excluded from artifact discovery. No new artifact edge is needed.
 
 ## Reader and additive response
 
@@ -8,7 +8,7 @@ Extend the existing safe reader and POST /api/explore response with unitsOfWork.
 
 A unit record contains id, title, path, markdown, members, acceptance, evidence, diagnostics, completion, artifactGraph, and implementationGraph. Member records contain artifact, change, retainedChangePath (nullable), deliveredVersion (nullable), sourcePath, establishmentEvidence, and workflow evidence. completion contains derivation (documented-complete, incomplete, or unknown), reasons, and source references. These fields exist only in the response. Invalid membership has unknown completion; known unmet criteria or proposed versions produce incomplete. Missing Git proof produces unknown rather than complete. Display documented-complete as Completion supported by documented evidence.
 
-Reuse the existing workflow evidence rules and six display phases, including Validation and Version preparation as evidence views rather than new ADD phases. Group rows by unit and member within the same worktree. Resolve retained change workflow evidence where available; when only a delivered version remains, show delivered-version evidence and unavailable historical phases without inventing phase commits. Existing ungrouped workflow rows remain accessible for legacy repositories.
+Reuse the existing workflow evidence rules and six display phases, including Validation and Version preparation as evidence views rather than new ADD phases. Group rows by unit and member within the same worktree. Resolve retained change workflow evidence where available; when only a delivered version remains, show delivered-version evidence and unavailable historical phases without inventing phase commits. Ungrouped change phase evidence and task graphs remain accessible through the Dependencies inspector for legacy repositories.
 
 ## Git establishment evidence
 
@@ -20,11 +20,11 @@ Derive an established/planning projection from existing artifact roots and valid
 
 ## Implementation view
 
-Reuse each member's validated taskGraph from its retained change or delivered version. Namespaced node keys include worktree, unit, artifact, change, and task path. Preserve original local IDs and internal edges. Invalid plans retain safely readable records with no invented edges; absent legacy metadata remains unavailable. Whole-graph derivation is invalid/unavailable where a required component cannot be resolved; render valid components but do not claim complete execution order.
+Reuse each member's validated taskGraph from its retained originating change when delivery_tasks is change, or its delivered version for legacy snapshots without that marker. Namespaced node keys include worktree, unit, artifact, change, and task path. Preserve original local IDs and internal edges. Invalid plans retain safely readable records with no invented edges; absent legacy metadata remains unavailable. Whole-graph derivation is invalid/unavailable where a required component cannot be resolved; render valid components but do not claim complete execution order.
 
 For each actual artifact prerequisite of a member, add a version-establishment gate owned by that prerequisite. A participating prerequisite gate follows its task sinks and gates the dependent member's task roots. An external gate has no invented task nodes. One artifact gate can feed several dependents. Gate edges are distinguished from internal task edges and phase sequence lines. Establishment includes publication/review obligations beyond tasks, so task completion never automatically opens a gate. Internal sinks/roots come only from valid task DAGs; an empty graph still has an establishment gate where required. Display explicit user approval as a separate documented obligation, never as inferred permission. A downstream member's entire implementation remains governed by its gate through task reachability. Diagnose cycles in the combined graph.
 
-For a historical delivered member, use the delivered version's plan/evidence; retain its namespace change provenance. Historical display does not instruct rerunning established tasks. Gate evidence refers to the required established knowledge and is unknown where it cannot be verified. Do not create cross-artifact depends_on metadata or persist this combined graph.
+For a historical delivered member, use the exact retained originating change's plan/evidence for delivery_tasks: change, or legacy delivered-version tasks; retain its namespace change provenance. Historical display does not instruct rerunning established tasks. Gate evidence refers to the required established knowledge and is unknown where it cannot be verified. Do not create cross-artifact depends_on metadata or persist this combined graph.
 
 ## Interface
 
@@ -41,7 +41,3 @@ ADD 1.2.0 is established on main after PR #10 merged. Its specifications/units-o
 For documented merge review, readers recognize an explicit statement that all required knowledge and implementation changes reside in the inspected repository, or that all required knowledge and implementation changes have landed on main/master. Publication still requires identical complete knowledge on a local protected ref; a branch-only statement cannot establish it. Missing review assertions remain unverified. This is a supported prose convention for existing evidence, not a workflow status declaration.
 
 A shared brief can record a publication-review paragraph prefixed with artifact identifier and delivered version (for example, artifact-driven 1.2.0:), followed by the explicit all-required-merges assertion. The reader applies it only to that member/version and still verifies identical protected-ref knowledge. This supports merged upstream members without editing their immutable snapshots.
-
-## Applicability in this change
-
-Specifications/task-retention.md replaces standalone Workflow canvas/navigation requirements and delivered task-source rules. Unit Workflow and derived workflow evidence remain supported.

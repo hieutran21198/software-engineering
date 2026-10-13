@@ -34,12 +34,8 @@ P5. Link nodes to knowledge and evidence; show diagnostics and derive completion
 
 P6. Preserve safe Markdown, existing views, read-only access, explicit refresh, selection, and responsive layouts.
 
-Consume proposed artifact-driven/change-units-of-work, element specifications/units-of-work.md. The existing dependency remains valid. Implementation waits for upstream establishment and contract recheck.
+Consume established artifact-driven 2.0.0, elements specifications/units-of-work.md and specifications/task-retention.md. The existing dependency remains valid. The upstream establishment and contract recheck passed before implementation.
 
 ## Requirement self-check
 
 The user confirmed scopes 1–5. Outcome, cardinality, ownership, evidence, and compatibility are explicit. KISS retains a single authority per fact; STE checks preserve obligations and observable examples. Schema choices belong to Specification. No unresolved requirement blocker remains.
-
-## Applicability in this change
-
-Specifications/task-retention.md replaces standalone Workflow canvas/navigation requirements and delivered task-source rules. Unit Workflow and derived workflow evidence remain supported.

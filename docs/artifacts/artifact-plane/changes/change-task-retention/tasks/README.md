@@ -30,3 +30,7 @@ Requirements R1–R5 map to the listed work and concrete DoD. IDs are unique, pr
 ## Preparation evidence
 
 The existing Artifact Plane task parser accepted both plans: ADD has two tasks and one edge; Plane has three tasks and two edges. Neither has graph diagnostics. The shared brief parser accepted membership and criteria without diagnostics. All 15 relative Markdown links in the new member changes and brief resolved without ancestor README links. git diff --check passed. Established versions, reusable bundle files, and application code are unchanged. These checks validate preparation only; implementation and acceptance checks have not run.
+
+## Implementation authorization
+
+The user approved both plans and reported PR #13 merged. Git confirms ADD 2.0.0 knowledge and retained tasks on main; the supplying contract recheck passed without differences. The approved Plane task chain can now execute sequentially.

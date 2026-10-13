@@ -17,11 +17,15 @@ Requirements R1–R5 in requirements/task-retention.md; specifications/task-rete
 
 ## Definition of Done
 
-- [ ] Targeted units-of-work, workflow/history, task-graph and unit-graph checks pass for the new layout and legacy fixtures.
-- [ ] Missing/invalid marker, missing source, modified/deleted/added task records, conflicting/unavailable protected refs and branch-only evidence cannot support completion.
-- [ ] Delivered history classification and version-preparation evidence remain correct when version snapshots lack task copies.
-- [ ] Next-change plans do not replace historical graphs; task IDs and runtime source bindings remain correct; read-only fingerprints pass.
+- [x] Targeted units-of-work, workflow/history, task-graph and unit-graph checks pass for the new layout and legacy fixtures.
+- [x] Missing/invalid marker, missing source, modified/deleted/added task records, conflicting/unavailable protected refs and branch-only evidence cannot support completion.
+- [x] Delivered history classification and version-preparation evidence remain correct when version snapshots lack task copies.
+- [x] Next-change plans do not replace historical graphs; task IDs and runtime source bindings remain correct; read-only fingerprints pass.
 
 ## Evidence
 
-Not executed. Record check commands, observed results, and relevant implementation references here after approved implementation.
+Targeted Node reader/workflow/history/task/unit-graph suites passed 81 checks. The final npm test in apps/artifact-plane passed 120 checks. git diff --check passed.
+
+Fixtures verify exact originating delivery sources, task-free delivered history/version-preparation association, missing/invalid markers and sources, changed/deleted/added task records and plan membership, UTF-8 byte differences, conflicting/unavailable protected refs, branch-only sources, invalid plans, next-change isolation, and read-only fingerprints. Existing legacy fixtures still pass.
+
+member.sourcePath remains delivered knowledge; member.deliveryPath identifies the exact task source. Workflow/task identities and runtime bindings remain unchanged. KISS reuses scanner/Git/task graph mechanisms and STE preserves evidence uncertainty. The reader task DoD is satisfied; navigation can begin.

@@ -23,7 +23,3 @@ ADD supplies the upstream proposed contract. Implementation waits for establishm
 ## Upstream recheck
 
 ADD 1.1.0 is established on main after PR #7 merged. The contract at the owning artifact's current version, element specifications/task-dag.md, matches the proposed format used for this approved plan. Task membership, IDs, prerequisites, validation, and legacy behavior remain unchanged. Dependency and phase self-checks pass; no material plan amendment is required.
-
-## Applicability in this change
-
-Specifications/task-retention.md replaces standalone Workflow canvas/navigation requirements and delivered task-source rules. Unit Workflow and derived workflow evidence remain supported.
