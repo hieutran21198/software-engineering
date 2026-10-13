@@ -1,4 +1,4 @@
-import {readUnitsOfWork} from './units-of-work.js';
+import {readUnitsOfWork, deliverySource, publication, frontMatter} from './units-of-work.js';
 import { buildTaskGraph } from './task-graph.js';
 import { parseArtifact } from "../src/model.js";
 import { marked } from "marked";
@@ -89,6 +89,16 @@ async function evidenceFor(root, data, git, head, diagnostics) {
     const prefix = `docs/artifacts/${artifact.id}/changes/${name}/`;
     const versionPrefix = `docs/artifacts/${artifact.id}/versions/${artifact.currentVersion}/`;
     const owned = [...files].filter(([path]) => path.startsWith(prefix) && category(path));
+    const delivery = deliverySource(files, artifact.id, name, prefix);
+    const claim = delivery.claims.length===1 ? delivery.claims[0] : null;
+    const changeOwned = claim?.deliveryTasks === 'change';
+    let delivered = false;
+    if (changeOwned && !delivery.diagnostic) {
+      const evidence = await publication(root, claim.prefix, files, git, '', null, prefix);
+      delivered = evidence.state === 'established' && buildTaskGraph(files,prefix,checklist,data.unsafeTaskPaths).state==='available';
+      if (!delivered) diagnostics.push(diagnostic('delivery-publication-unverified', `${artifact.id}/${name}: ${evidence.reasons.join(' ')}`));
+    }
+    if (delivery.diagnostic) diagnostics.push(diagnostic(delivery.diagnostic, `${artifact.id}/${name}: retained delivery source cannot be resolved.`));
     const first = [...history].reverse().find(commit => commit.paths.some(path => path.startsWith(prefix)));
     const introduction = first && !await content(`${first.id}^`, `${prefix}README.md`) && first.paths.includes(`${prefix}README.md`) ? first : null;
     const introductionVersion = introduction ? parseArtifact(artifact.id, await content(`${introduction.id}^`, `docs/artifacts/${artifact.id}/README.md`)).currentVersion : null;
@@ -107,15 +117,15 @@ async function evidenceFor(root, data, git, head, diagnostics) {
     const tasks = owned.filter(([path]) => path.includes('/tasks/')).map(([path, text]) => ({ path, ...checklist(text), inherited: !distinct.some(file => file.path === path && !file.inherited) }));
     const change = { artifact: artifact.id, name, declaredActive: artifact.activeChange === name, currentStep: null, inferenceReason: 'No distinguishable ongoing change: current snapshot contains the same knowledge.', steps, tasks, taskGraph: buildTaskGraph(files, prefix, checklist, data.unsafeTaskPaths) };
     changes.push(change);
-    const ongoing = distinct.length > 0;
+    const ongoing = !delivered && distinct.length > 0;
     change.history = !ongoing || !!artifact.activeChange && !change.declaredActive;
-    change.historyReason = !ongoing ? 'Current snapshot contains the same category knowledge.' : change.history ? 'Retained change; the artifact declares another active change. This does not prove completion.' : '';
+    change.historyReason = delivered ? 'Originating version and retained tasks match protected-ref delivery evidence.' : !ongoing ? 'Current snapshot contains the same category knowledge.' : change.history ? 'Retained change; the artifact declares another active change. This does not prove completion.' : '';
     const timestamps = history.filter(commit => commit.paths.some(path => path.startsWith(prefix))).map(commit => commit.time).filter(time => Number.isSafeInteger(time) && time >= 0 && time <= 8640000000000);
     change.lastCommitAt = timestamps.length ? Math.max(...timestamps) : null;
     if (ongoing) change.inferenceReason = 'No current phase can be inferred from distinguishable evidence.';
     // Older copied tasks can remain different from the current snapshot. They are not new progress.
     for (const commit of history) {
-      for (const path of commit.paths.filter(path => path.startsWith(prefix) || path.startsWith(versionPrefix) || path === `docs/artifacts/${artifact.id}/README.md`)) {
+      for (const path of commit.paths.filter(path => path.startsWith(prefix) || path.startsWith(versionPrefix) || claim && path.startsWith(claim.prefix) || path === `docs/artifacts/${artifact.id}/README.md`)) {
         const text = await content(commit.id, path);
         const previous = commit === introduction && path.startsWith(prefix) ? (introductionBaseline.get(path) || "") : await content(`${commit.id}^`, path);
         if (text === previous) continue;
@@ -123,7 +133,12 @@ async function evidenceFor(root, data, git, head, diagnostics) {
           // Version evidence must include this change's knowledge, not an unrelated release.
           const match = path.match(/^(docs\/artifacts\/[^/]+\/versions\/[^/]+\/)/);
           const version = match?.[1] || versionPrefix;
-          if (!owned.length || !(await Promise.all(owned.map(async ([file, value]) => await content(commit.id, `${version}${file.slice(prefix.length)}`) === value))).every(Boolean)) continue;
+          const metadata = frontMatter(await content(commit.id, `${version}README.md`));
+          const retained = metadata.value?.delivery_tasks === 'change' && metadata.value.source_change === name;
+          if (metadata.value?.delivery_tasks !== undefined && !retained) continue;
+          const knowledge = retained ? owned.filter(([file])=>category(file)!=='Plan') : owned;
+          if (!knowledge.length || !(await Promise.all(knowledge.map(async ([file, value]) => await content(commit.id, `${version}${file.slice(prefix.length)}`) === value))).every(Boolean)) continue;
+          if (retained && !(await Promise.all(owned.filter(([file])=>category(file)==='Plan').map(async ([file,value])=>await content(commit.id,file)===value))).every(Boolean)) continue;
         }
         for (const phase of associations(path, text, previous)) {
           const s = step(phase);

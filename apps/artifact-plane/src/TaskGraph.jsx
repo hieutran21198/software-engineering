@@ -26,7 +26,7 @@ export function TaskGraph({context, selection, onSelect, onBack}) {
  const [showAll,setShowAll]=useState(false);
  const graph = useMemo(()=>taskCanvas(worktree, change, selection,showAll),[worktree, change, selection,showAll]);
  return <div className="task-graph-view" aria-label="Implementation task graph">
-  <div className="task-graph-toolbar"><button onClick={onBack}>Back to workflow</button><strong>{change.artifact} / {change.name}</strong><RuntimeConnection/><label className="prerequisite-toggle"><input type="checkbox" checked={showAll} onChange={e=>setShowAll(e.target.checked)}/>Show all prerequisites</label></div>
+  <div className="task-graph-toolbar"><button onClick={onBack}>Back to dependencies</button><strong>{change.artifact} / {change.name}</strong><RuntimeConnection/><label className="prerequisite-toggle"><input type="checkbox" checked={showAll} onChange={e=>setShowAll(e.target.checked)}/>Show all prerequisites</label></div>
   <div className="task-graph-surface"><ReactFlowProvider><ReactFlow nodes={graph.nodes} edges={graph.edges} nodeTypes={nodeTypes} onNodeClick={(_,node)=>onSelect(node.id)} fitView fitViewOptions={{padding:0.15}} minZoom={0.15} maxZoom={2} nodesDraggable={false} nodesConnectable={false} edgesReconnectable={false} deleteKeyCode={null} colorMode="dark">
    <Background color="#334059" gap={24}/><Controls showInteractive={false}/>
   </ReactFlow></ReactFlowProvider></div>

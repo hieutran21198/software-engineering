@@ -4,7 +4,7 @@ import { execFile } from "node:child_process";
 import { promisify } from "node:util";
 import { buildSnapshot, parseArtifact } from "../src/model.js";
 const execute = promisify(execFile);
-import {unitBriefs, versionClaims, safeKnowledgePath} from "./units-of-work.js";
+import {frontMatter,unitBriefs, versionClaims, safeKnowledgePath} from "./units-of-work.js";
 import { readWorkflow } from "./workflow.js";
 export class ExploreError extends Error {
   constructor(status, message) {
@@ -25,6 +25,7 @@ export async function git(root, args, raw = false) {
       ...args,
     ],
     {
+      encoding: raw === "bytes" ? "buffer" : "utf8",
       env: { ...process.env, GIT_OPTIONAL_LOCKS: "0" },
       timeout: 15000,
       maxBuffer: 8 * 1024 * 1024,
@@ -113,7 +114,13 @@ export async function scanRepository(path) {
           return false;
         }
       }
-      files.set(path, await readFile(target, "utf8"));
+      const bytes = await readFile(target);
+      const markdown = bytes.toString("utf8");
+      if (!bytes.equals(Buffer.from(markdown, "utf8"))) {
+        diagnostic("unreadable-path", path, "Knowledge file is not valid UTF-8; skipped.");
+        return false;
+      }
+      files.set(path, markdown);
       return true;
     } catch {
       diagnostic("unreadable-path", path, "File cannot be read.");
@@ -163,7 +170,17 @@ export async function scanRepository(path) {
       ])
         await knowledge(`${prefix}/versions/${a.currentVersion}/${kind}`);
     for (const version of await directory(`${prefix}/versions`)) {
-      if (/^\d+\.\d+\.\d+$/.test(version.name)) await load(`${prefix}/versions/${version.name}/README.md`);
+      if (/^\d+\.\d+\.\d+$/.test(version.name)) {
+        const versionPath=`${prefix}/versions/${version.name}/`;
+        await load(`${versionPath}README.md`);
+        const metadata=frontMatter(files.get(`${versionPath}README.md`));
+        if (metadata.value?.delivery_tasks !== undefined) {
+          if (metadata.value.delivery_tasks !== 'change') diagnostic('invalid-delivery-marker', `${versionPath}README.md`, 'Delivery marker must be the literal value change.');
+          if (!/^change-[a-z0-9][a-z0-9-]*$/.test(metadata.value.source_change || '')) diagnostic('invalid-provenance', `${versionPath}README.md`, 'Change-owned delivery requires a safe source_change.');
+        }
+        if (metadata.value?.delivery_tasks !== undefined)
+          for (const kind of ['requirements','specifications','decisions','tasks']) await knowledge(`${versionPath}${kind}`);
+      }
     }
     for (const change of await directory(`${prefix}/changes`)) {
       if (

@@ -22,8 +22,7 @@ import {RecordedPicker,RecordedView,RecordedDetails} from "./RecordedExecutions.
 import {TaskGraph, TaskGraphDetails} from "./TaskGraph.jsx";
 import {taskSelection} from "./task-canvas.js";
 import { relationships } from "./graph.js";
-import { workflowSelection } from "./workflow-canvas.js";
-import { Workflow, WorkflowDetails } from "./Workflow.jsx";
+import {Worktrees, ChangeList, ChangeDetails} from "./Delivery.jsx";
 import { canvasGraph } from "./canvas.js";
 import { knowledgeGroups, typeKey, historyKey } from "./elements.js";
 import "@xyflow/react/dist/style.css";
@@ -197,13 +196,11 @@ function App() {
     [selection, setSelection] = useState(null),
     [planning, setPlanning] = useState(false);
   const [expandedTypes, setExpandedTypes] = useState(new Set());
-  const [workflowSelected, setWorkflowSelected] = useState(null);
+  const [deliveryChange, setDeliveryChange] = useState(null), [deliveryPhase, setDeliveryPhase] = useState(null);
   const [taskChange, setTaskChange] = useState(null), [taskSelected, setTaskSelected] = useState(null);
   const [unitSelected,setUnitSelected] = useState(null), [unitNodeSelected,setUnitNodeSelected] = useState(null), [unitWorktree,setUnitWorktree] = useState(null), [unitView,setUnitView] = useState('workflow'), [unitPlanning,setUnitPlanning] = useState(false);
   const [view, setView] = useState("canvas");
   const [recordedSelected,setRecordedSelected]=useState(null),[recordedNode,setRecordedNode]=useState(null);
-  const [workflowMounted,setWorkflowMounted] = useState(false);
-  useEffect(()=>{if(view === "workflow") setWorkflowMounted(true);},[view]);
   const [filter, setFilter] = useState("");
   const workspaceRef = useRef(null);
   const [panelWidth, setPanelWidth] = useState(340),
@@ -270,10 +267,11 @@ function App() {
       const taskContext = refresh && taskSelection(result.workflow, taskChange, taskSelected);
       setTaskChange(taskContext ? taskChange : null);
       setTaskSelected(taskContext?.task ? taskSelected : null);
-      setWorkflowSelected(current => refresh && workflowSelection(result.workflow,current) ? current : null);
+      const nextDelivery = refresh && taskSelection(result.workflow, deliveryChange, null);
+      setDeliveryChange(nextDelivery ? deliveryChange : null);
+      setDeliveryPhase(nextDelivery && nextDelivery.change.steps.some(s=>s.name===deliveryPhase) ? deliveryPhase : null);
       setPath(result.repository.path);
       if (!refresh) {
-        setWorkflowMounted(view === "workflow");
         setExpanded(new Set());
         setExpandedTypes(new Set());
         setSelection(null);
@@ -335,7 +333,7 @@ function App() {
     ) || [];
   const reachability =
     artifact && relationships(artifact.id, snapshot.edges, planning);
-  const selectArtifact = (id) => setSelection({ artifact: id });
+  const selectArtifact = (id) => {setSelection({ artifact: id });setDeliveryChange(null);setDeliveryPhase(null);setTaskChange(null);setTaskSelected(null);};
   function revealElement(artifactId, elementId) {
     const record = snapshot.artifacts
       .find((a) => a.id === artifactId)
@@ -347,13 +345,19 @@ function App() {
         new Set([...current, typeKey(artifactId, record.path.split("/")[0], record.source.startsWith("change:") ? record.source : undefined), ...(record.source.startsWith("change:") ? [historyKey(artifactId), historyKey(artifactId, record.source)] : [])]),
     );
     setSelection({ artifact: artifactId, element: elementId });
+    setDeliveryChange(null);setDeliveryPhase(null);setTaskChange(null);setTaskSelected(null);
   }
   function selectTarget(ref) {
     revealElement(ref.artifact, ref.targetId);
   }
   const selectedUnit = unitContext(snapshot,unitSelected,unitNodeSelected);
   const taskContext = taskSelection(snapshot?.workflow, taskChange, taskSelected);
-  const openTaskGraph = () => {setTaskChange(workflowSelected);setTaskSelected(null);};
+  const deliveryContext = taskSelection(snapshot?.workflow, deliveryChange, null);
+  const selectedWorktree = snapshot?.workflow?.worktrees.find(w=>w.selected);
+  const deliveryHistoryKey = artifact && historyKey(artifact.id, 'delivery-histories');
+  const selectDelivery = key => {setDeliveryChange(key);setDeliveryPhase(null);setTaskChange(null);setTaskSelected(null);};
+  const changeList = artifact && <ChangeList worktree={selectedWorktree} artifact={artifact.id} selected={deliveryChange} onSelect={selectDelivery} historiesOpen={expandedTypes.has(deliveryHistoryKey)} onToggleHistories={()=>toggleType(artifact.id,deliveryHistoryKey)}/>;
+  const openTaskGraph = () => {setTaskChange(deliveryChange);setTaskSelected(null);};
   const onNodeClick = (_, node) => {
     if (node.type === "artifact") selectArtifact(node.data.artifact.id);
     else if (node.type === "element")
@@ -439,6 +443,7 @@ function App() {
                     : "Working tree is clean"}
                 </small>
               </div>
+              <Worktrees workflow={snapshot.workflow} selected={unitWorktree} onSelect={value=>{setUnitWorktree(value);setUnitSelected(null);setUnitNodeSelected(null);}} onOpen={root=>open(root)} busy={busy}/>
               <label className="sr-only" htmlFor="artifact-filter">
                 {view === "units" ? "Filter units of work" : "Filter artifacts"}
               </label>
@@ -471,7 +476,7 @@ function App() {
                   ))}
               </nav>
               <RecordedPicker selected={recordedSelected} onSelect={id=>{setRecordedSelected(id);setRecordedNode(null);if(id)setView('recorded');}}/>
-              {view === "units" && <UnitList snapshot={snapshot} worktreePath={unitWorktree} filter={filter} selected={unitSelected} onWorktree={value=>{setUnitWorktree(value);setUnitSelected(null);setUnitNodeSelected(null);}} onSelect={value=>{setUnitSelected(value);setUnitNodeSelected(null);}}/>}
+              {view === "units" && <UnitList snapshot={snapshot} worktreePath={unitWorktree} filter={filter} selected={unitSelected} onSelect={value=>{setUnitSelected(value);setUnitNodeSelected(null);}}/>}
             </>
           ) : (
             <p className="muted sidebar-help">
@@ -487,11 +492,11 @@ function App() {
         <main className="canvas-area">
           <div className="canvas-toolbar">
             <div>
-              <strong>{view === "canvas" ? "Dependency canvas" : view === "units" ? "Units of work" : view==='recorded' ? "Recorded executions" : "Workflow canvas"}</strong>
+              <strong>{view === "canvas" ? taskContext ? "Implementation task graph" : "Dependency canvas" : view === "units" ? "Units of work" : "Recorded executions"}</strong>
               <small>{view === "canvas" ? "Upstream → downstream" : "Local worktrees · Git + Markdown"}</small>
             </div>
-            {snapshot && <div className="view-toggle" role="group" aria-label="Explorer view"><button aria-pressed={view === "canvas"} className={view === "canvas" ? "active" : ""} onClick={()=>setView("canvas")}>Dependencies</button><button aria-pressed={view === "workflow"} className={view === "workflow" ? "active" : ""} onClick={()=>setView("workflow")}>Workflow</button><button aria-pressed={view === "units"} className={view === "units" ? "active" : ""} onClick={()=>setView("units")}>Units of work</button></div>}
-            <div className="dependency-view-slot">{snapshot && view === "canvas" && (
+            {snapshot && <div className="view-toggle" role="group" aria-label="Explorer view"><button aria-pressed={view === "canvas"} className={view === "canvas" ? "active" : ""} onClick={()=>setView("canvas")}>Dependencies</button><button aria-pressed={view === "units"} className={view === "units" ? "active" : ""} onClick={()=>setView("units")}>Units of work</button></div>}
+            <div className="dependency-view-slot">{snapshot && view === "canvas" && !taskContext && (
               <div
                 className="view-toggle"
                 role="group"
@@ -514,7 +519,7 @@ function App() {
               </div>
             )}
           </div></div>
-          <div style={{ display: view === "canvas" ? "contents" : "none" }}>
+          <div style={{ display: view === "canvas" && !taskContext ? "contents" : "none" }}>
           {!snapshot || snapshot.artifacts.length === 0 ? (
             <div className="empty-canvas">
               <div className="empty-symbol">◇ → ◇</div>
@@ -592,7 +597,7 @@ function App() {
             </details>
           )}
           </div>
-          {snapshot && workflowMounted && <div style={{display:view === "workflow" ? "contents" : "none"}}><div style={{display:taskContext ? "none" : "contents"}}><Workflow key={snapshot.repository.path} workflow={snapshot.workflow} selection={workflowSelected} onSelect={setWorkflowSelected}/></div>{taskContext && <TaskGraph key={taskChange} context={taskContext} selection={taskSelected} onSelect={setTaskSelected} onBack={()=>{setTaskChange(null);setTaskSelected(null);}}/>}</div>}
+          {snapshot && taskContext && <div style={{display:view === "canvas" ? "contents" : "none"}}><TaskGraph key={taskChange} context={taskContext} selection={taskSelected} onSelect={setTaskSelected} onBack={()=>{setTaskChange(null);setTaskSelected(null);}}/></div>}
           {snapshot && view==='recorded' && <RecordedView id={recordedSelected} selection={recordedNode} onSelect={setRecordedNode}/>}
           {snapshot && view === "units" && <UnitView context={selectedUnit} view={unitView} onView={value=>{setUnitView(value);setUnitNodeSelected(null);}} planning={unitPlanning} onPlanning={value=>{setUnitPlanning(value);setUnitNodeSelected(null);}} selection={unitNodeSelected} onSelect={setUnitNodeSelected}/>}
         </main>
@@ -628,7 +633,7 @@ function App() {
           className="details-panel"
           aria-label="Selection details"
         >
-          {view==='recorded' ? <RecordedDetails id={recordedSelected} selection={recordedNode} onSelect={setRecordedNode}/> : view === "units" ? <UnitDetails context={selectedUnit} view={unitView} planning={unitPlanning} selection={unitNodeSelected} onSelect={setUnitNodeSelected}/> : view === "workflow" ? taskContext ? <TaskGraphDetails context={taskContext} onClear={()=>setTaskSelected(null)}/> : <WorkflowDetails node={workflowSelection(snapshot?.workflow,workflowSelected)} workflow={snapshot?.workflow} busy={busy} onOpen={root=>open(root)} onClear={()=>setWorkflowSelected(null)} onTaskGraph={openTaskGraph}/> : artifact ? (
+          {view==='recorded' ? <RecordedDetails id={recordedSelected} selection={recordedNode} onSelect={setRecordedNode}/> : view === "units" ? <UnitDetails context={selectedUnit} view={unitView} planning={unitPlanning} selection={unitNodeSelected} onSelect={setUnitNodeSelected}/> : taskContext ? <TaskGraphDetails context={taskContext} onClear={()=>setTaskSelected(null)}/> : deliveryContext ? <ChangeDetails context={deliveryContext} phase={deliveryPhase} onPhase={setDeliveryPhase} onBack={()=>{setDeliveryChange(null);setDeliveryPhase(null);}} onTaskGraph={openTaskGraph}>{changeList}</ChangeDetails> : artifact ? (
             <>
               <div className="details-heading">
                 <span className="eyebrow">
@@ -667,6 +672,7 @@ function App() {
                     {expanded.has(artifact.id) ? "Collapse" : "Expand"} elements
                     on canvas
                   </button>
+                  {changeList}
                   <section className="relationships">
                     <h3>
                       {planning ? "Planning" : "Established"} dependencies
@@ -688,7 +694,7 @@ function App() {
                       knowledgeGroups(artifact, expandedTypes).map((group) => {
                         const open = group.open;
                         return (
-                          <div className="knowledge-type" key={group.type}>
+                          <div className="knowledge-type" key={group.key}>
                             <button
                               className="type-toggle inspector-type"
                               aria-label={group.ariaLabel + " in inspector"}

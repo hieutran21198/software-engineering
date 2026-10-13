@@ -19,3 +19,15 @@ export function unitFixture({delivered=true, retained=true}={}) {
   }
   return records;
 }
+
+export function changeDeliveryFixture() {
+  const files=unitFixture();
+  files.set(unitPath,files.get(unitPath).replace('/versions/1.0.0/tasks/api.md','/changes/change-login/tasks/api.md'));
+  for(const artifact of ['tenant','authentication']) {
+    const base=`docs/artifacts/${artifact}/`;
+    for(const path of files.keys())if(path.startsWith(`${base}versions/1.0.0/tasks/`))files.delete(path);
+    files.set(`${base}versions/1.0.0/README.md`,'---\nsource_change: change-login\ndelivery_tasks: change\n---\n# Login outcome\n');
+    for(const location of ['changes/change-login','versions/1.0.0'])files.set(`${base}${location}/requirements/login.md`,'# Login\n\nMembers can sign in.\n');
+  }
+  return files;
+}
