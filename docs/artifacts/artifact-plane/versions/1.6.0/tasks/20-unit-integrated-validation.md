@@ -27,7 +27,7 @@ Internal prerequisites must satisfy applicable DoD before this task starts.
 - [x] Compare repository file bytes/Git fingerprints before and after exploration and refresh.
 - [x] Record shared integration evidence and member-specific task evidence without duplicating task lists or dependency graphs.
 - [x] Propose Plane 1.6.0 for user confirmation; prepare complete snapshot with provenance and consistent package/root/index updates.
-- [ ] Open the Plane PR linked to upstream ADD publication; stop for team review and merge.
+- [x] Open the Plane PR linked to upstream ADD publication; stop for team review and merge.
 
 ## Evidence
 
@@ -37,7 +37,7 @@ The same source fixture drives real reader/API records, pure aggregate graph che
 
 The user confirmed Plane 1.6.0. All required knowledge and implementation changes are in this repository. The complete proposed snapshot declares source_change: change-units-of-work. Existing artifact-plane -> artifact-driven dependency remains unchanged, and the obsolete copied proposal was removed. Shared validation evidence references exact delivered tasks and the brief; it contains no completion flag or copied DAG. ADD 1.2.0 is established and its contract recheck passed.
 
-KISS reuses existing libraries and evidence; STE preserves publication and approval limits. PR handoff remains pending. No merge, deployment, or tag has been performed.
+KISS reuses existing libraries and evidence; STE preserves publication and approval limits. Published [PR #11](https://github.com/hieutran21198/software-engineering/pull/11), linked to merged upstream ADD PR #10, and stopped for team review/merge. Plane 1.6.0 remains proposed until required merges. No merge, deployment, or tag has been performed.
 
 ## Publication preparation checks
 
