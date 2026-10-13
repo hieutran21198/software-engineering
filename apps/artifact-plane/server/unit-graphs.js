@@ -9,7 +9,7 @@ function cyclic(edges) {
 }
 export function buildUnitGraphs(unit, snapshot, worktree, files = new Map()) {
  const members=new Map(unit.members.map(m=>[m.artifact,m]));
- const diagnostics=[];
+ const diagnostics=(unit.diagnostics || []).filter(d=>['invalid-unit','invalid-membership','duplicate-membership','missing-member','ambiguous-provenance','invalid-provenance'].includes(d.code));
  // Explicit unit-selected changes supply their own proposals. External artifact
  // proposals retain the existing snapshot interpretation.
  let edges=snapshot.edges.filter(e=>e.status==='established' || !members.has(e.target));
@@ -67,6 +67,6 @@ export function buildUnitGraphs(unit, snapshot, worktree, files = new Map()) {
  if(graphDiagnostics.length)state='invalid';
  const combined=[...internal,...gateEdges];
  if(cyclic(combined)){state='invalid';graphDiagnostics.push({code:'unit-implementation-cycle',path:unit.path,message:'Combined task and establishment graph contains a cycle.'});}
- unit.implementationGraph={state,nodes,edges:graphDiagnostics.some(d=>d.code==='unit-implementation-cycle')?internal:combined,diagnostics:graphDiagnostics};
+ unit.implementationGraph={state,nodes,edges:diagnostics.length || graphDiagnostics.some(d=>d.code==='unit-implementation-cycle')?internal:combined,diagnostics:graphDiagnostics};
  return unit;
 }

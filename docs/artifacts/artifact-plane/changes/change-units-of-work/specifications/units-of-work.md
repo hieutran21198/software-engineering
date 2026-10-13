@@ -1,6 +1,6 @@
 # Aggregated unit-of-work exploration contract
 
-Governs P1–P6 and U1–U5 in requirements/units-of-work.md. Consume artifact-driven, element specifications/units-of-work.md, status proposed, supplying change change-units-of-work. Existing explorer and task-graph contracts remain valid except the reserved units-of-work directory is explicitly excluded from artifact discovery. No new artifact edge is needed.
+Governs P1–P6 and U1–U5 in requirements/units-of-work.md. Consume established artifact-driven 1.2.0, element specifications/units-of-work.md, originating change change-units-of-work. The upstream recheck passed before implementation. Existing explorer and task-graph contracts remain valid except the reserved units-of-work directory is explicitly excluded from artifact discovery. No new artifact edge is needed.
 
 ## Reader and additive response
 
@@ -39,3 +39,5 @@ Fixtures cover multi/single-member units, duplicates, malformed/unsafe briefs, m
 ADD 1.2.0 is established on main after PR #10 merged. Its specifications/units-of-work.md matches the supplying approved contract. Existing artifact and task DAG semantics remain unchanged. The local main reference has been fast-forwarded to the merged upstream commit for read-only establishment checks. No material plan amendment is required. The user's implementation approval remains valid.
 
 For documented merge review, readers recognize an explicit statement that all required knowledge and implementation changes reside in the inspected repository, or that all required knowledge and implementation changes have landed on main/master. Publication still requires identical complete knowledge on a local protected ref; a branch-only statement cannot establish it. Missing review assertions remain unverified. This is a supported prose convention for existing evidence, not a workflow status declaration.
+
+A shared brief can record a publication-review paragraph prefixed with artifact identifier and delivered version (for example, artifact-driven 1.2.0:), followed by the explicit all-required-merges assertion. The reader applies it only to that member/version and still verifies identical protected-ref knowledge. This supports merged upstream members without editing their immutable snapshots.

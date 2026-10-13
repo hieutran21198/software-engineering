@@ -29,7 +29,8 @@ export function parseUnitBrief(path, markdown) {
   else for (const member of value.changes) {
     if (!mapping(member) || !name(member.artifact) || !changeName(member.change)) {report('invalid-membership', 'Each member must name a safe artifact and change.');continue;}
     const key = JSON.stringify([member.artifact, member.change]);
-    if (seen.has(key) || artifacts.has(member.artifact)) report('invalid-membership', 'Members must be unique, with one change per artifact.');
+    if (seen.has(key)) {report('invalid-membership', 'Members must be unique, with one change per artifact.');continue;}
+    if (artifacts.has(member.artifact)) report('invalid-membership', 'Members must be unique, with one change per artifact.');
     seen.add(key);artifacts.add(member.artifact);members.push({artifact:member.artifact, change:member.change});
   }
   const acceptance = [], criteria = new Set();
@@ -59,7 +60,7 @@ export function versionClaims(files, artifact, change) {
   }).map(([path])=>({version:path.split('/')[4], prefix:path.slice(0,-'README.md'.length)}));
 }
 // Only local protected refs establish knowledge. Branch files are never proof.
-async function publication(root, prefix, files, git) {
+async function publication(root, prefix, files, git, reviewText = '', reviewSource = null) {
   const refs = [];
   for (const ref of ['refs/heads/main','refs/heads/master']) {
     try {await git(root,['rev-parse','--verify',ref]);refs.push(ref);} catch { /* Missing local ref is not publication. */ }
@@ -80,9 +81,10 @@ async function publication(root, prefix, files, git) {
     if (!sources.length) return {state:'proposed',reasons:['Delivered snapshot is not identical to knowledge on local main or master.'],sources:[]};
     // Merge evidence remains an author assertion. Require an explicit statement
     // of the all-required-merges boundary rather than guessing from task checks.
-    const review = [...files].filter(([p])=>p.startsWith(prefix)).map(([,body])=>marked.lexer(body).filter(t=>t.type!=='code').map(t=>t.raw).join('\n')).join('\n');
+    const review = [...files].filter(([p])=>p.startsWith(prefix)).map(([,body])=>marked.lexer(body).filter(t=>t.type!=='code').map(t=>t.raw).join('\n')).join('\n') + '\n' + reviewText;
     const localBoundary = /all required (?:knowledge and (?:code|implementation)|implementation and knowledge) changes (?:are|live|reside) in this repository\b/i.test(review);
     const mergedBoundary = /all required (?:knowledge and (?:code|implementation)|implementation and knowledge) (?:changes |merges )?(?:have landed|have merged|are merged|landed) (?:on|into) (?:main|master)\b/i.test(review);
+    if ((localBoundary || mergedBoundary) && reviewText && reviewSource) sources.push({path:reviewSource,kind:'documented-merge-review'});
     return {state:localBoundary || mergedBoundary ? 'established' : 'unverified',reasons:localBoundary || mergedBoundary ? [] : ['Knowledge is published; all required implementation merges lack explicit review evidence.'],sources};
   } catch {return {state:'unknown',reasons:['Protected-ref snapshot evidence could not be read.'],sources:[]};}
 }
@@ -117,7 +119,7 @@ export async function readUnitsOfWork(root, data, changes, git, checklist) {
         const metadata = frontMatter(body);
         if (metadata.error || metadata.value?.source_change !== undefined && !changeName(metadata.value.source_change)) unit.diagnostics.push({code:'invalid-provenance',path,message:'Version provenance must be valid YAML naming a safe originating change.'});
       }
-      if(member.deliveredVersion){if(!publicationCache.has(member.sourcePath))publicationCache.set(member.sourcePath,await publication(root,member.sourcePath,files,git));member.establishmentEvidence=publicationCache.get(member.sourcePath);}
+      if(member.deliveredVersion){if(!publicationCache.has(member.sourcePath))publicationCache.set(member.sourcePath,await publication(root,member.sourcePath,files,git,unit.markdown.split('\n').filter(line=>line.startsWith(`${member.artifact} ${member.deliveredVersion}: `)).join('\n'),unit.path));member.establishmentEvidence=publicationCache.get(member.sourcePath);}
       member.knowledge=[...files].filter(([p])=>member.sourcePath && p.startsWith(member.sourcePath) || member.retainedChangePath && p.startsWith(member.retainedChangePath)).map(([path,markdown])=>({path,markdown}));
       member.markdown=files.get(`${member.sourcePath}README.md`)||'';
       member.taskGraph=member.sourcePath?buildTaskGraph(files,member.sourcePath,checklist,unsafeTaskPaths):{state:'unavailable',tasks:[],edges:[],diagnostics:[]};

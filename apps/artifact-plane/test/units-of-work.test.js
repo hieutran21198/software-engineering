@@ -91,3 +91,11 @@ test('worktree membership and mutable files stay isolated',async t=>{
  assert.equal(worktrees.find(w=>w.selected).unitsOfWork[0].members.length,2);assert.equal(worktrees.find(w=>!w.selected).unitsOfWork[0].members.length,1);
  assert.deepEqual(await fingerprint(f.root),before);assert.deepEqual(await fingerprint(other),otherBefore);
 });
+
+test('duplicate member rows retain readable knowledge without duplicate node identities',async t=>{
+ const records=unitFixture();records.set(unitPath,unitBrief([['tenant','change-login'],['tenant','change-login'],['authentication','change-login']]));const f=await fixtureRepository(records);t.after(f.cleanup);const unit=(await exploreRepository(f.root)).unitsOfWork[0];assert.equal(unit.members.length,2);assert.ok(codes(unit).includes('invalid-membership'));assert.equal(unit.implementationGraph.state,'invalid');assert.ok(unit.implementationGraph.edges.every(e=>e.kind==='task'));assert.equal(new Set(unit.implementationGraph.nodes.map(n=>n.id)).size,unit.implementationGraph.nodes.length);
+});
+
+test('member-scoped review evidence supports published versions but cannot establish branch-only knowledge',async t=>{
+ const files=unitFixture();for(const [p,body]of files)files.set(p,body.replaceAll('All required knowledge and implementation changes are in this repository.',''));files.set(unitPath,files.get(unitPath)+'\n## Publication review\n\ntenant 1.0.0: All required knowledge and implementation changes have landed on main.\n\nauthentication 1.0.0: All required knowledge and implementation changes have landed on main.\n');const f=await fixtureRepository(files);t.after(f.cleanup);let unit=(await exploreRepository(f.root)).unitsOfWork[0];assert.equal(unit.completion.derivation,'documented-complete');assert.ok(unit.members.every(m=>m.establishmentEvidence.sources.some(s=>s.kind==='documented-merge-review')));git(f.root,'switch','-qc','proposed');await writeFile(join(f.root,'docs/artifacts/tenant/versions/1.0.0/tasks/api.md'),unitTask('api')+'Proposed difference');unit=(await exploreRepository(f.root)).unitsOfWork[0];assert.equal(unit.members[0].establishmentEvidence.state,'proposed');assert.equal(unit.completion.derivation,'incomplete');
+});

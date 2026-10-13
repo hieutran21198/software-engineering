@@ -962,3 +962,27 @@ summary {
 .task-details section { margin-top:18px; }
 .task-details p { overflow-wrap:anywhere; }
 @media (max-width:1150px) { .task-graph-view { top:88px; } }
+
+.unit-list label { display:block; font-size:12px; margin:14px 0 6px; }
+.unit-list select { width:100%; padding:8px; border:1px solid #435574; border-radius:6px; background:#19263c; color:#d4deef; }
+.unit-list .muted { margin-top:16px; font-size:12px; line-height:1.6; }
+.unit-view { position:absolute; inset:66px 0 0; overflow:hidden; }
+.unit-toolbar { min-height:92px; padding:10px 16px; border-bottom:1px solid #35435b; display:flex; align-items:center; flex-wrap:wrap; gap:10px; }
+.unit-toolbar > strong { flex-basis:100%; font-size:13px; }
+.unit-surface { position:absolute; inset:92px 0 0; }
+.unit-node { height:100%; padding:12px; border:1px solid #655b9b; border-radius:8px; background:#1b2940; }
+.unit-node.gate { border-color:#edbd75; background:#30291f; }
+.unit-node.external { border-style:dashed; }
+.unit-node.selected { outline:2px solid #b2a3ff; outline-offset:1px; }
+.unit-node small { color:#b8aafa; font-size:11px; }
+.unit-node.gate small { color:#edbd75; }
+.unit-node strong { display:block; margin:8px 0; font-size:13px; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
+.unit-node span { color:#b5c4db; font-size:10px; }
+.unit-legend { position:absolute; bottom:12px; left:60px; right:16px; text-align:center; font-size:10px; color:#bac6d9; pointer-events:none; }
+.unit-diagnostics { position:absolute; top:96px; right:16px; max-width:320px; max-height:180px; overflow:auto; background:#1b2940; padding:8px; font-size:11px; border-radius:6px; }
+.unit-graph-message { position:absolute; top:108px; left:20px; max-width:260px; font-size:11px; color:#edbd75; pointer-events:none; }
+.unit-criterion { border-left:2px solid #655b9b; margin:16px 0; padding-left:12px; }
+.unit-details section { margin:20px 0; }
+.unit-details details { margin-top:12px; }
+@media (max-width:1150px) { .unit-view { top:88px; } }
+@media (max-width:450px) { .unit-toolbar .view-toggle button { padding:7px; font-size:10px; } }

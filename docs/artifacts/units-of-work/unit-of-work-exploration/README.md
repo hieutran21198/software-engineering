@@ -33,3 +33,7 @@ Include the ADD knowledge contract and delivered guidance, version provenance, s
 ## Combined validation evidence
 
 The ADD knowledge and delivery checks passed; its proposed version task contains the actual results. Artifact Plane implementation and combined integration checks have not started. This unit has no completion claim while those checks and required merges remain outstanding.
+
+## Publication review
+
+artifact-driven 1.2.0: All required knowledge and implementation changes have landed on main. The user reported PR #10 merged; Git verification found the complete delivered contract on origin/main and the local main reference was fast-forwarded to it. The recorded outcome membership remains unchanged.

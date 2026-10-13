@@ -31,7 +31,7 @@ Propose 1.6.0 for additive exploration and response fields. The user confirms or
 
 ## Plan self-check
 
-All new requirements map to tasks and concrete DoD. Internal edges form a sequential acyclic chain; inherited tasks are excluded. Existing artifact DAG remains artifact-driven -> artifact-plane. Knowledge formats, gates, safe discovery, aggregation, browser behavior, and integration validation are covered. KISS reuses current libraries/readers and STE keeps evidence and establishment distinct. This plan awaits explicit user approval. Implementation checks have not run.
+All new requirements map to tasks and concrete DoD. Internal edges form a sequential acyclic chain; inherited tasks are excluded. Existing artifact DAG remains artifact-driven -> artifact-plane. Knowledge formats, gates, safe discovery, aggregation, browser behavior, and integration validation are covered. KISS reuses current libraries/readers and STE keeps evidence and establishment distinct. The user explicitly approved this plan. ADD 1.2.0 established before dependent execution; the upstream recheck passed. Implementation evidence is recorded in the listed tasks.
 
 ## Preparation evidence
 
