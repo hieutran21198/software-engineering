@@ -23,7 +23,7 @@ Integrate parallel workers onto the coordinated change branch frequently and rer
 
 For separate knowledge and implementation repositories, validate the required companion changes together where feasible. A passing job in one repository does not prove that another required repository is ready.
 
-Treat logs and reports as check evidence and summarize or reference them in tasks. Keep executable criteria and useful durable results available in the current knowledge snapshot; do not rely solely on expiring CI logs.
+Treat logs and reports as check evidence and summarize or reference them in tasks. Keep executable criteria and durable results in the retained originating change, linked from its version knowledge; do not rely solely on expiring CI logs.
 
 ## Validation
 

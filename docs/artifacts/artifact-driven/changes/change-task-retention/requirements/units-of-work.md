@@ -14,7 +14,7 @@ U5. Preserve repositories without unit documents. Diagnose invalid, ambiguous, m
 
 ## Acceptance examples
 
-A tenant login outcome groups tenant, authentication, and audit changes without creating edges. Two briefs claiming the same change produce a membership diagnostic. A version with explicit change provenance keeps the outcome traceable after its original change directory is removed. A later artifact version does not replace the delivered version in historical evidence.
+A tenant login outcome groups tenant, authentication, and audit changes without creating edges. Two briefs claiming the same change produce a membership diagnostic. A new version with explicit change provenance links its retained originating plan; removing that required directory makes delivery evidence unavailable. Legacy version-owned evidence remains readable after a change directory is removed. A later artifact version does not replace the delivered version in historical evidence.
 
 ## Scope and impact
 
@@ -27,7 +27,3 @@ The user confirmed scopes 1–5. Outcome, cardinality, ownership, evidence, and 
 ## Project adoption
 
 U6. During approved implementation the user explicitly requested adoption in this project as well. Apply the new convention to future project ADD outcomes, create the current shared brief, and preserve established legacy snapshots without retroactive membership or provenance edits.
-
-## Applicability in this change
-
-For future versions, specifications/task-retention.md replaces requirements to copy or inherit tasks and version-specific task evidence. Existing delivered records remain unchanged.

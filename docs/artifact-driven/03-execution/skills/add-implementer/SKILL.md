@@ -33,4 +33,4 @@ Task completion does not prove integrated change completion. Return remaining in
 
 ## Shared Outcome Evidence
 
-For a member change, read the [unit brief](../../../06-guidelines/units-of-work.md) and governing contracts. Record task checks under the owning artifact; return combined check results to the coordinator for shared evidence. Do not amend central membership, bypass an establishment gate, or treat a checked task as completed outcome evidence.
+For a member change, read the [unit brief](../../../06-guidelines/units-of-work.md) and governing contracts. Record task checks in the owning change; keep delivered task records available and do not copy them into versions or later changes. Return combined check results to the coordinator for shared evidence. Do not amend central membership, bypass an establishment gate, or treat a checked task as completed outcome evidence.

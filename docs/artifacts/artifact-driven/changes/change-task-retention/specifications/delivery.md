@@ -48,7 +48,3 @@ The initial artifact version describes the recovered complete ADD knowledge. It 
 ## Specification self-check
 
 CLI, filesystem, bundle and publishing contracts reflect inspected code. Error behavior and rollback limits avoid stronger claims than implementation supports. Existing checks and explicit reviews can validate this baseline without new abstractions or code. KISS/STE checks pass; no Specification blocker prevents Plan. Current parity and test execution still require task evidence.
-
-## Applicability in this change
-
-For future versions, specifications/task-retention.md replaces requirements to copy or inherit tasks and version-specific task evidence. Existing delivered records remain unchanged.

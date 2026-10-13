@@ -24,7 +24,3 @@ No ADD state database, workflow engine, artifact-generation CLI, automated gate 
 ## Evidence discipline
 
 Recovered ADRs report present choices and observable consequences. Alternatives are a current reconstruction, not proof of historical evaluation. Tests named in the plan identify existing coverage; only actual task results can satisfy DoD. Repository paths avoid copied commit hashes or approval registries. Existing release tags do not establish this new artifact's initial version.
-
-## Applicability in this change
-
-For future versions, specifications/task-retention.md replaces requirements to copy or inherit tasks and version-specific task evidence. Existing delivered records remain unchanged.

@@ -6,7 +6,7 @@ Authors need an explicit implementation graph for each new or materially revised
 
 ## Required outcomes
 
-D1. The plan explicitly identifies current implementation tasks. Retained historical tasks enter the graph only when explicitly included.
+D1. The plan explicitly identifies current implementation tasks. Create fresh plans for new changes. Existing legacy unlisted tasks remain excluded.
 D2. Current tasks have stable identifiers and explicit prerequisites. Arrows run from prerequisite to dependent. Integration and validation can be tasks. A one-task plan has one node.
 D3. Task prerequisites form an acyclic graph within the change. Duplicate IDs, self-dependencies, absent prerequisites, malformed declarations, and cycles prevent treating the plan as executable.
 D4. Task files own dependencies. Graphs are derived. Do not maintain a separate task DAG or status database.
@@ -16,12 +16,8 @@ D7. Canonical documentation, packaged adoption assets, and applicable role guida
 
 ## Acceptance
 
-Two independent tasks feeding integration, followed by validation, produce four nodes and three edges. A copied historical task is excluded unless explicitly included. Invalid references and cycles are diagnosed. Legacy plans remain readable without invented edges. Required upstream establishment still gates dependent implementation.
+Two independent tasks feeding integration, followed by validation, produce four nodes and three edges. A new plan contains no historical task copies; existing legacy unlisted records are excluded. Invalid references and cycles are diagnosed. Legacy plans remain readable without invented edges. Required upstream establishment still gates dependent implementation.
 
 ## Impact and self-check
 
-Artifact Plane consumes the proposed format from artifact-driven/change-implementation-task-dag. ADD has no dependency on its visualizer. Scope follows the accepted discussion. KISS retains task files as the dependency source. STE preserves gates and uncertainty. No Requirement blocker remains.
-
-## Applicability in this change
-
-For future versions, specifications/task-retention.md replaces requirements to copy or inherit tasks and version-specific task evidence. Existing delivered records remain unchanged.
+Artifact Plane consumes the established format and proposed retention contract from artifact-driven/change-task-retention. ADD has no dependency on its visualizer. Scope follows the accepted discussion. KISS retains task files as the dependency source. STE preserves gates and uncertainty. No Requirement blocker remains.

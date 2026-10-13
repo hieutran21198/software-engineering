@@ -2,7 +2,7 @@
 
 ## Need and constraints
 
-Recover the existing ADD capability as maintainable project knowledge. Existing documentation and implementation are primary evidence. These requirements describe the current baseline; they do not authorize new product behavior.
+Recover the existing ADD capability as maintainable project knowledge. Existing documentation and implementation are primary evidence. These requirements preserve the recovered baseline. requirements/task-retention.md authorizes the current lifecycle and delivery changes.
 
 R1. Preserve the five phases: Requirement, Specification, Plan, Implementation, Version. ADR work is part of Specification. The PO owns Requirement; one TL session owns Specification and Plan; implementers and the coordinator validate implementation; team review and merge establish versions.
 
@@ -20,7 +20,7 @@ R7. Publish documentation from maintained Markdown sources and supply portable a
 
 R8. Recover applicable decisions, acceptance checks, concrete source evidence, and limits. Do not fabricate historical rationale, commit provenance, approvals, owners' names, or completed checks. Preserve valid reusable knowledge instead of duplicating its complete text into the artifact.
 
-R9. Make future ADD changes start from the complete current artifact snapshot and use the existing workflow. No implementation edits, new workflow state, database, agent framework, new CLI command, auto-upgrade, or automatic version establishment is part of this recovery.
+R9. Future ADD changes start from complete current artifact knowledge without historical tasks or delivered provenance and create fresh plans. Keep the existing workflow. No new workflow state, database, agent framework, CLI command, auto-upgrade, or automatic version establishment is introduced.
 
 ## Acceptance criteria
 
@@ -34,18 +34,14 @@ A4. Applicable ADRs state observed choices, alternatives and consequences, disti
 
 A5. The plan contains executable or explicit-review DoD checks for source fidelity, role/bundle links, existing adoption behavior, documentation build, dependencies, and release consistency. Checks are rerun before version preparation; historical tests are not current evidence.
 
-A6. Only project knowledge and necessary parent navigation/index updates change. Existing implementation, canonical bundle, packaged sources, harness configuration, historical Artifact Plane snapshots, and unrelated open changes remain unchanged.
+A6. Update project knowledge, canonical bundle guidance, matching packaged delivery, and applicable project instructions for the approved retention contract. Preserve established snapshots, utility skills, CLI behavior, and unrelated work.
 
 A7. No initial established version is claimed before satisfied checks and merge. The prepared snapshot is complete without replaying the recovery change. Future changes need not copy the complete reusable guidance into their requirements.
 
 ## Potential impact
 
-ADD maintainers and consumers use the recovered contracts to scope future changes. No consumer behavior changes. Artifact Plane's current reader can explore conventional artifact knowledge, but modifying its dependency declaration or interface is outside scope. Reusable utility skills and website tooling remain implementation inputs within ADD's boundary, not independently versioned project artifacts.
+ADD maintainers and consumers use the recovered contracts to scope future changes. Artifact Plane must adapt historical task/evidence resolution to the new snapshot layout after this contract establishes. Its existing artifact dependency remains unchanged. Reusable utility skills and website tooling remain implementation inputs within ADD's boundary, not independently versioned project artifacts.
 
 ## Requirement self-check
 
 The requirements follow the supplied scope and existing method. Evidence gaps are reserved for validation rather than filled with assumptions. KISS keeps one cohesive artifact and existing tooling. STE principles keep obligations and limitations explicit. No unresolved requirement blocker prevents Specification.
-
-## Applicability in this change
-
-For future versions, specifications/task-retention.md replaces requirements to copy or inherit tasks and version-specific task evidence. Existing delivered records remain unchanged.

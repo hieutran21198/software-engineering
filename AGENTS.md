@@ -24,8 +24,8 @@ Use a unit of work for each new ADD outcome in this project, including outcomes 
 
 The coordinator owns membership and shared evidence. Keep artifact-local requirements, specifications, decisions, and tasks with their owners. Use the existing artifact and implementation task DAGs; membership creates no dependency and does not bypass plan approval or upstream establishment. Derive workflow and completion from knowledge, evidence, Git, and available approvals.
 
-Prepare source_change provenance in each new version README. Preserve delivered versions and referenced evidence for historical outcomes; do not rewrite established legacy snapshots or invent their membership. Record combined checks in the brief and reference delivered task evidence where sufficient. Completion requires all member versions to establish and all shared acceptance/integration criteria to have supporting evidence.
+Prepare source_change provenance and delivery_tasks: change in each new version README. Keep tasks and DoD evidence in their originating changes, link new versions to those plans, and exclude tasks from new snapshots. New changes create fresh plans without historical task copies. Retain delivered changes while referenced. Preserve delivered versions and referenced evidence for historical outcomes; do not rewrite established legacy snapshots or invent their membership. Record combined checks in the brief and reference delivered task evidence where sufficient. Completion requires all member versions to establish and all shared acceptance/integration criteria to have supporting evidence.
 
-The [current unit of work](docs/artifacts/units-of-work/unit-of-work-exploration/README.md) groups the ADD and Artifact Plane changes for unit-of-work exploration.
+The [current unit of work](docs/artifacts/units-of-work/task-retention-and-navigation/README.md) groups the ADD and Artifact Plane changes for task retention and navigation simplification.
 
 Harness setup alone does not authorize a domain change, implementation, commits, pushes, or merges. Preserve existing edits and unrelated instructions.

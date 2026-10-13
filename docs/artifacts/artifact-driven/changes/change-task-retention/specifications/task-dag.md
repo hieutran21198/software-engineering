@@ -35,18 +35,14 @@ A graph edge goes from prerequisite to dependent task. The graph must be acyclic
 
 The artifact DAG retains artifact nodes. Required upstream establishment gates the change's implementation independently of internal task readiness. Detailed external references and reasons remain in specifications and task prerequisites. Do not put cross-artifact task IDs in depends_on. A task without internal dependencies can still have an unmet external gate or lack user approval.
 
-Retain stable metadata and plan membership with the complete version snapshot. A new change copies the full snapshot, then replaces the tasks list with its own current work. Historical tasks retain evidence but do not enter that graph by default. Reusing a historical task requires explicit listing and current DoD verification when behavior or prerequisites changed.
+Retain stable metadata, plan membership, and evidence in the originating change. New versions contain no tasks and declare delivery_tasks: change alongside source_change. A new change copies version knowledge excluding legacy task copies and creates a fresh plan. Prior delivery work is not copied or overwritten. Legacy version-owned task records remain readable. Reused behavior requires current tasks and DoD checks when behavior or prerequisites changed. See specifications/task-retention.md for evidence publication.
 
 ## Delivery and impact
 
 Update the canonical foundation definitions/model, dependency methodology, writing/getting-started guidance, and applicable coordinator/TL/implementer role instructions. Explain that the artifact DAG node restriction applies to that graph, not the local task graph. Mirror affected files into src/archs/artifact-driven. Required utility skills remain intact. Existing adoption and publishing behavior stays governed by specifications/delivery.md.
 
-Artifact Plane consumes this proposed contract from artifact-driven/change-implementation-task-dag, element specifications/task-dag.md. ADD does not depend on Artifact Plane. No ADD artifact edge proposal is required.
+Artifact Plane consumes the existing task format and the proposed retention contract from artifact-driven/change-task-retention, element specifications/task-retention.md. ADD does not depend on Artifact Plane. No ADD artifact edge proposal is required.
 
 ## Specification self-check
 
 D1–D7 have precise membership, format, failure, lifecycle, and delivery rules. KISS uses task metadata and existing plan files, with no competing DAG file. STE keeps legacy unavailability distinct from invalid current declarations and preserves external gates. No blocker remains for Plan.
-
-## Applicability in this change
-
-For future versions, specifications/task-retention.md replaces requirements to copy or inherit tasks and version-specific task evidence. Existing delivered records remain unchanged.

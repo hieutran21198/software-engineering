@@ -4,7 +4,7 @@ Governs R1–R4, R6, R8–R9 and A1–A4, A7 in [baseline requirements](../requi
 
 ## Owned concepts and responsibilities
 
-An artifact is cohesive, versioned knowledge. An element is a requirements, specification, decision, or task file within that knowledge. A change is the single active candidate copied from a complete current version; change-initial has no previous snapshot. A version is the complete resulting knowledge, established only after required merges.
+An artifact is cohesive, versioned knowledge. An element is a requirements, specification, or decision file in version knowledge, or a task file in change-owned delivery work. A change is the single active candidate started from complete current version knowledge with a fresh plan; change-initial has no previous snapshot. A version is the complete resulting knowledge, established only after required merges.
 
 | Internal responsibility | Maintained implementation or guidance | Contract |
 | --- | --- | --- |
@@ -18,7 +18,7 @@ These are internal implementation relationships, not artifact DAG edges. Artifac
 
 ## Knowledge layout
 
-Project identity is docs/artifacts/artifact-driven/README.md. Detailed proposed knowledge is in changes/change-units-of-work/{requirements,specifications,decisions,tasks}; its validated complete copy becomes proposed versions/1.2.0. Established 1.1.0 remains the baseline until required merges. Root README links to the current snapshot and one active change. Later changes copy the full current snapshot and retain valid knowledge and task evidence. Obsolete material is removed or amended. Snapshots do not require replaying old changes and are not edited to fix later defects. The units-of-work extension defines shared outcome membership and version provenance.
+Project identity is docs/artifacts/artifact-driven/README.md. Detailed proposed knowledge and delivery work are in changes/change-task-retention/{requirements,specifications,decisions,tasks}. Proposed 2.0.0 contains complete knowledge without tasks and links to the retained originating plan. Established 1.2.0 remains the baseline until required merges. Root README links to the current snapshot and one active change. Later changes copy complete knowledge excluding legacy tasks, remove delivered provenance, and create fresh plans. Historical tasks stay with their original changes. Obsolete material is removed or amended. Snapshots do not require replaying old changes and are not edited to fix later defects. The units-of-work extension defines shared outcome membership. specifications/task-retention.md defines source_change plus delivery_tasks: change, retention, protected-ref evidence, and legacy compatibility.
 
 The root owns purpose, scope, owner, established version and dependency names. docs/artifacts/dag.yaml indexes roots as artifacts: <id>: {path: <relative artifact path>, depends_on: [<ids>]}. It is derived, not independently authoritative. A new unestablished artifact has no current version and is not inserted into the established graph during phase preparation. Publication prepares consistent root and index changes as proposed state until merge.
 
@@ -40,7 +40,7 @@ ADRs belong to Specification. Validation is an obligation within phases, not a s
 
 The full bundle supplies four role SKILL.md files and KISS/STE required skills. Skill-relative references resolve from canonical docs/artifact-driven/03-execution/skills/<role>. Harness copies/registrations must preserve access to the full bundle. Local .agents/skills registrations and .codex/agents profiles are evidence of this repository's configuration, not a portable runtime API. All roles apply required skills within existing self-checks. Roles may share a session; TL Specification and Plan use the same capable session. Report unavailable model/tool/delegation capabilities and use supported sequential execution where possible.
 
-Git records history; tasks record durable checks/results and source/test references. No phase status table, copied commit history, approval database or workflow engine is part of the contract. Prose gates require responsible human/agent execution and do not provide mechanical proof of approvals or running agents.
+Git records history; tasks in retained originating changes record durable checks/results and source/test references. Versions link to those plans rather than copying them. No phase status table, copied commit history, approval database or workflow engine is part of the contract. Prose gates require responsible human/agent execution and do not provide mechanical proof of approvals or running agents.
 
 ## Guidance and source reuse
 
@@ -51,7 +51,3 @@ Nine pattern guides cover strategic DDD, tactical DDD, contract-driven developme
 ## Specification self-check
 
 All R1–R4, R6, R8–R9 behavior is recovered from the inventory. One cohesive boundary avoids artificial version prerequisites. Role/phase ownership, error return paths and proposed/established distinctions remain explicit. KISS and STE checks found no blocker for Plan. No cross-artifact implementation prerequisite is introduced.
-
-## Applicability in this change
-
-For future versions, specifications/task-retention.md replaces requirements to copy or inherit tasks and version-specific task evidence. Existing delivered records remain unchanged.

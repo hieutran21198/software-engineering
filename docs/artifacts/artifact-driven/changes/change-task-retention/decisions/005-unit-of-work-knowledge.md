@@ -11,7 +11,3 @@ Embedding membership only in artifact changes scatters shared scope and acceptan
 ## Decision and consequences
 
 Use the agreed unit brief and explicit version provenance. Keep artifact/task DAGs authoritative and shared validation evidence with the outcome. Legacy artifacts remain readable. Aggregation must diagnose ambiguity and incomplete Git evidence. Historical display uses delivered versions; current dependency views are labelled separately. This adds knowledge formats and derived rendering, not an execution engine.
-
-## Applicability in this change
-
-For future versions, specifications/task-retention.md replaces requirements to copy or inherit tasks and version-specific task evidence. Existing delivered records remain unchanged.

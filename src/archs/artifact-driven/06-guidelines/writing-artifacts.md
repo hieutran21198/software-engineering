@@ -81,7 +81,7 @@ An ID is a nonempty string matching `[a-z0-9][a-z0-9-]*`. IDs are unique within 
 
 In this example, task `api` and task `interface` each declare `depends_on: []`. Task `integration` depends on both. Task `validation` declares `depends_on: [integration]`. The derived graph has four nodes and three edges, with arrows from prerequisite to dependent.
 
-A one-task plan lists only that task, whose `depends_on` is empty. An explicit `tasks: []` is a valid empty plan. A copied completed task, such as `old-validation.md`, is excluded unless the plan explicitly lists it. Replace copied plan membership with the new change's current work. If reused work or prerequisites changed, verify its DoD again before using its evidence.
+A one-task plan lists only that task, whose `depends_on` is empty. An explicit `tasks: []` is a valid empty plan. Create a fresh plan for each new change without copying completed tasks. Existing legacy unlisted tasks, such as `old-validation.md`, remain excluded. If current work reuses earlier behavior, define its current task and verify the applicable DoD again; earlier checks alone do not validate changed work.
 
 ### Validate the Task Graph
 
@@ -91,9 +91,9 @@ A legacy plan without a `tasks` declaration remains readable historical knowledg
 
 ### External Gates and Evidence
 
-Keep external artifact references and their reasons in specifications and task prerequisites. Do not put cross-artifact task IDs in `depends_on`. Required upstream established versions and explicit user approval still gate implementation. A task with no internal prerequisite can remain blocked by those gates. Preserve membership and task metadata in the complete version snapshot.
+Keep external artifact references and their reasons in specifications and task prerequisites. Do not put cross-artifact task IDs in `depends_on`. Required upstream established versions and explicit user approval still gate implementation. A task with no internal prerequisite can remain blocked by those gates. Preserve membership and task metadata in the retained originating change, not the version snapshot.
 
-Record commands or review methods, results, and relevant code/test references with tasks. Keep failed and incomplete checks visible. Historical completed tasks remain only while applicable; recheck evidence when its covered behavior changes.
+Record commands or review methods, results, and relevant code/test references with tasks. Keep failed and incomplete checks visible. Retain delivered task evidence while any version or outcome references it. Do not overwrite a delivered plan for later work. Correct changed behavior in a new change and recheck its evidence. Historical evidence corrections remain visible in Git and remove affected completion support until revalidated.
 
 ## Unit-of-Work Brief
 
@@ -101,8 +101,10 @@ Use the [unit-of-work format](units-of-work.md) for outcome scope, structured me
 
 ## Version Snapshot
 
-Set source_change in the new version README YAML front matter to the originating change name. Do not edit an established snapshot to add provenance.
+Set source_change in the new version README YAML front matter to the originating change name and set delivery_tasks: change. Link to ../../changes/<source_change>/tasks/README.md. Only the literal marker change is supported; no arbitrary task path is permitted. Do not edit an established snapshot to add provenance or the marker.
 
-After validation, copy the full resulting requirements, specifications, applicable decisions, and tasks with evidence into the proposed version. The snapshot must not require replaying old changes. Code and executable tests remain in implementation repositories.
+After validation, copy the full resulting requirements, specifications, and applicable decisions into the proposed version. Exclude tasks/. The knowledge snapshot must not require replaying old changes. Retain the originating change and its plan, dependency metadata, DoD results, and evidence. Code and executable tests remain in implementation repositories.
+
+For a new change, copy version knowledge without legacy task copies and remove delivered provenance metadata from its README. Create a fresh plan in Plan. Versions without delivery_tasks retain legacy version-owned tasks; preserve those established snapshots and evidence. Missing retained tasks for a new-layout delivery are unavailable evidence, not a reason to substitute another plan.
 
 Prepare consistent root README and DAG updates. Establishment requires all required merges. Later defects or missing evidence are handled by a new change, not edits to the established snapshot.
