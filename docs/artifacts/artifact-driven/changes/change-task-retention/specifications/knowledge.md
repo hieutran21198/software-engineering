@@ -51,3 +51,7 @@ Nine pattern guides cover strategic DDD, tactical DDD, contract-driven developme
 ## Specification self-check
 
 All R1–R4, R6, R8–R9 behavior is recovered from the inventory. One cohesive boundary avoids artificial version prerequisites. Role/phase ownership, error return paths and proposed/established distinctions remain explicit. KISS and STE checks found no blocker for Plan. No cross-artifact implementation prerequisite is introduced.
+
+## Applicability in this change
+
+For future versions, specifications/task-retention.md replaces requirements to copy or inherit tasks and version-specific task evidence. Existing delivered records remain unchanged.

@@ -56,3 +56,7 @@ ADD has no upstream artifact prerequisite. Plane consumes this proposed contract
 ## Project adoption extension
 
 Apply U6 through the repository AGENTS.md: new project ADD outcomes use a unit brief, including single-member outcomes. The coordinator owns membership/shared evidence. Existing task, approval, and upstream gates remain valid. The current brief groups artifact-driven/change-units-of-work and artifact-plane/change-units-of-work. The user directly authorized this adoption during implementation; it adds project instructions and no new implementation dependency.
+
+## Applicability in this change
+
+For future versions, specifications/task-retention.md replaces requirements to copy or inherit tasks and version-specific task evidence. Existing delivered records remain unchanged.

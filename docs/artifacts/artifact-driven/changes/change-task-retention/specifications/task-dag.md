@@ -46,3 +46,7 @@ Artifact Plane consumes this proposed contract from artifact-driven/change-imple
 ## Specification self-check
 
 D1–D7 have precise membership, format, failure, lifecycle, and delivery rules. KISS uses task metadata and existing plan files, with no competing DAG file. STE keeps legacy unavailability distinct from invalid current declarations and preserves external gates. No blocker remains for Plan.
+
+## Applicability in this change
+
+For future versions, specifications/task-retention.md replaces requirements to copy or inherit tasks and version-specific task evidence. Existing delivered records remain unchanged.

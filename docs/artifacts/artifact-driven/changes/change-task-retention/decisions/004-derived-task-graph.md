@@ -15,3 +15,7 @@ A separate dag.yaml duplicates task prerequisites. Parsing dependency prose make
 ## Consequences
 
 New or materially revised plans must declare metadata. Legacy plans remain readable with unavailable graphs. Cross-artifact establishment remains a separate gate.
+
+## Applicability in this change
+
+For future versions, specifications/task-retention.md replaces requirements to copy or inherit tasks and version-specific task evidence. Existing delivered records remain unchanged.

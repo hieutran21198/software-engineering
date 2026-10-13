@@ -23,3 +23,7 @@ Builds validate sources but do not prove deployed availability. Project artifact
 ## Evidence
 
 Repository-relative source paths: website/scripts/prepare-docs.mjs; website/docusaurus.config.js; website/package.json; .github/workflows/ci.yml; repository README.md.
+
+## Applicability in this change
+
+For future versions, specifications/task-retention.md replaces requirements to copy or inherit tasks and version-specific task evidence. Existing delivered records remain unchanged.

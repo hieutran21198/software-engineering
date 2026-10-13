@@ -23,3 +23,7 @@ Binaries are self-contained and need rebuilding for source updates. Differing de
 ## Evidence
 
 Repository-relative source paths: src/archs/catalog.go; src/archs/artifact-driven/bundle.go; src/utils/agents/skills/bundle.go; internal/adopt/adopt.go; cmd/se-adopt/main.go; docs/artifact-driven/05-adoption/README.md.
+
+## Applicability in this change
+
+For future versions, specifications/task-retention.md replaces requirements to copy or inherit tasks and version-specific task evidence. Existing delivered records remain unchanged.

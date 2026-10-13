@@ -27,3 +27,7 @@ The user confirmed scopes 1–5. Outcome, cardinality, ownership, evidence, and 
 ## Project adoption
 
 U6. During approved implementation the user explicitly requested adoption in this project as well. Apply the new convention to future project ADD outcomes, create the current shared brief, and preserve established legacy snapshots without retroactive membership or provenance edits.
+
+## Applicability in this change
+
+For future versions, specifications/task-retention.md replaces requirements to copy or inherit tasks and version-specific task evidence. Existing delivered records remain unchanged.

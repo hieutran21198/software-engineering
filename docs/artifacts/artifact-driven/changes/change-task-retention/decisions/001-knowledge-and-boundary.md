@@ -23,3 +23,7 @@ Future ADD changes can use complete knowledge and ordinary Git evidence. One cap
 ## Evidence
 
 Repository-relative source paths: docs/artifact-driven/01-foundation/principles.md and artifact-model.md; 02-methodology/workflow.md and dependencies.md; 03-execution/README.md; repository AGENTS.md.
+
+## Applicability in this change
+
+For future versions, specifications/task-retention.md replaces requirements to copy or inherit tasks and version-specific task evidence. Existing delivered records remain unchanged.

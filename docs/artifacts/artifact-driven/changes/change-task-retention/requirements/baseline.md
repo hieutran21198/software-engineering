@@ -45,3 +45,7 @@ ADD maintainers and consumers use the recovered contracts to scope future change
 ## Requirement self-check
 
 The requirements follow the supplied scope and existing method. Evidence gaps are reserved for validation rather than filled with assumptions. KISS keeps one cohesive artifact and existing tooling. STE principles keep obligations and limitations explicit. No unresolved requirement blocker prevents Specification.
+
+## Applicability in this change
+
+For future versions, specifications/task-retention.md replaces requirements to copy or inherit tasks and version-specific task evidence. Existing delivered records remain unchanged.
