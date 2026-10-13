@@ -13,4 +13,5 @@ The proposed artifact has no established dependencies. Existing ADD and Artifact
 ## Knowledge
 
 - [Requirements](requirements/framework.md)
-
+- [Knowledge and delivery specification](specifications/framework.md)
+- [Architecture decision](decisions/001-shared-knowledge.md)
