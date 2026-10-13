@@ -34,3 +34,7 @@ All P requirements have concrete tasks and checks. Graph: task-graph-reader -> t
 ## Preparation checks
 
 A local Node check verified declared task paths, unique IDs, resolved prerequisites, acyclicity, and exclusion of historical tasks for both plans. All 31 Markdown links in the two complete change snapshots resolve and do not link to ancestors. git diff --check passed. Implementation checks have not run.
+
+## Integrated result
+
+ADD 1.1.0 is established and the upstream contract recheck passed. Implementation passed 60 Node tests, the production build, and all 10 Chromium acceptance cases. Desktop/narrow screenshots and repository/Git fingerprints passed review. The user confirmed Artifact Plane 1.5.0. The complete snapshot and dependency declarations on this branch prepare the release; it remains proposed until team merge.

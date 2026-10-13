@@ -1,7 +1,8 @@
 artifacts:
-  artifact-plane:
-    path: artifact-plane
-    depends_on: []
   artifact-driven:
     path: artifact-driven
     depends_on: []
+  artifact-plane:
+    path: artifact-plane
+    depends_on:
+      - artifact-driven

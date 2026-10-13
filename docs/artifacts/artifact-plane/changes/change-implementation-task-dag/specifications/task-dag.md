@@ -1,6 +1,6 @@
 # Task graph exploration contract
 
-Governs P1–P5 in requirements/task-dag.md. Consume the proposed upstream contract from artifact-driven/change-implementation-task-dag, element specifications/task-dag.md, for plan membership, IDs, depends_on, validation, and legacy behavior. Resolve it through ADD's current established version and recheck before implementation.
+Governs P1–P5 in requirements/task-dag.md. Consume the established upstream contract from artifact-driven, element specifications/task-dag.md, for plan membership, IDs, depends_on, validation, and legacy behavior. The recheck against ADD's current established version, 1.1.0, passed before implementation.
 
 ## Reader and response
 
@@ -25,7 +25,7 @@ Task selection uses the existing safe Markdown renderer for scope, DoD, and evid
 
 ## Dependency and validation
 
-Propose artifact-plane -> artifact-driven in dependencies.yaml using the established graph convention. Diagram arrows still run upstream to dependent. This is an actual input contract prerequisite, with no reverse edge. The visualization implementation waits for the required ADD contract to establish. Preparation uses the explicit proposed reference above.
+Propose artifact-plane -> artifact-driven in dependencies.yaml using the established graph convention. Diagram arrows still run upstream to dependent. This is an actual input contract prerequisite, with no reverse edge. ADD 1.1.0 established before this implementation. The root and DAG updates on this branch prepare the new dependency for establishment with the Plane release.
 
 Use real temporary-repository fixtures for valid fork/join, disconnected/single/empty graphs, legacy plans, copied unlisted history, malformed YAML/types, duplicate keys/IDs/paths, missing files and IDs, invalid paths, duplicate prerequisites, self-dependencies, and cycles. Verify identical IDs in separate changes/worktrees do not collide. Browser acceptance covers navigation, selection/Markdown, diagnostic states, refresh, history preservation, desktop/narrow layouts, and read-only fingerprints. Existing regression checks remain required.
 
