@@ -947,3 +947,18 @@ summary {
  .canvas-surface,.workflow-view { top:88px; }
  .diagnostics { top:100px; }
 }
+
+.task-graph-view { position:absolute; inset:66px 0 0; overflow:hidden; }
+.task-graph-toolbar { height:60px; display:flex; align-items:center; gap:14px; padding:10px 16px; border-bottom:1px solid #35435b; }
+.task-graph-toolbar strong { font-size:12px; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
+.task-graph-toolbar button { flex-shrink:0; }
+.task-graph-surface { position:absolute; inset:60px 0 0; }
+.task-graph-empty { position:absolute; top:45%; left:20px; right:20px; text-align:center; pointer-events:none; color:#bac6d9; }
+.task-node { height:100%; padding:12px; background:#1b2940; border:1px solid #655b9b; border-radius:8px; }
+.task-node.selected { outline:2px solid #b2a3ff; outline-offset:1px; }
+.task-node small { color:#b8aafa; font-size:11px; }
+.task-node strong { display:block; margin:7px 0; font-size:13px; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
+.task-node span { color:#a1b1ca; font-size:10px; }
+.task-details section { margin-top:18px; }
+.task-details p { overflow-wrap:anywhere; }
+@media (max-width:1150px) { .task-graph-view { top:88px; } }

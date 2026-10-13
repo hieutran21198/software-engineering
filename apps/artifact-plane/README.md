@@ -27,6 +27,14 @@ All browser assets are bundled locally. The application uses no database, accoun
 - Drag the divider at the left edge of the inspector to resize it. When the divider has keyboard focus, Arrow Left widens the panel, Arrow Right narrows it, and Home/End select its minimum/maximum width. On narrow screens, the inspector sits below the canvas.
 - Use Refresh after external repository edits. Selection, type expansion, panel width, and canvas state remain in browser memory only; nothing is saved across page reloads.
 
+## Implementation task graphs
+
+In Workflow, select a change and choose View task graph. Arrows point from prerequisite tasks to dependent tasks. Select a task to read its source, scope, DoD, and documented evidence. Back to workflow preserves the selected change and history expansion.
+
+Current plan membership comes from the tasks list in YAML front matter in tasks/README.md. Each listed task declares id and depends_on. Unlisted files remain historical knowledge. A plan without a task list shows Task graph unavailable; an explicit empty list shows No planned tasks. Invalid declarations show diagnostics and no execution edges. Checklists are documented evidence; they do not verify completion, approval, or running agents. External artifact gates remain separate.
+
+Refresh rereads the graph and clears task selection if its source disappears. Opening another worktree clears task context. The graph uses the same local read-only inputs as the other views.
+
 ## Supported repository structure
 
 ```text

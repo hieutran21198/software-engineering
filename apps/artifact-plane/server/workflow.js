@@ -1,3 +1,4 @@
+import { buildTaskGraph } from './task-graph.js';
 import { parseArtifact } from "../src/model.js";
 import { marked } from "marked";
 // Runtime evidence only. No state is stored in the inspected repository.
@@ -103,7 +104,7 @@ async function evidenceFor(root, data, git, head, diagnostics) {
     const steps = phases.map(name => ({ name, state: 'unknown', evidence: [], commits: [], completionCommit: null }));
     const step = name => steps.find(s => s.name === name);
     const tasks = owned.filter(([path]) => path.includes('/tasks/')).map(([path, text]) => ({ path, ...checklist(text), inherited: !distinct.some(file => file.path === path && !file.inherited) }));
-    const change = { artifact: artifact.id, name, declaredActive: artifact.activeChange === name, currentStep: null, inferenceReason: 'No distinguishable ongoing change: current snapshot contains the same knowledge.', steps, tasks };
+    const change = { artifact: artifact.id, name, declaredActive: artifact.activeChange === name, currentStep: null, inferenceReason: 'No distinguishable ongoing change: current snapshot contains the same knowledge.', steps, tasks, taskGraph: buildTaskGraph(files, prefix, checklist, data.unsafeTaskPaths) };
     changes.push(change);
     const ongoing = distinct.length > 0;
     change.history = !ongoing || !!artifact.activeChange && !change.declaredActive;
