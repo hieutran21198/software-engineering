@@ -129,3 +129,7 @@ flow:
 ## Coverage
 
 The structured record owns this named journey, source reasons, evidence basis, gaps and exclusions. Sources are documented/static support; recorded task checks validate this map separately.
+
+## Evidence presentation
+
+The flow explorer shows compact evidence status and expandable diagnostic and shortened-source details. Optional semantic-model failure leaves keyword and graph discovery available.
