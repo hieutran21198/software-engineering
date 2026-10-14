@@ -10,7 +10,7 @@ The flow explorer currently prints raw diagnostic messages and serialized omissi
 - Keep the supporting-node checkbox beside its label and usable with the keyboard.
 - Preserve freshness, completeness, source publication, diagnostic severity, source pagination and navigation behavior.
 
-Model installation, backend changes beyond creation metadata and list ordering, new dependencies and historical snapshot changes are excluded.
+This retained presentation scope excludes model installation, new dependencies and historical snapshot changes. Backend corrections and selected-change review/context work are separately governed by this change's evidence-correctness and change-review-context requirements.
 
 ## Navigation consistency amendment
 
@@ -30,6 +30,6 @@ Amendment check: inspected main.jsx state and panel rendering, Flows.jsx local s
 
 ## Lazy paginated discovery
 
-Load flow results only when the Flows view is active. Load detail only after selection and source text only when requested. Fetch the list in bounded pages as the user scrolls, with an accessible Load more control as a fallback. Order flow records by creation date descending; do not use filesystem modification time as creation evidence. Preserve loaded pages and selection across view switches when their context and revision remain valid. Unknown creation dates remain explicit.
+Load flow results only when the Flows view is active. Load detail only after selection and source text only when requested. Fetch the list in bounded pages as the user scrolls, with an accessible Load more control as a fallback. Empty-query browsing and impact lists retain descending creation-date order; nonempty search leads with exact IDs and relevance under E3. Do not use filesystem modification time as creation evidence. Preserve loaded pages and selection across view switches when their context and revision remain valid. Unknown creation dates remain explicit.
 
 Requirements amendment check: existing search/impact operations already expose cursor pagination but sort by relevance/ID and contain no creation metadata. Creation-date provenance and sorting therefore require a small additive retrieval change; the earlier backend-change exclusion is narrowed to allow this specific metadata/order work. Model installation, index algorithms, arbitrary file access and historical authoring remain excluded.
