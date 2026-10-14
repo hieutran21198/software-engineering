@@ -4,3 +4,4 @@ Improve the flow explorer after the user reported dense diagnostics and metadata
 
 - [Readability requirements](requirements/flow-readability.md)
 - [Presentation specification](specifications/flow-readability.md)
+- [Implementation plan](tasks/README.md)
