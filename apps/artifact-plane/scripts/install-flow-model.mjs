@@ -6,6 +6,7 @@ import {
   MODEL,
   MODEL_REVISION,
   MODEL_FILES,
+  MODEL_HASHES,
 } from "../server/flow-embeddings.js";
 const state = resolve(
   process.env.ARTIFACT_PLANE_STATE_DIR || defaultStateDir(),
@@ -24,6 +25,8 @@ try {
       throw Error(`Download failed: ${file} (${response.status})`);
     const bytes = Buffer.from(await response.arrayBuffer());
     manifest.files[file] = createHash("sha256").update(bytes).digest("hex");
+    if (manifest.files[file] !== MODEL_HASHES[file])
+      throw Error("Downloaded asset differs from pinned hash: " + file);
     await writeFile(join(stage, MODEL, file), bytes, { mode: 0o600 });
   }
   await writeFile(
@@ -35,7 +38,7 @@ try {
     const hash = createHash("sha256")
       .update(await readFile(join(stage, MODEL, file)))
       .digest("hex");
-    if (hash !== manifest.files[file])
+    if (hash !== MODEL_HASHES[file])
       throw Error("Installed asset hash mismatch: " + file);
   }
   await rm(join(state, "models"), { recursive: true, force: true });

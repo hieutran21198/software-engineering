@@ -10,6 +10,19 @@ export const MODEL_FILES = [
   "special_tokens_map.json",
   "onnx/model_quantized.onnx",
 ];
+// SHA-256 values from the pinned public revision, independent of mutable local manifests.
+export const MODEL_HASHES = Object.freeze({
+  "config.json":
+    "05b570bff786faa5c4604152aa16f19f77ed6dfc31e47dd0f3dd987078693ac7",
+  "tokenizer.json":
+    "b60b6b43406a48bf3638526314f3d232d97058bc93472ff2de930d43686fa441",
+  "tokenizer_config.json":
+    "3f5961b9ac86288cccdb97f32fb848d6187c78e1603958c53f3ea1f296b7d8a2",
+  "special_tokens_map.json":
+    "06e405a36dfe4b9604f484f6a1e619af1a7f7d09e34a8555eb0b77b66318067f",
+  "onnx/model_quantized.onnx":
+    "66fc00f5f29afcaff34092e1bdd20008ca3918265a82fb9695a551e510cc4ebc",
+});
 export const modelSignature = MODEL + "@" + MODEL_REVISION;
 export function normalizeVector(value) {
   const v = Array.from(value, Number);
@@ -32,6 +45,8 @@ export function createLocalEmbedder(stateDir) {
       if (manifest.model !== MODEL || manifest.revision !== MODEL_REVISION)
         throw Error("Pinned flow model manifest is missing or invalid");
       for (const file of MODEL_FILES) {
+        if (manifest.files?.[file] !== MODEL_HASHES[file])
+          throw Error("Corrupt flow model asset manifest: " + file);
         const path = join(directory, MODEL, file),
           info = await lstat(path);
         if (!info.isFile()) throw Error("Invalid flow model asset");
@@ -41,7 +56,7 @@ export function createLocalEmbedder(stateDir) {
           info.size,
           info.mtimeMs,
           info.ctimeMs,
-          manifest.files[file],
+          MODEL_HASHES[file],
         ].join(":");
         const hash =
           verified.get(path)?.stamp === stamp
@@ -50,7 +65,7 @@ export function createLocalEmbedder(stateDir) {
                 .update(await readFile(path))
                 .digest("hex");
         verified.set(path, { stamp, hash });
-        if (hash !== manifest.files[file])
+        if (hash !== MODEL_HASHES[file])
           throw Error("Corrupt flow model asset: " + file);
       }
       pipelinePromise ??= (async () => {
