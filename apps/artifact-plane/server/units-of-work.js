@@ -108,14 +108,17 @@ export function publicationReview(files, prefix, reviewSource = null) {
       }
     }
     for (const text of paragraphs) {
-      // A conflicting review paragraph invalidates the claim even if another
-      // paragraph has a valid affirmative sentence for the same member.
-      if (nonassertion.test(text)) {
-        if (/\b(?:knowledge|implementation|code|changes|merges?|assertion|claim|statement|review|this|that|they)\b/i.test(text)) contradictory = true;
-        continue;
+      const sentence = text.match(/^[^.]*\./)?.[0] || text;
+      // Check assertion grammar separately from later explanatory sentences.
+      // The word "format" in a dependency description is not a merge qualifier.
+      if (nonassertion.test(sentence) && /^(?:But )?(?:All required|(?:The )?(?:knowledge|implementation|code)|This|That|They)\b/i.test(sentence)) contradictory = true;
+      const later = text.slice(sentence.length).match(/[^.!?]+[.!?]?/g) || [];
+      for (const statement of later) {
+        const qualifier = /\b(?:not|never|no|cannot|can't|hasn't|haven't|isn't|aren't|didn't|won't|unmerged|pending|unpublished|unverified|false|incorrect|tentative|if|unless|until|when|once|will|would|could|should|must|may|might|examples?|hypothetical|suppose|instructions?|template|quotes?|quoted)\b/i.test(statement);
+        const mergeClaim = /\b(?:implementation|code|merges?|landed|published|publication|assertion|claim|statement|review|this|that|they)\b/i.test(statement);
+        if (qualifier && mergeClaim) contradictory = true;
       }
-      const sentence = text.match(/^[^.]*\./)?.[0];
-      if (!sentence || !affirmative.test(sentence)) continue;
+      if (!affirmative.test(sentence)) continue;
       evidence.push({kind: 'documented-merge-review', path: source.path, heading: 'publication-review', artifact, version, assertion: sentence});
     }
   }

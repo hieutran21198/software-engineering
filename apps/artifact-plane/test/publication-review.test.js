@@ -99,3 +99,18 @@ for(const clause of ['through PR #21 if tests pass','after PR #13 as an example'
  const statement=assertion.replace('main.','main '+clause+'.');
  assert.equal((await inspect('# Version\n\n## Publication review\n\n'+statement)).state,'unverified');
 });
+
+test('real story-driven review accepts unrelated flow-format dependency explanation',async()=>{
+ const source=await readFile(new URL('../../../docs/artifacts/units-of-work/flow-discovery-and-retrieval/README.md',import.meta.url),'utf8');
+ const paragraph=source.split('\n\n').find(text=>text.startsWith('story-driven 1.1.0: '));
+ assert.ok(paragraph);
+ const scoped=paragraph.replace('story-driven 1.1.0: ','tenant 1.0.0: ');
+ const result=await inspect('# Version',new Map([[unitPath,brief+'\n## Publication review\n\n'+scoped]]),unitPath);
+ assert.equal(result.state,'established');
+ assert.equal(result.sources.find(item=>item.kind==='documented-merge-review').assertion,'All required knowledge and implementation changes have landed on main through PR #21.');
+});
+
+test('a separate flow-format explanation does not contradict the affirmative merge assertion',async()=>{
+ const body='# Version\n\n## Publication review\n\n'+assertion+'\n\nIts flow-format dependency on established ADD 2.1.0 is knowledge-only.';
+ assert.equal((await inspect(body)).state,'established');
+});
