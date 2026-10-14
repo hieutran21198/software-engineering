@@ -59,6 +59,8 @@ function validate(body) {
     !isAbsolute(body.path)
   )
     throw new ExploreError(422, "Select an absolute repository path");
+  const keys=['path','worktree','knowledge','operation','query','flow','ids','source','cursor','limit','budget'];
+  if(Object.keys(body).some(key=>!keys.includes(key))||body.path.includes('\0'))throw new ExploreError(422,'Invalid flow query fields');
   const knowledge = body.knowledge ?? "planning",
     operation = body.operation;
   if (
@@ -114,6 +116,7 @@ function validate(body) {
 }
 const summary = (f) => ({
   id: f.id,
+  localId:f.localId,
   logicalId: f.logicalId,
   title: f.title,
   artifact: f.artifact,
@@ -200,7 +203,7 @@ export function createFlowService({
  CREATE TABLE IF NOT EXISTS relations(context TEXT,source TEXT,target TEXT,kind TEXT,json TEXT);
  CREATE INDEX IF NOT EXISTS reverse_relations ON relations(context,target);`);
   const encoder = embedder ?? createLocalEmbedder(dir);
-  let serial = Promise.resolve();
+  let serial = Promise.resolve(), closing=false, closePromise;
   async function execute(raw) {
     const started = performance.now(),
       timings = {};
@@ -489,6 +492,7 @@ export function createFlowService({
       data = {
         flow: {
           ...summary(flow),
+          entry_steps:flow.entry_steps||[],
           steps: flow.steps,
           support: flow.support,
           transitions: flow.transitions,
@@ -531,11 +535,19 @@ export function createFlowService({
           403,
           "Source is not registered in this flow context",
         );
+      let offset=0;
+      if(body.cursor){
+        try{const c=JSON.parse(Buffer.from(body.cursor,'base64url'));if(c.context!==context||c.revision!==record.revision||c.operation!=='source'||c.source!==source.id||c.flow!==flow.id||!Number.isInteger(c.offset)||c.offset<0||c.offset>source.text.length)throw Error();offset=c.offset;}
+        catch{throw new ExploreError(422,'Invalid or stale source cursor');}
+      }
+      const text=source.text.slice(offset,offset+body.budget),nextOffset=offset+text.length;
+      if(nextOffset<source.text.length)omissions.push({source:source.id,characters:source.text.length-nextOffset});
       data = {
         source: source.id,
         path: source.path,
         fingerprint: source.fingerprint,
-        text: excerpt(source).text,
+        text,offset,totalCharacters:source.text.length,
+        next:nextOffset<source.text.length&&text.length?Buffer.from(JSON.stringify({context,revision:record.revision,operation:'source',flow:flow.id,source:source.id,offset:nextOffset})).toString('base64url'):null,
       };
     }
     if (items.length || ["search", "impact"].includes(body.operation)) {
@@ -605,7 +617,7 @@ export function createFlowService({
           : "complete",
       data,
       diagnostics,
-      pagination: { total, next: data.next || null, limit: body.limit },
+      pagination: { total, next: data.next || null,nextCursor:data.next||null, limit: body.limit },
       omissions,
     };
   }
@@ -626,12 +638,14 @@ export function createFlowService({
       return result;
     },
     query(body) {
+      if(closing)return Promise.reject(new ExploreError(503,'Flow service is closed'));
       const result = serial.then(() => execute(body));
       serial = result.catch(() => {});
       return result;
     },
     close() {
-      db.close();
+      closing=true;
+      return closePromise??=(serial.then(()=>db.close()));
     },
   };
 }

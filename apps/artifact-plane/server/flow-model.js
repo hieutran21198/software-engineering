@@ -57,11 +57,12 @@ export function parseFlow(element, context = '') {
   for (const key of ['gaps','exclusions']) if (f[key] !== undefined && (!Array.isArray(f[key]) || !f[key].every(text))) report('invalid-flow', `${key} must contain nonempty explanations.`);
   const localId=safeFlowID(f.id)?f.id:element.path;
   const id = flowKey(context, element.artifact, element.source, 'flow', localId);
+  const state=diagnostics.some(d => d.code !== 'flow-evidence-gap') ? 'invalid' : 'valid';
   return {...f, id, localId, artifact:element.artifact, title:text(f.title)?f.title:localId,
     trigger:text(f.trigger)?f.trigger:'',outcome:text(f.outcome)?f.outcome:'',logicalId:`${element.artifact}:${localId}`, source:element.source,
-    elementId:element.id, file:element.file, markdown:element.markdown, steps, support, transitions,
-    gaps:f.gaps || [], exclusions:f.exclusions || [], diagnostics,
-    state:diagnostics.some(d => d.code !== 'flow-evidence-gap') ? 'invalid' : 'valid'};
+    elementId:element.id, file:element.file, markdown:element.markdown,
+    steps:state==='valid'?steps:[],support:state==='valid'?support:[],transitions:state==='valid'?transitions:[],
+    gaps:Array.isArray(f.gaps)?f.gaps.filter(text):[],exclusions:Array.isArray(f.exclusions)?f.exclusions.filter(text):[],diagnostics,state};
 }
 
 // This projection is not an execution DAG. Runtime transitions can contain loops.
@@ -135,7 +136,8 @@ export function buildFlowGraph(snapshot, {context = '', knowledge = 'planning'} 
 
 export function flowImpact(graph, ids) {
   const nodes=new Map(graph.nodes.map(n=>[n.id,n])), reverse=new Map(), starts=new Set(), paths=new Map();
-  for(const id of ids)for(const node of graph.nodes)if(node.id===id||node.logicalId===id||node.elementId===id||node.file===id)starts.add(node.id);
+  const matches=(node,id)=>node.id===id||node.logicalId===id||node.elementId===id||node.file===id||id.startsWith('artifact:')&&node.artifact===id.slice(9);
+  for(const id of ids)for(const node of graph.nodes)if(matches(node,id))starts.add(node.id);
   for(const edge of graph.edges) {
     if(!['supports','references','defines'].includes(edge.kind)||edge.resolved===false)continue;
     if(!reverse.has(edge.target))reverse.set(edge.target,[]);reverse.get(edge.target).push(edge);
@@ -148,5 +150,5 @@ export function flowImpact(graph, ids) {
     for(const edge of reverse.get(id)||[])if(!visited.has(edge.source)){visited.add(edge.source);queue.push(edge.source);paths.set(edge.source,[...paths.get(id),edge]);}
   }
   const flows=graph.flows.filter(f=>visited.has(f.id)).map(f=>({...f,impactPath:paths.get(f.id)}));
-  return {flows,visited:[...visited].map(id=>nodes.get(id)),unresolved:ids.filter(id=>![...starts].some(start=>start===id||nodes.get(start)?.logicalId===id||nodes.get(start)?.elementId===id||nodes.get(start)?.file===id)),coverage:'Explicit known relationships only; participation requires contract impact review.'};
+  return {flows,visited:[...visited].map(id=>nodes.get(id)),unresolved:ids.filter(id=>![...starts].some(start=>matches(nodes.get(start),id))),coverage:'Explicit known relationships only; participation requires contract impact review.'};
 }

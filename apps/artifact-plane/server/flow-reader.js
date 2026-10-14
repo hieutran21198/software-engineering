@@ -5,6 +5,7 @@ import {scanRepository,git,ExploreError} from './reader.js';
 import {parseWorktrees} from './workflow.js';
 import {unitBriefs} from './units-of-work.js';
 import {buildFlowGraph,safeFlowSource} from './flow-model.js';
+import {parseArtifact} from '../src/model.js';
 
 export const sourceDigest = bytes => createHash('sha256').update(bytes).digest('hex');
 const contained = (root,path) => {const r=relative(root,path);return r!== '..'&&!r.startsWith('..'+sep)&&!isAbsolute(r);};
@@ -27,6 +28,17 @@ export async function readFlowRepository(path, {worktree,knowledge='planning',ro
   if(!target||!worktrees.some(w=>w.path===target))throw new ExploreError(422,'Select a registered readable worktree.');
   const scan=target===root?base:await scanRepository(target,{metadata:true,full:p=>p.includes('/specifications/flows/')});
   const snapshot=scan.snapshot;
+  const head=await git(target,['rev-parse','HEAD']);
+  const refs=await Promise.all(['main','master'].map(ref=>git(target,['rev-parse','--verify','refs/heads/'+ref]).catch(()=>null)));
+  if(knowledge==='established')for(const artifact of snapshot.artifacts){
+    const declarations=[];
+    for(const [i,ref] of ['main','master'].entries())if(refs[i]){
+      const body=await git(target,['show',`${ref}:docs/artifacts/${artifact.id}/README.md`]).catch(()=>null);
+      if(body)declarations.push(parseArtifact(artifact.id,body).currentVersion);
+    }
+    artifact.currentVersion=declarations.length&&new Set(declarations).size===1?declarations[0]:null;
+    if(!declarations.length||new Set(declarations).size!==1)snapshot.diagnostics.push({code:'unavailable-flow-baseline',path:`docs/artifacts/${artifact.id}/README.md`,message:'No unambiguous protected-ref flow baseline is available.'});
+  }
   // Keep historical knowledge available without confusing it with current roots.
   const known=new Set(snapshot.artifacts.flatMap(a=>a.elements.map(e=>e.id)));
   for(const [file,markdown] of scan.files){
@@ -35,6 +47,7 @@ export async function readFlowRepository(path, {worktree,knowledge='planning',ro
     if(artifact&&!known.has(id)){artifact.elements.push({id,artifact:m[1],source,path:m[3],file,markdown});known.add(id);}
   }
   const graph=buildFlowGraph(snapshot,{context:target,knowledge});
+  graph.diagnostics.push(...snapshot.diagnostics.filter(d=>d.code==='unavailable-flow-baseline'));
   const tracked=new Set((await git(target,['ls-files','-z'],true)).split('\0').filter(Boolean));
   const sources=[];
   for(const source of graph.sources){
@@ -51,15 +64,19 @@ export async function readFlowRepository(path, {worktree,knowledge='planning',ro
   }
   const units=unitBriefs(scan.files);
   for(const unit of units)for(const f of unit.affectedFlows||[])if(!snapshot.artifacts.some(a=>a.id===f.artifact))unit.diagnostics.push({code:'unknown-flow-owner',path:unit.path,message:'Affected flow owner does not exist.'});
-  const head=await git(target,['rev-parse','HEAD']);
-  const refs=await Promise.all(['main','master'].map(ref=>git(target,['rev-parse','--verify','refs/heads/'+ref]).catch(()=>null)));
-  for(const flow of graph.flows){
-    flow.sourcePublication={state:refs.some(Boolean)?'proposed':'unknown',reason:'Source bytes are not confirmed on an available protected ref; this is not an artifact-establishment verdict.'};
-    for(const [i,ref] of ['main','master'].entries())if(refs[i]){
-      const bytes=await git(target,['show',`${ref}:${flow.file}`],'bytes').catch(()=>null);
-      if(bytes&&bytes.equals(Buffer.from(flow.markdown))){flow.sourcePublication={state:'published-source',ref,reason:'These flow-source bytes match the protected ref; full artifact establishment still requires applicable delivery evidence.'};break;}
-    }
+  const paths=[...new Set([...graph.flows.map(f=>f.file),...sources.map(s=>s.path)])],trees=[];
+  for(const [i,ref] of ['main','master'].entries())if(refs[i]&&paths.length){
+    const tree=await git(target,['ls-tree','-r','-z','--format=%(objectname)%x09%(path)',ref,'--',...paths],true).catch(()=>null);
+    if(tree)trees.push({ref,entries:new Map(tree.split('\0').filter(Boolean).map(row=>{const i=row.indexOf('\t');return [row.slice(i+1),row.slice(0,i)];}))});
   }
+  const publication=(path,text)=>{
+    for(const {ref,entries} of trees){const hash=entries.get(path);if(!hash)continue;const bytes=Buffer.from(text),blob=createHash(hash.length===64?'sha256':'sha1').update(`blob ${bytes.length}\0`).update(bytes).digest('hex');
+      if(blob===hash)return {state:'published-source',ref,reason:'Source bytes match the protected ref; full artifact establishment still requires applicable delivery evidence.'};}
+    return {state:trees.length?'proposed':'unknown',reason:'Source bytes are not confirmed on an available protected ref; source changes require reassessment, not an inferred workflow state.'};
+  };
+  for(const flow of graph.flows)flow.sourcePublication=publication(flow.file,flow.markdown);
+  for(const source of sources)source.sourcePublication=publication(source.path,source.text);
+  if(knowledge==='established')for(const flow of graph.flows)if(flow.sourcePublication.state!=='published-source')graph.diagnostics.push({code:'unpublished-flow-source',path:flow.file,message:'Declared version flow bytes differ from the protected baseline; do not treat this as confirmed established knowledge.'});
   const fingerprint=sourceDigest(JSON.stringify([scan.revision,head,refs,sources.map(s=>[s.id,s.fingerprint]),graph.diagnostics,units.map(u=>[u.id,u.affectedFlows,u.flowAssessment])]));
   return {repository:base.snapshot.repository,worktree:target,snapshot,graph,sources,units,tracked,revision:fingerprint,knowledge,protectedRefs:refs};
 }
