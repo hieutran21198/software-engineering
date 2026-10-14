@@ -16,7 +16,7 @@ Add spacing between toolbar, status, flow summary and graph. Use a dedicated inl
 
 ## Impact and self-check
 
-Only Flows.jsx, its existing stylesheet and focused browser coverage require code changes. Existing HTTP/MCP response schemas, model installation, source safety and artifact dependencies remain compatible. No ADR or new abstraction is needed. Update the owned exploration/source-retrieval descriptions to mention compact expandable evidence. KISS reuses native details controls; STE preserves status meanings. No specification blocker remains.
+The approved amendment also changes main.jsx and the flow reader/index metadata and ordering, with focused Node/browser coverage. Existing HTTP/MCP operations, model installation, source safety and artifact dependencies remain compatible. No ADR or new abstraction is needed. Update the owned exploration/source-retrieval descriptions to mention compact expandable evidence. KISS reuses native details controls; STE preserves status meanings. No specification blocker remains.
 
 ## Consistent explorer navigation
 

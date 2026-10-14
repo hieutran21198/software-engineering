@@ -5,7 +5,7 @@ delivery_tasks: change
 
 # artifact-plane 1.11.1 — flow readability
 
-This proposed compatible patch improves flow evidence presentation. Keyword, semantic and graph retrieval contracts remain unchanged. The snapshot includes complete requirements, specifications and decisions. Delivery evidence stays in the originating change.
+This proposed compatible patch improves flow evidence presentation. Existing retrieval operations remain compatible. Additive Git creation metadata supports lazy newest-first pagination, and synchronized explorer panels preserve project context. The snapshot includes complete requirements, specifications and decisions. Delivery evidence stays in the originating change.
 
 - [Readability requirements](requirements/flow-readability.md)
 - [Presentation specification](specifications/flow-readability.md)

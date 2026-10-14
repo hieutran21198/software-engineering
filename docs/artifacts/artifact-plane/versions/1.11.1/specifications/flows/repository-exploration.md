@@ -97,3 +97,5 @@ The structured record owns this named journey, source reasons, evidence basis, g
 ## Evidence presentation
 
 The flow explorer shows compact evidence status and expandable diagnostic and shortened-source details. Optional semantic-model failure leaves keyword and graph discovery available.
+
+The explorer uses a lazy, newest-first flow list in the sidebar, a selected graph in the center, and matching evidence/source details in the right inspector. Shared knowledge controls and per-project selections remain consistent across view switches. Creation dates describe the selected document record and are unknown when Git history cannot prove them.

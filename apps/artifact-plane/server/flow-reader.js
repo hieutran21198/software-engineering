@@ -19,6 +19,28 @@ export async function readFlowSource(root, source, tracked) {
   return {...source,text,fingerprint:sourceDigest(bytes)};
 }
 
+// Disposable, bounded history metadata; never infer dates from filesystem times.
+const creationCache=new Map();
+export async function flowCreationDates(root,heads,paths){
+ const unique=[...new Set(paths)].sort(),refs=[...new Set(heads.filter(Boolean))];
+ const shallow=await git(root,['rev-parse','--is-shallow-repository']).catch(()=> 'true');
+ const key=JSON.stringify([root,refs,unique,shallow]);
+ if(creationCache.has(key))return creationCache.get(key);
+ const dates=new Map();
+ if(unique.length&&refs.length&&shallow==='false'){
+  const history=await git(root,['log','--full-history','--diff-filter=A','--max-count=10001','--format=%x00created:%cI','--name-only','-z',...refs,'--',...unique],true).catch(()=>null);
+  if(history!==null){let date=null,commits=0;const wanted=new Set(unique);
+   for(const token of history.split('\0')){const value=token.replace(/^\n+/,'');
+    if(value.startsWith('created:')){commits++;const time=Date.parse(value.slice(8));date=Number.isFinite(time)?new Date(time).toISOString():null;}
+    else if(date&&wanted.has(value)&&(!dates.has(value)||dates.get(value)>date))dates.set(value,date);
+   }
+   if(commits>10000)dates.clear();
+  }
+ }
+ if(creationCache.size>=16)creationCache.delete(creationCache.keys().next().value);
+ creationCache.set(key,dates);return dates;
+}
+
 export async function readFlowRepository(path, {worktree,knowledge='planning',roots}={}) {
   if(roots?.length){const selected=await realpath(path).catch(()=>null),allowed=await Promise.all(roots.map(p=>realpath(p).catch(()=>null)));if(!selected||!allowed.includes(selected))throw new ExploreError(403,'Repository is not configured for this agent server.');}
   const base=await scanRepository(path,{metadata:true,historicalKnowledge:true,full:p=>p.includes('/specifications/flows/')});
@@ -83,9 +105,10 @@ export async function readFlowRepository(path, {worktree,knowledge='planning',ro
       if(blob===hash)return {state:'published-source',ref,reason:'Source bytes match the protected ref; full artifact establishment still requires applicable delivery evidence.'};}
     return {state:trees.length?'proposed':'unknown',reason:'Source bytes are not confirmed on an available protected ref; source changes require reassessment, not an inferred workflow state.'};
   };
-  for(const flow of graph.flows)flow.sourcePublication=publication(flow.file,flow.markdown);
+  const created=await flowCreationDates(target,knowledge==='established'?refs:[head,...refs],graph.flows.map(f=>f.file));
+  for(const flow of graph.flows){flow.sourcePublication=publication(flow.file,flow.markdown);flow.createdAt=created.get(flow.file)||null;}
   for(const source of sources)source.sourcePublication=publication(source.path,source.text);
   if(knowledge==='established')for(const flow of graph.flows)if(flow.sourcePublication.state!=='published-source')graph.diagnostics.push({code:'unpublished-flow-source',path:flow.file,message:'Declared version flow bytes differ from the protected baseline; do not treat this as confirmed established knowledge.'});
-  const fingerprint=sourceDigest(JSON.stringify([scan.revision,head,refs,sources.map(s=>[s.id,s.fingerprint]),graph.diagnostics,units.map(u=>[u.id,u.affectedFlows,u.flowAssessment])]));
+  const fingerprint=sourceDigest(JSON.stringify([scan.revision,head,refs,sources.map(s=>[s.id,s.fingerprint]),graph.diagnostics,graph.flows.map(f=>[f.id,f.createdAt]),units.map(u=>[u.id,u.affectedFlows,u.flowAssessment])]));
   return {repository:base.snapshot.repository,worktree:target,snapshot,graph,sources,units,tracked,revision:fingerprint,knowledge,protectedRefs:refs};
 }

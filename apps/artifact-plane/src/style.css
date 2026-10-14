@@ -1067,3 +1067,17 @@ summary {
 .flow-content>section {margin:24px 0;line-height:1.6;}
 .flow-content>section h3 {margin-top:20px;}
 .flow-content>label:not(.flow-support-toggle) {margin-top:20px;}
+
+.flow-sidebar-slot {min-height:0;overflow:auto;flex:1;}
+.flow-list .flow-toolbar {display:flex;align-items:stretch;gap:8px;}
+.flow-list .flow-toolbar label {width:100%;}
+.flow-list .flow-toolbar input {width:100%;min-width:0;}
+.flow-list nav button {display:flex;flex-direction:column;text-align:left;width:100%;margin:8px 0;gap:6px;overflow-wrap:anywhere;}
+.flow-list nav button[aria-pressed=true] {background:#302a48;border-color:#a99bea;}
+.flows-view>.flow-support-toggle {display:flex;align-items:center;gap:8px;margin:16px 0 8px;}
+.flows-view>h2 {margin-top:16px;}
+.flow-inspector-slot {width:100%;min-width:0;}
+.flow-content>p {margin-top:10px;}
+
+.flow-sidebar-slot {min-height:260px;flex:1 0 260px;}
+.flow-inspector-slot>.flow-content {border:0;margin:0;padding:0;}

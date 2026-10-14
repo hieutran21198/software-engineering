@@ -97,3 +97,18 @@ test('YAML task examples do not create reference diagnostics in a flow context',
  files.set('docs/artifacts/tenant/versions/1.0.0/specifications/inline.md','# Inline reference\n\n```yaml\n{note: Context, references: [{artifact: tenant, element: specifications/identity.md, requires: Use identity.}]}\n```\n');
  const inline=buildSnapshot(files);assert.equal(inline.diagnostics.length,0);assert.equal(inline.references.length,1);assert.equal(inline.references[0].resolved,true);
 });
+test('record creation dates use original Git addition and leave uncommitted or shallow histories unknown',async()=>{
+ const {flowCreationDates}=await import('../server/flow-reader.js');
+ const f=await fixtureRepository(flowFiles());
+ try{
+  const path='docs/artifacts/tenant/versions/1.0.0/specifications/flows/login.md';
+  const head=git(f.root,'rev-parse','HEAD').trim();
+  const expected=new Date(git(f.root,'show','-s','--format=%cI','HEAD').trim()).toISOString();
+  let dates=await flowCreationDates(f.root,[head],[path,'docs/artifacts/tenant/specifications/flows/new.md']);
+  assert.equal(dates.get(path),expected);assert.equal(dates.has('docs/artifacts/tenant/specifications/flows/new.md'),false);
+  await writeFile(join(f.root,path),flowMarkdown(flowFixture('login',{title:'Edited journey'})));git(f.root,'add',path);git(f.root,'-c','user.name=Fixture','-c','user.email=fixture@example.invalid','commit','-m','Edit flow');
+  dates=await flowCreationDates(f.root,[git(f.root,'rev-parse','HEAD').trim()],[path]);assert.equal(dates.get(path),expected);
+  await writeFile(join(f.root,'.git/shallow'),git(f.root,'rev-parse','HEAD').trim()+'\n');
+  dates=await flowCreationDates(f.root,[git(f.root,'rev-parse','HEAD').trim()],[path,'another-safe-path']);assert.equal(dates.size,0);
+ }finally{await f.cleanup();}
+});

@@ -61,4 +61,4 @@ Version 1.11.0 is established through merged PR #21. The complete knowledge snap
 
 ## Proposed patch
 
-[Version 1.11.1](versions/1.11.1/README.md) improves flow status, shortened-source details and control spacing. Its approved [delivery plan](changes/change-flow-readability/tasks/README.md) contains validation evidence. It remains proposed until review and merge; the current established version is 1.11.0.
+[Version 1.11.1](versions/1.11.1/README.md) improves flow status, shortened-source details, shared controls and synchronized panels with lazy newest-first pagination. Its approved [delivery plan](changes/change-flow-readability/tasks/README.md) contains validation evidence. It remains proposed until review and merge; the current established version is 1.11.0.

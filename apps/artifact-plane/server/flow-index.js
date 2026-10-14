@@ -123,6 +123,7 @@ function validate(body) {
 const summary = (f) => ({
   id: f.id,
   localId:f.localId,
+  createdAt:f.createdAt||null,
   logicalId: f.logicalId,
   title: f.title,
   artifact: f.artifact,
@@ -575,6 +576,7 @@ export function createFlowService({
           throw new ExploreError(422, "Invalid or stale cursor");
         }
       }
+      items.sort((a,b)=>{const x=Date.parse(a.createdAt),y=Date.parse(b.createdAt),knownX=Number.isFinite(x),knownY=Number.isFinite(y);return Number(knownY)-Number(knownX)||(knownX&&knownY?y-x:0)||a.id.localeCompare(b.id);});
       data.flows = items.slice(offset, offset + body.limit);
       data.total = total;
       data.next =
