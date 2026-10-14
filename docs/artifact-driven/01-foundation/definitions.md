@@ -8,6 +8,11 @@
 | Established version | The complete knowledge state after a change satisfies its DoD and all required knowledge and implementation changes land on `main` or `master`. Dependencies use the current established version. |
 | Change | An artifact-local revision of knowledge. It starts from the current established version knowledge, excluding legacy task copies, and creates its own delivery plan. It adds, amends, or removes information. An artifact has at most one active change. |
 | Unit of work | A documented deliverable outcome that groups changes to one or more artifacts. Each participating change belongs to exactly one unit of work; membership creates no dependency. |
+| Element | An addressable piece of artifact knowledge, such as a requirement, specification, ADR, or task document. |
+| System flow | A named behavior journey owned by one artifact and defined as a specification element. It is separate from a unit of work or delivery schedule. |
+| Flow step | An identified part of a system flow, connected to other steps through behavior transitions. |
+| Flow support | A relationship from a step to a knowledge element, named subjourney, implementation, or test, with its evidence basis. |
+| Flow graph | A derived view of flows, steps, supporting sources, and typed relationships. It permits branches, joins, and loops; it is not an execution DAG. |
 | Version provenance | The originating artifact-local change named by source_change in a version snapshot. New versions also declare delivery_tasks: change, linking their retained delivery record. |
 | Requirement | A business or technical need, rule, or constraint that motivates and governs the work. |
 | Specification | Detailed behavior, domain knowledge, and technical contracts that define how requirements will be satisfied. |

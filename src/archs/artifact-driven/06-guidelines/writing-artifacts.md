@@ -108,3 +108,7 @@ After validation, copy the full resulting requirements, specifications, and appl
 For a new change, copy version knowledge without legacy task copies and remove delivered provenance metadata from its README. Create a fresh plan in Plan. Versions without delivery_tasks retain legacy version-owned tasks; preserve those established snapshots and evidence. Missing retained tasks for a new-layout delivery are unavailable evidence, not a reason to substitute another plan.
 
 Prepare consistent root README and DAG updates. Establishment requires all required merges. Later defects or missing evidence are handled by a new change, not edits to the established snapshot.
+
+## System-flow specifications
+
+Write named behavior journeys under specifications/flows/<id>.md using the [system-flow format](system-flows.md). Flow records remain specification elements. Preserve stable IDs when paths change; update supporting source references. Do not copy flow authority into a unit brief, graph, or retrieval index.

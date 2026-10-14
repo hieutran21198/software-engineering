@@ -14,6 +14,11 @@ changes:
     change: change-tenant-login
   - artifact: authentication
     change: change-tenant-login
+affected_flows:
+  - artifact: authentication
+    flow: tenant-login
+    effect: modify
+flow_assessment: Investigated login and membership contracts; session renewal is excluded and requires separate discovery.
 acceptance:
   - id: tenant-login
     criterion: Members can sign in to their tenant; nonmembers are denied.
@@ -77,3 +82,11 @@ When all member versions are established and shared evidence meets all criteria,
 A workflow view groups member phase evidence. An artifact view projects existing dependencies and includes transitive external prerequisites without making them members. A combined implementation view preserves member task DAGs and connects them through upstream version-establishment gates. Task IDs remain local to their plans; readers namespace task identity by worktree, unit, artifact, change, and task path. Finishing prerequisite tasks does not itself establish a version or authorize downstream work.
 
 For historical outcomes, use the plan/evidence associated with the delivered version: its retained source_change tasks when delivery_tasks is change, or legacy version-owned tasks when the marker is absent. Never substitute a newer plan. Label a projection of current artifact dependencies as current knowledge; do not treat it as a historical graph or invalidate previous completion solely because artifacts later changed. Invalid or unavailable component graphs remain visible without invented execution edges.
+
+## Flow impact assessment
+
+New briefs declare affected_flows as a list of unique {artifact, flow, effect} records. artifact identifies the owning artifact; flow is its stable local flow ID. effect is create, modify, or remove. flow_assessment is a nonempty explanation of discovery scope and unresolved gaps. Use affected_flows: [] with an explicit reason when no system flow applies. Legacy briefs without these fields remain readable; do not infer historical membership or rewrite established outcomes.
+
+A create declaration can precede its specification; record the missing definition as discovery or authoring work instead of blocking unit creation. Resolve modified flows from member changes when present, otherwise from established knowledge. Resolve removed flows from the delivered predecessor and preserve their historical definitions. Unknown owners, duplicate declarations, and unsafe IDs are diagnostic failures. IDs match [a-z0-9][a-z0-9-]*.
+
+The coordinator owns this assessment and its links. Detailed behavior stays in artifact specifications using the [system-flow format](system-flows.md). Shared flow participation does not create artifact prerequisites or unit membership. An assessment does not establish a version or prove that every consumer was discovered. Existing approval, membership, task DAG, and upstream establishment gates still apply.

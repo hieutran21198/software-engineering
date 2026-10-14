@@ -73,6 +73,8 @@ artifact-driven/
 └── 06-guidelines/
     ├── README.md
     ├── getting-started.md
+    ├── system-flows.md
+    ├── units-of-work.md
     ├── writing-artifacts.md
     ├── adopting-from-git.md
     └── working-with-ai.md

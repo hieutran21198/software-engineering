@@ -34,3 +34,7 @@ Task completion does not prove integrated change completion. Return remaining in
 ## Shared Outcome Evidence
 
 For a member change, read the [unit brief](../../../06-guidelines/units-of-work.md) and governing contracts. Record task checks in the owning change; keep delivered task records available and do not copy them into versions or later changes. Return combined check results to the coordinator for shared evidence. Do not amend central membership, bypass an establishment gate, or treat a checked task as completed outcome evidence.
+
+## System-flow checks
+
+Read the [system-flow format](../../../06-guidelines/system-flows.md) when the change affects system journeys. During the existing task self-check, compare affected behavior with the approved flow knowledge and validate the task’s supporting references and evidence. A test source is static support unless recorded execution evidence supports an observed claim. Return new requirement or contract facts to their owning phase; do not amend governing flow contracts independently or bypass approval and establishment gates.

@@ -32,3 +32,7 @@ Use artifacts and Git as evidence. Do not add workflow status tables or an appro
 ## Shared Outcome Requirements
 
 When assigned a member of a unit of work, consume its outcome scope and shared acceptance criteria from the [unit brief](../../../06-guidelines/units-of-work.md). Keep artifact-local requirements under their owner. Identify affected members and integration needs; do not copy shared criteria into a second authority. The coordinator controls membership and the shared brief.
+
+## System-flow checks
+
+Read the [system-flow format](../../../06-guidelines/system-flows.md) when the change affects system journeys. During the existing Requirement self-check, investigate candidate journeys and owning elements from knowledge, entry points, contracts, implementation, and tests before asking for discoverable facts. Report discovery scope, exclusions, and gaps to the coordinator for the unit flow assessment. Missing flow definitions become authoring work; absence from an incomplete map does not prove absence from the system.
