@@ -74,3 +74,9 @@ Before establishment, validate that referenced elements exist and required contr
 Generate Mermaid `flowchart TD` diagrams from the graph for reading. Draw arrows from upstream artifact to dependent artifact, and dashed arrows for proposed dependencies. Group element-level views by artifact to explain specific references without changing the execution DAG's node model.
 
 The YAML index remains the machine-readable artifact graph. Derive task diagrams from the plan task list and task declarations. Include single and disconnected tasks. A reader must show diagnostics for invalid plans and must not present them as valid execution order. Show graph unavailable for legacy plans and no planned tasks for an explicit empty list. Task diagram arrows mean task prerequisites; phase sequence and external artifact gates have different meanings. Diagrams are derived views, not competing sources of truth.
+
+## Flow participation and discovery
+
+Follow the [system-flow format](../06-guidelines/system-flows.md) to connect named journeys with supporting elements. Reverse references identify candidate consumers for impact analysis. Review their contracts before deciding whether a change propagates. A shared element can support several flows without copying ownership.
+
+Flow transitions describe behavior and can branch, join, or loop. They do not create artifact or task prerequisites. Participation alone does not require a participant to change, join a unit, or wait for another flow step. Keep proposed references distinct from established knowledge; existing upstream establishment gates remain authoritative.

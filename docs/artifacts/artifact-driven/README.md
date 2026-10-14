@@ -10,36 +10,41 @@ Project knowledge lives here. The canonical local method remains in docs/artifac
 
 ## Current established version
 
-2.0.0
+2.1.0
 
 ## Established dependencies
 
 None.
 
-Version 2.0.0 and its snapshot links on this branch are proposed until required team merge. Version 1.2.0 remains established until then.
+This branch proposes the post-merge 2.1.0 root and snapshot. ADD 2.0.0 remains established on main until the new knowledge, bundled implementation and retained delivery evidence land through team review and merge. Historical snapshot preparation text is retained.
 
 ## Active change
 
-- [Task retention and navigation simplification](changes/change-task-retention/README.md)
+- [Flow discovery and retrieval](changes/change-flow-discovery/README.md)
+
 
 ## Knowledge snapshot
 
-- [Requirements](versions/2.0.0/requirements/baseline.md)
-- [Source inventory and capability limits](versions/2.0.0/requirements/evidence.md)
-- [Knowledge and execution contract](versions/2.0.0/specifications/knowledge.md)
-- [Adoption and publishing contract](versions/2.0.0/specifications/delivery.md)
-- [Knowledge and boundary decision](versions/2.0.0/decisions/001-knowledge-and-boundary.md)
-- [Embedded adoption decision](versions/2.0.0/decisions/002-embedded-safe-adoption.md)
-- [Publishing decision](versions/2.0.0/decisions/003-derived-documentation.md)
-- [Task DAG contract](versions/2.0.0/specifications/task-dag.md)
-- [Derived task graph decision](versions/2.0.0/decisions/004-derived-task-graph.md)
+- [Requirements](versions/2.1.0/requirements/baseline.md)
+- [Source inventory and capability limits](versions/2.1.0/requirements/evidence.md)
+- [Knowledge and execution contract](versions/2.1.0/specifications/knowledge.md)
+- [Adoption and publishing contract](versions/2.1.0/specifications/delivery.md)
+- [Knowledge and boundary decision](versions/2.1.0/decisions/001-knowledge-and-boundary.md)
+- [Embedded adoption decision](versions/2.1.0/decisions/002-embedded-safe-adoption.md)
+- [Publishing decision](versions/2.1.0/decisions/003-derived-documentation.md)
+- [Task DAG contract](versions/2.1.0/specifications/task-dag.md)
+- [Derived task graph decision](versions/2.1.0/decisions/004-derived-task-graph.md)
 - [Plan and validation evidence](changes/change-task-retention/tasks/README.md)
 
-- [Unit-of-work requirements](versions/2.0.0/requirements/units-of-work.md)
-- [Unit-of-work contract](versions/2.0.0/specifications/units-of-work.md)
+- [Unit-of-work requirements](versions/2.1.0/requirements/units-of-work.md)
+- [Unit-of-work contract](versions/2.1.0/specifications/units-of-work.md)
 
-- [Task retention requirements](versions/2.0.0/requirements/task-retention.md)
-- [Change-owned delivery contract](versions/2.0.0/specifications/task-retention.md)
+- [Task retention requirements](versions/2.1.0/requirements/task-retention.md)
+- [Change-owned delivery contract](versions/2.1.0/specifications/task-retention.md)
+
+- [Flow requirements](versions/2.1.0/requirements/flows.md)
+- [System flow contract](versions/2.1.0/specifications/system-flows.md)
+- [Named ADD journeys](versions/2.1.0/README.md)
 
 ## Future development
 

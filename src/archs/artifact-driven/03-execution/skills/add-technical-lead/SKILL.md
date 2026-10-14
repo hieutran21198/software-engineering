@@ -48,3 +48,7 @@ For corrections, return to the phase that owns the missing information and repea
 ## Shared Outcome Contracts and Plan
 
 Consume the [unit brief](../../../06-guidelines/units-of-work.md) when the change participates in an outcome. Specify applicable cross-artifact contracts and plan combined validation without creating membership-derived edges. Keep artifact establishment gates separate from internal task prerequisites. Historical outcome evidence resolves through source_change provenance and delivery_tasks: change to the retained originating change. Legacy versions retain their version-owned task evidence. The coordinator owns membership and shared evidence updates.
+
+## System-flow checks
+
+Read the [system-flow format](../../../06-guidelines/system-flows.md) when the change affects system journeys. During the existing Specification self-check, assess compatibility and update affected flow steps, branches, supporting references, evidence basis, and gaps. During the existing Plan self-check, supply fresh tasks and concrete flow checks. Keep detailed behavior with its owning artifact; flow participation alone creates no dependency or unit membership. Proposed knowledge can support preparation, but dependent Implementation still waits for upstream establishment and plan approval.

@@ -32,7 +32,7 @@ Do not establish a version while applicable DoD criteria or integration and depe
 
 The coordinator suggests a semantic version and explains the compatibility impact. The user confirms or overrides the suggestion. The initial established version is `1.0.0`.
 
-Preserve the complete resulting requirements, specifications, applicable decisions, and implementation plan in the new version. Retain valid completed tasks and evidence as historical context. Remove or amend obsolete content and repeat checks whose coverage is affected.
+Preserve the complete resulting requirements, specifications, and applicable decisions in the new version, excluding tasks/. Declare source_change and delivery_tasks: change in its README and link to the originating change’s retained implementation plan and evidence. Remove or amend obsolete knowledge and repeat checks whose coverage is affected.
 
 Prepare root README updates and refresh the DAG consistently on the change branch. Until merge, these describe proposed state. Push and open linked PRs for repositories with remotes, then stop for team review and merge. Ask the user how to finish when a remote is absent.
 
@@ -42,4 +42,10 @@ The version becomes established only when all required knowledge and implementat
 
 Address defects, missing tests, or missing required evidence through a new change. Keep established snapshots unchanged.
 
-Old versions and changes can be removed because the current snapshot contains the full valid knowledge state and implementation plan. Retained criteria support later validation; historical results alone do not prove the current implementation still passes them.
+Preserve delivered versions and their referenced originating changes and evidence for historical outcomes. New changes create fresh plans without copying historical tasks. Retained criteria support later validation; historical results alone do not prove the current implementation still passes them.
+
+## Flow validation
+
+Apply the [system-flow checks](../06-guidelines/system-flows.md) during existing phase, task, integration, and Version checks. Check IDs, ownership, entry steps, transition and support endpoints, safe source references, evidence basis, and final snapshot resolution. Report missing targets, evidence gaps, and ambiguous selectors. Keep inferred connections explicit; a structurally valid record is not independently verified behavior.
+
+Inspect relevant contracts and behavior when supporting sources change. Record coverage, important branches, exclusions, and gaps; a map cannot prove complete system coverage merely because its indexed records validate. Derived indexes retain source fingerprints without creating a second authoritative knowledge ledger.

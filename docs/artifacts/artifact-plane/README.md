@@ -10,11 +10,11 @@ Discover artifact knowledge and visualize artifact and element dependencies. Ins
 
 This artifact owns the repository explorer and its input interpretation rules.
 
-Version 1.10.0 and its snapshot links on this branch are proposed until team review and merge. Version 1.9.0 remains established on main.
+Version 1.10.0, its originating delivery tasks, and implementation landed on main through the merged project-tabs delivery. Historical snapshot preparation text is retained.
 
 ## Current established version
 
-1.9.0
+1.10.0
 
 ## Established dependencies
 
@@ -22,7 +22,8 @@ Version 1.10.0 and its snapshot links on this branch are proposed until team rev
 
 ## Active change
 
-- [Project tabs](changes/change-project-tabs/README.md)
+- [Flow discovery and retrieval](changes/change-flow-discovery/README.md)
+
 
 ## Knowledge snapshot
 

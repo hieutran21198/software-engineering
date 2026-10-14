@@ -52,3 +52,11 @@ Passing task checks is not the same as combined validation. The coordinator inte
 Provide the relevant branch, active change, repository locations, and available approval context. The coordinator derives progress from knowledge files, code, evidence, and Git rather than maintaining a workflow database.
 
 If approval is not available in the current context, the coordinator asks before implementing. An unmerged snapshot is proposed; dependent Implementation waits until the required knowledge and code land on `main` or `master`.
+
+## Discover affected flows
+
+Use [system-flow knowledge](system-flows.md) to find candidate journeys and supporting elements before asking the user for repository facts. If a flow reader is available, search by behavior or identifiers, inspect its source-backed relationships, and follow reverse references to candidate consumers. Inspect relevant current contracts, implementation, and tests to assess actual impact. Use targeted repository search when the map is missing, incomplete, or stale; do not treat absence from the map as absence from the system.
+
+Record investigated journeys, important branches, exclusions, and evidence gaps. Distinguish documented, static, observed, and inferred support; an existing test file alone is static evidence. Ask the user about remaining business intent after repository investigation. Keep fingerprints in derived indexes, separate worktrees and snapshots, and reassess affected evidence when supporting sources change. Changed bytes alone do not prove changed behavior.
+
+The coordinator records applicable flow IDs and create/modify/remove intent in the unit brief. A unit can introduce a new flow or have no applicable system flow with a stated reason. Existing phase self-checks update the owning knowledge and validation; flow retrieval does not bypass plan approval or upstream establishment.

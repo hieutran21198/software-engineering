@@ -60,3 +60,9 @@ Each completed phase produces a commit containing its output. Corrections also p
 Commit each phase on a dedicated branch. Never commit directly to protected branches such as `main` or `master`. When remotes exist, push change branches and open one PR per changed repository, cross-linking companion PRs. Always stop for the team to review and merge. If no remote exists, ask the user how to finish; do not assume remote creation or local integration.
 
 Plan approval is a required user gate before Implementation. Team PR review and merge establish the version after validation. Neither requires redundant agent reviews; phase self-checks and implementation validation remain required.
+
+## Flow maintenance in existing phases
+
+Use the [system-flow format](../06-guidelines/system-flows.md) within existing phase self-checks. Requirement investigates candidate journeys, owners, and supporting elements before asking for discoverable facts. Specification updates affected steps, branches, contracts, support records, and gaps, and checks compatibility. Plan supplies fresh implementation tasks and concrete flow validation. Implementation compares behavior with the prepared flow knowledge; new requirement or contract facts return to their owning phase. Version preparation checks final references and retains originating evidence.
+
+The coordinator records affected-flow declarations and discovery scope in the unit brief. A flow can be new or not yet documented; its absence does not prevent unit creation. Do not add a review phase, approval shortcut, or workflow state registry.

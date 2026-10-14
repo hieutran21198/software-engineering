@@ -119,3 +119,7 @@ For updates that conflict with local changes, compare and reconcile manually or 
 ## Required Utility Skills
 
 The ADD bundle includes `kiss` and `asd-ste-100` under `required-skills/`. Both are required for ADD work. The copy command embeds their canonical utility sources, so adopted bundles remain self-contained. Consumer AI setup must make both skills available to every ADD role.
+
+## Flow knowledge after adoption
+
+The bundle includes the [system-flow format](../06-guidelines/system-flows.md) and phase maintenance instructions. Adoption copies guidance; it does not invent project flows, evidence, or unit membership. After adoption, the coordinator investigates existing knowledge and implementation, records applicable flow impact in each new unit, and keeps detailed flow definitions in their owning specifications. Configure available flow retrieval for source-backed discovery and retain targeted repository inspection when indexes are incomplete or stale.
