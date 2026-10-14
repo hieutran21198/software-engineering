@@ -19,12 +19,14 @@ Explicit approval of this plan and the listed internal prerequisites with their 
 
 ## Definition of Done
 
-- [ ] Existing single-project exploration works after extraction.
-- [ ] Two mounted explorers retain independent selections, filters, worktrees, views, panels, and graph viewport.
-- [ ] Deactivation cancels reads and closes automatic observation/runtime connections; reactivation refreshes without resetting valid navigation.
-- [ ] Close/unmount releases resources; delayed callbacks cannot update another explorer.
-- [ ] Focused browser checks exercise switching, repository edits while inactive, delayed reads, and canvas dimensions.
+- [x] Existing single-project exploration works after extraction.
+- [x] Two mounted explorers retain independent selections, filters, worktrees, views, panels, and graph viewport.
+- [x] Deactivation cancels reads and closes automatic observation/runtime connections; reactivation refreshes without resetting valid navigation.
+- [x] Close/unmount releases resources; delayed callbacks cannot update another explorer.
+- [x] Focused browser checks exercise switching, repository edits while inactive, delayed reads, and canvas dimensions.
 
 ## Evidence
 
-Implementation has not started. No validation success is asserted.
+ProjectExplorer owns React state and request generations; active flags gate repository detail, history, Markdown, completion, and runtime observation. Runtime fetches now use cancellation. Per-project control IDs prevent labels from targeting hidden projects. Review confirmed project-scoped ownership and cleanup, with no API or repository-writing change.
+
+The Chromium project-tab cases verified equal artifact identities in separate fixtures, independent selection, delayed-read close, pause on focus while inactive, viewport retention, reactivation edits, exactly two active observation streams and zero after closing all projects. Existing worktree, unit/task, resize, runtime, and recorded-execution cases passed. KISS and STE self-checks passed.

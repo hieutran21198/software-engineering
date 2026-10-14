@@ -11,7 +11,19 @@ acceptance:
   - id: integration
     criterion: Integrated checks verify request isolation, resource cleanup, existing exploration behavior, and unchanged inspected repository bytes and Git state.
     integration: true
-evidence: []
+evidence:
+  - criterion: tabs
+    method: Run project-tab navigation, duplicate, close, keyboard, and viewport cases.
+    result: passed
+    source: docs/artifacts/artifact-plane/changes/change-project-tabs/tasks/02-workspace-tabs.md#evidence
+  - criterion: restoration
+    method: Check preference validation, page refresh, fresh browser context, unavailable paths, and blocked storage.
+    result: passed
+    source: docs/artifacts/artifact-plane/changes/change-project-tabs/tasks/02-workspace-tabs.md#evidence
+  - criterion: integration
+    method: Run Node and Chromium regressions, production build, fixture fingerprints, and resource lifecycle checks.
+    result: passed
+    source: docs/artifacts/artifact-plane/changes/change-project-tabs/tasks/03-validation.md#evidence
 ---
 
 # Project tabs
@@ -30,4 +42,4 @@ Project editing, cross-window synchronization, persisted graph data, tab reorder
 
 ## Validation evidence
 
-No implementation checks have run. Evidence will be recorded in the originating delivery tasks and referenced here after validation.
+The referenced task evidence records 136 passing Node checks, 27 passing browser cases, the production build, fixture fingerprints, resource cleanup, and documentation/task metadata review. These are preparatory delivery checks until the resulting version and required code merge on main. No completed outcome is asserted.

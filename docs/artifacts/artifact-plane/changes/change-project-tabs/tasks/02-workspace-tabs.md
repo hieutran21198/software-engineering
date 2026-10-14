@@ -19,14 +19,16 @@ Explicit approval of this plan and the listed internal prerequisites with their 
 
 ## Definition of Done
 
-- [ ] Plus opens an empty tab; canonical duplicate opens select the existing project.
-- [ ] Closing active/inactive/last tabs follows the contract without disrupting other projects.
-- [ ] Keyboard and pointer controls expose correct selected state and readable path labels.
-- [ ] Paths, order, and active project restore on a fresh page/browser context with the same persisted profile.
-- [ ] Inactive restored projects load only on selection; unavailable paths remain recoverable.
-- [ ] Invalid JSON/schema, unsupported versions, duplicates, blocked storage, and quota errors recover as specified.
-- [ ] Storage contains preferences only; repository data and workflow evidence are excluded.
+- [x] Plus opens an empty tab; canonical duplicate opens select the existing project.
+- [x] Closing active/inactive/last tabs follows the contract without disrupting other projects.
+- [x] Keyboard and pointer controls expose correct selected state and readable path labels.
+- [x] Paths, order, and active project restore on a fresh page/browser context with the same persisted profile.
+- [x] Inactive restored projects load only on selection; unavailable paths remain recoverable.
+- [x] Invalid JSON/schema, unsupported versions, duplicates, blocked storage, and quota errors recover as specified.
+- [x] Storage contains preferences only; repository data and workflow evidence are excluded.
 
 ## Evidence
 
-Implementation has not started. No validation success is asserted.
+Workspace.jsx owns tab order, stable session IDs, active selection, plus/close actions, keyboard navigation, and canonical duplicate selection. project-tabs.js validates and writes versioned browser preferences without graph data. Node preference tests passed for round trips, invalid JSON/schema, unsupported versions, duplicates, blocked/quota storage, and close selection.
+
+Browser cases passed for independent navigation, tab controls, duplicate opens, refresh restoration, fresh browser-context restoration, unavailable restored paths, delayed reads, keyboard navigation, and blocked storage. Review confirmed inactive restored projects issue no reads until selected. KISS and STE self-checks passed.

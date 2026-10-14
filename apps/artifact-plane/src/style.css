@@ -1017,3 +1017,15 @@ summary {
 .unit-view > [role="status"] { margin: 4px 12px; color: #b8c1d1; }
 .unit-graph-message { padding: 12px; }
 .statusbar [aria-label="Repository update status"] { color: #b8c1d1; }
+
+.project-workspace {height:100dvh;display:flex;flex-direction:column;min-height:560px;}
+.project-tab-bar {display:flex;gap:8px;padding:6px 12px;background:#111b2c;border-bottom:1px solid #334159;flex-shrink:0;}
+.project-tab-bar [role=tablist] {display:flex;gap:6px;overflow-x:auto;}
+.project-tab {display:flex;align-items:center;flex-shrink:0;}
+.project-tab [role=tab] {max-width:220px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;border-radius:6px 0 0 6px;}
+.project-tab [aria-selected=true] {background:#30476b;border-color:#819dce;}
+.close-project {border-radius:0 6px 6px 0;padding:8px;}
+.project-panel {flex:1;min-height:0;}
+.project-panel[hidden] {display:none;}
+.project-panel .app {height:100%;min-height:0;}
+.workspace-warning {padding:8px 16px;background:#453716;}
