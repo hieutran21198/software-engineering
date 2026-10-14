@@ -10,7 +10,12 @@ All knowledge and implementation belong to this repository. The established arti
 
 - [Project tab requirements](requirements/project-tabs.md)
 - [Project tab contract](specifications/project-tabs.md)
+- [Implementation plan](tasks/README.md)
 
 ## Requirement self-check
 
 The user confirmed tabs inside the application and restoration of open projects and the active tab. Scope and observable criteria are defined. Existing read-only, evidence interpretation, and lazy-loading requirements remain applicable. KISS and STE checks passed. Proposed defaults are explicit and subject to plan approval.
+
+## Plan handoff
+
+Requirement, Specification, and Plan self-checks are complete. Explicit user approval is required before implementation.
