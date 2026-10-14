@@ -46,9 +46,9 @@ evidence:
     result: passed
     source: docs/artifacts/artifact-plane/changes/change-flow-discovery/tasks/03-agent-adapters.md#evidence
   - criterion: integration
-    method: Check availability of downstream delivery and required upstream
-      publication.
-    result: incomplete
+    method: Verify merged protected-ref knowledge, retained delivery records,
+      implementation and shared checks after PRs 20 and 21.
+    result: passed
     source: docs/artifacts/units-of-work/flow-discovery-and-retrieval/README.md#combined-checks
 affected_flows:
   - artifact: artifact-driven
@@ -111,7 +111,7 @@ Hosted inference, an embedded generative model, automatic code changes, arbitrar
 
 ## Approval and delivery boundaries
 
-The user approved the draft plan and instructed implementation. Prepare Requirement, Specification and Plan with phase self-checks and commits. Preserve that approval for unchanged scope. ADD's required flow contract must establish before downstream Implementation. Protected main establishes ADD 2.1.0 after PR #20 merged. Its contract and retained delivery evidence were rechecked before downstream implementation. PR review and merge remain required.
+The user approved the draft plan and instructed implementation. Prepare Requirement, Specification and Plan with phase self-checks and commits. Preserve that approval for unchanged scope. ADD's required flow contract must establish before downstream Implementation. Protected main establishes ADD 2.1.0 after PR #20 merged. Its contract and retained delivery evidence were rechecked before downstream implementation. PRs #20 and #21 have completed review and merge.
 
 ## Combined checks
 
@@ -119,10 +119,18 @@ ADD upstream checks passed: Go tests/vet; canonical and embedded bundle fidelity
 
 The integrated reader validates 14 named flows and 57 readable supporting sources with no flow diagnostics. Plane and Story-Driven task records contain the concrete downstream checks: 179 Node tests, 32 browser tests, app/website builds, Go tests/vet, dependency audit, documentation hierarchy, complete snapshots and historical retention. Five actual local semantic queries ranked the expected flow first. Explicit impact traversal returned both known shared adoption consumers. Runtime support is a discovery aid; the map does not enumerate every possible system path.
 
-Shared completion remains incomplete until proposed Plane 1.11.0 and Story-Driven 1.1.0 land on main with their retained delivery records. Local passing tests and prepared snapshots do not establish these versions.
+PR #21 merged after its Artifact Plane, Go and documentation CI checks passed. Its complete repository tree matches protected main. All member snapshots, retained originating delivery paths/bytes and required implementation are published. The post-merge unit completion query resolves every shared evidence pointer and supports completion from that publication and recorded checks.
 
 ## Publication review
 
-[PR #20](https://github.com/hieutran21198/software-engineering/pull/20) merged. All required knowledge, originating delivery records and implementation for artifact-driven 2.1.0 have landed on main. The protected-ref path sets and bytes match the prepared contract. Plane 1.11.0 and Story-Driven 1.1.0 remain proposed; their review and merge are still required. No shared completion is asserted.
+[PR #20](https://github.com/hieutran21198/software-engineering/pull/20) and [PR #21](https://github.com/hieutran21198/software-engineering/pull/21) merged. Protected main contains the complete reviewed knowledge and implementation. All version snapshots and originating delivery task path sets and bytes match published main. Snapshot preparation text remains historical evidence and is not rewritten.
 
-[PR #21](https://github.com/hieutran21198/software-engineering/pull/21) proposes the complete Plane 1.11.0 and Story-Driven 1.1.0 delivery with integrated checks and retained task evidence. Both downstream versions and shared completion remain unestablished until required review and merge on main.
+artifact-driven 2.1.0: All required knowledge and implementation changes have landed on main through PR #20. Its published contract, bundled implementation and retained delivery evidence were rechecked before downstream implementation.
+
+artifact-plane 1.11.0: All required knowledge and implementation changes have landed on main through PR #21. The complete snapshot, retained change-flow-discovery delivery tasks and application sources match protected main. Artifact Plane, Go and documentation CI checks passed on the merged feature revision.
+
+story-driven 1.1.0: All required knowledge and implementation changes have landed on main through PR #21. The complete snapshot and retained change-flow-discovery delivery evidence match protected main. Its flow-format dependency on established ADD 2.1.0 is knowledge-only.
+
+## Post-merge verification
+
+The completion query reports documented-complete with no reasons or diagnostics, and all three members resolve as established. Protected-main comparison checked 54 ADD, 67 Plane and 21 Story-Driven files across their delivered snapshots and originating changes. All paths and bytes remain unchanged. This review updates only the current unit brief and artifact overviews; it preserves published snapshots and task evidence.

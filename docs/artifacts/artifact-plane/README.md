@@ -52,9 +52,9 @@ Version 1.10.0, its originating delivery tasks, and implementation landed on mai
 - [Project tab requirements](versions/1.11.0/requirements/project-tabs.md)
 - [Project tab contract](versions/1.11.0/specifications/project-tabs.md)
 
-## Proposed publication
+## Publication review
 
-The 1.11.0 declaration and snapshot on this branch are proposed. Protected main still establishes 1.10.0 until this complete delivery merges. This compatible minor version adds flow discovery without removing prior contracts.
+Version 1.11.0 is established through merged PR #21. The complete knowledge snapshot, originating delivery tasks and required implementation match protected main. Artifact Plane, Go and documentation CI checks passed on the reviewed feature revision. This compatible minor version adds flow discovery without removing prior contracts.
 
 - [Flow requirements](versions/1.11.0/requirements/flows.md)
 - [Flow contract](versions/1.11.0/specifications/flows.md)
