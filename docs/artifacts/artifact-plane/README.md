@@ -22,7 +22,7 @@ Version 1.10.0, its originating delivery tasks, and implementation landed on mai
 
 ## Active change
 
-- [Flow readability](changes/change-flow-readability/README.md)
+- [Evidence-based change review and context handoff](changes/change-evidence-review-context/README.md)
 
 
 ## Knowledge snapshot
