@@ -16,11 +16,12 @@ Project knowledge lives here. The canonical local method remains in docs/artifac
 
 None.
 
-Version 2.0.0 and its snapshot links on this branch are proposed until required team merge. Version 1.2.0 remains established until then.
+Version 2.0.0, its originating delivery tasks, and implementation landed on main through the merged task-retention delivery. Historical snapshot preparation text is retained.
 
 ## Active change
 
-- [Task retention and navigation simplification](changes/change-task-retention/README.md)
+- [Flow discovery and retrieval](changes/change-flow-discovery/README.md)
+
 
 ## Knowledge snapshot
 

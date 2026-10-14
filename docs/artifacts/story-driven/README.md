@@ -6,18 +6,18 @@ Repository maintainers own the reusable story knowledge architecture, creative w
 
 ## Current established version
 
-1.0.0 — proposed until all required knowledge, implementation and retained delivery evidence land through team review and merge. Before that merge, no version is established.
+1.0.0
 
 ## Established dependencies
 
-None. ADD governs delivery of this capability; it is not a runtime or creative-authoring prerequisite.
+None. ADD governs delivery; no flow-format prerequisite was established by the initial framework delivery.
 
 ## Active change
 
-- [Initial framework](changes/change-initial/README.md)
+- [Flow discovery and retrieval](changes/change-flow-discovery/README.md)
 
 
-## Proposed knowledge snapshot
+## Knowledge snapshot
 
 - [Version 1.0.0](versions/1.0.0/README.md)
 - [Requirements](versions/1.0.0/requirements/framework.md)
