@@ -18,7 +18,7 @@ These are internal implementation relationships, not artifact DAG edges. Artifac
 
 ## Knowledge layout
 
-Project identity is docs/artifacts/artifact-driven/README.md. Detailed proposed knowledge and delivery work are in changes/change-task-retention/{requirements,specifications,decisions,tasks}. Proposed 2.0.0 contains complete knowledge without tasks and links to the retained originating plan. Established 1.2.0 remains the baseline until required merges. Root README links to the current snapshot and one active change. Later changes copy complete knowledge excluding legacy tasks, remove delivered provenance, and create fresh plans. Historical tasks stay with their original changes. Obsolete material is removed or amended. Snapshots do not require replaying old changes and are not edited to fix later defects. The units-of-work extension defines shared outcome membership. specifications/task-retention.md defines source_change plus delivery_tasks: change, retention, protected-ref evidence, and legacy compatibility.
+Project identity is docs/artifacts/artifact-driven/README.md. Detailed proposed knowledge and delivery work are in changes/change-flow-discovery/{requirements,specifications,decisions,tasks}. Established 2.0.0 is the baseline. The new flow-format delivery retains complete knowledge without task copies and links to its originating plan; it remains proposed until required merges. Root README links to the current snapshot and one active change. Later changes copy complete knowledge excluding legacy tasks, remove delivered provenance, and create fresh plans. Historical tasks stay with their original changes. Obsolete material is removed or amended. Snapshots do not require replaying old changes and are not edited to fix later defects. The units-of-work extension defines shared outcome membership. specifications/task-retention.md defines source_change plus delivery_tasks: change, retention, protected-ref evidence, and legacy compatibility.
 
 The root owns purpose, scope, owner, established version and dependency names. docs/artifacts/dag.yaml indexes roots as artifacts: <id>: {path: <relative artifact path>, depends_on: [<ids>]}. It is derived, not independently authoritative. A new unestablished artifact has no current version and is not inserted into the established graph during phase preparation. Publication prepares consistent root and index changes as proposed state until merge.
 
@@ -51,3 +51,7 @@ Nine pattern guides cover strategic DDD, tactical DDD, contract-driven developme
 ## Specification self-check
 
 All R1–R4, R6, R8–R9 behavior is recovered from the inventory. One cohesive boundary avoids artificial version prerequisites. Role/phase ownership, error return paths and proposed/established distinctions remain explicit. KISS and STE checks found no blocker for Plan. No cross-artifact implementation prerequisite is introduced.
+
+## System flow extension
+
+Specifications/system-flows.md defines owned runtime/method journeys and unit flow assessment. Flow documents are specification elements; their runtime transitions do not become artifact or task prerequisites. Readers derive views and indexes from these records.

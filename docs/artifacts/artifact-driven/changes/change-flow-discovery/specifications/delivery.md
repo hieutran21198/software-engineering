@@ -4,7 +4,7 @@ Governs R4–R5, R7–R9 and A2–A6 in [baseline requirements](../requirements/
 
 ## Bundle interface
 
-src/archs/catalog.go returns a fresh Architecture catalog with Name, Description and fs.FS Bundle. The default and only current entry is artifact-driven. Lookup rejects unsupported names. This registry permits future bundles but does not implement another architecture.
+src/archs/catalog.go returns a fresh Architecture catalog with Name, Description and fs.FS Bundle. The default entry is artifact-driven; story-driven is also available. Lookup rejects unsupported names. Flow guidance extends the ADD bundle without changing architecture selection or copying behavior.
 
 src/archs/artifact-driven/bundle.go embeds README.md and sections 01-foundation through 06-guidelines. It mounts src/utils/agents/skills at required-skills; it does not maintain a second embedded utility copy. Open, ReadFile, ReadDir and directory iteration support valid fs paths, including the mounted directory. Invalid paths return filesystem errors. bundle_test.go applies fstest.TestFS. The delivered bundle contains role metadata, required skill metadata and relative references; it does not contain project artifacts, Go source, or workflow state.
 
