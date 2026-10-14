@@ -33,6 +33,7 @@ flow:
       supports:
         - explorer
         - reader-tests
+        - evidence-review-contract
   transitions:
     - from: select
       to: validate
@@ -80,9 +81,18 @@ flow:
       requires: Describe source-backed flow queries without adding authorization or
         workflow state.
       basis: documented
+    - id: evidence-review-contract
+      kind: element
+      artifact: artifact-plane
+      element: specifications/change-review.md
+      requires: Open selected-change review without losing artifact and delivery
+        navigation.
+      basis: documented
   gaps:
     - The flow documents discovery behavior, not complete knowledge coverage or
       artifact establishment.
+    - New contextual review navigation is specified but not implemented or
+      browser-validated yet.
   exclusions:
     - Arbitrary filesystem browsing and automatic repository edits.
   artifact: artifact-plane
@@ -93,3 +103,9 @@ flow:
 ## Coverage
 
 The structured record owns this named journey, source reasons, evidence basis, gaps and exclusions. Sources are documented/static support; recorded task checks validate this map separately.
+
+## Evidence presentation
+
+The flow explorer shows compact evidence status and expandable diagnostic and shortened-source details. Optional semantic-model failure leaves keyword and graph discovery available.
+
+The explorer uses a lazy flow list with newest-first browsing and exact/relevance-first nonempty search in the sidebar, a selected graph in the center, and matching evidence/source details in the right inspector. Shared knowledge controls and per-project selections remain consistent across view switches. Creation dates describe the selected document record and are unknown when Git history cannot prove them.

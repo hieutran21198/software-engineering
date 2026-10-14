@@ -33,6 +33,7 @@ flow:
       title: Report supported completion or missing proof
       supports:
         - units
+        - evidence-review-contract
   transitions:
     - from: brief
       to: resolve
@@ -77,9 +78,18 @@ flow:
       requires: Describe source-backed flow queries without adding authorization or
         workflow state.
       basis: documented
+    - id: evidence-review-contract
+      kind: element
+      artifact: artifact-plane
+      element: specifications/evidence-correctness.md
+      requires: Accept only member/version-scoped actual review assertions and
+        disclose missing merge proof.
+      basis: documented
   gaps:
     - Recorded passing assertions are not independently executed tests; missing
       merge evidence stays unresolved.
+    - Scoped publication-recognition corrections are specified; implementation
+      validation remains pending.
   exclusions:
     - Creating unit members from shared flow participation.
   artifact: artifact-plane

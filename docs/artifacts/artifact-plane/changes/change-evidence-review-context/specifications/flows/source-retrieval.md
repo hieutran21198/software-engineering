@@ -44,6 +44,7 @@ flow:
         - flow-contract
         - index
         - adapters-tests
+        - evidence-review-contract
   transitions:
     - from: context
       to: discover
@@ -115,9 +116,18 @@ flow:
       requires: Check adapter parity, stdio framing, root isolation, pagination,
         repeated edits and unchanged repository bytes.
       basis: static
+    - id: evidence-review-contract
+      kind: element
+      artifact: artifact-plane
+      element: specifications/evidence-correctness.md
+      requires: Keep exact/relevance-first search and source-backed review context
+        bounded and revision-safe.
+      basis: documented
   gaps:
     - Retrieval ranks candidates; it does not prove compatibility or complete
       system discovery.
+    - Selected-change review and packet adapters are specified; implementation
+      and parity checks remain pending.
   exclusions:
     - Arbitrary paths, credential files, hosted embedding calls and inferred
       approval.
@@ -129,3 +139,9 @@ flow:
 ## Coverage
 
 The structured record owns this named journey, source reasons, evidence basis, gaps and exclusions. Sources are documented/static support; recorded task checks validate this map separately.
+
+## Evidence presentation
+
+The flow explorer shows compact evidence status and expandable diagnostic and shortened-source details. Optional semantic-model failure leaves keyword and graph discovery available.
+
+The explorer uses a lazy flow list with newest-first browsing and exact/relevance-first nonempty search in the sidebar, a selected graph in the center, and matching evidence/source details in the right inspector. Shared knowledge controls and per-project selections remain consistent across view switches. Creation dates describe the selected document record and are unknown when Git history cannot prove them.

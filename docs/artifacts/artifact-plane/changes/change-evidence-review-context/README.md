@@ -8,6 +8,10 @@ The existing artifact-plane -> artifact-driven dependency remains. ADD 2.1.0 is 
 
 - [Evidence correctness requirements](requirements/evidence-correctness.md)
 - [Review and context requirements](requirements/change-review-context.md)
+- [Evidence corrections contract](specifications/evidence-correctness.md)
+- [Selected-change review](specifications/change-review.md)
+- [Context packet contract](specifications/context-packets.md)
+- [Shared review service decision](decisions/009-derived-change-review-context.md)
 
 ## Requirement discovery
 
@@ -18,3 +22,7 @@ This outcome serves reviewers, engineers, and explicitly configured agent client
 ## Requirement self-check
 
 Requirements cover all five selected items with positive and negative examples. Proposed review and packet capabilities are scoped to one selected local artifact change. No account, hosted inference, lifecycle registry, or new artifact boundary is needed. KISS reuses the existing read-only readers and navigation. STE distinguishes published bytes, scoped recorded review, observation, and approval. There is no Requirement blocker for Specification. The concrete plan still requires user approval before implementation.
+
+## Specification self-check
+
+Specification covers evidence-recognition scope, search ordering, source-worktree identity and additive legacy storage behavior. One review service supplies declared-current comparison, both-side explicit impact, bounded source context, HTTP/MCP parity and local export. A necessary ADR compares shared-service, flow-only and persistent/generative alternatives. Named flows retain IDs and explicitly disclose implementation gaps. Merged 1.11.1 readability and navigation contracts are incorporated without rewriting historical knowledge. ADD 2.1.0 remains the sole established upstream prerequisite. KISS adds no framework, hosted model or workflow registry; STE preserves source, approval, freshness and coverage limits. No blocker remains for Plan.

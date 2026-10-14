@@ -30,6 +30,7 @@ flow:
       supports:
         - store
         - runtime-tests
+        - evidence-review-contract
   transitions:
     - from: bind
       to: observe
@@ -68,9 +69,18 @@ flow:
       path: apps/artifact-plane/test/runtime-store.test.js
       requires: Exercise private storage, scope, stale observations and reported states.
       basis: static
+    - id: evidence-review-contract
+      kind: element
+      artifact: artifact-plane
+      element: specifications/evidence-correctness.md
+      requires: Match activity to canonical worktree and task content; disclose
+        captured revision.
+      basis: documented
   gaps:
     - Observed lifecycle activity and reported checks do not prove task DoD,
       plan approval or artifact establishment.
+    - Current-worktree attribution is specified but its new implementation
+      checks remain pending.
   exclusions:
     - Starting agents, granting permissions, changing artifact knowledge or
       maintaining ADD workflow state.
