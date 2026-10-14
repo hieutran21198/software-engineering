@@ -1045,3 +1045,25 @@ summary {
 @media(max-width:800px){.flow-columns{grid-template-columns:minmax(0,1fr)}.flow-toolbar input{min-width:0;width:100%}.flow-surface{height:320px}.flows-view{padding:10px}}
 
 @media(max-width:1150px){.flows-view{top:88px}}
+
+/* Keep flow evidence secondary to the behavior and graph. */
+.flow-toolbar {margin-bottom:16px;}
+.flow-evidence {margin:12px 0 18px;line-height:1.6;}
+.flow-status {display:flex;align-items:baseline;flex-wrap:wrap;gap:8px 20px;}
+.flow-status summary {color:#aeb8cd;}
+.flow-diagnostics {padding:12px 16px;margin:0 0 16px;border:1px solid #665b3e;border-radius:8px;background:#25251f;line-height:1.6;}
+.flow-diagnostics>div+div {margin-top:12px;}
+.flow-diagnostics details {margin-top:6px;color:#aeb8cd;font-size:12px;overflow-wrap:anywhere;}
+.flow-diagnostics details p {margin-top:8px;}
+.flows-view summary {cursor:pointer;}
+.flow-omissions {margin-top:10px;padding:10px 12px;background:#182338;border-radius:6px;}
+.flow-omissions>p {margin-top:10px;}
+.flow-omissions ul {padding-left:20px;}
+.flow-omissions li {margin:10px 0;}
+.flow-omissions li>span {display:block;color:#aeb8cd;}
+.flow-content>p {margin-top:10px;line-height:1.65;}
+.flow-content>label.flow-support-toggle {flex-direction:row;align-items:center;justify-content:flex-start;gap:8px;margin:16px 0 8px;}
+.flow-support-toggle input {width:16px;height:16px;margin:0;flex:none;}
+.flow-content>section {margin:24px 0;line-height:1.6;}
+.flow-content>section h3 {margin-top:20px;}
+.flow-content>label:not(.flow-support-toggle) {margin-top:20px;}

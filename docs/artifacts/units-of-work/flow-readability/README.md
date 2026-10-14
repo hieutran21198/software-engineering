@@ -17,7 +17,15 @@ acceptance:
   - id: integration
     criterion: Focused browser checks and the app build pass without changing retrieval or navigation contracts.
     integration: true
-evidence: []
+evidence:
+  - criterion: readability
+    method: Run focused flow browser checks and review wide and narrow screenshots.
+    result: passed
+    source: docs/artifacts/artifact-plane/changes/change-flow-readability/tasks/01-presentation.md#evidence
+  - criterion: integration
+    method: Build the app and check focused regressions, documentation and historical retention.
+    result: passed
+    source: docs/artifacts/units-of-work/flow-readability/README.md#combined-checks
 ---
 
 # Flow readability
@@ -28,4 +36,4 @@ Make the flow explorer readable when optional semantic search is unavailable or 
 
 ## Combined checks
 
-Validation has not run. The new plan requires user approval before implementation.
+The user explicitly approved the new plan. The app build and all six focused flow browser tests passed. Screenshots at 1440 and 700 pixels were reviewed. The implementation does not change backend responses, model installation, dependencies or existing navigation. Local documentation links resolve without ancestor destinations; the one-task graph is acyclic. The actual repository completion query reports zero diagnostics and incomplete publication, as expected for the proposed patch. Established snapshots and all existing delivered changes remain byte-identical to main. Version 1.11.1 is proposed for team review; completion requires publication of its knowledge and implementation.
