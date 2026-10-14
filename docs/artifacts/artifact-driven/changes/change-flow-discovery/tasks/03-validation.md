@@ -21,7 +21,7 @@ Governing requirements: requirements/flows.md. Governing specification: specific
 
 ## Evidence
 
-## Commands and current results
+### Commands and current results
 
 - GOCACHE=/tmp/flow-discovery-go-cache go test ./...: passed for all Go packages, including full canonical/bundle fidelity, embedded filesystem, CLI selection, adoption/repeat/dry-run and conflict preservation.
 - GOCACHE=/tmp/flow-discovery-go-cache go vet ./...: passed.
@@ -31,7 +31,7 @@ Governing requirements: requirements/flows.md. Governing specification: specific
 - The authored flow-record check below passed: five flows, 29 steps, 30 transitions and 15 readable supporting sources. It validates these authored records, not the future Plane parser or semantic retrieval.
 - All fresh task DAGs validate: ADD 3 tasks/3 edges, Plane 6 tasks/7 edges, Story-Driven 1 task/0 edges.
 
-## Reproducible authored-record check
+### Reproducible authored-record check
 
 From repository root after installing the locked Plane development dependencies, run the following with node --input-type=module. The temporary script used during validation is fully included here; delivery does not depend on that file.
 
@@ -81,17 +81,17 @@ assert(records.size===5,'five planned ADD journeys');
 console.log(`${records.size} valid ADD flows; ${steps} steps; ${edges} transitions; ${sources} readable supporting sources. Shared support and a step loop remain valid.`);
 ```
 
-## Remaining delivery checks
+### Remaining delivery checks
 
 Changed Markdown link/hierarchy checks, snapshot/retention checks and PR preparation are recorded below after execution. Plane browser, embedding, MCP and new-flow retrieval checks belong to the downstream implementation and have not run.
 
 
-## Snapshot, links and adoption review
+### Snapshot, links and adoption review
 
 The changed/new Markdown scan covered 127 files and resolved 167 local file/heading links with no ancestor README references. Compare relative destinations after stripping fenced examples, then resolve each Markdown link and heading against its source directory. All old tracked artifact snapshots and originating changes remain unchanged against main. The new 2.1.0 requirements/specifications/decisions path sets and bytes match the originating change; tasks are absent from the version. Provenance identifies change-flow-discovery with delivery_tasks: change.
 
 CLI smoke check: GOCACHE=/tmp/flow-discovery-go-cache go run ./cmd/se-adopt --project <isolated-temporary-workspace> --dry-run reported 40 new files and created none. Fresh adoption copied 40 files, including system-flows.md byte-for-byte. Repeat reported zero new and 40 unchanged. After changing the consumer guide, adoption rejected the conflict and preserved those bytes. No project artifacts or index were generated.
 
-## Upstream delivery boundary
+### Upstream delivery boundary
 
 ADD 2.1.0 is proposed, not established. The full unit remains incomplete. No new Plane parser/view/index/embedding/MCP implementation or Story-Driven inventory delivery was performed before the required upstream merge. Their approved preparation and fresh task plans remain available for continuation.
