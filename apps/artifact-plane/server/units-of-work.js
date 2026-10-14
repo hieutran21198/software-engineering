@@ -78,7 +78,51 @@ export function deliverySource(files, artifact, change, retainedChangePath) {
   if (!retainedChangePath || !files.has(`${retainedChangePath}tasks/README.md`)) return {claims, deliveryPath:null, diagnostic:'missing-delivery-source'};
   return {claims, deliveryPath:retainedChangePath, diagnostic:null};
 }
+// Review assertions are documented claims, not independent merge verification.
+// Use source documents rather than caller-supplied excerpts to preserve scope.
+export function publicationReview(files, prefix, reviewSource = null) {
+  const match = prefix.match(/^docs\/artifacts\/([a-z0-9-]+)\/versions\/(\d+\.\d+\.\d+)\/$/);
+  if (!match) return [];
+  const [, artifact, version] = match, path = `${prefix}README.md`;
+  const sourceChange = frontMatter(files.get(path)).value?.source_change;
+  const owners = unitBriefs(files).filter(unit => unit.members.some(member => member.artifact === artifact && member.change === sourceChange));
+  const sources = [{path, memberPrefix: ''}];
+  if (owners.length === 1 && !owners[0].diagnostics.length && (!reviewSource || reviewSource === owners[0].path)) sources.push({path: owners[0].path, memberPrefix: `${artifact} ${version}: `});
+  const evidence = [];
+  const affirmative = /^All required (?:knowledge and (?:implementation|code)|(?:implementation|code) and knowledge) (?:changes|merges) (?:have landed|have merged|are merged|landed) (?:on|into) (?:main|master)\.$/i;
+  const nonassertion = /\b(?:not|never|no|cannot|can't|hasn't|haven't|isn't|aren't|didn't|won't|unmerged|pending|unpublished|unverified|false|incorrect|tentative|if|unless|until|when|once|will|would|could|should|must|may|might|example|examples|hypothetical|suppose|instruction|instructions|template|format|quote|quoted)\b/i;
+  let contradictory = false;
+  for (const source of sources) {
+    const paragraphs = [];
+    let depth = null, excludedDepth = null;
+    for (const token of marked.lexer(files.get(source.path) || '')) {
+      if (token.type === 'heading') {
+        if (depth !== null && token.depth <= depth) depth = null;
+        if (excludedDepth !== null && token.depth <= excludedDepth) excludedDepth = null;
+        if (/\b(?:examples?|instructions?|templates?|quotes?)\b/i.test(token.text)) excludedDepth ??= token.depth;
+        if (excludedDepth === null && token.text.trim().toLowerCase() === 'publication review') depth = token.depth;
+      } else if (depth !== null && excludedDepth === null && token.type === 'paragraph') {
+        const text = token.text.trim();
+        if (source.memberPrefix && !text.startsWith(source.memberPrefix)) continue;
+        paragraphs.push(source.memberPrefix ? text.slice(source.memberPrefix.length) : text);
+      }
+    }
+    for (const text of paragraphs) {
+      // A conflicting review paragraph invalidates the claim even if another
+      // paragraph has a valid affirmative sentence for the same member.
+      if (nonassertion.test(text)) {
+        if (/\b(?:knowledge|implementation|code|changes|merges?|assertion|claim|statement|review|this|that|they)\b/i.test(text)) contradictory = true;
+        continue;
+      }
+      const sentence = text.match(/^[^.]*\./)?.[0];
+      if (!sentence || !affirmative.test(sentence)) continue;
+      evidence.push({kind: 'documented-merge-review', path: source.path, heading: 'publication-review', artifact, version, assertion: sentence});
+    }
+  }
+  return contradictory ? [] : evidence;
+}
 // Only local protected refs establish knowledge. Branch files are never proof.
+// Keep reviewText for call compatibility; raw excerpts no longer supply evidence.
 export async function publication(root, prefix, files, git, reviewText = '', reviewSource = null, deliveryPath = null) {
   const prefixes = [prefix, ...(deliveryPath ? [`${deliveryPath}tasks/`] : [])];
   const refs = [];
@@ -98,13 +142,9 @@ export async function publication(root, prefix, files, git, reviewText = '', rev
     }
     if (observed.length > 1 && [...observed[0]].some(([p,body])=>observed[1].get(p)!==body) || observed.length > 1 && observed[0].size!==observed[1].size) return {state:'unknown',reasons:['Protected refs disagree about delivered knowledge.'],sources:[]};
     if (!sources.length) return {state:'proposed',reasons:['Delivered knowledge or task records do not match local main or master.'],sources:[]};
-    // Merge evidence remains an author assertion. Require an explicit statement
-    // of the all-required-merges boundary rather than guessing from task checks.
-    const review = [...files].filter(([p])=>prefixes.some(prefix=>p.startsWith(prefix))).map(([,body])=>marked.lexer(body).filter(t=>t.type!=='code').map(t=>t.raw).join('\n')).join('\n') + '\n' + reviewText;
-    const localBoundary = /all required (?:knowledge and (?:code|implementation)|implementation and knowledge) changes (?:are|live|reside) in this repository\b/i.test(review);
-    const mergedBoundary = /all required (?:knowledge and (?:code|implementation)|implementation and knowledge) (?:changes |merges )?(?:have landed|have merged|are merged|landed) (?:on|into) (?:main|master)\b/i.test(review);
-    if ((localBoundary || mergedBoundary) && reviewText && reviewSource) sources.push({path:reviewSource,kind:'documented-merge-review'});
-    return {state:localBoundary || mergedBoundary ? 'established' : 'unverified',reasons:localBoundary || mergedBoundary ? [] : ['Knowledge is published; all required implementation merges lack explicit review evidence.'],sources};
+    const reviews = publicationReview(files, prefix, reviewSource);
+    sources.push(...reviews);
+    return {state: reviews.length ? 'established' : 'unverified', reasons: reviews.length ? [] : ['Knowledge is published; all required implementation merges lack explicit scoped Publication review evidence.'], sources};
   } catch {return {state:'unknown',reasons:['Protected-ref snapshot evidence could not be read.'],sources:[]};}
 }
 function anchor(text) {return text.toLowerCase().replace(/[^\p{L}\p{N}_\s-]/gu,'').trim().replace(/\s/g,'-');}
@@ -144,7 +184,7 @@ export async function readUnitsOfWork(root, data, changes, git, checklist, optio
       if(member.deliveredVersion && !options.deferPublication){
         const key=JSON.stringify([member.sourcePath,member.deliveryPath,unit.path]);
         if(delivery.diagnostic)member.establishmentEvidence={state:'unknown',reasons:['Delivered task source cannot be resolved.'],sources:[]};
-        else {if(!publicationCache.has(key))publicationCache.set(key,await publication(root,member.sourcePath,files,git,unit.markdown.split('\n').filter(line=>line.startsWith(`${member.artifact} ${member.deliveredVersion}: `)).join('\n'),unit.path,claims[0].deliveryTasks==='change'?member.deliveryPath:null));member.establishmentEvidence=publicationCache.get(key);}
+        else {if(!publicationCache.has(key))publicationCache.set(key,await publication(root,member.sourcePath,files,git,unit.markdown,unit.path,claims[0].deliveryTasks==='change'?member.deliveryPath:null));member.establishmentEvidence=publicationCache.get(key);}
       }
       member.knowledge=[...files].filter(([p])=>member.sourcePath && p.startsWith(member.sourcePath) || member.retainedChangePath && p.startsWith(member.retainedChangePath)).map(([path,markdown])=>({path,markdown}));
       member.markdown=files.get(`${member.sourcePath}README.md`)||'';

@@ -10,7 +10,7 @@ export function unitFixture({delivered=true, retained=true}={}) {
     records.set(`docs/artifacts/${artifact}/README.md`,rootReadme(artifact,delivered?'1.0.0':null,artifact==='authentication'?['tenant']:[]));
     for(const source of [...(retained?['changes/change-login']:[]),...(delivered?['versions/1.0.0']:[])]){
       const prefix=`docs/artifacts/${artifact}/${source}/`;
-      records.set(`${prefix}README.md`,`${source.startsWith('versions')?'---\nsource_change: change-login\n---\n':''}# Login outcome\n`);
+      records.set(`${prefix}README.md`,`${source.startsWith('versions')?'---\nsource_change: change-login\n---\n':''}# Login outcome\n${source.startsWith('versions')?'\n## Publication review\n\nAll required knowledge and implementation changes have landed on main.\n':''}`);
       records.set(`${prefix}tasks/README.md`,'---\ntasks: [api.md, ui.md, integration.md]\n---\n# Plan');
       records.set(`${prefix}tasks/api.md`,unitTask('api'));
       records.set(`${prefix}tasks/ui.md`,unitTask('ui'));
@@ -26,7 +26,7 @@ export function changeDeliveryFixture() {
   for(const artifact of ['tenant','authentication']) {
     const base=`docs/artifacts/${artifact}/`;
     for(const path of files.keys())if(path.startsWith(`${base}versions/1.0.0/tasks/`))files.delete(path);
-    files.set(`${base}versions/1.0.0/README.md`,'---\nsource_change: change-login\ndelivery_tasks: change\n---\n# Login outcome\n');
+    files.set(`${base}versions/1.0.0/README.md`,'---\nsource_change: change-login\ndelivery_tasks: change\n---\n# Login outcome\n\n## Publication review\n\nAll required knowledge and implementation changes have landed on main.\n');
     for(const location of ['changes/change-login','versions/1.0.0'])files.set(`${base}${location}/requirements/login.md`,'# Login\n\nMembers can sign in.\n');
   }
   return files;
