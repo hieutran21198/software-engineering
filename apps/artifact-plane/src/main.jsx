@@ -5,6 +5,7 @@ import React, {
   useRef,
   useState,
 } from "react";
+import Workspace from "./Workspace.jsx";
 import { createRoot } from "react-dom/client";
 import {
   ReactFlow,
@@ -188,8 +189,8 @@ function ReferenceList({ references, onTarget }) {
     </div>
   );
 }
-function App() {
-  const [path, setPath] = useState(""),
+export function ProjectExplorer({active: isActive = true, initialPath = "", onOpened = () => {}, tabId = "default"}) {
+  const [path, setPath] = useState(initialPath),
     [snapshot, setSnapshot] = useState(null),
     [busy, setBusy] = useState(false),
     [error, setError] = useState("");
@@ -273,7 +274,7 @@ function App() {
         if(session!==generation.current)return;
         base={...base,workflow:{...base.workflow,worktrees:base.workflow.worktrees.map(w=>w.path===selected?other.data.workflow.worktrees.find(t=>t.path===selected):w)}};
       }
-      installOverview(base,refresh);setLoadedSession(session);queueRoot.current=base.repository.path;setPath(base.repository.path);setFresh(!result.diagnostics.some(d=>d.code==='stale-response'));
+      onOpened(base.repository.path);installOverview(base,refresh);setLoadedSession(session);queueRoot.current=base.repository.path;setPath(base.repository.path);setFresh(!result.diagnostics.some(d=>d.code==='stale-response'));
       if(!refresh){setRecordedSelected(null);setRecordedNode(null);if(active.current.view==='recorded')setView('canvas');setUnitSelected(null);setUnitNodeSelected(null);setUnitWorktree(base.repository.path);setUnitView('artifacts');setUnitPlanning(false);setTaskChange(null);setTaskSelected(null);setDeliveryChange(null);setDeliveryPhase(null);setExpanded(new Set());setExpandedTypes(new Set());setSelection(null);setFilter('');setPlanning(false);setCompletionOpen(false);setDocument(null);}
     }catch(error){if(session===generation.current&&error.name!=='AbortError'){setError(error.message);setFresh(false);}}
     finally{if(session===generation.current)setBusy(false);}
@@ -284,7 +285,11 @@ function App() {
     queueRoot.current=repositoryPath;let first=!refresh;const queue=refreshQueue(signal=>{const initial=first;first=false;return reloadRef.current(repositoryPath,!initial,signal,session);});queueRef.current=queue;return queue.request();
   }
   useEffect(()=>{
-    const root=snapshot?.repository.path;if(!root)return;const session=generation.current;
+    if(isActive){const root=snapshotRef.current?.repository.path||queueRoot.current||initialPath;if(root)open(root,Boolean(snapshotRef.current));}
+    else{generation.current++;queueRef.current?.close();queueRef.current=null;eventsRef.current?.close();completionController.current?.abort();setConnected(false);setFresh(false);setBusy(false);}
+  },[isActive]);
+  useEffect(()=>{
+    const root=snapshot?.repository.path;if(!isActive||!root)return;const session=generation.current;
     const refresh=()=>{if(session===generation.current)queueRef.current?.request();};
     const connect=()=>{eventsRef.current?.close();const source=new EventSource('/api/repository/events?path='+encodeURIComponent(root));eventsRef.current=source;
       source.onmessage=event=>{if(session!==generation.current||eventsRef.current!==source)return;try{const value=JSON.parse(event.data);setConnected(Boolean(value.available));setFresh(false);if(value.available)refresh();}catch{setConnected(false);setFresh(false);}};
@@ -293,16 +298,16 @@ function App() {
     const offline=()=>{eventsRef.current?.close();setConnected(false);setFresh(false);};const online=()=>{connect();refresh();};
     if(navigator.onLine)connect();window.addEventListener('focus',refresh);window.addEventListener('online',online);window.addEventListener('offline',offline);
     return()=>{eventsRef.current?.close();window.removeEventListener('focus',refresh);window.removeEventListener('online',online);window.removeEventListener('offline',offline);};
-  },[snapshot?.repository.path,loadedSession]);
+  },[isActive,snapshot?.repository.path,loadedSession]);
   useEffect(()=>()=>{generation.current++;queueRef.current?.close();eventsRef.current?.close();completionController.current?.abort();},[]);
   useEffect(()=>{
-    const root=snapshot?.repository.path,target=unitWorktree;if(!root||!target||target===root||overviewRef.current?.workflow.worktrees.find(w=>w.path===target)?.availability!=='readable'||overviewRef.current?.workflow.worktrees.find(w=>w.path===target)?.loadState==='loaded')return;
+    const root=snapshot?.repository.path,target=unitWorktree;if(!isActive||!root||!target||target===root||overviewRef.current?.workflow.worktrees.find(w=>w.path===target)?.availability!=='readable'||overviewRef.current?.workflow.worktrees.find(w=>w.path===target)?.loadState==='loaded')return;
     const controller=new AbortController(),session=generation.current;
     repositoryQuery({path:root,worktree:target,section:'overview'},controller.signal).then(result=>{if(session!==generation.current)return;const base=overviewRef.current;const next={...base,workflow:{...base.workflow,worktrees:base.workflow.worktrees.map(w=>w.path===target?result.data.workflow.worktrees.find(t=>t.path===target):w.selected?w:{...w,loadState:'not-loaded',unitsOfWork:[]})}};installOverview(next,true);}).catch(error=>{if(error.name!=='AbortError')setError(error.message);});
     return()=>controller.abort();
-  },[snapshot?.repository.path,unitWorktree]);
+  },[isActive,snapshot?.repository.path,unitWorktree]);
   useEffect(()=>{
-    const root=snapshot?.repository.path,base=overviewRef.current;if(!root||!base)return;
+    const root=snapshot?.repository.path,base=overviewRef.current;if(!isActive||!root||!base)return;
     const controller=new AbortController(),session=generation.current;let key,body;
     if(view==='units'&&unitSelected){const [worktree,unit]=JSON.parse(unitSelected);if(!unitContext(base,unitSelected))return;key=unitSelected;body={path:root,worktree,unit,section:unitView,...(unitView==='artifacts'?{dependencyMode:unitPlanning?'planning':'established'}:{})};}
     else if(view==='canvas'&&(taskChange||deliveryChange)){key=taskChange||deliveryChange;const [worktree,artifact,change]=JSON.parse(key);body={path:root,worktree,artifact,change,section:taskChange?'implementation':'workflow'};}
@@ -318,7 +323,7 @@ function App() {
       else if(active.current.taskSelected&&!taskSelection(next.workflow,key,active.current.taskSelected)?.task)setTaskSelected(null);
     }).catch(error=>{if(error.name!=='AbortError'&&session===generation.current){setSectionState('Error');setFresh(false);setError(error.message);}});
     return()=>controller.abort();
-  },[snapshot?.repository.path,overviewEpoch,view,unitSelected,unitView,unitPlanning,taskChange,deliveryChange]);
+  },[isActive,snapshot?.repository.path,overviewEpoch,view,unitSelected,unitView,unitPlanning,taskChange,deliveryChange]);
   async function loadCompletion(){
     const key=active.current.unitSelected,root=snapshotRef.current?.repository.path;if(!key||!root)return;
     completionController.current?.abort();const controller=new AbortController();completionController.current=controller;const session=generation.current,[worktree,unit]=JSON.parse(key);setCompletionOpen(true);
@@ -327,7 +332,7 @@ function App() {
     }catch(error){if(error.name!=='AbortError')setError(error.message);}
   }
   useEffect(()=>{completionController.current?.abort();setCompletionOpen(false);},[unitSelected,view]);
-  useEffect(()=>{if(completionOpen&&view==='units')loadCompletion();},[overviewEpoch]);
+  useEffect(()=>{if(isActive&&completionOpen&&view==='units')loadCompletion();},[isActive,overviewEpoch]);
   const toggle = useCallback(
     (id) =>
       setExpanded((current) => {
@@ -403,16 +408,17 @@ function App() {
   const documentScope=view==='units'&&selectedUnit?{worktree:selectedUnit.worktree.path,unit:selectedUnit.unit.id}:taskContext?{worktree:taskContext.worktree.path,artifact:taskContext.change.artifact,change:taskContext.change.name}:artifact?{artifact:artifact.id,...(element?.source.startsWith('change:')?{change:element.source.slice(7)}:{})}:null;
   const documentIdentity=JSON.stringify([snapshot?.repository.path,documentSource,documentScope]);
   useEffect(()=>{
+    if(!isActive)return;
     if(!documentSource||!documentScope){setDocument(null);return;}const controller=new AbortController(),session=generation.current;
     setDocument(current=>current?.identity===documentIdentity?{...current,status:'Loading'}:{source:documentSource,markdown:'',status:'Loading'});
     repositoryQuery({path:snapshot.repository.path,section:'markdown',source:documentSource,...documentScope},controller.signal).then(result=>{if(!controller.signal.aborted&&session===generation.current)setDocument({...result.data,identity:documentIdentity,status:'Loaded'});}).catch(error=>{if(error.name!=='AbortError'&&session===generation.current)setDocument({source:documentSource,markdown:'',status:'Error',error:error.message});});
     return()=>controller.abort();
-  },[documentIdentity,overviewEpoch]);
+  },[isActive,documentIdentity,overviewEpoch]);
   const deliveryHistoryKey = artifact && historyKey(artifact.id, 'delivery-histories');
   const selectDelivery = key => {setDeliveryChange(key);setDeliveryPhase(null);setTaskChange(null);setTaskSelected(null);};
   const changeList = artifact && <ChangeList worktree={selectedWorktree} artifact={artifact.id} selected={deliveryChange} onSelect={selectDelivery} historiesOpen={expandedTypes.has(deliveryHistoryKey)} onToggleHistories={()=>toggleType(artifact.id,deliveryHistoryKey)}/>;
   useEffect(()=>{
-    if(!artifact||!selectedWorktree||!expandedTypes.has(deliveryHistoryKey))return;
+    if(!isActive||!artifact||!selectedWorktree||!expandedTypes.has(deliveryHistoryKey))return;
     const controller=new AbortController(),session=generation.current,root=snapshot.repository.path;
     const candidates=selectedWorktree.changes.filter(c=>c.artifact===artifact.id&&c.history&&c.loadState==='not-loaded');
     (async()=>{for(const c of candidates){if(controller.signal.aborted)return;try{const result=await repositoryQuery({path:root,worktree:selectedWorktree.path,artifact:c.artifact,change:c.name,section:'history'},controller.signal);if(controller.signal.aborted||session!==generation.current)return;
@@ -420,7 +426,7 @@ function App() {
       overviewRef.current=patch(overviewRef.current);setSnapshot(current=>patch(current));
     }catch(error){if(error.name!=='AbortError')setError(error.message);}}})();
     return()=>controller.abort();
-  },[artifact?.id,deliveryHistoryKey,expandedTypes.has(deliveryHistoryKey),overviewEpoch]);
+  },[isActive,artifact?.id,deliveryHistoryKey,expandedTypes.has(deliveryHistoryKey),overviewEpoch]);
   const openTaskGraph = () => {setTaskChange(deliveryChange);setTaskSelected(null);};
   const onNodeClick = (_, node) => {
     if (node.type === "artifact") selectArtifact(node.data.artifact.id);
@@ -431,7 +437,7 @@ function App() {
       });
   };
   return (
-    <RuntimeProvider snapshot={snapshot}><div className="app">
+    <RuntimeProvider snapshot={snapshot} active={isActive}><div className="app">
       <header className="topbar">
         <div className="brand">
           <span className="brand-icon">⌘</span>
@@ -452,9 +458,9 @@ function App() {
           open(path);
         }}
       >
-        <label htmlFor="repository-path">Repository path</label>
+        <label htmlFor={`repository-path-${tabId}`}>Repository path</label>
         <input
-          id="repository-path"
+          id={`repository-path-${tabId}`}
           placeholder="/absolute/path/to/add-repository"
           value={path}
           onChange={(e) => setPath(e.target.value)}
@@ -507,11 +513,11 @@ function App() {
                 </small>
               </div>
               <Worktrees workflow={snapshot.workflow} selected={unitWorktree} onSelect={value=>{setUnitWorktree(value);setUnitSelected(null);setUnitNodeSelected(null);}} onOpen={root=>open(root)} busy={busy}/>
-              <label className="sr-only" htmlFor="artifact-filter">
+              <label className="sr-only" htmlFor={`artifact-filter-${tabId}`}>
                 {view === "units" ? "Filter units of work" : "Filter artifacts"}
               </label>
               <input
-                id="artifact-filter"
+                id={`artifact-filter-${tabId}`}
                 className="filter"
                 placeholder={view === "units" ? "Filter units of work…" : "Filter artifacts…"}
                 value={filter}
@@ -672,7 +678,7 @@ function App() {
           aria-valuemin={240}
           aria-valuemax={panelMax}
           aria-valuenow={panelWidth}
-          aria-controls="details-panel"
+          aria-controls={`details-panel-${tabId}`}
           tabIndex={0}
           onKeyDown={resizeWithKeyboard}
           onPointerDown={(event) => {
@@ -692,7 +698,7 @@ function App() {
           }}
         />
         <aside
-          id="details-panel"
+          id={`details-panel-${tabId}`}
           className="details-panel"
           aria-label="Selection details"
         >
@@ -835,8 +841,4 @@ function App() {
     </div></RuntimeProvider>
   );
 }
-createRoot(document.getElementById("root")).render(
-  <ReactFlowProvider>
-    <App />
-  </ReactFlowProvider>,
-);
+createRoot(document.getElementById("root")).render(<Workspace Explorer={ProjectExplorer}/>);

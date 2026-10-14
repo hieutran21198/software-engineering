@@ -35,6 +35,16 @@ Current plan membership comes from the tasks list in YAML front matter in tasks/
 
 Automatic updates and Refresh reread the active graph and clear task selection only if its source disappears. Opening another worktree clears task context. The graph uses the same local read-only inputs as the other views.
 
+## Project tabs
+
+Use **+** above the explorer to open another project inside Artifact Plane. Select a project tab to switch, or use its close button. Opening the same canonical repository path selects its existing tab. Each tab keeps its navigation, selection, filter, worktree, and graph position during the page session.
+
+Inactive tabs pause repository and runtime observation. Selecting a tab refreshes its repository evidence while retaining valid navigation. Closing the last project returns to an empty project tab.
+
+The application saves successfully opened project paths, tab order, and the active project in browser-local storage. Refresh or restart restores these projects in the same browser profile and application origin. Inactive restored projects load when selected. A missing project keeps its path so you can retry or close it. Navigation details and graph data are not saved across page reloads. Separate browser windows do not synchronize their tabs. Changing the server port creates a different storage origin.
+
+Storage errors leave current-session exploration available with a warning. Retained session memory grows with open projects; closing tabs releases their state and connections.
+
 ## Supported repository structure
 
 ```text

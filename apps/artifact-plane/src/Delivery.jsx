@@ -1,15 +1,16 @@
-import React from 'react';
+import React,{useId} from 'react';
 
 const stateLabel = state => state === 'documented-complete' ? 'Documented complete' : state;
 const natural = new Intl.Collator('en', {numeric:true});
 export const changeKey = (worktree, change) => JSON.stringify([worktree.path, change.artifact, change.name]);
 
 export function Worktrees({workflow, selected, onSelect, onOpen, busy}) {
+ const controlId=useId();
  const worktrees = workflow?.worktrees || [];
  const worktree = worktrees.find(w => w.path === selected) || worktrees.find(w => w.selected);
  return <section className="worktree-browser" aria-label="Registered worktrees">
-  <label htmlFor="repository-worktree">Worktree</label>
-  <select id="repository-worktree" value={worktree?.path || ''} onChange={event => onSelect(event.target.value)}>
+  <label htmlFor={controlId}>Worktree</label>
+  <select id={controlId} value={worktree?.path || ''} onChange={event => onSelect(event.target.value)}>
    {worktrees.map(w => <option key={w.path} value={w.path}>{w.branch || (w.detached ? 'Detached HEAD' : 'Unknown branch')} · {w.selected ? 'opened' : w.availability} · {w.path}</option>)}
   </select>
   {worktree && <details className="worktree-details">
