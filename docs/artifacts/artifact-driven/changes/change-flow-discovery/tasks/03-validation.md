@@ -17,7 +17,7 @@ Governing requirements: requirements/flows.md. Governing specification: specific
 - [x] Fresh/repeated/dry-run adoption preserves the full bundle and conflicts; website build succeeds.
 - [x] New flow records and task DAG validate; changed Markdown links and hierarchy validate.
 - [x] Historical snapshots/evidence are unchanged; proposed new version has source_change, delivery_tasks: change and no task copies.
-- [ ] Record upstream-only evidence and prepare a PR; do not claim the shared unit complete.
+- [x] Record upstream-only evidence and prepare a PR; do not claim the shared unit complete.
 
 ## Evidence
 
@@ -95,3 +95,7 @@ CLI smoke check: GOCACHE=/tmp/flow-discovery-go-cache go run ./cmd/se-adopt --pr
 ### Upstream delivery boundary
 
 ADD 2.1.0 is proposed, not established. The full unit remains incomplete. No new Plane parser/view/index/embedding/MCP implementation or Story-Driven inventory delivery was performed before the required upstream merge. Their approved preparation and fresh task plans remain available for continuation.
+
+### Publication review
+
+Proposed ADD 2.1.0 and downstream preparation are available in [PR #20](https://github.com/hieutran21198/software-engineering/pull/20). The branch is feat/flow-discovery-and-retrieval. This is an upstream review handoff, not establishment. Do not start dependent implementation until the new contract lands on main/master and is rechecked. The new unit remains incomplete.

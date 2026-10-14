@@ -122,3 +122,7 @@ The user approved the draft plan and instructed implementation. Prepare Requirem
 ADD upstream checks passed: Go tests/vet; canonical and embedded bundle fidelity; fresh/repeated/dry-run/conflict adoption; five flow records with 29 steps, 30 transitions and 15 readable supporting sources; new task DAGs; 167 changed local links/headings across 127 Markdown files; historical snapshot/delivery retention; website build. Existing Plane regression tests passed 136 checks after the sandbox subprocess restriction was resolved, and its existing build passed. No application source was changed. Detailed reproducible evidence remains in ADD task 03.
 
 Combined flow-system acceptance is incomplete: ADD 2.1.0 has not established; Plane and Story-Driven implementation wait for that upstream merge and contract recheck. The nine downstream flow records, new Flows UI, local embeddings, HTTP/MCP, browser acceptance and semantic/impact benchmarks are not delivered or validated yet. This brief does not assert completed shared acceptance or establishment.
+
+## Publication review
+
+[PR #20](https://github.com/hieutran21198/software-engineering/pull/20) proposes ADD 2.1.0 with the upstream flow contract and prepared downstream knowledge/plans. It does not establish the new version. After required review/merge, verify the published contract and retained ADD delivery evidence before executing the Plane and Story-Driven plans. No shared completion is asserted.
