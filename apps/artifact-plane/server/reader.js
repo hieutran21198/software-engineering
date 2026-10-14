@@ -203,7 +203,7 @@ export async function scanRepository(path, options = {}) {
           if (metadata.value.delivery_tasks !== 'change') diagnostic('invalid-delivery-marker', `${versionPath}README.md`, 'Delivery marker must be the literal value change.');
           if (!/^change-[a-z0-9][a-z0-9-]*$/.test(metadata.value.source_change || '')) diagnostic('invalid-provenance', `${versionPath}README.md`, 'Change-owned delivery requires a safe source_change.');
         }
-        if (metadata.value?.delivery_tasks !== undefined)
+        if (metadata.value?.delivery_tasks !== undefined || options.historicalKnowledge)
           for (const kind of ['requirements','specifications','decisions','tasks']) await knowledge(`${versionPath}${kind}`);
       }
     }

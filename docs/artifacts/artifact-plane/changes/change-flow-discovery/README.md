@@ -11,3 +11,7 @@ The complete 1.10.0 snapshot, originating delivery tasks, and required implement
 ## Preparation and approval
 
 The user approved the draft Flow Knowledge, Visualization, and Agent Retrieval plan and instructed implementation in this session. Detailed tasks refine that scope. No new scope or dependency gate is authorized. New flow contracts remain proposed until required publication.
+
+## Upstream recheck
+
+PR #20 merged. ADD 2.1.0 knowledge, retained originating task paths/bytes and canonical/packaged implementation match protected main and the contract used in preparation. Required upstream establishment is verified. Continue the unchanged user-approved tasks; no additional approval or workflow registry is needed.

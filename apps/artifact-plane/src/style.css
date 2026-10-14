@@ -1029,3 +1029,19 @@ summary {
 .project-panel[hidden] {display:none;}
 .project-panel .app {height:100%;min-height:0;}
 .workspace-warning {padding:8px 16px;background:#453716;}
+
+.flows-view {position:absolute;inset:66px 0 0;overflow:auto;min-height:0;padding:16px;}
+.flow-toolbar {display:flex;gap:12px;align-items:end;flex-wrap:wrap;}
+.flow-toolbar label,.flow-content>label {display:flex;flex-direction:column;gap:6px;}
+.flow-toolbar input {min-width:220px;}
+.flow-evidence {font-size:12px;color:var(--muted,#aeb8cd);overflow-wrap:anywhere;}
+.flow-columns {display:grid;grid-template-columns:240px minmax(0,1fr);gap:16px;}
+.flow-columns nav button {display:flex;flex-direction:column;text-align:left;width:100%;margin:8px 0;gap:6px;overflow-wrap:anywhere;}
+.flow-columns nav button[aria-pressed=true] {border-color:#a99bea;}
+.flow-content {min-width:0;overflow-wrap:anywhere;}
+.flow-content pre {white-space:pre-wrap;overflow-wrap:anywhere;}
+.flow-surface {height:420px;border:1px solid #334059;margin-top:12px;}
+.flow-node {width:260px;min-height:100px;padding:14px;background:#202a3d;border:1px solid #a99bea;border-radius:8px;display:flex;flex-direction:column;gap:8px;overflow-wrap:anywhere;}
+@media(max-width:800px){.flow-columns{grid-template-columns:minmax(0,1fr)}.flow-toolbar input{min-width:0;width:100%}.flow-surface{height:320px}.flows-view{padding:10px}}
+
+@media(max-width:1150px){.flows-view{top:88px}}

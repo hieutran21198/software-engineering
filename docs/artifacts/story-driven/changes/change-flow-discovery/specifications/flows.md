@@ -1,6 +1,6 @@
 # Story-Driven flow inventory contract
 
-Governs S1–S4 in requirements/flows.md. Consume proposed artifact-driven change-flow-discovery, specifications/system-flows.md. Recheck its established contract before dependent delivery.
+Governs S1–S4 in requirements/flows.md. Consume established artifact-driven 2.1.0, specifications/system-flows.md, delivered through change-flow-discovery. Protected main knowledge, retained task bytes and bundled guidance match the prepared contract after PR #20 merged. The required upstream gate and contract recheck passed; original user approval remains available.
 
 ## Inventory and ownership
 

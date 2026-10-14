@@ -4,7 +4,7 @@ Artifact Plane provides read-only knowledge exploration of local ADD repositorie
 
 ## Scope
 
-Discover artifact knowledge and visualize artifact and element dependencies. Inspect local worktrees and workflow evidence. Observe explicitly bound Codex attempts and retain their graph context outside repositories. Implementation belongs in apps/artifact-plane.
+Discover artifact knowledge and visualize artifact dependencies, knowledge references and maintained system flows. Retrieve source-backed context through local keyword, semantic and graph discovery, HTTP and stdio MCP. Inspect local worktrees and workflow evidence. Observe explicitly bound Codex attempts and retain their graph context outside repositories. Implementation belongs in apps/artifact-plane.
 
 ## Ownership
 
@@ -14,7 +14,7 @@ Version 1.10.0, its originating delivery tasks, and implementation landed on mai
 
 ## Current established version
 
-1.10.0
+1.11.0
 
 ## Established dependencies
 
@@ -27,27 +27,34 @@ Version 1.10.0, its originating delivery tasks, and implementation landed on mai
 
 ## Knowledge snapshot
 
-- [Requirements](versions/1.10.0/requirements/explorer.md)
-- [Specification](versions/1.10.0/specifications/explorer.md)
-- [Local server decision](versions/1.10.0/decisions/001-local-server.md)
-- [Derived workflow decision](versions/1.10.0/decisions/002-derived-workflow.md)
-- [Task graph requirements](versions/1.10.0/requirements/task-dag.md)
-- [Task graph specification](versions/1.10.0/specifications/task-dag.md)
-- [Unit-of-work requirements](versions/1.10.0/requirements/units-of-work.md)
-- [Unit-of-work contract](versions/1.10.0/specifications/units-of-work.md)
-- [Implementation evidence](changes/change-project-tabs/tasks/README.md)
+- [Requirements](versions/1.11.0/requirements/explorer.md)
+- [Specification](versions/1.11.0/specifications/explorer.md)
+- [Local server decision](versions/1.11.0/decisions/001-local-server.md)
+- [Derived workflow decision](versions/1.11.0/decisions/002-derived-workflow.md)
+- [Task graph requirements](versions/1.11.0/requirements/task-dag.md)
+- [Task graph specification](versions/1.11.0/specifications/task-dag.md)
+- [Unit-of-work requirements](versions/1.11.0/requirements/units-of-work.md)
+- [Unit-of-work contract](versions/1.11.0/specifications/units-of-work.md)
+- [Implementation evidence](changes/change-flow-discovery/tasks/README.md)
 
-- [Codex execution requirements](versions/1.10.0/requirements/codex-execution.md)
-- [Codex execution contract](versions/1.10.0/specifications/codex-execution.md)
-- [Codex observer decision](versions/1.10.0/decisions/006-codex-observer.md)
+- [Codex execution requirements](versions/1.11.0/requirements/codex-execution.md)
+- [Codex execution contract](versions/1.11.0/specifications/codex-execution.md)
+- [Codex observer decision](versions/1.11.0/decisions/006-codex-observer.md)
 
-- [Task retention and navigation requirements](versions/1.10.0/requirements/task-retention.md)
-- [Retained delivery and navigation contract](versions/1.10.0/specifications/task-retention.md)
+- [Task retention and navigation requirements](versions/1.11.0/requirements/task-retention.md)
+- [Retained delivery and navigation contract](versions/1.11.0/specifications/task-retention.md)
 
-- [Automatic update requirements](versions/1.10.0/requirements/live-reload.md)
-- [Automatic update contract](versions/1.10.0/specifications/live-reload.md)
-- [Lazy loading contract](versions/1.10.0/specifications/lazy-loading.md)
-- [Repository update decision](versions/1.10.0/decisions/007-repository-updates.md)
+- [Automatic update requirements](versions/1.11.0/requirements/live-reload.md)
+- [Automatic update contract](versions/1.11.0/specifications/live-reload.md)
+- [Lazy loading contract](versions/1.11.0/specifications/lazy-loading.md)
+- [Repository update decision](versions/1.11.0/decisions/007-repository-updates.md)
 
-- [Project tab requirements](versions/1.10.0/requirements/project-tabs.md)
-- [Project tab contract](versions/1.10.0/specifications/project-tabs.md)
+- [Project tab requirements](versions/1.11.0/requirements/project-tabs.md)
+- [Project tab contract](versions/1.11.0/specifications/project-tabs.md)
+
+## Proposed publication
+
+The 1.11.0 declaration and snapshot on this branch are proposed. Protected main still establishes 1.10.0 until this complete delivery merges. This compatible minor version adds flow discovery without removing prior contracts.
+
+- [Flow requirements](versions/1.11.0/requirements/flows.md)
+- [Flow contract](versions/1.11.0/specifications/flows.md)

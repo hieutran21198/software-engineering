@@ -13,7 +13,7 @@ test('delivery navigation preserves phases, commits, worktrees, refresh and read
  try{
   await page.goto('/');await page.getByLabel('Repository path').fill(fixture.root);await page.getByRole('button',{name:'Open repository',exact:true}).click();
   const explorer=page.getByRole('group',{name:'Explorer view'}),panel=page.getByRole('complementary',{name:'Selection details'});
-  await expect(explorer.getByRole('button')).toHaveCount(2);await expect(explorer.getByRole('button',{name:'Workflow',exact:true})).toHaveCount(0);await expect(page.getByLabel('Local ADD workflows')).toHaveCount(0);
+  await expect(explorer.getByRole('button')).toHaveCount(3);await expect(explorer.getByRole('button',{name:'Workflow',exact:true})).toHaveCount(0);await expect(page.getByLabel('Local ADD workflows')).toHaveCount(0);
   await page.getByRole('navigation',{name:'Artifacts'}).getByRole('button',{name:/Knowledge/}).click();await panel.getByRole('button',{name:/^change-next/}).click();
   await expect(panel.getByRole('navigation',{name:'Change phases'}).getByRole('button')).toHaveCount(6);await expect(panel.getByRole('button',{name:/^Approval/})).toHaveCount(0);
   await panel.getByRole('button',{name:/^Specification/}).click();await expect(panel).toContainText('Define new explorer contract');await panel.locator('.workflow-commit').first().locator('summary').click();await expect(panel.locator('.full-commit').first()).toHaveText(id);

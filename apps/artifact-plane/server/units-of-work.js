@@ -48,7 +48,17 @@ export function parseUnitBrief(path, markdown) {
     evidence.push({...entry, resolved:false, markdown:null});
   }
   const title = marked.lexer(markdown || '').find(t=>t.type==='heading' && t.depth===1)?.text || id;
-  return {id, title, path, markdown, members, acceptance, evidence, diagnostics, completion:{derivation:'unknown',reasons:[],sources:[]}};
+  const affectedFlows=[],flowKeys=new Set();
+  const flowAssessment=value.flow_assessment??null;
+  if(value.affected_flows!==undefined||value.flow_assessment!==undefined){
+    if(!Array.isArray(value.affected_flows)||!nonempty(flowAssessment))report('invalid-flow-assessment','Flow assessment needs a list and nonempty scope/gap explanation.');
+    else for(const flow of value.affected_flows){
+      const key=JSON.stringify([flow?.artifact,flow?.flow]);
+      if(!mapping(flow)||!name(flow.artifact)||!name(flow.flow)||!['create','modify','remove'].includes(flow.effect)||flowKeys.has(key)){report('invalid-flow-assessment','Affected flows need unique safe owner/flow IDs and create/modify/remove intent.');continue;}
+      flowKeys.add(key);affectedFlows.push({...flow});
+    }
+  }
+  return {id, title, path, markdown, members, acceptance, evidence, affectedFlows, flowAssessment, diagnostics, completion:{derivation:'unknown',reasons:[],sources:[]}};
 }
 export function unitBriefs(files) {
   return [...files].filter(([p])=>/^docs\/artifacts\/units-of-work\/[^/]+\/README\.md$/.test(p)).map(([p,body])=>parseUnitBrief(p,body));

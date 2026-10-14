@@ -16,7 +16,7 @@ Project knowledge lives here. The canonical local method remains in docs/artifac
 
 None.
 
-This branch proposes the post-merge 2.1.0 root and snapshot. ADD 2.0.0 remains established on main until the new knowledge, bundled implementation and retained delivery evidence land through team review and merge. Historical snapshot preparation text is retained.
+ADD 2.1.0 knowledge, bundled implementation and retained delivery evidence landed on main through merged PR #20. The published contract was rechecked before downstream implementation. Historical snapshot preparation text is retained.
 
 ## Active change
 

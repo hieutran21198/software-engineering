@@ -8,4 +8,5 @@ artifacts:
       - artifact-driven
   story-driven:
     path: story-driven
-    depends_on: []
+    depends_on:
+      - artifact-driven

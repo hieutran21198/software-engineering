@@ -3,6 +3,7 @@ import {createHash} from 'node:crypto';
 import {resolve,relative,isAbsolute,sep} from 'node:path';
 import {git,ExploreError} from './reader.js';
 import {parseWorktrees} from './workflow.js';
+import {readFlowSource} from './flow-reader.js';
 let fsActive=0;const fsWaiting=[];
 async function fsRead(work){if(fsActive>=8)await new Promise(resolve=>fsWaiting.push(resolve));else fsActive++;try{return await work();}finally{const next=fsWaiting.shift();if(next)next();else fsActive--;}}
 const contained=(root,path)=>{const rel=relative(root,path);return rel!=='..'&&!rel.startsWith('..'+sep)&&!isAbsolute(rel)&&!rel.split(sep).includes('.git');};
@@ -72,4 +73,22 @@ export function repositoryService({intervalMs=2000,debounceMs=250,heartbeatMs=15
   get clientCount(){return clients;},get observerCount(){return observers.size;},
   stats(){return [...observers.values()].map(o=>({root:o.root,sequence:o.sequence,available:o.available,lastScanMs:o.lastScanMs,files:o.files}));}
  };
+}
+
+// Read only sources that a flow context registered. Git status alone misses a
+// second edit to an already dirty implementation file.
+export async function registeredSourceFingerprint(root, base, sources, {signal}={}){
+ if(!sources.length)return base;
+ const hash=createHash('sha256').update(base.fingerprint),trees=new Set(parseWorktrees(await git(root,['worktree','list','--porcelain','-z'],true)).map(t=>t.path)),tracked=new Map();
+ let files=base.files;
+ for(const source of [...sources].sort((a,b)=>JSON.stringify(a).localeCompare(JSON.stringify(b)))){
+  if(signal?.aborted)throw Error('Observation stopped');
+  hash.update(JSON.stringify([source.worktree,source.path,source.kind]));
+  if(!trees.has(source.worktree)){hash.update('unavailable');continue;}
+  try{
+   if(!tracked.has(source.worktree))tracked.set(source.worktree,new Set((await git(source.worktree,['ls-files','-z'],true)).split('\0').filter(Boolean)));
+   const value=await readFlowSource(source.worktree,source,tracked.get(source.worktree));hash.update(value.fingerprint);files++;
+  }catch{hash.update('unavailable');}
+ }
+ return {fingerprint:hash.digest('hex'),files};
 }
