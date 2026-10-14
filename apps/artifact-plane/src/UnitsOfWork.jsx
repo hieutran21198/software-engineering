@@ -6,7 +6,7 @@ import {checklistLabel} from './runtime-model.js';
 import {useTaskRuntime,RuntimeBadge,RuntimeDetails,RuntimeConnection} from './Runtime.jsx';
 export const completionLabel = completion => completion.derivation==='not-loaded'?'Completion evidence not loaded':completion.derivation==='documented-complete'?'Completion supported by documented evidence':completion.derivation==='incomplete'?'Incomplete':'Completion unknown';
 function UnitNode({data,selected}) {
- const execution=useTaskRuntime(data.artifact,data.change,data.task?.path,data.recorded);
+ const execution=useTaskRuntime(data.artifact,data.change,data.task?.path,data.recorded,data.sourceWorktree);
  const label=data.kind==='gate'?'Version establishment gate':data.kind==='task'?'Implementation task':data.kind==='phase'?'Workflow phase':data.kind==='member'?'Participating change':data.external?'External prerequisite':'Participating artifact';
  return <div className={`unit-node ${data.kind} ${data.kind==='task'?'state-'+execution.state:''} ${data.external?'external':''} ${selected?'selected':''}`}>
   <Handle type="target" position={Position.Left} isConnectable={false}/>
@@ -26,7 +26,7 @@ export function UnitList({snapshot,worktreePath,selected,onSelect,filter}) {
 export function UnitView({context,view,onView,planning,onPlanning,selection,onSelect,recorded=false,loading}) {
  const [showAll,setShowAll]=useState(false);
  const ready=context?.unit.loadState!=='not-loaded'&&(view==='workflow'?context?.unit.members.some(m=>m.workflow)||!context?.unit.members.length:view==='implementation'?context?.unit.implementationGraph.state!=='not-loaded':context?.unit.artifactGraph[planning?'planning':'established'].state!=='not-loaded');
- const graph=useMemo(()=>{const result=context&&ready?unitCanvas(context,view,planning,selection,showAll):{nodes:[],edges:[]};return {...result,nodes:result.nodes.map(node=>({...node,initialWidth:node.style.width,initialHeight:node.style.height}))};},[context,view,planning,selection,showAll,ready]);
+ const graph=useMemo(()=>{const result=context&&ready?unitCanvas(context,view,planning,selection,showAll):{nodes:[],edges:[]};return {...result,nodes:result.nodes.map(node=>({...node,data:{...node.data,sourceWorktree:context.worktree.path},initialWidth:node.style.width,initialHeight:node.style.height}))};},[context,view,planning,selection,showAll,ready]);
  if(!context)return <div className="empty-canvas"><h2>Select a unit of work</h2><p>Choose an outcome to explore its participating changes and evidence.</p></div>;
  const {unit}=context;
  const diagnostics=view==='artifacts'?unit.artifactGraph[planning?'planning':'established'].diagnostics:view==='implementation'?unit.implementationGraph.diagnostics:unit.diagnostics;
@@ -48,7 +48,7 @@ export function UnitDetails({context,view,planning,selection,onSelect,document,o
    <section><h3>Governing knowledge</h3><p className="tiny">{node.source||`${node.member.artifact} / ${node.member.change}`}</p>{node.kind==='task'&&<p>Task ID: {node.task.id||'Invalid'} · Prerequisites: {node.task.dependsOn.join(', ')||'None within this plan'}</p>}
    {node.kind==='gate'&&<><p>{node.establishmentEvidence.state}</p>{node.establishmentEvidence.reasons.map((reason,i)=><p key={i}>{reason}</p>)}<p className="muted">Task checks alone do not establish this gate or authorize implementation.</p></>}
    {node.kind==='phase'&&<><p>Documented phase evidence: {node.step.state}</p>{node.step.evidence.map((e,i)=><div className="workflow-task" key={i}><p>{e.explanation}</p><p className="tiny">{e.file}</p><button onClick={()=>onDocument?.(e.file)}>Read evidence</button>{document?.source===e.file&&<Markdown text={document.markdown||''}/>}</div>)}{node.step.commits.map(c=><details key={c.id}><summary>{c.subject}</summary><code>{c.id}</code></details>)}{!node.step.evidence.length&&<p>No phase evidence available; no completion or approval is inferred.</p>}</>}
-   {node.kind==='task'&&<UnitExecution node={node}/>}<p className="tiny">{document?.status||'Not loaded'}{document?.error&&`: ${document.error}`}</p><Markdown text={document?.markdown||node.markdown||''}/></section>
+   {node.kind==='task'&&<UnitExecution node={node} sourceWorktree={worktree.path}/>}<p className="tiny">{document?.status||'Not loaded'}{document?.error&&`: ${document.error}`}</p><Markdown text={document?.markdown||node.markdown||''}/></section>
   </>:<>
    <section><h3>Completion evidence</h3>{onCompletion&&<button onClick={onCompletion}>Load completion evidence</button>}<p>{completionLabel(unit.completion)}</p>{unit.completion.reasons.map((reason,i)=><p key={i}>{reason}</p>)}<p className="muted">Recorded check results and publication evidence are shown; tests are not executed by this explorer.</p></section>
    <section><h3>Affected flows</h3><p>{unit.flowAssessment||"Legacy brief: flow impact was not recorded."}</p>{(unit.affectedFlows||[]).map(f=><button key={`${f.artifact}:${f.flow}`} onClick={()=>onFlow?.({flow:`${f.artifact}:${f.flow}`})}>{f.effect} · {f.artifact}:{f.flow}</button>)}</section>
@@ -60,4 +60,4 @@ export function UnitDetails({context,view,planning,selection,onSelect,document,o
  </div>;
 }
 
-function UnitExecution({node}){const value=useTaskRuntime(node.artifact,node.change,node.task.path,node.recorded);return <RuntimeDetails value={value}/>;}
+function UnitExecution({node,sourceWorktree}){const value=useTaskRuntime(node.artifact,node.change,node.task.path,node.recorded,sourceWorktree);return <RuntimeDetails value={value}/>;}

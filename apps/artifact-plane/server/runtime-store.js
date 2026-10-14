@@ -88,10 +88,11 @@ export class RuntimeStore {
   const selected=nodes.find(n=>n.kind==='task'&&n.artifact===artifact&&n.change===change&&(n.source===task||n.source.endsWith('/tasks/'+task)));
   if(!selected)throw Error('Task is not a listed member');
   const repo=this.repository(root,true),safeNodes=nodes.map(capturedNode);
-  const graphDigest=digest(JSON.stringify([unit,safeNodes.map(n=>[n.kind,n.artifact,n.change,n.source,n.task?.signature]),edges.map(e=>[e.source,e.target,e.kind])]));
+  const sourceWorktree=realpathSync(root),sourceRevision=snapshot.repository.head||null;
+  const graphDigest=digest(JSON.stringify([sourceWorktree,sourceRevision,unit,safeNodes.map(n=>[n.kind,n.artifact,n.change,n.source,n.task?.signature]),edges.map(e=>[e.source,e.target,e.kind])]));
   let context=this.db.prepare('SELECT json FROM contexts WHERE repository=? AND digest=?').get(repo.id,graphDigest);
-  const now=Date.now();context=context?JSON.parse(context.json):{id:randomUUID(),repository:repo.id,unit,root:realpathSync(root),revision:snapshot.repository.head,digest:graphDigest,capturedAt:now,nodes:safeNodes,edges};
-  const attempt={id:randomUUID(),repository:repo.id,context:context.id,task:selected.id,session:label(session),agent:label(agent)||'',artifact,change,path:selected.source,signature:taskSignature(selected.task),state:'unknown',startedAt:now,updatedAt:now,endedAt:null,activity:'Bound; waiting for observed activity'};
+  const now=Date.now();context=context?JSON.parse(context.json):{id:randomUUID(),repository:repo.id,unit,root:sourceWorktree,revision:sourceRevision,digest:graphDigest,capturedAt:now,nodes:safeNodes,edges};
+  const attempt={id:randomUUID(),repository:repo.id,context:context.id,task:selected.id,session:label(session),agent:label(agent)||'',artifact,change,path:selected.source,signature:taskSignature(selected.task),sourceWorktree,sourceRevision,state:'unknown',startedAt:now,updatedAt:now,endedAt:null,activity:'Bound; waiting for observed activity'};
   this.db.exec('BEGIN IMMEDIATE');try{
    this.db.prepare('INSERT OR IGNORE INTO contexts VALUES(?,?,?,?,?)').run(context.id,repo.id,graphDigest,now,JSON.stringify(context));
    for(const row of this.db.prepare('SELECT json FROM attempts WHERE session=? AND agent=?').all(attempt.session,attempt.agent)){

@@ -32,3 +32,15 @@ test('recorded graph survives worktree removal and exposes exact archived attemp
   await page.reload();await page.getByLabel('Repository path').fill(f.root);await page.getByRole('button',{name:'Open repository',exact:true}).click();await page.getByLabel('Recorded executions',{exact:true}).selectOption(a.context);await expect(view.locator('.unit-node.task')).toHaveCount(3);await page.screenshot({path:'test-results/runtime-archived.png',fullPage:true});
  }finally{s.close();await f.cleanup();}
 });
+test('identical task plans show only the selected source worktree activity',async({page})=>{
+ const f=await runtimeFixture(),other=f.root+'-scope';git(f.root,'worktree','add','-qb','scope-worker',other);
+ const s=new RuntimeStore({stateDir:stateDir()});try{
+  await bind(s,other,'a.md','other-worktree');hook(other,'other-worktree','UserPromptSubmit');
+  await open(page,f.root);await unit(page);
+  const task=page.getByLabel('Unit of work exploration').locator('.unit-node.task').filter({hasText:'Task A'});
+  await expect(task).toContainText('No recorded execution');await expect(task).not.toContainText('other-worktree');
+  await bind(s,f.root,'a.md','selected-worktree');hook(f.root,'selected-worktree','UserPromptSubmit');
+  await expect(task).toContainText('Processing');await expect(task).toContainText('selected-worktree');await expect(task).not.toContainText('other-worktree');await expect(task).toContainText('Captured revision:');
+  await page.getByLabel('Worktree',{exact:true}).selectOption(other);await page.getByRole('navigation',{name:'Units of work'}).getByRole('button',{name:/Live execution/}).click();await page.getByRole('group',{name:'Unit view'}).getByRole('button',{name:'Implementation',exact:true}).click();await expect(task).toContainText('other-worktree');await expect(task).not.toContainText('selected-worktree');
+ }finally{s.close();git(f.root,'worktree','remove','--force',other);await f.cleanup();}
+});
