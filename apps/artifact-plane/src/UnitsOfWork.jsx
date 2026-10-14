@@ -38,7 +38,7 @@ export function UnitView({context,view,onView,planning,onPlanning,selection,onSe
   {view==='implementation'&&unit.implementationGraph.state!=='available'&&<p className="unit-graph-message">Combined implementation graph {unit.implementationGraph.state}. Available components do not establish a complete execution order.</p>}
  </div>;
 }
-export function UnitDetails({context,view,planning,selection,onSelect,document,onCompletion,onDocument}) {
+export function UnitDetails({context,view,planning,selection,onSelect,document,onCompletion,onDocument,onFlow}) {
  if(!context)return <div className="empty-details"><h2>Explore a shared outcome</h2><p>Select a unit of work to inspect scope, acceptance criteria, and evidence.</p></div>;
  const {unit,worktree}=context,node=unitNode(context,view,planning,selection);
  return <div className="workflow-details unit-details">
@@ -51,6 +51,7 @@ export function UnitDetails({context,view,planning,selection,onSelect,document,o
    {node.kind==='task'&&<UnitExecution node={node}/>}<p className="tiny">{document?.status||'Not loaded'}{document?.error&&`: ${document.error}`}</p><Markdown text={document?.markdown||node.markdown||''}/></section>
   </>:<>
    <section><h3>Completion evidence</h3>{onCompletion&&<button onClick={onCompletion}>Load completion evidence</button>}<p>{completionLabel(unit.completion)}</p>{unit.completion.reasons.map((reason,i)=><p key={i}>{reason}</p>)}<p className="muted">Recorded check results and publication evidence are shown; tests are not executed by this explorer.</p></section>
+   <section><h3>Affected flows</h3><p>{unit.flowAssessment||"Legacy brief: flow impact was not recorded."}</p>{(unit.affectedFlows||[]).map(f=><button key={`${f.artifact}:${f.flow}`} onClick={()=>onFlow?.({flow:`${f.artifact}:${f.flow}`})}>{f.effect} · {f.artifact}:{f.flow}</button>)}</section>
    <section><h3>Participating changes</h3>{unit.members.map(m=><div className="workflow-task" key={`${m.artifact}/${m.change}`}><strong>{m.artifact} / {m.change}</strong><p>{m.deliveredVersion?`Delivered v${m.deliveredVersion}`:'No delivered version'} · {m.establishmentEvidence.state}</p><p className="tiny">{m.sourcePath||'Unresolved knowledge source'}</p></div>)}</section>
    <section><h3>Shared acceptance criteria</h3>{unit.acceptance.map(c=><div className="unit-criterion" key={c.id}><strong>{c.id}{c.integration?' · Integration':''}</strong><p>{c.criterion}</p>{unit.evidence.filter(e=>e.criterion===c.id).map((e,i)=><details key={i}><summary>{e.result} · {e.method}</summary><p className="tiny">{e.source}</p>{e.resolved?<><button onClick={()=>onDocument?.(e.source.split('#')[0])}>Read evidence</button>{document?.source===e.source.split('#')[0]?<Markdown text={document.markdown}/>:<p>Evidence details not loaded.</p>}</>:<p>Evidence details unavailable.</p>}</details>)}</div>)}</section>
    <section><h3>Brief</h3><p className="tiny">{unit.path}</p><p className="tiny">{document?.status||'Not loaded'}</p><Markdown text={document?.markdown||unit.markdown||''}/></section>
