@@ -13,12 +13,12 @@ Governing knowledge: specifications/change-review.md query/source boundaries and
 
 ## Definition of Done
 
-- [ ] POST /api/review/query and get_change_review/get_change_context/read_change_context_source use the same service, envelopes, validation and source cursor semantics.
-- [ ] Configured root/registered-worktree selection, local host/origin/request-size checks and sanitized failures reject foreign or arbitrary reads; stdout remains protocol-only.
-- [ ] Real HTTP and stdio MCP fixtures prove equivalent facts/omissions, all source pages and stale-revision rejection; existing four flow tools remain callable and compatible.
-- [ ] Document explicit root setup, packet capture/coverage/approval limits and bounded retrieval; no hosted calls, model download or inspected-repository writes occur.
-- [ ] Focused adapter/read-only checks pass and coordinator receives commands/results.
+- [x] POST /api/review/query and get_change_review/get_change_context/read_change_context_source use the same service, envelopes, validation and source cursor semantics.
+- [x] Configured root/registered-worktree selection, local host/origin/request-size checks and sanitized failures reject foreign or arbitrary reads; stdout remains protocol-only.
+- [x] Real HTTP and stdio MCP fixtures prove equivalent facts/omissions, all source pages and stale-revision rejection; existing four flow tools remain callable and compatible.
+- [x] Document explicit root setup, packet capture/coverage/approval limits and bounded retrieval; no hosted calls, model download or inspected-repository writes occur.
+- [x] Focused adapter/read-only checks pass and coordinator receives commands/results.
 
 ## Evidence
 
-Implementation has not started. Existing flow adapter checks do not prove additive review behavior.
+Implemented in c0b08fb. The focused adapter, service, formatter and repository-observer suites passed 29 tests with no skips. Actual HTTP and stdio MCP return equivalent envelopes and omissions, reconstruct all source pages, reject stale cursors and enforce configured roots, registered worktrees and local HTTP guards. Review-only registered sources invalidate repeated dirty edits. Existing four flow tools remain callable; stdout stays protocol-only. README records explicit setup and limits.
