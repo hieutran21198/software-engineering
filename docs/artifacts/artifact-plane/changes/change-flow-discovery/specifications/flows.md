@@ -1,6 +1,6 @@
 # Flow exploration and retrieval contract
 
-Governs P1–P9 in requirements/flows.md. Consume proposed ADD change-flow-discovery, specifications/system-flows.md; do not start dependent implementation before that version establishes and the input contract is rechecked.
+Governs P1–P9 in requirements/flows.md. Consume established ADD 2.1.0, specifications/system-flows.md, delivered through change-flow-discovery. The protected main snapshot, retained delivery task path set/bytes, canonical guide and packaged implementation match the prepared contract after PR #20 merged. The user’s original approval remains available; the downstream gate is satisfied.
 
 ## Reader and views
 
