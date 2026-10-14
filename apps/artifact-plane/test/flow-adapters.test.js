@@ -9,6 +9,7 @@ import {
   utimes,
 } from "node:fs/promises";
 import { join } from "node:path";
+import {existsSync} from "node:fs";
 import { tmpdir } from "node:os";
 import {StdioClientTransport} from "@modelcontextprotocol/sdk/client/stdio.js";
 import {fileURLToPath} from "node:url";
@@ -179,6 +180,9 @@ test("adapters deny unsafe source IDs, invalid selectors and foreign origins", a
       flow: "tenant:login",
       source: "/etc/passwd",
     };
+  const forbiddenState=join(fixture.root,'.git','private-flow-state');
+  assert.throws(()=>createFlowService({stateDir:forbiddenState}),/outside repositories/);
+  assert.equal(existsSync(forbiddenState),false);
   assert.equal((await http(body)).status, 403);
   const { operation, ...arguments_ } = body,
     mcp = await client.callTool({

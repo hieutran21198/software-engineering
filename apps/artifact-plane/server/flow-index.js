@@ -45,6 +45,12 @@ export function guardFlowDirectory(directory, roots = []) {
   } catch {}
   if (top && inside(canonical(top), dir))
     throw Error("Flow state must be outside repositories and worktrees");
+  let common;
+  try {
+    common=execFileSync("git",["-C",parent,"rev-parse","--path-format=absolute","--git-common-dir"],{encoding:"utf8",stdio:["ignore","pipe","ignore"]}).trim();
+  } catch {}
+  if(common&&inside(canonical(common),dir))
+    throw Error("Flow state must be outside repositories and worktrees");
   if (existsSync(dir) && statSync(dir).mode & 0o077)
     throw Error("Flow state directory must be private (0700)");
   mkdirSync(dir, { recursive: true, mode: 0o700 });

@@ -31,6 +31,7 @@ flow:
       title: Read contained UTF-8 knowledge or tracked code/test support
       supports:
         - flow-reader
+        - reader-tests
     - id: freshness
       title: Validate source bytes and disclose stale or partial results
       supports:
