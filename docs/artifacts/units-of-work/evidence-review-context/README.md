@@ -64,4 +64,6 @@ The user requested three investigated corrections plus change review and context
 
 ## Validation evidence
 
-Requirement self-check completed. Implementation checks have not run for this outcome. The evidence list remains empty until actual checks pass. No proposed member version or shared completion is asserted. Specification and a concrete task plan precede implementation approval.
+Requirement, Specification and Plan self-checks completed. The fresh plan has seven tasks, six resolved prerequisite edges and no cycle. Eight proposed flow records pass structural validation; new journeys expose pending implementation gaps. Fifteen local change-document links resolve without ancestor destinations, and the member belongs to exactly this unit. The dedicated branch contains knowledge changes only; no implementation or historical snapshot/task file was changed.
+
+Implementation checks have not run for this outcome. The evidence list remains empty until actual shared checks pass. Suggested compatible minor version 1.12.0 is for user confirmation; no version snapshot or shared completion is asserted. Implementation waits for explicit approval of the concrete plan.

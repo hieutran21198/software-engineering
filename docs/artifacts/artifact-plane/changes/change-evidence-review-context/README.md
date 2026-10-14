@@ -12,6 +12,7 @@ The existing artifact-plane -> artifact-driven dependency remains. ADD 2.1.0 is 
 - [Selected-change review](specifications/change-review.md)
 - [Context packet contract](specifications/context-packets.md)
 - [Shared review service decision](decisions/009-derived-change-review-context.md)
+- [Implementation plan](tasks/README.md)
 
 ## Requirement discovery
 
