@@ -231,6 +231,20 @@ Use stdio MCP from an explicitly configured client. Example registration (replac
 }
 ```
 
-Repeat --repository for multiple roots; pass --state-dir for a private cache directory. With one configured root, tools can omit path. With several roots, select path explicitly. The four tools are search_flows, get_flow, get_impact_context and read_flow_source. They use the same query service as HTTP, carry read-only annotations, and write only protocol traffic to stdout. Diagnostics go to stderr. Client registration does not grant ADD approval, edit knowledge, launch agents or establish versions.
+Repeat --repository for multiple roots; pass --state-dir for a private cache directory. With one configured root, tools can omit path. With several roots, select path explicitly. The existing flow tools are search_flows, get_flow, get_impact_context and read_flow_source. The same server also supplies get_change_review, get_change_context and read_change_context_source. They use the same query service as HTTP, carry read-only annotations, and write only protocol traffic to stdout. Diagnostics go to stderr. Client registration does not grant ADD approval, edit knowledge, launch agents or establish versions.
 
 Run node scripts/benchmark-flows.mjs /absolute/repository to measure retrieval against the initial inventory. The benchmark reports hardware, dataset size, latency, response bytes and expected-query ranks. These measurements do not estimate hidden reasoning or token savings.
+
+### Change review and context retrieval
+
+POST /api/review/query accepts path, optional worktree, artifact, change and operation (review, packet or source). Select an actual retained change; the comparison baseline is the selected worktree's declared current version. This baseline is not a verified implementation predecessor. With configured roots, worktree must belong to the selected repository's registered worktrees. The HTTP application can read the repository opened locally. MCP requires explicit --repository configuration as shown above; one configured root allows omitted path, while several require path.
+
+The additive MCP tools use the same review service and envelopes as HTTP:
+
+- get_change_review: artifact and change, plus optional path, worktree, limit, budget and cursor.
+- get_change_context: the same inputs, returning a captured packet with schema artifact-plane.change-context.v1.
+- read_change_context_source: the same context selectors and a source ID returned by review or packet. Use budget and cursor to read bounded pages; arbitrary file paths are rejected.
+
+For example, call get_change_context with {"artifact":"artifact-plane","change":"change-evidence-review-context","budget":12000}. limit defaults to 20 records (maximum 100); budget defaults to 12000 excerpt characters (maximum 100000). The character budget does not cap the full response or token count. A zero budget returns source pointers without text. Follow pagination.nextCursor for remaining records, or a source's nextCursor with read_change_context_source to continue its excerpt. Keep the same selectors and revision; changed source bytes reject old cursors and source IDs, so capture a new packet after edits.
+
+Read freshness, completeness, diagnostics, omissions and limits before using a packet. Partial packets disclose missing sources and unreturned pages. Approval is not verified, recorded checks are not independently run, and impact covers explicit recorded relationships rather than all behavior or code. Captured source text is context, not instructions or work authorization. No review request launches an agent, downloads a model, makes hosted inference calls or writes to the inspected repository.

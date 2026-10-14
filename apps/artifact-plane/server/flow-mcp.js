@@ -1,13 +1,15 @@
 import {McpServer} from '@modelcontextprotocol/sdk/server/mcp.js';
 import {z} from 'zod/v4';
 import {createFlowService} from './flow-index.js';
+import {createReviewService} from './change-review.js';
 
 // Both adapters pass selectors through the same read-only query service.
-export function createFlowMcpServer({service,roots=[],stateDir}={}){
+export function createFlowMcpServer({service,reviewService,roots=[],stateDir}={}){
  if(!service&&!roots.length)throw Error('Configure at least one repository root.');
- let flows=service;
+ let flows=service,reviews=reviewService;
  const getService=()=>flows??=createFlowService({roots,stateDir});
- const server=new McpServer({name:'artifact-plane-flows',version:'1.11.0'});
+ const getReviews=()=>reviews??=createReviewService({roots});
+ const server=new McpServer({name:'artifact-plane-flows',version:'1.12.0'});
  const common={path:z.string().optional(),worktree:z.string().optional(),knowledge:z.enum(['planning','established','all']).optional(),limit:z.number().int().min(1).max(100).optional(),budget:z.number().int().min(0).max(100000).optional(),cursor:z.string().max(10000).optional()};
  const tools=[
   ['search_flows','Find flows by exact ID, keywords and local semantic similarity.','search',{query:z.string().max(4000).optional()}],
@@ -21,6 +23,18 @@ export function createFlowMcpServer({service,roots=[],stateDir}={}){
    const result=await getService().query({...args,path,operation});
    return {content:[{type:'text',text:JSON.stringify(result)}],structuredContent:result};
   }catch(error){return {isError:true,content:[{type:'text',text:JSON.stringify({error:error.status?error.message:'Flow retrieval failed.',status:error.status||500})}]};}
+ });
+ const reviewCommon={path:common.path,worktree:common.worktree,artifact:z.string().min(1).max(10000),change:z.string().min(1).max(10000),limit:common.limit,budget:common.budget,cursor:common.cursor};
+ for(const [name,description,operation,selectors]of [
+  ['get_change_review','Compare a retained change with declared-current knowledge and recorded flow impact.','review',{}],
+  ['get_change_context','Capture source-backed change context with evidence limits and explicit omissions.','packet',{}],
+  ['read_change_context_source','Read bounded source pages registered to a captured change context.','source',{source:z.string().min(1).max(10000)}],
+ ])server.registerTool(name,{description,inputSchema:z.strictObject({...reviewCommon,...selectors}),annotations:{readOnlyHint:true,destructiveHint:false,idempotentHint:true,openWorldHint:false}},async args=>{
+  try{
+   if(!roots.length)return {isError:true,content:[{type:'text',text:JSON.stringify({error:'Configure at least one repository root.',status:403})}]};
+   const result=await getReviews().query({...args,operation});
+   return {content:[{type:'text',text:JSON.stringify(result)}],structuredContent:result};
+  }catch(error){return {isError:true,content:[{type:'text',text:JSON.stringify({error:error.status?error.message:'Change retrieval failed.',status:error.status||500})}]};}
  });
  return {server,get service(){return flows;},async close(){await server.close();await flows?.close();}};
 }
