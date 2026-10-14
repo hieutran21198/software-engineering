@@ -30,4 +30,3 @@ Novel writers, narrative designers, and creators working with AI need help turni
 ## Boundaries and self-check
 
 Framework authoring is distinct from downstream creative production and from ADD delivery. The new artifact owns the added bundle and catalog integration; this does not introduce an execution dependency on ADD or Artifact Plane. Requirements reflect the approved plan, have observable acceptance scenarios, and do not prescribe a universal plot formula. KISS and clear technical writing have been applied. No unresolved Requirement blocker remains.
-
