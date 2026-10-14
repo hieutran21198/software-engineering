@@ -23,3 +23,7 @@ Requirement, Specification, and Plan self-checks are complete. The user explicit
 ## Implementation handoff
 
 Approved implementation and integrated validation passed. See the current task evidence. The user confirmed version 1.10.0. The complete proposed snapshot preserves source_change provenance and change-owned delivery tasks. Review PR preparation follows.
+
+## Publication handoff
+
+Version 1.10.0 is confirmed and the proposed snapshot is committed on the dedicated branch. Automatic permission review rejected branch publication because destination ownership/privacy and authorization to export the implementation and documentation were not verified. No push or PR creation occurred. Explicit authorization to publish this branch to the configured GitHub repository is pending. Team review and merge remain required for establishment.
