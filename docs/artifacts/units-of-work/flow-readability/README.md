@@ -41,3 +41,5 @@ The user explicitly approved the new plan. The app build and all six focused flo
 ## Navigation amendment
 
 The user reported inconsistent view and knowledge controls and disconnected panels before PR #23 merged. Extend this same outcome to consistent Flows navigation and panel layout. The first task remains delivered on this branch; its six passing checks do not prove the added behavior. New checks and explicit amended-plan approval are required. Backend schemas, model installation, historical snapshots and other artifact membership stay outside scope.
+
+The user further requested lazy loading, pagination and descending creation-date order. Include bounded flow-list requests and additive creation-date provenance. Existing cursor safety, read-only retrieval and source limits remain applicable; no new dependency or authoritative state store is introduced.

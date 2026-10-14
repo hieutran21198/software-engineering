@@ -27,3 +27,9 @@ The user supplied further screenshots while the readability PR remained open. Th
 Inspected Flows.jsx, its CSS, the shipped flow specification and the delivered browser evidence. The screenshot matches raw JSON rendering and the shared column-label rule. One owning artifact is affected. KISS limits work to presentation; STE uses direct notices and keeps technical detail available. No requirement blocker remains.
 
 Amendment check: inspected main.jsx state and panel rendering, Flows.jsx local state and view-toggle CSS. Confirmed the missing active class, independent default and placeholder inspector in code. The same open unit owns this presentation outcome. Navigation consistency is new scope; prior presentation evidence remains valid, but it does not validate the amendment.
+
+## Lazy paginated discovery
+
+Load flow results only when the Flows view is active. Load detail only after selection and source text only when requested. Fetch the list in bounded pages as the user scrolls, with an accessible Load more control as a fallback. Order flow records by creation date descending; do not use filesystem modification time as creation evidence. Preserve loaded pages and selection across view switches when their context and revision remain valid. Unknown creation dates remain explicit.
+
+Requirements amendment check: existing search/impact operations already expose cursor pagination but sort by relevance/ID and contain no creation metadata. Creation-date provenance and sorting therefore require a small additive retrieval change; the earlier backend-change exclusion is narrowed to allow this specific metadata/order work. Model installation, index algorithms, arbitrary file access and historical authoring remain excluded.
