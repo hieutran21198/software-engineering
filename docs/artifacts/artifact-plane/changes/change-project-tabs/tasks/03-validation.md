@@ -44,4 +44,4 @@ Commands ran in apps/artifact-plane with Node 24.21.0:
 
 Initial restricted test runs could not listen on localhost; checks passed with test server access. Cached Chromium lacked libnspr4.so, so checks used installed Nix Chromium. The extra browser case first raced a build directory replacement, then used a disabled zoom-in control in the small fixture. Repeating it after the build with Zoom Out passed. These harness failures do not support acceptance; the passing reruns do.
 
-Documentation describes browser-profile/origin restoration, session-only navigation, and retained memory growth. Implementation and validation are complete. Version confirmation, proposed snapshot preparation, and review PR handoff remain pending. No merge or establishment is asserted. KISS and STE self-checks passed.
+Documentation describes browser-profile/origin restoration, session-only navigation, and retained memory growth. Implementation and validation are complete. The user confirmed version 1.10.0 and its complete proposed snapshot is prepared. Review PR handoff follows. No merge or establishment is asserted. KISS and STE self-checks passed.
