@@ -387,3 +387,15 @@ test("separate processes atomically publish complete SQLite records", async (t) 
   );
   db.close();
 });
+test('newest records sort before paging with stable ties and unknown dates last',async(t)=>{
+ const record=fixture();
+ record.graph.flows=Array.from({length:45},(_,i)=>({...record.graph.flows[0],id:`flow-${String(i).padStart(2,'0')}`,logicalId:`owner:flow-${i}`,createdAt:i<43?new Date(Date.UTC(2020,0,1+Math.floor(i/2))).toISOString():null}));
+ record.graph.flows[0].createdAt=null;record.graph.flows[43].createdAt='1970-01-01T00:00:00.000Z';
+ const {service}=await setup(t,{loader:async()=>structuredClone(record)});
+ const all=[];let cursor;
+ do{const result=await service.query({path:'/repo',operation:'search',query:'',limit:20,cursor});all.push(...result.data.flows);cursor=result.pagination.nextCursor;}while(cursor);
+ assert.equal(all.length,45);assert.equal(new Set(all.map(f=>f.id)).size,45);
+ assert.equal(all[0].id,'flow-42');assert.equal(all[1].id,'flow-40');assert.equal(all[2].id,'flow-41');
+ assert.equal(all.at(-3).id,'flow-43');assert.deepEqual(all.slice(-2).map(f=>f.createdAt),[null,null]);
+ for(let i=1;i<43;i++)assert.ok(all[i-1].createdAt>=all[i].createdAt);
+});

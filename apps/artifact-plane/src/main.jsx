@@ -204,7 +204,9 @@ export function ProjectExplorer({active: isActive = true, initialPath = "", onOp
   const [unitSelected,setUnitSelected] = useState(null), [unitNodeSelected,setUnitNodeSelected] = useState(null), [unitWorktree,setUnitWorktree] = useState(null), [unitView,setUnitView] = useState('artifacts'), [unitPlanning,setUnitPlanning] = useState(false);
   const [view, setView] = useState("canvas");
   const [flowEntry,setFlowEntry]=useState(null);
-  const openFlows=entry=>{setFlowEntry(entry);setView("flows");};
+  const [flowKnowledge,setFlowKnowledge]=useState("established"),[flowSidebar,setFlowSidebar]=useState(null),[flowInspector,setFlowInspector]=useState(null);
+  const chooseKnowledge=value=>{setFlowKnowledge(value);if(value!=="all")setPlanning(value==="planning");};
+  const openFlows=entry=>{if(entry!==null)setFlowEntry(entry);setView("flows");};
   const [recordedSelected,setRecordedSelected]=useState(null),[recordedNode,setRecordedNode]=useState(null);
   const [filter, setFilter] = useState("");
   const workspaceRef = useRef(null);
@@ -278,7 +280,7 @@ export function ProjectExplorer({active: isActive = true, initialPath = "", onOp
         base={...base,workflow:{...base.workflow,worktrees:base.workflow.worktrees.map(w=>w.path===selected?other.data.workflow.worktrees.find(t=>t.path===selected):w)}};
       }
       onOpened(base.repository.path);installOverview(base,refresh);setLoadedSession(session);queueRoot.current=base.repository.path;setPath(base.repository.path);setFresh(!result.diagnostics.some(d=>d.code==='stale-response'));
-      if(!refresh){setFlowEntry(null);setRecordedSelected(null);setRecordedNode(null);if(active.current.view==='recorded')setView('canvas');setUnitSelected(null);setUnitNodeSelected(null);setUnitWorktree(base.repository.path);setUnitView('artifacts');setUnitPlanning(false);setTaskChange(null);setTaskSelected(null);setDeliveryChange(null);setDeliveryPhase(null);setExpanded(new Set());setExpandedTypes(new Set());setSelection(null);setFilter('');setPlanning(false);setCompletionOpen(false);setDocument(null);}
+      if(!refresh){setFlowEntry(null);setRecordedSelected(null);setRecordedNode(null);if(active.current.view==='recorded')setView('canvas');setUnitSelected(null);setUnitNodeSelected(null);setUnitWorktree(base.repository.path);setUnitView('artifacts');setUnitPlanning(false);setTaskChange(null);setTaskSelected(null);setDeliveryChange(null);setDeliveryPhase(null);setExpanded(new Set());setExpandedTypes(new Set());setSelection(null);setFilter('');setPlanning(false);setFlowKnowledge('established');setCompletionOpen(false);setDocument(null);}
     }catch(error){if(session===generation.current&&error.name!=='AbortError'){setError(error.message);setFresh(false);}}
     finally{if(session===generation.current)setBusy(false);}
   };
@@ -522,11 +524,12 @@ export function ProjectExplorer({active: isActive = true, initialPath = "", onOp
               <input
                 id={`artifact-filter-${tabId}`}
                 className="filter"
+                style={{display:view=== "flows" ? "none" : undefined}}
                 placeholder={view === "units" ? "Filter units of work…" : "Filter artifacts…"}
                 value={filter}
                 onChange={(e) => setFilter(e.target.value)}
               />
-              <nav aria-label="Artifacts" style={{display:view === "units" ? "none" : undefined}}>
+              <nav aria-label="Artifacts" style={{display:view === "units" || view === "flows" ? "none" : undefined}}>
                 {snapshot.artifacts
                   .filter((a) =>
                     `${a.id} ${a.title}`
@@ -547,7 +550,8 @@ export function ProjectExplorer({active: isActive = true, initialPath = "", onOp
                     </button>
                   ))}
               </nav>
-              <RecordedPicker selected={recordedSelected} onSelect={id=>{setRecordedSelected(id);setRecordedNode(null);if(id)setView('recorded');}}/>
+              <div ref={setFlowSidebar} className="flow-sidebar-slot" style={{display:view=== "flows" ? undefined : "none"}}/>
+              {view!=="flows"&&<RecordedPicker selected={recordedSelected} onSelect={id=>{setRecordedSelected(id);setRecordedNode(null);if(id)setView('recorded');}}/>}
               {view === "units" && <UnitList snapshot={snapshot} worktreePath={unitWorktree} filter={filter} selected={unitSelected} onSelect={value=>{setUnitSelected(value);setUnitView('artifacts');setUnitNodeSelected(null);}}/>}
             </>
           ) : (
@@ -567,27 +571,28 @@ export function ProjectExplorer({active: isActive = true, initialPath = "", onOp
               <strong>{view === "canvas" ? taskContext ? "Implementation task graph" : "Dependency canvas" : view === "units" ? "Units of work" : view === "flows" ? "System flows" : "Recorded executions"}</strong>
               <small>{view === "canvas" ? "Upstream → downstream" : "Local worktrees · Git + Markdown"}</small>
             </div>
-            {snapshot && <div className="view-toggle" role="group" aria-label="Explorer view"><button aria-pressed={view === "canvas"} className={view === "canvas" ? "active" : ""} onClick={()=>setView("canvas")}>Dependencies</button><button aria-pressed={view === "units"} className={view === "units" ? "active" : ""} onClick={()=>setView("units")}>Units of work</button><button aria-pressed={view === "flows"} onClick={()=>openFlows(null)}>Flows</button></div>}
-            <div className="dependency-view-slot">{snapshot && view === "canvas" && !taskContext && (
+            {snapshot && <div className="view-toggle" role="group" aria-label="Explorer view"><button aria-pressed={view === "canvas"} className={view === "canvas" ? "active" : ""} onClick={()=>setView("canvas")}>Dependencies</button><button aria-pressed={view === "units"} className={view === "units" ? "active" : ""} onClick={()=>setView("units")}>Units of work</button><button aria-pressed={view === "flows"} className={view === "flows" ? "active" : ""} onClick={()=>openFlows(null)}>Flows</button></div>}
+            <div className="dependency-view-slot">{snapshot && (view === "canvas" && !taskContext || view === "flows") && (
               <div
                 className="view-toggle"
                 role="group"
-                aria-label="Dependency view"
+                aria-label={view === "flows" ? "Flow knowledge" : "Dependency view"}
               >
                 <button
-                  aria-pressed={!planning}
-                  className={!planning ? "active" : ""}
-                  onClick={() => setPlanning(false)}
+                  aria-pressed={view==="flows"?flowKnowledge==="established":!planning}
+                  className={(view==="flows"?flowKnowledge==="established":!planning) ? "active" : ""}
+                  onClick={() => chooseKnowledge("established")}
                 >
                   Established
                 </button>
                 <button
-                  aria-pressed={planning}
-                  className={planning ? "active" : ""}
-                  onClick={() => setPlanning(true)}
+                  aria-pressed={view==="flows"?flowKnowledge==="planning":planning}
+                  className={(view==="flows"?flowKnowledge==="planning":planning) ? "active" : ""}
+                  onClick={() => chooseKnowledge("planning")}
                 >
                   Planning
                 </button>
+                {view === "flows" && <button aria-pressed={flowKnowledge==="all"} className={flowKnowledge==="all"?"active":""} onClick={()=>chooseKnowledge("all")}>All snapshots</button>}
               </div>
             )}
           </div></div>
@@ -671,7 +676,7 @@ export function ProjectExplorer({active: isActive = true, initialPath = "", onOp
           </div>
           {snapshot && taskContext && <div style={{display:view === "canvas" ? "contents" : "none"}}><TaskGraph key={taskChange} context={taskContext} selection={taskSelected} onSelect={setTaskSelected} onBack={()=>{setTaskChange(null);setTaskSelected(null);}}/></div>}
           {snapshot && view==='recorded' && <RecordedView id={recordedSelected} selection={recordedNode} onSelect={setRecordedNode}/>}
-          {snapshot && view === "flows" && <Flows path={snapshot.repository.path} worktree={unitWorktree} epoch={overviewEpoch} isActive={isActive} entry={flowEntry}/>}
+          {snapshot && <Flows path={snapshot.repository.path} worktree={unitWorktree} epoch={overviewEpoch} isActive={isActive&&view==="flows"} entry={flowEntry} knowledge={flowKnowledge} sidebar={flowSidebar} inspector={flowInspector}/>}
           {snapshot && view === "units" && <UnitView loading={sectionState} context={selectedUnit} view={unitView} onView={value=>{setUnitView(value);setUnitNodeSelected(null);}} planning={unitPlanning} onPlanning={value=>{setUnitPlanning(value);setUnitNodeSelected(null);}} selection={unitNodeSelected} onSelect={setUnitNodeSelected}/>}
         </main>
         <div
@@ -706,7 +711,7 @@ export function ProjectExplorer({active: isActive = true, initialPath = "", onOp
           className="details-panel"
           aria-label="Selection details"
         >
-          {view==='flows' ? <div className="empty-details"><h2>System flows</h2><p>Select a flow, step or referenced source in the flow view. Evidence describes known coverage, not complete system discovery.</p></div> : view==='recorded' ? <RecordedDetails id={recordedSelected} selection={recordedNode} onSelect={setRecordedNode}/> : view === "units" ? <UnitDetails onFlow={openFlows} onDocument={setRequestedSource} document={document} onCompletion={loadCompletion} context={selectedUnit} view={unitView} planning={unitPlanning} selection={unitNodeSelected} onSelect={setUnitNodeSelected}/> : taskContext ? <TaskGraphDetails document={document} context={taskContext} onClear={()=>setTaskSelected(null)}/> : deliveryContext ? <ChangeDetails context={deliveryContext} phase={deliveryPhase} onPhase={setDeliveryPhase} onBack={()=>{setDeliveryChange(null);setDeliveryPhase(null);}} onTaskGraph={openTaskGraph}>{changeList}</ChangeDetails> : artifact ? (
+          {view==='flows' ? <div ref={setFlowInspector} className="flow-inspector-slot"/> : view==='recorded' ? <RecordedDetails id={recordedSelected} selection={recordedNode} onSelect={setRecordedNode}/> : view === "units" ? <UnitDetails onFlow={entry=>{const owner=entry.flow?.split(':')[0],member=selectedUnit?.unit.members.find(m=>m.artifact===owner);if(member?.sourcePath?.includes('/changes/')||member?.establishmentEvidence?.state==='proposed')chooseKnowledge('planning');openFlows(entry);}} onDocument={setRequestedSource} document={document} onCompletion={loadCompletion} context={selectedUnit} view={unitView} planning={unitPlanning} selection={unitNodeSelected} onSelect={setUnitNodeSelected}/> : taskContext ? <TaskGraphDetails document={document} context={taskContext} onClear={()=>setTaskSelected(null)}/> : deliveryContext ? <ChangeDetails context={deliveryContext} phase={deliveryPhase} onPhase={setDeliveryPhase} onBack={()=>{setDeliveryChange(null);setDeliveryPhase(null);}} onTaskGraph={openTaskGraph}>{changeList}</ChangeDetails> : artifact ? (
             <>
               <div className="details-heading">
                 <span className="eyebrow">
@@ -816,7 +821,7 @@ export function ProjectExplorer({active: isActive = true, initialPath = "", onOp
                 <ReferenceList references={refs} onTarget={selectTarget} />
               </section>
               <section>
-                <button onClick={()=>openFlows({ids:[element?.id||`artifact:${artifact.id}`]})}>Find participating flows</button>
+                <button onClick={()=>{if(element?.source?.startsWith('change:'))chooseKnowledge('planning');openFlows({ids:[element?.id||`artifact:${artifact.id}`]});}}>Find participating flows</button>
                 <h3>{element ? "Content" : "Overview"}</h3>
                 <p className="tiny">{document?.status||'Not loaded'}{document?.error&&`: ${document.error}`}</p><Markdown text={document?.markdown||''} />
               </section>
