@@ -10,6 +10,7 @@ const initialIndexExists = existsSync(
 );
 const service = createFlowService({ roots: [path] });
 const cases = [
+  ["artifact-plane:repository-exploration", "artifact-plane:repository-exploration"],
   ["Retrieve safe source context with freshness and pagination", "artifact-plane:source-retrieval"],
   ["Switch between independent open project tabs", "artifact-plane:project-tabs"],
   ["Adopt the reusable artifact driven bundle", "artifact-driven:adoption"],
@@ -87,7 +88,7 @@ try {
       2,
     ),
   );
-  if (missingConsumers.length || impact.freshness!=="fresh" || impact.completeness!=="complete" || results.some((r) => !r.rank || !r.semantic || r.freshness !== "fresh" || r.completeness!=="complete"))
+  if (missingConsumers.length || impact.freshness!=="fresh" || impact.completeness!=="complete" || results.some((r) => !r.rank || r.query===r.expected&&r.rank!==1 || !r.semantic || r.freshness !== "fresh" || r.completeness!=="complete"))
     process.exitCode = 1;
 } finally {
   await service.close();
