@@ -10,6 +10,8 @@ import {
 } from "node:fs/promises";
 import { join } from "node:path";
 import { tmpdir } from "node:os";
+import {StdioClientTransport} from "@modelcontextprotocol/sdk/client/stdio.js";
+import {fileURLToPath} from "node:url";
 import { Client } from "@modelcontextprotocol/sdk/client/index.js";
 import { InMemoryTransport } from "@modelcontextprotocol/sdk/inMemory.js";
 import { createFlowMcpServer } from "../server/flow-mcp.js";
@@ -328,4 +330,18 @@ test("service close drains accepted requests and rejects new requests", async (t
   assert.equal((await accepted).freshness, "fresh");
   await closed;
   await service.close();
+});
+
+test('real stdio client initializes, lists tools and reads only configured roots',async t=>{
+ const fixture=await fixtureRepository(files()),other=await fixtureRepository(files()),stateDir=await mkdtemp(join(tmpdir(),'plane-flow-stdio-'));
+ const before=await fingerprint(fixture.root),client=new Client({name:'stdio-test',version:'1'});
+ const transport=new StdioClientTransport({command:process.execPath,args:[fileURLToPath(new URL('../server/flow-mcp-stdio.js',import.meta.url)),'--repository',fixture.root,'--state-dir',stateDir],stderr:'pipe'});
+ let stderr='';transport.stderr?.on('data',chunk=>stderr+=chunk);
+ t.after(async()=>{await client.close();await fixture.cleanup();await other.cleanup();await rm(stateDir,{recursive:true,force:true});});
+ await client.connect(transport);assert.equal((await client.listTools()).tools.length,4);
+ const result=await client.callTool({name:'search_flows',arguments:{query:'membership'}});
+ assert.equal(result.isError,undefined);assert.equal(result.structuredContent.data.flows.length,2);assert.equal(result.structuredContent.freshness,'fresh');
+ assert.ok(result.structuredContent.diagnostics.some(d=>d.code==='flow-model-unavailable'));
+ const denied=await client.callTool({name:'search_flows',arguments:{path:other.root}});assert.equal(denied.isError,true);assert.equal(JSON.parse(denied.content[0].text).status,403);
+ assert.deepEqual(await fingerprint(fixture.root),before);assert.ok(!stderr.includes('SyntaxError'));
 });

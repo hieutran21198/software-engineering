@@ -38,6 +38,7 @@ test('same-owner source resolution and context IDs keep proposed and worktree kn
  const f=a.flows.find(f=>f.localId==='login');assert.equal(f.source,'change:change-login');
  assert.ok(f.support[0].targetId.includes('change:change-login'));assert.notEqual(f.id,b.flows.find(f=>f.localId==='login').id);
  assert.equal(buildFlowGraph(snapshot,{knowledge:'established'}).flows.find(f=>f.localId==='login').source,'version:1.0.0');
+ const all=buildFlowGraph(snapshot,{knowledge:'all'});assert.equal(all.flows.length,3);assert.equal(new Set(all.flows.map(f=>f.id)).size,3);
 });
 for(const [name,mutate] of [
  ['owner',f=>({...f,artifact:'wrong'})],['duplicate step',f=>({...f,steps:[f.steps[0],f.steps[0]]})],
@@ -75,4 +76,22 @@ test('reader preserves bytes, checks tracked sources and refuses symlink escapes
  const outside=await mkdtemp(join(tmpdir(),'flow-source-'));t.after(()=>rm(outside,{recursive:true,force:true}));await writeFile(join(outside,'private.js'),'DO NOT EXPOSE');
  await rm(join(fixture.root,'src/identity.js'));await symlink(join(outside,'private.js'),join(fixture.root,'src/identity.js'));
  const escaped=await readFlowRepository(fixture.root);assert.ok(escaped.graph.diagnostics.some(d=>d.code==='unavailable-flow-source'));assert.ok(!JSON.stringify(escaped).includes('DO NOT EXPOSE'));
+});
+
+test('established flow selection uses protected declarations and flags modified source bytes',async t=>{
+ const fixture=await fixtureRepository(flowFiles());t.after(fixture.cleanup);
+ await writeFile(join(fixture.root,'docs/artifacts/tenant/README.md'),rootReadme('Tenant','2.0.0'));
+ await mkdir(join(fixture.root,'docs/artifacts/tenant/versions/2.0.0/specifications/flows'),{recursive:true});
+ await writeFile(join(fixture.root,'docs/artifacts/tenant/versions/2.0.0/specifications/flows/login.md'),flowMarkdown(flowFixture('login',{title:'Proposed login'})));
+ await writeFile(join(fixture.root,'docs/artifacts/tenant/versions/2.0.0/specifications/identity.md'),'# Proposed identity');
+ const planning=await readFlowRepository(fixture.root),established=await readFlowRepository(fixture.root,{knowledge:'established'});
+ assert.equal(planning.graph.flows[0].source,'version:2.0.0');assert.equal(planning.graph.flows[0].sourcePublication.state,'proposed');
+ assert.equal(established.graph.flows.length,2);assert.ok(established.graph.flows.every(f=>f.source==='version:1.0.0'&&f.sourcePublication.state==='published-source'));
+ await writeFile(join(fixture.root,'docs/artifacts/tenant/versions/1.0.0/specifications/flows/login.md'),flowMarkdown(flowFixture('login',{title:'Modified historical source'})));
+ const dirty=await readFlowRepository(fixture.root,{knowledge:'established'});assert.ok(dirty.graph.diagnostics.some(d=>d.code==='unpublished-flow-source'));
+});
+
+test('YAML task examples do not create reference diagnostics in a flow context',()=>{
+ const files=flowFiles();files.set('docs/artifacts/tenant/versions/1.0.0/specifications/examples.md','# Task examples\n\n```yaml\n---\nid: first\n---\n---\nid: second\n---\n```\n');
+ const snapshot=buildSnapshot(files);assert.equal(snapshot.diagnostics.length,0);assert.equal(snapshot.references.length,0);
 });

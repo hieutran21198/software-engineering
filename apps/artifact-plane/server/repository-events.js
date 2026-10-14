@@ -78,6 +78,7 @@ export function repositoryService({intervalMs=2000,debounceMs=250,heartbeatMs=15
 // Read only sources that a flow context registered. Git status alone misses a
 // second edit to an already dirty implementation file.
 export async function registeredSourceFingerprint(root, base, sources, {signal}={}){
+ if(!sources.length)return base;
  const hash=createHash('sha256').update(base.fingerprint),trees=new Set(parseWorktrees(await git(root,['worktree','list','--porcelain','-z'],true)).map(t=>t.path)),tracked=new Map();
  let files=base.files;
  for(const source of [...sources].sort((a,b)=>JSON.stringify(a).localeCompare(JSON.stringify(b)))){

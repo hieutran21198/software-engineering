@@ -1,6 +1,6 @@
 # Artifact Plane
 
-Explore a local Artifact-Driven Development repository on an interactive dependency canvas. The application reads Git and Markdown and calculates graphs in memory. It does not write to the repository you open.
+Explore a local Artifact-Driven Development repository on an interactive dependency canvas. The application reads Git and Markdown. It derives dependency and behavior graphs and stores a rebuildable flow index outside inspected repositories. It does not write to the repository you open.
 
 ## Run
 
@@ -196,3 +196,41 @@ The server samples relevant knowledge bytes, refs, status, and registered worktr
 Historical file bytes are reused in server memory by repository identity and immutable commit ID. The cache has a process-wide 32 MiB byte budget and a 4,096-entry limit. Other memory includes overview metadata, active detail, Git buffers, and browser graphs; total application memory is not capped at 32 MiB. A new browser session can reuse cached bytes while the server stays running. Restarting the server clears this cache. Current files, status, refs, and publication conclusions are read again. No exploration cache or workflow registry is written to the inspected repository.
 
 For repeatable measurements, run `node scripts/reload-benchmark.js` for equal-work full reload comparisons, `node --expose-gc scripts/lazy-benchmark.js` for payload/server memory, `node --expose-gc scripts/request-memory-benchmark.js` for sampled request peaks, and `node scripts/observation-benchmark.js` for a 60-second large-corpus idle sample. They create and remove temporary fixture repositories outside the inspected project. The scoped query API preserves the complete explore endpoint for existing consumers; the browser uses scoped reads.
+
+## System flows and agent retrieval
+
+Select **Flows** to browse named behavior journeys. Search by purpose or ID, select a flow to see its steps, and expand supporting relationships. A shared source can participate in several flows. Artifact and element inspectors offer **Participating flows**. Unit inspectors show affected flows and their create, modify, or remove intent.
+
+Planning uses current changes; Established resolves the protected main/master version declaration. Source publication labels compare source bytes with protected refs. They do not independently establish an artifact version. Gaps and diagnostics describe missing coverage. An empty impact result proves only that no consumers were found in the fresh, explicitly recorded relationships.
+
+Flow discovery combines exact IDs, SQLite FTS5 and optional local semantic similarity. Impact follows reverse relationships independently of search page limits. The private index is flow-index.sqlite under ARTIFACT_PLANE_STATE_DIR (normally the user's local state directory), outside repositories and registered worktrees. Normal retrieval never downloads a model or sends repository content to a hosted service. Missing or corrupt model assets leave keyword and graph retrieval available with a diagnostic.
+
+Install the pinned quantized model explicitly:
+
+```sh
+npm run flow:model-install
+```
+
+The installer downloads public assets for Xenova/paraphrase-multilingual-MiniLM-L12-v2 at revision 2c4055b12046f11709e9df2c122e59ffbdc2f900 and verifies their SHA256 hashes. Set ARTIFACT_PLANE_STATE_DIR to use a different private state directory. The model uses local CPU inference. Indexing long supporting documents can take longer than subsequent queries.
+
+POST /api/flows/query accepts path, optional worktree and knowledge (planning, established, all), and operation (search, detail, impact, source). Search takes query; detail takes flow; impact takes ids; source takes flow and a source ID returned by detail. limit is 1–100, budget is 0–100000 characters, and cursor continues a page. Response fields include context, revision, generation, freshness, completeness, diagnostics, pagination and omissions. Source selectors never accept arbitrary file paths. Refresh invalidates stale cursors. Repository observation also checks explicitly registered supporting source bytes, including repeated edits to an already dirty file.
+
+Use stdio MCP from an explicitly configured client. Example registration (replace both absolute paths):
+
+```json
+{
+  "mcpServers": {
+    "artifact-plane-flows": {
+      "command": "node",
+      "args": [
+        "/absolute/software-engineering/apps/artifact-plane/server/flow-mcp-stdio.js",
+        "--repository", "/absolute/knowledge-repository"
+      ]
+    }
+  }
+}
+```
+
+Repeat --repository for multiple roots; pass --state-dir for a private cache directory. With one configured root, tools can omit path. With several roots, select path explicitly. The four tools are search_flows, get_flow, get_impact_context and read_flow_source. They use the same query service as HTTP, carry read-only annotations, and write only protocol traffic to stdout. Diagnostics go to stderr. Client registration does not grant ADD approval, edit knowledge, launch agents or establish versions.
+
+Run node scripts/benchmark-flows.mjs /absolute/repository to measure retrieval against the initial inventory. The benchmark reports hardware, dataset size, latency, response bytes and expected-query ranks. These measurements do not estimate hidden reasoning or token savings.

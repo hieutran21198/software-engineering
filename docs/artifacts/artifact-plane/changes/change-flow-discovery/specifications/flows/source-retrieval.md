@@ -14,15 +14,19 @@ flow:
       supports:
         - query
         - flow-reader
+        - http
+        - mcp
     - id: discover
       title: Find ranked flow candidates and expand explicit impact
       supports:
         - flow-contract
+        - index
     - id: authorize
       title: Resolve a source ID inside the selected context
       supports:
         - flow-reader
         - query
+        - index
     - id: read
       title: Read contained UTF-8 knowledge or tracked code/test support
       supports:
@@ -32,10 +36,13 @@ flow:
       supports:
         - query
         - flow-contract
+        - index
     - id: return
       title: Return bounded excerpts and full source pointers
       supports:
         - flow-contract
+        - index
+        - adapters-tests
   transitions:
     - from: context
       to: discover
@@ -80,6 +87,33 @@ flow:
       requires: Describe source-backed flow queries without adding authorization or
         workflow state.
       basis: documented
+    - id: index
+      kind: implementation
+      path: apps/artifact-plane/server/flow-index.js
+      symbol: createFlowService
+      requires: Rank local candidates, traverse explicit consumers and page safe
+        registered sources with revision validation.
+      basis: static
+    - id: http
+      kind: implementation
+      path: apps/artifact-plane/server/http.js
+      symbol: createAppServer
+      requires: Apply local host/origin and bounded request guards to the shared flow
+        service.
+      basis: static
+    - id: mcp
+      kind: implementation
+      path: apps/artifact-plane/server/flow-mcp.js
+      symbol: createFlowMcpServer
+      requires: Expose four read-only tools using the same context and diagnostics as
+        HTTP.
+      basis: static
+    - id: adapters-tests
+      kind: test
+      path: apps/artifact-plane/test/flow-adapters.test.js
+      requires: Check adapter parity, stdio framing, root isolation, pagination,
+        repeated edits and unchanged repository bytes.
+      basis: static
   gaps:
     - Retrieval ranks candidates; it does not prove compatibility or complete
       system discovery.

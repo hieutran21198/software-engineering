@@ -83,7 +83,7 @@ export function buildFlowGraph(snapshot, {context = '', knowledge = 'planning'} 
     for (const f of candidates) selected.set(f.logicalId,f);
     if (knowledge === 'planning' && artifact.activeChange) for (const f of records.filter(f => f.artifact === artifact.id && f.source === `change:${artifact.activeChange}`)) selected.set(f.logicalId,f);
   }
-  if (knowledge === 'all') for (const f of records) selected.set(f.id,f);
+  if (knowledge === 'all') {selected.clear();for (const f of records) selected.set(f.id,f);}
   const flows = [...selected.values()].sort((a,b) => a.logicalId.localeCompare(b.logicalId) || a.source.localeCompare(b.source));
   const nodes = new Map(), edges = [], sources = new Map(), elements = new Map(snapshot.artifacts.flatMap(a => a.elements.map(e => [JSON.stringify([a.id,e.source,e.path]),e])));
   const add = node => {if (!nodes.has(node.id)) nodes.set(node.id,node);return node.id;};

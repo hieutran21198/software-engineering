@@ -5,7 +5,7 @@ import {scanRepository,git,ExploreError} from './reader.js';
 import {parseWorktrees} from './workflow.js';
 import {unitBriefs} from './units-of-work.js';
 import {buildFlowGraph,safeFlowSource} from './flow-model.js';
-import {parseArtifact} from '../src/model.js';
+import {parseArtifact,buildSnapshot} from '../src/model.js';
 
 export const sourceDigest = bytes => createHash('sha256').update(bytes).digest('hex');
 const contained = (root,path) => {const r=relative(root,path);return r!== '..'&&!r.startsWith('..'+sep)&&!isAbsolute(r);};
@@ -20,24 +20,33 @@ export async function readFlowSource(root, source, tracked) {
 }
 
 export async function readFlowRepository(path, {worktree,knowledge='planning',roots}={}) {
-  const base=await scanRepository(path,{metadata:true,full:p=>p.includes('/specifications/flows/')});
+  if(roots?.length){const selected=await realpath(path).catch(()=>null),allowed=await Promise.all(roots.map(p=>realpath(p).catch(()=>null)));if(!selected||!allowed.includes(selected))throw new ExploreError(403,'Repository is not configured for this agent server.');}
+  const base=await scanRepository(path,{metadata:true,historicalKnowledge:true,full:p=>p.includes('/specifications/flows/')});
   const root=base.snapshot.repository.path;
-  if(roots?.length){const allowed=await Promise.all(roots.map(p=>realpath(p).catch(()=>null)));if(!allowed.includes(root))throw new ExploreError(403,'Repository is not configured for this agent server.');}
   const worktrees=parseWorktrees(await git(root,['worktree','list','--porcelain','-z'],true));
   const target=worktree?await realpath(worktree).catch(()=>null):root;
   if(!target||!worktrees.some(w=>w.path===target))throw new ExploreError(422,'Select a registered readable worktree.');
-  const scan=target===root?base:await scanRepository(target,{metadata:true,full:p=>p.includes('/specifications/flows/')});
-  const snapshot=scan.snapshot;
+  const scan=target===root?base:await scanRepository(target,{metadata:true,historicalKnowledge:true,full:p=>p.includes('/specifications/flows/')});
+  let snapshot=scan.snapshot;
   const head=await git(target,['rev-parse','HEAD']);
   const refs=await Promise.all(['main','master'].map(ref=>git(target,['rev-parse','--verify','refs/heads/'+ref]).catch(()=>null)));
-  if(knowledge==='established')for(const artifact of snapshot.artifacts){
-    const declarations=[];
-    for(const [i,ref] of ['main','master'].entries())if(refs[i]){
-      const body=await git(target,['show',`${ref}:docs/artifacts/${artifact.id}/README.md`]).catch(()=>null);
-      if(body)declarations.push(parseArtifact(artifact.id,body).currentVersion);
+  if(knowledge==='established'){
+    const files=new Map(scan.files),diagnostics=[];
+    // Root declarations and reference resolution use the same protected context.
+    // A branch's proposed DAG index cannot override protected root declarations.
+    files.delete('docs/artifacts/dag.yaml');
+    for(const artifact of snapshot.artifacts){
+      const declarations=[];
+      for(const [i,ref] of ['main','master'].entries())if(refs[i]){
+        const body=await git(target,['show',`${ref}:docs/artifacts/${artifact.id}/README.md`]).catch(()=>null);
+        if(body){const errors=[],parsed=parseArtifact(artifact.id,body,errors);declarations.push({body,parsed,errors});}
+      }
+      const signatures=declarations.map(d=>JSON.stringify([d.parsed.currentVersion,[...d.parsed.dependsOn].sort()]));
+      const path=`docs/artifacts/${artifact.id}/README.md`;
+      if(declarations.length&&new Set(signatures).size===1&&!declarations.some(d=>d.errors.length))files.set(path,declarations[0].body);
+      else{files.set(path,`---\ncurrent_version: null\ndepends_on: []\n---\n# ${artifact.id}\n`);diagnostics.push({code:'unavailable-flow-baseline',path,message:'No unambiguous protected-ref flow baseline is available.'});}
     }
-    artifact.currentVersion=declarations.length&&new Set(declarations).size===1?declarations[0]:null;
-    if(!declarations.length||new Set(declarations).size!==1)snapshot.diagnostics.push({code:'unavailable-flow-baseline',path:`docs/artifacts/${artifact.id}/README.md`,message:'No unambiguous protected-ref flow baseline is available.'});
+    snapshot=buildSnapshot(files,snapshot.repository,diagnostics);
   }
   // Keep historical knowledge available without confusing it with current roots.
   const known=new Set(snapshot.artifacts.flatMap(a=>a.elements.map(e=>e.id)));
@@ -47,7 +56,7 @@ export async function readFlowRepository(path, {worktree,knowledge='planning',ro
     if(artifact&&!known.has(id)){artifact.elements.push({id,artifact:m[1],source,path:m[3],file,markdown});known.add(id);}
   }
   const graph=buildFlowGraph(snapshot,{context:target,knowledge});
-  graph.diagnostics.push(...snapshot.diagnostics.filter(d=>d.code==='unavailable-flow-baseline'));
+  graph.diagnostics.push(...snapshot.diagnostics.filter(d=>d.code!=='redundant-proposal'));
   const tracked=new Set((await git(target,['ls-files','-z'],true)).split('\0').filter(Boolean));
   const sources=[];
   for(const source of graph.sources){
@@ -67,7 +76,7 @@ export async function readFlowRepository(path, {worktree,knowledge='planning',ro
   const paths=[...new Set([...graph.flows.map(f=>f.file),...sources.map(s=>s.path)])],trees=[];
   for(const [i,ref] of ['main','master'].entries())if(refs[i]&&paths.length){
     const tree=await git(target,['ls-tree','-r','-z','--format=%(objectname)%x09%(path)',ref,'--',...paths],true).catch(()=>null);
-    if(tree)trees.push({ref,entries:new Map(tree.split('\0').filter(Boolean).map(row=>{const i=row.indexOf('\t');return [row.slice(i+1),row.slice(0,i)];}))});
+    if(tree!==null)trees.push({ref,entries:new Map(tree.split('\0').filter(Boolean).map(row=>{const i=row.indexOf('\t');return [row.slice(i+1),row.slice(0,i)];}))});
   }
   const publication=(path,text)=>{
     for(const {ref,entries} of trees){const hash=entries.get(path);if(!hash)continue;const bytes=Buffer.from(text),blob=createHash(hash.length===64?'sha256':'sha1').update(`blob ${bytes.length}\0`).update(bytes).digest('hex');

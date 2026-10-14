@@ -34,20 +34,17 @@ evidence:
     result: passed
     source: docs/artifacts/artifact-driven/changes/change-flow-discovery/tasks/03-validation.md#evidence
   - criterion: inventory
-    method: Check availability of downstream delivery and required upstream
-      publication.
-    result: incomplete
-    source: docs/artifacts/units-of-work/flow-discovery-and-retrieval/README.md#combined-checks
+    method: Validate all three owned inventories and supporting references.
+    result: passed
+    source: docs/artifacts/artifact-plane/changes/change-flow-discovery/tasks/05-plane-inventory.md#evidence
   - criterion: discovery
-    method: Check availability of downstream delivery and required upstream
-      publication.
-    result: incomplete
-    source: docs/artifacts/units-of-work/flow-discovery-and-retrieval/README.md#combined-checks
+    method: Run integrated browser, offline semantic and complete graph retrieval checks.
+    result: passed
+    source: docs/artifacts/artifact-plane/changes/change-flow-discovery/tasks/06-integration.md#evidence
   - criterion: agent-access
-    method: Check availability of downstream delivery and required upstream
-      publication.
-    result: incomplete
-    source: docs/artifacts/units-of-work/flow-discovery-and-retrieval/README.md#combined-checks
+    method: Compare HTTP/MCP responses and exercise actual stdio protocol and guards.
+    result: passed
+    source: docs/artifacts/artifact-plane/changes/change-flow-discovery/tasks/03-agent-adapters.md#evidence
   - criterion: integration
     method: Check availability of downstream delivery and required upstream
       publication.
@@ -98,9 +95,8 @@ affected_flows:
     effect: create
 flow_assessment: Investigated named journeys in all three artifacts using
   artifact contracts, shipped guidance, entry points and tests. ADD records are
-  supplied in its member change. Plane and Story-Driven inventories remain
-  planned until the new ADD contract establishes; their current absence is
-  explicit preparatory work. No exhaustive runtime-path coverage is asserted.
+  supplied in its member change. The inventory contains five ADD, six Plane and three Story-Driven flows.
+  Supporting source relationships are documented or static; gaps remain explicit. No exhaustive runtime-path coverage is asserted.
 ---
 
 # Flow discovery and retrieval
@@ -115,14 +111,16 @@ Hosted inference, an embedded generative model, automatic code changes, arbitrar
 
 ## Approval and delivery boundaries
 
-The user approved the draft plan and instructed implementation. Prepare Requirement, Specification and Plan with phase self-checks and commits. Preserve that approval for unchanged scope. ADD's required flow contract must establish before downstream Implementation. Local main establishes the previous baselines; it does not establish this new contract. PR review and merge remain required.
+The user approved the draft plan and instructed implementation. Prepare Requirement, Specification and Plan with phase self-checks and commits. Preserve that approval for unchanged scope. ADD's required flow contract must establish before downstream Implementation. Protected main establishes ADD 2.1.0 after PR #20 merged. Its contract and retained delivery evidence were rechecked before downstream implementation. PR review and merge remain required.
 
 ## Combined checks
 
 ADD upstream checks passed: Go tests/vet; canonical and embedded bundle fidelity; fresh/repeated/dry-run/conflict adoption; five flow records with 29 steps, 30 transitions and 15 readable supporting sources; new task DAGs; 167 changed local links/headings across 127 Markdown files; historical snapshot/delivery retention; website build. Existing Plane regression tests passed 136 checks after the sandbox subprocess restriction was resolved, and its existing build passed. No application source was changed. Detailed reproducible evidence remains in ADD task 03.
 
-Combined flow-system acceptance is incomplete: ADD 2.1.0 has not established; Plane and Story-Driven implementation wait for that upstream merge and contract recheck. The nine downstream flow records, new Flows UI, local embeddings, HTTP/MCP, browser acceptance and semantic/impact benchmarks are not delivered or validated yet. This brief does not assert completed shared acceptance or establishment.
+The integrated reader validates 14 named flows and 57 readable supporting sources with no flow diagnostics. Plane and Story-Driven task records contain the concrete downstream checks: 179 Node tests, 32 browser tests, app/website builds, Go tests/vet, dependency audit, documentation hierarchy, complete snapshots and historical retention. Five actual local semantic queries ranked the expected flow first. Explicit impact traversal returned both known shared adoption consumers. Runtime support is a discovery aid; the map does not enumerate every possible system path.
+
+Shared completion remains incomplete until proposed Plane 1.11.0 and Story-Driven 1.1.0 land on main with their retained delivery records. Local passing tests and prepared snapshots do not establish these versions.
 
 ## Publication review
 
-[PR #20](https://github.com/hieutran21198/software-engineering/pull/20) proposes ADD 2.1.0 with the upstream flow contract and prepared downstream knowledge/plans. It does not establish the new version. After required review/merge, verify the published contract and retained ADD delivery evidence before executing the Plane and Story-Driven plans. No shared completion is asserted.
+[PR #20](https://github.com/hieutran21198/software-engineering/pull/20) merged. All required knowledge, originating delivery records and implementation for artifact-driven 2.1.0 have landed on main. The protected-ref path sets and bytes match the prepared contract. Plane 1.11.0 and Story-Driven 1.1.0 remain proposed; their review and merge are still required. No shared completion is asserted.

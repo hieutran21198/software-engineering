@@ -10,6 +10,8 @@ const initialIndexExists = existsSync(
 );
 const service = createFlowService({ roots: [path] });
 const cases = [
+  ["Retrieve safe source context with freshness and pagination", "artifact-plane:source-retrieval"],
+  ["Switch between independent open project tabs", "artifact-plane:project-tabs"],
   ["Adopt the reusable artifact driven bundle", "artifact-driven:adoption"],
   [
     "Wait for upstream prerequisites before implementing",
@@ -47,10 +49,13 @@ try {
   const impact = await service.query({
     path,
     operation: "impact",
-    ids: ["artifact-driven:adoption"],
+    ids: ["internal/adopt/adopt.go"],
     limit: 100,
   });
   const impactMs = performance.now() - start;
+  const expectedConsumers=["artifact-driven:adoption","story-driven:adoption"];
+  const returnedConsumers=impact.data.flows.map(f=>f.logicalId);
+  const missingConsumers=expectedConsumers.filter(id=>!returnedConsumers.includes(id));
   console.log(
     JSON.stringify(
       {
@@ -71,6 +76,7 @@ try {
         results,
         impact: {
           milliseconds: impactMs,
+          source:"internal/adopt/adopt.go",expectedConsumers,returnedConsumers,missingConsumers,
           total: impact.pagination.total,
           coverage: impact.data.coverage,
           freshness: impact.freshness,
@@ -81,8 +87,8 @@ try {
       2,
     ),
   );
-  if (results.some((r) => !r.rank || !r.semantic || r.freshness !== "fresh"))
+  if (missingConsumers.length || impact.freshness!=="fresh" || impact.completeness!=="complete" || results.some((r) => !r.rank || !r.semantic || r.freshness !== "fresh" || r.completeness!=="complete"))
     process.exitCode = 1;
 } finally {
-  service.close();
+  await service.close();
 }
