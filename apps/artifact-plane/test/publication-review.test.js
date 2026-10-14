@@ -80,3 +80,22 @@ test('version and brief contradictions keep evidence unverified',async()=>{
  assert.equal((await inspect('# Version\n\n## Publication review\n\n'+assertion,new Map([[unitPath,body]]),unitPath)).state,'unverified');
 });
 for(const wording of ['All required knowledge and code changes have merged into master.','All required implementation and knowledge merges are merged on main.']) test('accept scoped affirmative wording '+wording,async()=>assert.equal((await inspect('# Version\n\n## Publication review\n\n'+wording)).state,'established'));
+
+test('real flow-discovery review retains its affirmative PR provenance and exact assertion',async()=>{
+ const source=await readFile(new URL('../../../docs/artifacts/units-of-work/flow-discovery-and-retrieval/README.md',import.meta.url),'utf8');
+ const paragraph=source.split('\n\n').find(text=>text.startsWith('artifact-plane 1.11.0: '));
+ assert.ok(paragraph);
+ const scoped=paragraph.replace('artifact-plane 1.11.0: ','tenant 1.0.0: ');
+ const body=brief+'\n## Publication review\n\n'+scoped;
+ const result=await inspect('# Version',new Map([[unitPath,body]]),unitPath);
+ assert.equal(result.state,'established');
+ assert.equal(result.sources.find(item=>item.kind==='documented-merge-review').assertion,'All required knowledge and implementation changes have landed on main through PR #21.');
+});
+for(const clause of ['through PR #21','after PR #13','via PR #20']) test('accept bounded provenance '+clause,async()=>{
+ const statement=assertion.replace('main.','main '+clause+'.');
+ assert.equal((await inspect('# Version\n\n## Publication review\n\n'+statement)).state,'established');
+});
+for(const clause of ['through PR #21 if tests pass','after PR #13 as an example','via PR #20 which has not merged','through PR #21 or future PR #22']) test('reject qualified PR provenance '+clause,async()=>{
+ const statement=assertion.replace('main.','main '+clause+'.');
+ assert.equal((await inspect('# Version\n\n## Publication review\n\n'+statement)).state,'unverified');
+});

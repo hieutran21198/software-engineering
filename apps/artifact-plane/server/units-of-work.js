@@ -89,7 +89,7 @@ export function publicationReview(files, prefix, reviewSource = null) {
   const sources = [{path, memberPrefix: ''}];
   if (owners.length === 1 && !owners[0].diagnostics.length && (!reviewSource || reviewSource === owners[0].path)) sources.push({path: owners[0].path, memberPrefix: `${artifact} ${version}: `});
   const evidence = [];
-  const affirmative = /^All required (?:knowledge and (?:implementation|code)|(?:implementation|code) and knowledge) (?:changes|merges) (?:have landed|have merged|are merged|landed) (?:on|into) (?:main|master)\.$/i;
+  const affirmative = /^All required (?:knowledge and (?:implementation|code)|(?:implementation|code) and knowledge) (?:changes|merges) (?:have landed|have merged|are merged|landed) (?:on|into) (?:main|master)(?: (?:through|after|via) PR #[1-9]\d*)?\.$/i;
   const nonassertion = /\b(?:not|never|no|cannot|can't|hasn't|haven't|isn't|aren't|didn't|won't|unmerged|pending|unpublished|unverified|false|incorrect|tentative|if|unless|until|when|once|will|would|could|should|must|may|might|example|examples|hypothetical|suppose|instruction|instructions|template|format|quote|quoted)\b/i;
   let contradictory = false;
   for (const source of sources) {
