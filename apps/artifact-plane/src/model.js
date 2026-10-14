@@ -355,7 +355,7 @@ export function buildSnapshot(files, repository = {}, inputDiagnostics = []) {
         ),
         documents = [data];
       for (const token of marked.lexer(body))
-        if (token.type === "code" && ["yaml", "yml"].includes(token.lang) && /^\s*(?:references\s*:|["\']references["\']\s*:|\{\s*["\']?references["\']?\s*:)/m.test(token.text))
+        if (token.type === "code" && ["yaml", "yml"].includes(token.lang) && /(?:\breferences\s*:|["\']references["\']\s*:)/.test(token.text))
           documents.push(yaml(token.text, consumer.file, diagnostics));
       for (const document of documents) {
         if (!record(document) || !Object.hasOwn(document, "references"))

@@ -94,4 +94,6 @@ test('established flow selection uses protected declarations and flags modified 
 test('YAML task examples do not create reference diagnostics in a flow context',()=>{
  const files=flowFiles();files.set('docs/artifacts/tenant/versions/1.0.0/specifications/examples.md','# Task examples\n\n```yaml\n---\nid: first\n---\n---\nid: second\n---\n```\n');
  const snapshot=buildSnapshot(files);assert.equal(snapshot.diagnostics.length,0);assert.equal(snapshot.references.length,0);
+ files.set('docs/artifacts/tenant/versions/1.0.0/specifications/inline.md','# Inline reference\n\n```yaml\n{note: Context, references: [{artifact: tenant, element: specifications/identity.md, requires: Use identity.}]}\n```\n');
+ const inline=buildSnapshot(files);assert.equal(inline.diagnostics.length,0);assert.equal(inline.references.length,1);assert.equal(inline.references[0].resolved,true);
 });

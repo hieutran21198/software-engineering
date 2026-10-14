@@ -124,3 +124,5 @@ Shared completion remains incomplete until proposed Plane 1.11.0 and Story-Drive
 ## Publication review
 
 [PR #20](https://github.com/hieutran21198/software-engineering/pull/20) merged. All required knowledge, originating delivery records and implementation for artifact-driven 2.1.0 have landed on main. The protected-ref path sets and bytes match the prepared contract. Plane 1.11.0 and Story-Driven 1.1.0 remain proposed; their review and merge are still required. No shared completion is asserted.
+
+[PR #21](https://github.com/hieutran21198/software-engineering/pull/21) proposes the complete Plane 1.11.0 and Story-Driven 1.1.0 delivery with integrated checks and retained task evidence. Both downstream versions and shared completion remain unestablished until required review and merge on main.

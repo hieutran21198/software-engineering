@@ -16,7 +16,7 @@ Governing requirements: requirements/flows.md. Governing specification: specific
 - [x] Representative queries return expected flows within the top ten and expected explicit consumers appear in complete impact traversal.
 - [x] Offline, freshness, interrupted indexing, isolation and read-only checks pass.
 - [x] Existing Node/browser suites and build pass; hardware/dataset/context metrics are recorded without invented token claims.
-- [ ] Prepare complete proposed version and PR with retained task evidence; shared completion waits for every member establishment.
+- [x] Prepare complete proposed version and PR with retained task evidence; shared completion waits for every member establishment.
 
 ## Evidence
 
@@ -47,6 +47,6 @@ These are measurements of this small inventory and structured response bytes. Th
 
 ### Version and handoff
 
-Prepared compatible proposed minor versions Plane 1.11.0 and Story 1.1.0, with complete knowledge, originating source_change, delivery_tasks: change and retained task evidence. Protected main continues to establish prior downstream versions until review/merge. ADD 2.1.0 is already established and its supplying contract was rechecked. The shared unit records local checks separately from remaining publication. PR handoff is pending below.
+Prepared compatible proposed minor versions Plane 1.11.0 and Story 1.1.0, with complete knowledge, originating source_change, delivery_tasks: change and retained task evidence. Protected main continues to establish prior downstream versions until review/merge. ADD 2.1.0 is already established and its supplying contract was rechecked. The shared unit records local checks separately from remaining publication. [PR #21](https://github.com/hieutran21198/software-engineering/pull/21) contains the complete downstream delivery and links merged upstream PR #20. Team review and merge are required; no auto-merge or deployment was enabled.
 
 KISS and STE self-check passed: one authoritative Git map, disposable local index, shared adapters and explicit coverage. No additional workflow registry, hosted inference or approval bypass was added.
