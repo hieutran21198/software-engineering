@@ -26,7 +26,7 @@ Explicit approval of this plan and the listed internal prerequisites with their 
 - [x] Verify inspected fixture bytes and Git state remain unchanged.
 - [x] Validate documentation hierarchy, safe unit membership, task DAG, and resulting snapshot references.
 - [x] Record actual commands/results in task evidence and reference shared evidence from the unit brief.
-- [ ] Document browser-origin persistence and memory growth with retained tabs; prepare the proposed version and review PR after version confirmation.
+- [x] Document browser-origin persistence and memory growth with retained tabs; prepare the proposed version and review PR after version confirmation.
 
 ## Evidence
 
@@ -44,4 +44,4 @@ Commands ran in apps/artifact-plane with Node 24.21.0:
 
 Initial restricted test runs could not listen on localhost; checks passed with test server access. Cached Chromium lacked libnspr4.so, so checks used installed Nix Chromium. The extra browser case first raced a build directory replacement, then used a disabled zoom-in control in the small fixture. Repeating it after the build with Zoom Out passed. These harness failures do not support acceptance; the passing reruns do.
 
-Documentation describes browser-profile/origin restoration, session-only navigation, and retained memory growth. Implementation and validation are complete. The user confirmed version 1.10.0 and its complete proposed snapshot is prepared. Review PR handoff follows. No merge or establishment is asserted. KISS and STE self-checks passed.
+Documentation describes browser-profile/origin restoration, session-only navigation, and retained memory growth. Implementation and validation are complete. The user confirmed version 1.10.0 and its complete proposed snapshot is prepared. [Review PR #19](https://github.com/hieutran21198/software-engineering/pull/19) is open after explicit destination authorization. No merge or establishment is asserted. KISS and STE self-checks passed.
