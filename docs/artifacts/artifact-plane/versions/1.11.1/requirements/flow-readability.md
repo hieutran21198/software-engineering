@@ -10,7 +10,7 @@ The flow explorer currently prints raw diagnostic messages and serialized omissi
 - Keep the supporting-node checkbox beside its label and usable with the keyboard.
 - Preserve freshness, completeness, source publication, diagnostic severity, source pagination and navigation behavior.
 
-Model installation, backend retrieval changes, new dependencies and historical snapshot changes are excluded.
+Model installation, backend changes beyond creation metadata and list ordering, new dependencies and historical snapshot changes are excluded.
 
 ## Navigation consistency amendment
 

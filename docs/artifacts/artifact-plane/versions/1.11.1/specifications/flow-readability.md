@@ -26,7 +26,7 @@ Give flow state a project-session lifetime so switching views does not unmount a
 
 In Flows, replace the artifact navigation with the searchable flow list in the left panel. The center displays the selected flow graph and its supporting-node toggle. The right inspector displays the selected flow summary, evidence, supporting knowledge, gaps, exclusions and source reader; a graph node filters its relevant support. Selecting a flow, step or source updates the same context across panels. Artifact and unit participation links still open their requested flow/impact context. Switching back restores the prior dependency or unit selection without showing it as the active flow selection.
 
-Keep the first task's readable notices and expandable details. On narrow screens use the existing responsive panel behavior and accessible labels. Do not change HTTP/MCP schemas, index semantics, artifact dependencies or publication rules.
+Keep the first task's readable notices and expandable details. On narrow screens use the existing responsive panel behavior and accessible labels. Preserve HTTP/MCP compatibility, retrieval candidate semantics, artifact dependencies and publication rules.
 
 Amendment self-check: this adds UI state ownership and panel integration in main.jsx and Flows.jsx, plus CSS and focused tests. Existing project sessions supply isolation; no new persistence store or dependency is needed. The same-session TL reviewed requirements and this contract sequentially. Approval is required before the new task starts.
 
