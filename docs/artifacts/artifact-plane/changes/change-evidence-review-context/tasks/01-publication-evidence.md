@@ -13,12 +13,14 @@ Governing knowledge: requirements/evidence-correctness.md E1/E2/E5; specificatio
 
 ## Definition of Done
 
-- [ ] Only actual affirmative Publication review paragraphs from the correct version README/owning unit can supply member/version-scoped merge assertions; return exact source/assertion metadata.
-- [ ] Instructional specification prose, blocks/quotes/examples, negation/future/conditional text, location-only statements and wrong versions/members never establish.
-- [ ] Complete protected-ref snapshot/task bytes remain required; missing/conflicting/changed/unsafe sources retain honest proposed/unverified/unknown evidence.
-- [ ] Real and controlled regression fixtures reproduce the discovery false positive, prove rejection, and preserve valid explicit historical review assertions without rewriting snapshots.
-- [ ] Focused Node checks pass and actual commands/results are returned to the coordinator; repository fingerprints remain unchanged.
+- [x] Only actual affirmative Publication review paragraphs from the correct version README/owning unit can supply member/version-scoped merge assertions; return exact source/assertion metadata.
+- [x] Instructional specification prose, blocks/quotes/examples, negation/future/conditional text, location-only statements and wrong versions/members never establish.
+- [x] Complete protected-ref snapshot/task bytes remain required; missing/conflicting/changed/unsafe sources retain honest proposed/unverified/unknown evidence.
+- [x] Real and controlled regression fixtures reproduce the discovery false positive, prove rejection, and preserve valid explicit historical review assertions without rewriting snapshots.
+- [x] Focused Node checks pass and actual commands/results are returned to the coordinator; repository fingerprints remain unchanged.
 
 ## Evidence
 
-Implementation has not started. No checks for changed behavior are recorded.
+Publication recognition now reads only scoped affirmative Publication review paragraphs from the matching version README or unique owning unit. Exact assertion/source metadata is returned; specifications, examples, quotations, negations, location-only prose and unrelated member/version claims cannot supply proof. Complete protected-ref snapshot/task matching remains required. Bounded through/after/via PR-number provenance preserves legitimate explicit review paragraphs.
+
+The final focused publication/unit/workflow/repository-query suites passed all 88 checks. The real 1.11.1 specification false-positive fixture is rejected and its repository fingerprint remains unchanged. An earlier combined publication/runtime run passed all 96 checks before the bounded-provenance addition; final integrated checks remain pending. No historical documentation was changed. Legacy sources without explicit review become unverified by design. KISS uses scoped Markdown paragraphs and existing readers; STE keeps recorded assertions distinct from independent validation.
