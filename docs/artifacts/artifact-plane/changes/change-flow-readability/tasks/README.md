@@ -16,3 +16,5 @@ One task owns the related component and style changes plus focused browser valid
 ## Amendment self-check
 
 The new task depends on the validated first task and stays in this same open change. Two unique IDs and one resolved dependency form an acyclic graph. Scope includes shared controls, session state and synchronized panels. Existing evidence is retained, with shared acceptance marked incomplete pending new checks. Execute sequentially after explicit approval of this amendment.
+
+The pending second task also covers the user-requested lazy pages and newest-first ordering. Creation metadata is the only additive backend scope. Fresh pagination, date provenance and HTTP/MCP parity checks are required. No added task dependency or parallel worker is needed.

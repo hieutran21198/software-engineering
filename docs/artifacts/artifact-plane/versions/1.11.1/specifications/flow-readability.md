@@ -29,3 +29,15 @@ In Flows, replace the artifact navigation with the searchable flow list in the l
 Keep the first task's readable notices and expandable details. On narrow screens use the existing responsive panel behavior and accessible labels. Do not change HTTP/MCP schemas, index semantics, artifact dependencies or publication rules.
 
 Amendment self-check: this adds UI state ownership and panel integration in main.jsx and Flows.jsx, plus CSS and focused tests. Existing project sessions supply isolation; no new persistence store or dependency is needed. The same-session TL reviewed requirements and this contract sequentially. Approval is required before the new task starts.
+
+## Lazy pages and creation-date order
+
+Request 20 flow records per page using the existing search/impact cursor contract. Fetch the first page on entering Flows. Append the next page once when its sentinel enters the scroll viewport; also expose a keyboard-accessible Load more button. Permit only one next-page request at a time. Deduplicate opaque IDs and retain the selected flow. Show initial, next-page loading and retry states separately. Do not fetch details for every list row or source text before selection. Hidden views issue no list/detail/source requests.
+
+Use the first available Git commit introducing the selected flow document as createdAt, an ISO UTC timestamp. This is the selected record's creation date, not a claim about the original logical journey across all snapshots. Uncommitted records and histories with insufficient creation proof expose null and a Creation date unknown label. Do not substitute file mtime or an observed index timestamp. Derive metadata from contained registered repository history in bounded batched reads and reuse it by Git revision in the disposable cache. Preserve the existing read-only and safe-path rules.
+
+Sort search and impact candidate lists by createdAt descending before cursor pagination. Existing retrieval still determines candidate membership and may expose its scores; newest-first determines displayed order. Use opaque ID as the stable tie breaker and put unknown dates last. Return creation metadata additively through the shared HTTP/MCP service; existing clients remain valid. Bind cursors to the selected context/revision/query as before.
+
+Reset pages when search, knowledge or worktree changes. On revision refresh or stale-cursor rejection, reload the first page and retain a selected detail only if it still resolves. Abort or ignore old-context page responses. Creation-date metadata follows Git revision invalidation. All snapshots orders each snapshot record by its own documented Git creation date. This amendment permits only the needed reader/index metadata and ordering additions; other backend behavior is unchanged.
+
+Specification self-check: existing cursor pagination supplies the transport and safe context binding. This design adds no workflow database or model download. Tests must cover larger lists, tie/unknown dates, page boundaries, read-only parity and stale requests before delivery evidence can pass.
