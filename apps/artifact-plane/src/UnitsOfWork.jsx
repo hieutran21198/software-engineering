@@ -26,7 +26,7 @@ export function UnitList({snapshot,worktreePath,selected,onSelect,filter}) {
 export function UnitView({context,view,onView,planning,onPlanning,selection,onSelect,recorded=false,loading}) {
  const [showAll,setShowAll]=useState(false);
  const ready=context?.unit.loadState!=='not-loaded'&&(view==='workflow'?context?.unit.members.some(m=>m.workflow)||!context?.unit.members.length:view==='implementation'?context?.unit.implementationGraph.state!=='not-loaded':context?.unit.artifactGraph[planning?'planning':'established'].state!=='not-loaded');
- const graph=useMemo(()=>context&&ready?unitCanvas(context,view,planning,selection,showAll):{nodes:[],edges:[]},[context,view,planning,selection,showAll,ready]);
+ const graph=useMemo(()=>{const result=context&&ready?unitCanvas(context,view,planning,selection,showAll):{nodes:[],edges:[]};return {...result,nodes:result.nodes.map(node=>({...node,initialWidth:node.style.width,initialHeight:node.style.height}))};},[context,view,planning,selection,showAll,ready]);
  if(!context)return <div className="empty-canvas"><h2>Select a unit of work</h2><p>Choose an outcome to explore its participating changes and evidence.</p></div>;
  const {unit}=context;
  const diagnostics=view==='artifacts'?unit.artifactGraph[planning?'planning':'established'].diagnostics:view==='implementation'?unit.implementationGraph.diagnostics:unit.diagnostics;
