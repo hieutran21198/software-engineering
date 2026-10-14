@@ -9,6 +9,7 @@ All knowledge and implementation belong to this repository. The established arti
 ## Knowledge
 
 - [Project tab requirements](requirements/project-tabs.md)
+- [Project tab contract](specifications/project-tabs.md)
 
 ## Requirement self-check
 
