@@ -13,3 +13,7 @@ The requested outcome concerns visible spacing and control consistency. Evidence
 - [Presentation contract](specifications/spacing-control-consistency.md)
 
 Specification self-check completed in the same session as Plan. No implementation is authorized yet.
+
+- [Concrete plan](tasks/README.md)
+
+Requirement, Specification and Plan self-checks completed. The new plan awaits explicit approval. No implementation files changed.
