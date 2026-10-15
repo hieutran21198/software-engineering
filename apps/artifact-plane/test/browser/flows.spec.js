@@ -63,6 +63,8 @@ test('lazy pages, synchronized panels and retained cross-view knowledge and sele
  });
  try{
   await page.goto('/');await page.getByLabel('Repository path').fill(f.root);await page.getByRole('button',{name:'Open repository',exact:true}).click();expect(requests).toHaveLength(0);
+  // The initial observation pulse can refresh flow reads; settle it before measuring cross-view reuse.
+  await expect(page.getByLabel('Repository update status')).toHaveText('Current');
   await page.getByRole('group',{name:'Dependency view'}).getByRole('button',{name:'Planning',exact:true}).click();
   await page.getByRole('button',{name:'Flows',exact:true}).click();
   const panel=page.getByRole('tabpanel'),nav=panel.getByRole('navigation',{name:'System flows'}),knowledge=panel.getByRole('group',{name:'Flow knowledge'});
