@@ -1,6 +1,6 @@
 # Consistent search and readable graph labels
 
-The user reported that searching a flow title leaves the results apparently unchanged, that Unit of Work and Flow search interactions differ, and that nodes hide edge text.
+The user reported that searching a flow title leaves the results apparently unchanged, that Unit of Work and Flow search interactions differ, and that nodes hide edge text. The user also requested an Artifact filter in Flows and automatic artifact selection from Find participating flows.
 
 The root declares 1.11.0. This change starts with its complete knowledge and incorporates the merged 1.12.0 contracts from PR #24 as explicit supplemental knowledge. It excludes historical tasks and delivered provenance. Existing versions and originating changes remain unchanged. The package is 1.12.0; a compatible patch 1.12.1 is proposed after validation and review. No lifecycle repair is inferred.
 
@@ -24,3 +24,9 @@ The contract covers filtering before paging, compatible discovery, shared contro
 ## Plan self-check
 
 Four tasks cover service matching, graph labels, common controls and combined validation. Three prerequisite edges resolve with no cycle. The same capable session completed Specification and Plan sequentially. No implementation files were changed. The concrete plan awaits explicit user approval.
+
+## Additional discovery
+
+RecordedPicker reads stored capture contexts and opens a captured implementation graph with observed attempts. It is implemented, not a planned placeholder. The default local runtime query returned an available store with zero contexts and zero attempts; a differently configured server store can differ. This question does not add observer or history redesign to the search outcome.
+
+Find participating flows currently enters reverse-relationship discovery with an artifact/element selector, but exposes no Artifact dropdown in Flows. The new filter preserves explicit participation across flow owners; it must not become a filter only on flow.artifact.

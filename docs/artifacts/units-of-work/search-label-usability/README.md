@@ -17,6 +17,8 @@ flow_assessment: Inspected Flows, UnitList, main search controls, flow ranking a
 acceptance:
   - id: named-search
     criterion: Title and ID filtering updates visible matching results in both views, including flows outside the first browsing page.
+  - id: artifact-scope
+    criterion: Flow search scopes complete recorded participation to a visible Artifact selection, and Artifact details preselects the clicked artifact.
   - id: readable-labels
     criterion: Edge labels remain readable without covering node content or blocking controls in representative graph fixtures.
   - id: integration
@@ -33,7 +35,7 @@ Readers can find named units/flows predictably and read graph relationships. The
 
 ## Scope
 
-Include title/ID search, explicit behavior discovery, search feedback/races and labelled flow/dependency graph presentation. Exclude global search, new inference, graph semantics changes, task history deletion and lifecycle repair.
+Include title/ID search, explicit behavior discovery, Artifact filtering and contextual navigation, search feedback/races and labelled flow/dependency graph presentation. Exclude global search, new inference, graph semantics changes, task history deletion and lifecycle repair.
 
 ## Validation evidence
 
