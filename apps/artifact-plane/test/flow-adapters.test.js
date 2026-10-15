@@ -72,13 +72,13 @@ function files() {
   }
   return result;
 }
-async function setup(t) {
-  const fixture = await fixtureRepository(files()),
+async function setup(t, inputFiles = files(), inputEmbedder) {
+  const fixture = await fixtureRepository(inputFiles),
     stateDir = await mkdtemp(join(tmpdir(), "plane-flow-adapter-"));
   const service = createFlowService({
     stateDir,
     roots: [fixture.root],
-    embedder: {
+    embedder: inputEmbedder || {
       signature: "test",
       embed: async (texts) => texts.map(() => [1, 0]),
     },
@@ -351,4 +351,52 @@ test('real stdio client initializes, lists tools and reads only configured roots
  assert.ok(result.structuredContent.diagnostics.some(d=>d.code==='flow-model-unavailable'));
  const denied=await client.callTool({name:'search_flows',arguments:{path:other.root}});assert.equal(denied.isError,true);assert.equal(JSON.parse(denied.content[0].text).status,403);
  assert.deepEqual(await fingerprint(fixture.root),before);assert.ok(!stderr.includes('SyntaxError'));
+});
+
+test('actual HTTP and MCP agree on complete named filtering and artifact participation', async t => {
+  const input=files();
+  const template=JSON.parse(input.get('docs/artifacts/tenant/versions/1.0.0/specifications/flows/login.md').split('---\n')[1]).flow;
+  for(let i=0;i<25;i++) {
+    const flow={...template,id:`lookup-${i}`,title:`Lookup ${i}`};
+    input.set(`docs/artifacts/tenant/versions/1.0.0/specifications/flows/lookup-${i}.md`,'---\n'+JSON.stringify({flow})+'\n---\n# '+flow.title+'\n');
+  }
+  for(const [id,support] of [['participating',[{id:'rules',kind:'element',artifact:'authentication',element:'specifications/login.md',basis:'documented',requires:'Use referenced identity rules.'}]],['unrelated',[{id:'rules',kind:'implementation',path:'src/check.js',basis:'static',requires:'Unrelated code.'}]]]) {
+    const flow={...template,id,artifact:'authentication',title:`Lookup ${id}`,support,steps:[{id:'check',title:'Check',supports:['rules']}]};
+    input.set(`docs/artifacts/authentication/versions/1.0.0/specifications/flows/${id}.md`,'---\n'+JSON.stringify({flow})+'\n---\n# Flow\n');
+  }
+  let calls=0;
+  const {fixture,http,client}=await setup(t,input,{signature:'adapter-spy',embed:async texts=>{calls++;return texts.map(()=>[1,0]);}});
+  const before=await fingerprint(fixture.root);
+  async function parity(args, expectedStatus=200){
+    const request={path:fixture.root,knowledge:'established',...args};
+    const response=await http(request);
+    assert.equal(response.status,expectedStatus);
+    const {operation,...arguments_}=request;
+    const tool=operation==='impact'?'get_impact_context':'search_flows';
+    const mcp=await client.callTool({name:tool,arguments:arguments_});
+    if(expectedStatus===200){assert.equal(mcp.isError,undefined);assert.deepEqual(stable(response.body),stable(mcp.structuredContent));return response.body;}
+    assert.equal(mcp.isError,true);
+    assert.equal(JSON.parse(mcp.content[0].text).status,expectedStatus);
+  }
+  const request={operation:'search',match:'title',artifact:'tenant',query:' Lookup ',limit:20};
+  const first=await parity(request);assert.equal(first.data.total,26);assert.equal(first.data.flows.length,20);
+  assert.ok(first.data.artifactOptions.some(a=>a.id==='initial'&&a.title==='Initial'));
+  const second=await parity({...request,cursor:first.data.next});assert.equal(second.data.flows.length,6);
+  assert.ok([...first.data.flows,...second.data.flows].some(f=>f.logicalId==='authentication:participating'));
+  assert.ok(![...first.data.flows,...second.data.flows].some(f=>f.logicalId==='authentication:unrelated'));
+  const title=await parity({...request,query:'  LOOKUP 24  '});assert.deepEqual(title.data.flows.map(f=>f.logicalId),['tenant:lookup-24']);
+  assert.equal((await parity({...request,query:'unrelated'})).data.total,0);
+  assert.equal((await parity({...request,artifact:'initial'})).data.total,0);
+  await parity({...request,artifact:'missing'},422);
+  await parity({...request,artifact:'authentication',cursor:first.data.next},422);
+  assert.equal(calls,0,'title requests must not execute embedding inference');
+  await parity({...request,match:'discovery',cursor:first.data.next},422);
+  const discovery=await parity({...request,match:'discovery',query:'membership'});
+  assert.equal(discovery.data.total,28);assert.ok(!discovery.data.flows.some(f=>f.logicalId==='authentication:unrelated'));
+  const impact=await parity({operation:'impact',ids:['docs/artifacts/tenant/versions/1.0.0/specifications/identity.md'],artifact:'tenant',limit:100});
+  assert.ok(impact.data.flows.some(f=>f.logicalId==='authentication:participating'));
+  assert.deepEqual(await fingerprint(fixture.root),before);
+  assert.equal((await http({...request,path:fixture.root,operation:'impact',ids:['artifact:tenant']})).status,422);
+  assert.equal((await http({...request,path:fixture.root,match:'unknown'})).status,422);
+  const invalid=await client.callTool({name:'get_flow',arguments:{flow:'tenant:login',artifact:'tenant'}});assert.equal(invalid.isError,true);
 });

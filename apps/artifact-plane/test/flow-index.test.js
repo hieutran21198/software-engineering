@@ -417,3 +417,74 @@ test('newest records sort before paging with stable ties and unknown dates last'
  assert.equal(all.at(-3).id,'flow-43');assert.deepEqual(all.slice(-2).map(f=>f.createdAt),[null,null]);
  for(let i=1;i<43;i++)assert.ok(all[i-1].createdAt>=all[i].createdAt);
 });
+
+test('title metadata filters complete eligible sets without invoking the encoder', async t => {
+  const record=fixture();
+  record.snapshot={artifacts:[{id:'owner',title:'Owner'},{id:'consumer',title:'Consumer'},{id:'empty',title:'No flows'}]};
+  const base=record.graph.flows[0];
+  record.graph.flows=Array.from({length:30},(_,i)=>({...base,id:`flow-${i}`,localId:`lookup-${i}`,logicalId:`owner:lookup-${i}`,title:`Lookup ${i}`,createdAt:`2026-10-${String(30-i).padStart(2,'0')}T00:00:00Z`,steps:[],support:[]}));
+  record.graph.flows.push({...base,id:'cross',artifact:'consumer',localId:'foreign',logicalId:'consumer:foreign',title:'Café lookup',steps:[],support:[]});
+  record.graph.flows.push({...base,id:'unrelated',artifact:'consumer',localId:'unrelated',logicalId:'consumer:unrelated',title:'Lookup unrelated',steps:[],support:[]});
+  record.graph.nodes=record.graph.flows.map(f=>({id:f.id,kind:'flow',artifact:f.artifact,logicalId:f.logicalId}));
+  record.graph.nodes.push({id:'owner-element',kind:'element',artifact:'owner'});
+  record.graph.edges=[{source:'cross',target:'owner-element',kind:'references',resolved:true}];
+  let calls=0;
+  const {service}=await setup(t,{loader:async()=>record,embedder:{get signature(){calls++;throw Error('Encoder initialized');},embed(){calls++;throw Error('Unexpected inference');}}});
+  const query=body=>service.query({path:'/repo',operation:'search',match:'title',...body});
+  const browse=await query({limit:20,artifact:'owner'});
+  assert.equal(browse.data.total,31);
+  assert.equal(browse.data.artifactOptions.length,3);
+  const hit=await query({query:'  LOOKUP 29  ',artifact:'owner'});
+  assert.deepEqual(hit.data.flows.map(f=>f.id),['flow-29']);
+  assert.equal((await query({query:'lookup 1',artifact:'owner'})).data.flows[0].id,'flow-1');
+  assert.equal(hit.freshness,'fresh');
+  const unicode=await query({query:'  CAFE\u0301  ',artifact:'owner'});
+  assert.deepEqual(unicode.data.flows.map(f=>f.id),['cross']);
+  assert.equal((await query({query:'lookup',artifact:'empty'})).data.total,0);
+  assert.equal((await query({query:'not-a-flow'})).data.total,0);
+  assert.equal((await query({query:'lookup 29owner'})).data.total,0);
+  const first=await query({query:'lookup',artifact:'owner',limit:2});
+  assert.deepEqual(first.data.flows.map(f=>f.title),['Café lookup','Lookup 0']);
+  const next=await query({query:' LOOKUP ',artifact:'owner',limit:2,cursor:first.data.next});
+  assert.deepEqual(next.data.flows.map(f=>f.title),['Lookup 1','Lookup 2']);
+  await assert.rejects(query({query:'lookup',artifact:'consumer',cursor:first.data.next}),{status:422});
+  const emptyCursor=(await query({limit:2})).data.next;
+  record.revision='changed';
+  await assert.rejects(query({cursor:emptyCursor}),{status:422});
+  assert.equal(calls,0);
+});
+
+test('artifact scope intersects impact reasons and scopes discovery before ranking', async t=>{
+  const record=fixture();record.snapshot={artifacts:[{id:'owner'},{id:'other'},{id:'empty'}]};
+  const base=record.graph.flows[0];
+  record.graph.flows=[base,{...base,id:'cross',artifact:'other',logicalId:'other:cross',localId:'cross'},{...base,id:'unrelated',artifact:'other',logicalId:'other:unrelated',localId:'unrelated'}];
+  record.graph.nodes=[{id:base.id,artifact:'owner',kind:'flow'}, {id:'cross',kind:'flow',artifact:'other'},{id:'unrelated',kind:'flow',artifact:'other'}, {id:'specific',kind:'element',artifact:'owner'}];
+  record.graph.edges=[{source:'cross',target:'specific',kind:'references',resolved:true}];
+  const {service}=await setup(t,{loader:async()=>record,embedder:{signature:'stub',embed:async texts=>texts.map(()=>[1,0])}});
+  const request={path:'/repo',operation:'search',query:'membership',artifact:'owner',limit:1};
+  const found=await service.query(request);assert.equal(found.data.total,2);assert.equal(found.data.flows.length,1);
+  const remaining=await service.query({...request,cursor:found.data.next});assert.equal(remaining.data.flows.length,1);
+  assert.ok(![...found.data.flows,...remaining.data.flows].some(f=>f.id==='unrelated'));
+  const impact=await service.query({path:'/repo',operation:'impact',ids:['specific'],artifact:'owner'});
+  assert.deepEqual(impact.data.flows.map(f=>f.id),['cross']);assert.equal(impact.data.flows[0].paths[0].target,'specific');
+  await assert.rejects(service.query({...request,match:'title',cursor:found.data.next}),{status:422});
+  for(const args of [{artifact:'missing'},{artifact:'../owner'},{match:'unknown'},{operation:'impact',ids:['specific'],match:'title'},{operation:'detail',flow:base.id,artifact:'owner'},{operation:'source',flow:base.id,source:'doc',match:'discovery'}])await assert.rejects(service.query({...request,...args}),{status:422});
+});
+
+test('switching title and discovery preserves cached document vectors', async t => {
+  const calls=[];
+  const {service,stateDir}=await setup(t,{embedder:{signature:'switch-cache',embed:async texts=>{calls.push([...texts]);return texts.map(()=>[1,0]);}}});
+  const request={path:'/repo',operation:'search'};
+  await service.query(request);
+  assert.ok(calls.some(texts=>texts.length>0));
+  const db=new DatabaseSync(join(stateDir,'flow-index.sqlite'));
+  t.after(()=>db.close());
+  const before=db.prepare('SELECT hash,model,hex(vector) AS vector FROM vectors ORDER BY hash,model').all();
+  const prepared=calls.length;
+  await service.query({...request,match:'title',query:'login'});
+  await service.query({...request,match:'title',query:''});
+  assert.equal(calls.length,prepared);
+  assert.deepEqual(db.prepare('SELECT hash,model,hex(vector) AS vector FROM vectors ORDER BY hash,model').all(),before);
+  await service.query({...request,match:'discovery'});
+  assert.deepEqual(calls.slice(prepared),[[]],'existing document vectors must not be embedded again');
+});

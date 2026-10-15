@@ -12,10 +12,11 @@ import { execFileSync } from "node:child_process";
 import { createHash } from "node:crypto";
 import { defaultStateDir, repositoryIdentity } from "./runtime-store.js";
 import { readFlowRepository } from "./flow-reader.js";
-import { flowImpact } from "./flow-model.js";
+import { flowImpact, safeFlowID } from "./flow-model.js";
 import { ExploreError } from "./reader.js";
 import { createLocalEmbedder, normalizeVector } from "./flow-embeddings.js";
 const digest = (x) => createHash("sha256").update(x).digest("hex");
+const normalizedName = value => String(value || "").trim().normalize("NFC").toLowerCase();
 const inside = (root, path) => {
   const r = relative(root, path);
   return !r || (r !== ".." && !r.startsWith("../") && !isAbsolute(r));
@@ -65,7 +66,7 @@ function validate(body) {
     !isAbsolute(body.path)
   )
     throw new ExploreError(422, "Select an absolute repository path");
-  const keys=['path','worktree','knowledge','operation','query','flow','ids','source','cursor','limit','budget'];
+  const keys=['path','worktree','knowledge','operation','query','flow','ids','source','cursor','limit','budget','match','artifact'];
   if(Object.keys(body).some(key=>!keys.includes(key))||body.path.includes('\0'))throw new ExploreError(422,'Invalid flow query fields');
   const knowledge = body.knowledge ?? "planning",
     operation = body.operation;
@@ -79,6 +80,10 @@ function validate(body) {
     (typeof body.cursor !== "string" || body.cursor.length > 10000)
   )
     throw new ExploreError(422, "Invalid cursor");
+  if (body.match !== undefined && (operation !== 'search' || !['title','discovery'].includes(body.match)))
+    throw new ExploreError(422, 'Invalid match selector');
+  if (body.artifact !== undefined && (!['search','impact'].includes(operation) || !safeFlowID(body.artifact)))
+    throw new ExploreError(422, 'Invalid artifact selector');
   const limit = body.limit ?? 10,
     budget = body.budget ?? 12000;
   if (
@@ -118,7 +123,12 @@ function validate(body) {
       !body.ids.every((x) => typeof x === "string" && x.length < 10000))
   )
     throw new ExploreError(422, "Select up to 100 impact IDs");
-  return { ...body, query: body.query?.trim(), knowledge, operation, limit, budget };
+  return {
+    ...body,
+    match: operation === 'search' ? body.match ?? 'discovery' : undefined,
+    query: body.match === 'title' ? normalizedName(body.query) : body.query?.trim(),
+    knowledge, operation, limit, budget,
+  };
 }
 const summary = (f) => ({
   id: f.id,
@@ -209,7 +219,8 @@ export function createFlowService({
  CREATE TABLE IF NOT EXISTS source_fingerprints(context TEXT,id TEXT,path TEXT,kind TEXT,fingerprint TEXT,PRIMARY KEY(context,id));
  CREATE TABLE IF NOT EXISTS relations(context TEXT,source TEXT,target TEXT,kind TEXT,json TEXT);
  CREATE INDEX IF NOT EXISTS reverse_relations ON relations(context,target);`);
-  const encoder = embedder ?? createLocalEmbedder(dir);
+  let encoder = embedder;
+  const getEncoder = () => encoder ??= createLocalEmbedder(dir);
   let serial = Promise.resolve(), closing=false, closePromise;
   async function execute(raw) {
     const started = performance.now(),
@@ -230,10 +241,20 @@ export function createFlowService({
       roots,
     });
     mark("loadMs");
+    const artifactOptions = (record.snapshot?.artifacts || [])
+      .filter(a => safeFlowID(a.id))
+      .map(({id,title}) => ({id,title: title || id}));
+    if (body.artifact && !artifactOptions.some(a => a.id === body.artifact))
+      throw new ExploreError(422, 'Artifact does not exist in selected context');
+    const participation = body.artifact ? flowImpact(record.graph, ['artifact:' + body.artifact]) : null;
+    const eligible = participation ? new Set(participation.flows.map(f => f.id)) : null;
+    const eligibleFlows = record.graph.flows.filter(f => !eligible || eligible.has(f.id));
+    const scopedRecord = {...record, graph: {...record.graph, flows: eligibleFlows}};
+    const titleMode = body.operation === 'search' && body.match === 'title';
     const context = digest(
-      JSON.stringify([record.repository.path, record.worktree, body.knowledge]),
+      JSON.stringify([record.repository.path, record.worktree, body.knowledge, body.match, body.artifact]),
     );
-    const model = encoder.signature || "injected";
+    const model = titleMode ? "metadata-title-v1" : getEncoder().signature || "injected";
     let cached = db.prepare("SELECT * FROM contexts WHERE id=?").get(context),
       diagnostics = [...record.graph.diagnostics];
     const reusableChunks =
@@ -246,13 +267,13 @@ export function createFlowService({
           .prepare("SELECT id,flow,text FROM documents WHERE context=?")
           .all(context)
           .map((doc) => ({ ...doc, hash: digest(doc.text) }))
-      : chunks(record);
+      : titleMode ? [] : chunks(scopedRecord);
     const vectors = new Map();
     let semantic = false;
-    try {
+    if (!titleMode) try {
       await encoder.embed([]);
       if (encoder.split && !reusableChunks)
-        docs = chunks(record, (text) => encoder.split(text));
+        docs = chunks(scopedRecord, (text) => encoder.split(text));
       const missing = [];
       for (const doc of docs) {
         const row = db
@@ -420,10 +441,23 @@ export function createFlowService({
         });
       return { ...source, text };
     }
-    if (body.operation === "search") {
+    if (titleMode) {
+      const query = body.query || "";
+      items = eligibleFlows
+        .filter(f => !query || [f.title,f.id,f.logicalId,f.localId].some(v => normalizedName(v).includes(query)))
+        .map(f => ({...summary(f), score:0}));
+      const exactIDs = items.filter(f => [f.id,f.logicalId,f.localId].some(v => normalizedName(v) === query));
+      const exactID = exactIDs.length === 1 ? exactIDs[0].id : null;
+      if(query) items.sort((a,b) =>
+        Number(normalizedName(b.title) === query || b.id === exactID) - Number(normalizedName(a.title) === query || a.id === exactID)
+        || String(a.title || '').localeCompare(String(b.title || ''), undefined, {numeric:true,sensitivity:"base"})
+        || a.id.localeCompare(b.id));
+      total = items.length;
+      data = {flows:items,total,semantic:false,artifactOptions,coverage: participation?.coverage || "Explicit known relationships only; participation requires contract impact review."};
+    } else if (body.operation === "search") {
       const query = body.query || "",
         ranks = [],
-        exact = record.graph.flows
+        exact = eligibleFlows
           .filter((f) => [f.id, f.logicalId, f.localId].includes(query))
           .map((f) => f.id);
       ranks.push(exact);
@@ -435,7 +469,7 @@ export function createFlowService({
             "SELECT flow,bm25(flow_fts) AS rank FROM flow_fts WHERE flow_fts MATCH ? AND context=? ORDER BY rank,id",
           )
           .all(terms.map((t) => '"' + t + '"').join(" OR "), context);
-        ranks.push([...new Set(rows.map((r) => r.flow))]);
+        ranks.push([...new Set(rows.filter(r => !eligible || eligible.has(r.flow)).map((r) => r.flow))]);
       }
       if (semantic && query) {
         try {
@@ -469,11 +503,11 @@ export function createFlowService({
         rank.forEach((id, i) =>
           scores.set(id, (scores.get(id) || 0) + 1 / (60 + i + 1)),
         );
-      items = record.graph.flows
+      items = eligibleFlows
         .filter((f) => !query || scores.has(f.id))
         .map((f) => ({ ...summary(f), score: scores.get(f.id) || 0 }));
       total = items.length;
-      data = { flows: items, total, semantic };
+      data = { flows: items, total, semantic, artifactOptions, coverage: participation?.coverage || "Explicit known relationships only; participation requires contract impact review." };
     } else if (body.operation === "detail") {
       const flow = selected(),
         ids = new Set([
@@ -519,10 +553,11 @@ export function createFlowService({
       };
     } else if (body.operation === "impact") {
       const impact = flowImpact(record.graph, body.ids);
-      items = impact.flows.map((f) => ({ ...summary(f), paths: f.impactPath }));
+      items = impact.flows.filter(f => !eligible || eligible.has(f.id)).map((f) => ({ ...summary(f), paths: f.impactPath }));
       total = items.length;
       data = {
         flows: items,
+        artifactOptions,
         unresolved: impact.unresolved,
         coverage: impact.coverage,
       };
@@ -563,7 +598,7 @@ export function createFlowService({
             c.context !== context ||
             c.revision !== record.revision ||
             c.operation !== body.operation ||
-            c.selector !== digest(JSON.stringify([body.query, body.ids])) ||
+            c.selector !== digest(JSON.stringify([body.query, body.ids, body.match, body.artifact])) ||
             !Number.isInteger(c.offset) ||
             c.offset < 0
           )
@@ -573,7 +608,9 @@ export function createFlowService({
           throw new ExploreError(422, "Invalid or stale cursor");
         }
       }
-      if (body.operation === 'search' && body.query) {
+      if (titleMode && body.query) {
+        // Named results were ordered over the complete eligible set above.
+      } else if (body.operation === 'search' && body.query) {
         items.sort((a,b) => Number(b.id === exactMatch) - Number(a.id === exactMatch)
           || b.score - a.score || a.id.localeCompare(b.id));
       } else {
@@ -588,7 +625,7 @@ export function createFlowService({
                 context,
                 revision: record.revision,
                 operation: body.operation,
-                selector: digest(JSON.stringify([body.query, body.ids])),
+                selector: digest(JSON.stringify([body.query, body.ids, body.match, body.artifact])),
                 offset: offset + body.limit,
               }),
             ).toString("base64url")
