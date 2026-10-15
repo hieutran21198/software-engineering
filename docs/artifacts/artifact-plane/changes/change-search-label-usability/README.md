@@ -30,3 +30,7 @@ Four tasks cover service matching, graph labels, common controls and combined va
 RecordedPicker reads stored capture contexts and opens a captured implementation graph with observed attempts. It is implemented, not a planned placeholder. The default local runtime query returned an available store with zero contexts and zero attempts; a differently configured server store can differ. This question does not add observer or history redesign to the search outcome.
 
 Find participating flows currently enters reverse-relationship discovery with an artifact/element selector, but exposes no Artifact dropdown in Flows. The new filter preserves explicit participation across flow owners; it must not become a filter only on flow.artifact.
+
+## Approved delivery
+
+The user explicitly approved the updated four-task plan, including Artifact filtering and contextual entry. Implementation proceeded on a dedicated branch after ADD 2.1.0 was verified on main. Earlier self-checks record phase boundaries, not current implementation blockers. The proposed patch awaits integrated validation and team review.

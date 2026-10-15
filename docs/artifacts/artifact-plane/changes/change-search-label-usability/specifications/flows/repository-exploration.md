@@ -25,16 +25,24 @@ flow:
       title: Load metadata first and scoped details on demand
       supports:
         - query
+        - measured-edge-labels
+        - label-placement
+        - label-browser-checks
     - id: flows
       title: Discover named flows and supporting owners
       supports:
         - flow-contract
+        - measured-edge-labels
+        - label-placement
+        - label-browser-checks
     - id: inspect
       title: Inspect selected knowledge and diagnostics
       supports:
         - explorer
         - reader-tests
         - evidence-review-contract
+        - measured-edge-labels
+        - label-browser-checks
   transitions:
     - from: select
       to: validate
@@ -96,13 +104,28 @@ flow:
       requires: Define named filtering, explicit discovery and readable labelled graph
         presentation without changing graph meaning.
       basis: documented
+    - id: measured-edge-labels
+      kind: implementation
+      path: apps/artifact-plane/src/GraphLabels.jsx
+      requires: Measure rendered node and edge-label bounds with accessible
+        clear-space disclosure.
+      basis: static
+    - id: label-placement
+      kind: implementation
+      path: apps/artifact-plane/src/label-placement.js
+      requires: Place displaced labels deterministically outside cards and other labels.
+      basis: static
+    - id: label-browser-checks
+      kind: test
+      path: apps/artifact-plane/test/browser/edge-labels.spec.js
+      requires: Check actual long, loop, reverse and parallel geometry at 1440 and 700
+        widths.
+      basis: static
   gaps:
     - The flow documents discovery behavior, not complete knowledge coverage or
       artifact establishment.
     - New contextual review navigation is specified but not implemented or
       browser-validated yet.
-    - New named-search controls and collision-aware label behavior await
-      approved implementation and executable evidence.
   exclusions:
     - Arbitrary filesystem browsing and automatic repository edits.
   artifact: artifact-plane
@@ -119,3 +142,5 @@ The structured record owns this named journey, source reasons, evidence basis, g
 The flow explorer shows compact evidence status and expandable diagnostic and shortened-source details. Optional semantic-model failure leaves keyword and graph discovery available.
 
 The explorer uses a lazy flow list with newest-first browsing and exact/relevance-first nonempty search in the sidebar, a selected graph in the center, and matching evidence/source details in the right inspector. Shared knowledge controls and per-project selections remain consistent across view switches. Creation dates describe the selected document record and are unknown when Git history cannot prove them.
+
+The approved search/readability change has tracked implementation and browser support. Static support identifies source responsibility; validation in the originating tasks does not prove exhaustive behavior or publication.

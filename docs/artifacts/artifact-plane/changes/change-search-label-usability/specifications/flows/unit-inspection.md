@@ -13,6 +13,8 @@ flow:
       supports:
         - units
         - search-label-contract
+        - shared-search-field
+        - search-browser-checks
     - id: resolve
       title: Resolve delivered versions and exact originating plans
       supports:
@@ -100,11 +102,19 @@ flow:
       requires: Define named filtering, explicit discovery and readable labelled graph
         presentation without changing graph meaning.
       basis: documented
+    - id: shared-search-field
+      kind: implementation
+      path: apps/artifact-plane/src/SearchField.jsx
+      requires: Provide consistent named filtering and clear behavior.
+      basis: static
+    - id: search-browser-checks
+      kind: test
+      path: apps/artifact-plane/test/browser/search-usability.spec.js
+      requires: Exercise live unit filtering, clear and consistent flow controls.
+      basis: static
   gaps:
     - Recorded passing assertions are not independently executed tests; missing
       merge evidence stays unresolved.
-    - New named-search controls and collision-aware label behavior await
-      approved implementation and executable evidence.
   exclusions:
     - Creating unit members from shared flow participation.
   artifact: artifact-plane
@@ -115,3 +125,5 @@ flow:
 ## Coverage
 
 The structured record owns this named journey, source reasons, evidence basis, gaps and exclusions. Sources are documented/static support; recorded task checks validate this map separately.
+
+The approved search/readability change has tracked implementation and browser support. Static support identifies source responsibility; validation in the originating tasks does not prove exhaustive behavior or publication.

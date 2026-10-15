@@ -17,11 +17,19 @@ flow:
         - http
         - mcp
         - search-label-contract
+        - named-scope-index
+        - named-scope-adapters
+        - flow-search-controls
+        - search-browser-checks
     - id: discover
-      title: Find ranked flow candidates and expand explicit impact
+      title: Filter named flows, discover behavior or expand explicit participation
       supports:
         - flow-contract
         - index
+        - named-scope-index
+        - named-scope-adapters
+        - flow-search-controls
+        - search-browser-checks
     - id: authorize
       title: Resolve a source ID inside the selected context
       supports:
@@ -50,7 +58,7 @@ flow:
   transitions:
     - from: context
       to: discover
-      condition: Semantic, keyword or impact discovery requested.
+      condition: Title, behavior or explicit participation discovery requested.
     - from: context
       to: authorize
       condition: A known scoped source is requested.
@@ -138,11 +146,33 @@ flow:
       requires: Define named filtering, explicit discovery and readable labelled graph
         presentation without changing graph meaning.
       basis: documented
+    - id: named-scope-index
+      kind: implementation
+      path: apps/artifact-plane/server/flow-index.js
+      requires: Filter complete title metadata and explicit artifact participation
+        before ranking and paging.
+      basis: static
+    - id: named-scope-adapters
+      kind: test
+      path: apps/artifact-plane/test/flow-adapters.test.js
+      requires: Verify HTTP/MCP selector parity, scoped cursors and unchanged
+        inspected sources.
+      basis: static
+    - id: flow-search-controls
+      kind: implementation
+      path: apps/artifact-plane/src/Flows.jsx
+      requires: Select artifact scope and title filtering or explicitly submitted
+        behavior discovery.
+      basis: static
+    - id: search-browser-checks
+      kind: test
+      path: apps/artifact-plane/test/browser/search-usability.spec.js
+      requires: Verify complete named matches, cross-owner participation, contextual
+        entry and delayed replies.
+      basis: static
   gaps:
     - Retrieval ranks candidates; it does not prove compatibility or complete
       system discovery.
-    - New named-search controls and collision-aware label behavior await
-      approved implementation and executable evidence.
   exclusions:
     - Arbitrary paths, credential files, hosted embedding calls and inferred
       approval.
@@ -159,4 +189,6 @@ The structured record owns this named journey, source reasons, evidence basis, g
 
 The flow explorer shows compact evidence status and expandable diagnostic and shortened-source details. Optional semantic-model failure leaves keyword and graph discovery available.
 
-The explorer uses a lazy flow list with newest-first browsing and exact/relevance-first nonempty search in the sidebar, a selected graph in the center, and matching evidence/source details in the right inspector. Shared knowledge controls and per-project selections remain consistent across view switches. Creation dates describe the selected document record and are unknown when Git history cannot prove them.
+The explorer uses a lazy flow list with newest-first browsing and complete title/ID filtering or explicitly submitted behavior discovery in the sidebar, a selected graph in the center, and matching evidence/source details in the right inspector. Shared knowledge controls and per-project selections remain consistent across view switches. Creation dates describe the selected document record and are unknown when Git history cannot prove them.
+
+The approved search/readability change has tracked implementation and browser support. Static support identifies source responsibility; validation in the originating tasks does not prove exhaustive behavior or publication.
