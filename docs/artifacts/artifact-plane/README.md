@@ -22,7 +22,7 @@ Version 1.10.0, its originating delivery tasks, and implementation landed on mai
 
 ## Active change
 
-- [Consistent spacing and form controls](changes/change-spacing-control-consistency/README.md)
+- [Simpler Artifact Plane exploration](changes/change-ux-simplification/README.md)
 
 
 ## Knowledge snapshot
