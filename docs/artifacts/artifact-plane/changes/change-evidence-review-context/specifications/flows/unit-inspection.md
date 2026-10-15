@@ -34,6 +34,7 @@ flow:
       supports:
         - units
         - evidence-review-contract
+        - publication-checks
   transitions:
     - from: brief
       to: resolve
@@ -85,11 +86,15 @@ flow:
       requires: Accept only member/version-scoped actual review assertions and
         disclose missing merge proof.
       basis: documented
+    - id: publication-checks
+      kind: test
+      path: apps/artifact-plane/test/publication-review.test.js
+      requires: Reject instructional/unscoped claims and preserve real member/version
+        assertions.
+      basis: static
   gaps:
     - Recorded passing assertions are not independently executed tests; missing
       merge evidence stays unresolved.
-    - Scoped publication-recognition corrections are specified; implementation
-      validation remains pending.
   exclusions:
     - Creating unit members from shared flow participation.
   artifact: artifact-plane

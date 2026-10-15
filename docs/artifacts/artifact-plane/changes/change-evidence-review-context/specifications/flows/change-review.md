@@ -13,22 +13,42 @@ flow:
       title: Select the registered worktree and artifact change
       supports:
         - contract
+        - review-service
+        - review-interface
+        - review-checks
+        - browser-checks
     - id: compare
       title: Compare contract knowledge with the declared current version
       supports:
         - contract
+        - review-service
+        - review-interface
+        - review-checks
+        - browser-checks
     - id: impact
       title: Trace recorded relationships on both comparison sides
       supports:
         - contract
+        - review-service
+        - review-interface
+        - review-checks
+        - browser-checks
     - id: evidence
       title: Read governing sources and missing review proof
       supports:
         - contract
+        - review-service
+        - review-interface
+        - review-checks
+        - browser-checks
     - id: return
       title: Return to delivery or capture the reviewed context
       supports:
         - contract
+        - review-service
+        - review-interface
+        - review-checks
+        - browser-checks
   transitions:
     - from: select
       to: compare
@@ -49,8 +69,28 @@ flow:
       requires: Define safe source context, evidence limits, revision recovery and
         read-only behavior.
       basis: documented
+    - id: review-service
+      kind: implementation
+      path: apps/artifact-plane/server/change-review.js
+      requires: Derive safe comparison, explicit impact and revision-bound source
+        context.
+      basis: static
+    - id: review-interface
+      kind: implementation
+      path: apps/artifact-plane/src/ChangeReview.jsx
+      requires: Present captured context, source comparisons, recovery and local exports.
+      basis: static
+    - id: review-checks
+      kind: test
+      path: apps/artifact-plane/test/change-review.test.js
+      requires: Exercise comparison, evidence, impact and contained source boundaries.
+      basis: static
+    - id: browser-checks
+      kind: test
+      path: apps/artifact-plane/test/browser/change-review.spec.js
+      requires: Exercise review navigation, exports, refresh and delayed replies.
+      basis: static
   gaps:
-    - Implementation and executable behavior evidence remain pending.
     - Declared current is not a historical code predecessor; recorded
       relationships are not exhaustive impact.
   exclusions:
@@ -60,4 +100,4 @@ flow:
 
 # Review a selected artifact change
 
-This proposed flow has documented contract support. Add tracked implementation/test support and actual validation evidence after plan approval.
+Tracked implementation and tests support this flow. Actual validation evidence remains in the originating delivery tasks; static support does not prove exhaustive behavior or approval.

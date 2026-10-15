@@ -13,6 +13,7 @@ flow:
       title: Bind a listed task and capture its graph context
       supports:
         - store
+        - worktree-checks
     - id: observe
       title: Record allowlisted lifecycle observations
       supports:
@@ -25,12 +26,14 @@ flow:
       title: Show reported execution and freshness separately from knowledge
       supports:
         - runtime-model
+        - worktree-checks
     - id: retain
       title: Retain history or disclose stale/unknown observations
       supports:
         - store
         - runtime-tests
         - evidence-review-contract
+        - worktree-checks
   transitions:
     - from: bind
       to: observe
@@ -76,11 +79,14 @@ flow:
       requires: Match activity to canonical worktree and task content; disclose
         captured revision.
       basis: documented
+    - id: worktree-checks
+      kind: test
+      path: apps/artifact-plane/test/browser/runtime.spec.js
+      requires: Verify matching worktree observations and retained captured identities.
+      basis: static
   gaps:
     - Observed lifecycle activity and reported checks do not prove task DoD,
       plan approval or artifact establishment.
-    - Current-worktree attribution is specified but its new implementation
-      checks remain pending.
   exclusions:
     - Starting agents, granting permissions, changing artifact knowledge or
       maintaining ADD workflow state.

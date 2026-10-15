@@ -45,6 +45,7 @@ flow:
         - index
         - adapters-tests
         - evidence-review-contract
+        - ranking-checks
   transitions:
     - from: context
       to: discover
@@ -123,11 +124,15 @@ flow:
       requires: Keep exact/relevance-first search and source-backed review context
         bounded and revision-safe.
       basis: documented
+    - id: ranking-checks
+      kind: test
+      path: apps/artifact-plane/test/flow-index.test.js
+      requires: Verify exact/relevance ordering before paging and offline
+        installed-model retrieval.
+      basis: static
   gaps:
     - Retrieval ranks candidates; it does not prove compatibility or complete
       system discovery.
-    - Selected-change review and packet adapters are specified; implementation
-      and parity checks remain pending.
   exclusions:
     - Arbitrary paths, credential files, hosted embedding calls and inferred
       approval.

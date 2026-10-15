@@ -42,3 +42,7 @@ Passing these checks does not establish a version or grant approval. Record actu
 ## Plan self-check
 
 Seven unique tasks and IDs form an acyclic graph. All prerequisite IDs resolve. Each of the five user-selected outcomes has focused acceptance and an integration join. First roots have nonconflicting ownership; downstream consumers wait for corrected evidence/ranking/identity. Contracts cover source scope, errors, cursor revisions, legacy observations, both-side impact and local-only exports. No additional artifact, upstream change, LLM, dependency or state database is required. KISS shares one review service/formatter; STE distinguishes documented assertions, captured context and approval. Plan is complete for user review; implementation has not started.
+
+## Approval and delivery
+
+The user approved this concrete plan with “chấp nhận” and later requested continuation. The coordinator integrated the approved tasks on a dedicated branch. Actual checks remain in each task and the unit brief. Version 1.12.0 remains a proposed publication; this approval does not authorize merge or certify establishment.

@@ -27,3 +27,7 @@ Requirements cover all five selected items with positive and negative examples. 
 ## Specification self-check
 
 Specification covers evidence-recognition scope, search ordering, source-worktree identity and additive legacy storage behavior. One review service supplies declared-current comparison, both-side explicit impact, bounded source context, HTTP/MCP parity and local export. A necessary ADR compares shared-service, flow-only and persistent/generative alternatives. Named flows retain IDs and explicitly disclose implementation gaps. Merged 1.11.1 readability and navigation contracts are incorporated without rewriting historical knowledge. ADD 2.1.0 remains the sole established upstream prerequisite. KISS adds no framework, hosted model or workflow registry; STE preserves source, approval, freshness and coverage limits. No blocker remains for Plan.
+
+## Implementation approval
+
+The user explicitly accepted the concrete seven-task plan and proposed compatible minor version 1.12.0. Implementation proceeded on a dedicated branch after the required ADD 2.1.0 supplier was verified. The phase self-checks above record the discovery and planning boundaries; they are not current implementation blockers.
