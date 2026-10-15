@@ -83,3 +83,14 @@ test('selected-unit completion loads automatically and failed evidence has local
   expect(await fingerprint(fixture.root)).toEqual(before);
  }finally{await fixture.cleanup();}
 });
+
+test('compact setup and scoped artifact filtering keep recovery and graph context clear',async({page})=>{
+ const fixture=await fixtureRepository(orderingFixture());
+ try{
+  await page.goto('/');await page.getByLabel('Repository path').fill(fixture.root);await page.getByRole('button',{name:'Open repository',exact:true}).click();
+  await expect(page.getByLabel('Repository path')).toBeHidden();await expect(page.getByRole('button',{name:'Change repository',exact:true})).toBeVisible();
+  await page.getByLabel('Filter artifact list', {exact:true}).fill('missing');await expect(page.getByRole('navigation',{name:'Artifacts'}).getByRole('button')).toHaveCount(0);await expect(page.getByRole('status').filter({hasText:'No artifacts match'})).toContainText('graph is unchanged');await expect(page.locator('.canvas-surface .react-flow__node')).toHaveCount(1);
+  await page.getByRole('button',{name:'Clear search',exact:true}).click();await expect(page.getByRole('navigation',{name:'Artifacts'})).toContainText('Knowledge');await page.getByRole('button',{name:'Change repository',exact:true}).click();await expect(page.getByLabel('Repository path')).toHaveValue(fixture.root);await page.getByLabel('Repository path').fill('/missing-replacement');await page.getByRole('button',{name:'Cancel',exact:true}).click();await expect(page.getByLabel('Repository path')).toBeHidden();await expect(page.getByRole('navigation',{name:'Artifacts'})).toContainText('Knowledge');
+  await expect(page.getByLabel('Recorded executions',{exact:true})).toHaveCount(0);
+ }finally{await fixture.cleanup();}
+});

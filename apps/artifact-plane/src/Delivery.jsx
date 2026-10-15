@@ -27,12 +27,12 @@ export function ChangeList({worktree, artifact, selected, onSelect, historiesOpe
  const changes = (worktree?.changes || []).filter(c => c.artifact === artifact);
  const histories = changes.filter(c => c.history).sort((a,b) => (b.lastCommitAt ?? -1) - (a.lastCommitAt ?? -1) || natural.compare(a.name,b.name));
  const button = c => <button className={'delivery-change' + (selected === changeKey(worktree,c) ? ' active' : '')} key={c.name} onClick={() => onSelect(changeKey(worktree,c))}>
-  <span>{c.name}</span><small>{c.history ? 'History' : c.currentStep || (c.loadState==='not-loaded'?'Evidence not loaded':'Unknown')}</small>
+  <span>{c.name}</span><small>{c.history ? 'History' : c.currentStep || (c.loadState==='not-loaded'?'':'Unknown')}</small>
  </button>;
  return <section className="change-delivery" aria-label="Change delivery">
   <h3>Delivery work</h3>
   {changes.filter(c => !c.history).map(button)}
-  {!!histories.length && <><button className="type-toggle" aria-label="Delivery histories" aria-expanded={historiesOpen} onClick={onToggleHistories}><span>{historiesOpen ? '▾' : '▸'} Change histories</span><span>{histories.length}</span></button>{historiesOpen && <div className="delivery-histories">{histories.map(button)}</div>}</>}
+  {!!histories.length && <><button className="type-toggle" aria-label="Delivery histories" aria-expanded={historiesOpen} onClick={onToggleHistories}><span>{historiesOpen ? '▾' : '▸'} Delivery history</span><span>{histories.length}</span></button>{historiesOpen && <div className="delivery-histories">{histories.map(button)}</div>}</>}
   {!changes.length && <p className="muted">No change delivery records in this worktree.</p>}
  </section>;
 }

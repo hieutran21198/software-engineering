@@ -1,16 +1,17 @@
 import React,{createContext,useContext,useEffect,useState,useMemo} from 'react';
+import {postJSON} from './request.js';
 import {signatureFor,identityKey,taskRuntime,stateLabels,elapsedLabel} from './runtime-model.js';
 const Context=createContext({data:null,connected:false,signatures:{},now:Date.now()});
 export function useRuntime(){return useContext(Context);}
 export function RuntimeProvider({snapshot,children,active=true}){
- const [data,setData]=useState(null),[connected,setConnected]=useState(false),[signatures,setSignatures]=useState({}),[now,setNow]=useState(Date.now());
+ const [data,setData]=useState(null),[connected,setConnected]=useState(false),[signatures,setSignatures]=useState({}),[now,setNow]=useState(Date.now()),[status,setStatus]=useState('loading'),[error,setError]=useState(''),[retryTick,setRetryTick]=useState(0);
  const path=snapshot?.repository.path;
  useEffect(()=>{let cancelled=false;const tasks=[];
   for(const w of snapshot?.workflow.worktrees||[]){for(const c of w.changes||[])for(const task of c.taskGraph?.tasks||[])tasks.push({sourceWorktree:w.path,artifact:c.artifact,change:c.name,task});for(const unit of w.unitsOfWork||[])for(const n of unit.implementationGraph.nodes||[])if(n.kind==='task')tasks.push({sourceWorktree:w.path,artifact:n.artifact,change:n.change,task:n.task});}
   Promise.all(tasks.map(async n=>[identityKey(n.artifact,n.change,n.task.path,n.sourceWorktree),await signatureFor(n.task)])).then(entries=>{if(!cancelled)setSignatures(Object.fromEntries(entries));});return()=>{cancelled=true;};
  },[snapshot]);
- useEffect(()=>{if(!active||!path){setConnected(false);return;}let cancelled=false,inFlight=false,again=false;const controller=new AbortController();setData(null);setConnected(false);
-  const refresh=async()=>{if(inFlight){again=true;return;}inFlight=true;try{const res=await fetch('/api/runtime/query',{signal:controller.signal,method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({path})});const result=await res.json();if(!res.ok)throw Error('Runtime query failed');if(!cancelled){setData(result);if(!result.available)setConnected(false);}}catch{if(!cancelled)setConnected(false);}finally{inFlight=false;if(again&&!cancelled){again=false;refresh();}}};
+ useEffect(()=>{if(!active||!path){setConnected(false);return;}let cancelled=false,inFlight=false,again=false;const controller=new AbortController();setData(null);setConnected(false);setStatus('loading');setError('');
+  const refresh=async()=>{if(inFlight){again=true;return;}inFlight=true;try{const result=await postJSON('/api/runtime/query',{path},controller.signal);if(!cancelled){setData(result);setStatus(result.available?'loaded':'error');setError(result.diagnostic||'Execution observation is unavailable.');if(!result.available)setConnected(false);}}catch(e){if(!cancelled){setConnected(false);setStatus('error');setError(e.message);}}finally{inFlight=false;if(again&&!cancelled){again=false;refresh();}}};
   let events=null;
   const connect=()=>{events?.close();const source=new EventSource('/api/runtime/events');events=source;
    source.onopen=()=>{if(!cancelled&&events===source){setConnected(true);refresh();}};
@@ -21,8 +22,8 @@ export function RuntimeProvider({snapshot,children,active=true}){
   const online=()=>{connect();refresh();};
   window.addEventListener('offline',offline);window.addEventListener('online',online);if(navigator.onLine){refresh();connect();}
   const clock=setInterval(()=>setNow(Date.now()),1000);return()=>{cancelled=true;controller.abort();events?.close();clearInterval(clock);window.removeEventListener('offline',offline);window.removeEventListener('online',online);};
- },[path,active]);
- const value=useMemo(()=>({data,connected,signatures,now}),[data,connected,signatures,now]);return <Context.Provider value={value}>{children}</Context.Provider>;
+ },[path,active,retryTick]);
+ const value=useMemo(()=>({data,connected,signatures,now,status,error,retry:()=>setRetryTick(n=>n+1)}),[data,connected,signatures,now,status,error]);return <Context.Provider value={value}>{children}</Context.Provider>;
 }
 export function useTaskRuntime(artifact,change,path,recorded,sourceWorktree){const runtime=useRuntime();return taskRuntime(runtime,{artifact,change,path,signature:recorded?.signature||runtime.signatures[identityKey(artifact,change,path,sourceWorktree)],contextId:recorded?.contextId,sourceWorktree});}
 export function RuntimeBadge({value}){return <div className={`runtime-badge state-${value.state}`}><b>{stateLabels[value.state]||'Unknown'}</b>{value.attempts.length>0&&<span>{value.attempts.length>1?`${value.attempts.length} agents`:value.attempts[0].agent||value.attempts[0].session} · {elapsedLabel(Math.max(...value.attempts.map(a=>a.elapsedMs)))}</span>}{value.attempts.length===1&&<small>Captured revision: {value.attempts[0].sourceRevision?.slice(0,12)||'unknown'}</small>}{value.attempts.length===1&&<small>{value.attempts[0].stale?'Stale · last observed '+value.attempts[0].lastObservedState:value.attempts[0].activity}</small>}</div>;}

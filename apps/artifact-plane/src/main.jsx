@@ -16,7 +16,7 @@ import {
   Position,
 } from "@xyflow/react";
 import Flows from './Flows.jsx';
-import SearchField from './SearchField.jsx';
+import SearchField, {matchesName} from './SearchField.jsx';
 import ChangeReview from './ChangeReview.jsx';
 import {UnitList, UnitView, UnitDetails} from './UnitsOfWork.jsx';
 import {unitContext, unitNode} from './unit-canvas.js';
@@ -76,7 +76,7 @@ function ArtifactNode({ data, selected }) {
             <button
               className="type-toggle canvas-type nodrag nopan"
               style={{ top: group.y, left: 16 + group.depth * 8, width: 328 - group.depth * 8 }}
-              aria-label={group.ariaLabel + " in " + a.title}
+              aria-label={group.ariaLabel.replace("Change histories","Historical documents") + " in " + a.title}
               aria-expanded={group.open}
               onClick={(event) => {
                 event.stopPropagation();
@@ -84,7 +84,7 @@ function ArtifactNode({ data, selected }) {
               }}
             >
               <span>
-                {group.open ? "▾" : "▸"} {group.label}
+                {group.open ? "▾" : "▸"} {group.label==='Change histories'?'Historical documents':group.label}
               </span>
               <span className="type-count">{group.count}</span>
             </button>
@@ -150,7 +150,7 @@ function DependencyList({ title, value, onSelect }) {
           <span className="muted">None</span>
         )}
       </div>
-      <p className="tiny">All reachable</p>
+      {value.transitive.some(id=>!value.direct.includes(id))&&<><p className="tiny">All reachable</p>
       <div className="chips">
         {value.transitive.length ? (
           value.transitive.map((id) => (
@@ -161,7 +161,7 @@ function DependencyList({ title, value, onSelect }) {
         ) : (
           <span className="muted">None</span>
         )}
-      </div>
+      </div></>}
     </div>
   );
 }
@@ -199,6 +199,7 @@ export function ProjectExplorer({active: isActive = true, initialPath = "", onOp
     [snapshot, setSnapshot] = useState(null),
     [busy, setBusy] = useState(false),
     [error, setError] = useState("");
+  const [editingRepo,setEditingRepo]=useState(false);
   const [projectRoot, setProjectRoot] = useState(initialPath), [openingWorktree,setOpeningWorktree]=useState(null);
   const [expanded, setExpanded] = useState(new Set()),
     [selection, setSelection] = useState(null),
@@ -288,7 +289,7 @@ export function ProjectExplorer({active: isActive = true, initialPath = "", onOp
       const result=await repositoryQuery({path:repositoryPath,section:'overview',...(target?{worktree:target}:{})},signal);
       if(session!==generation.current||signal.aborted)return;
       const base=result.data;
-      setProjectRoot(result.repository.path);if(!switching)onOpened(result.repository.path);
+      setProjectRoot(result.repository.path);if(!refresh&&!switching)setEditingRepo(false);if(!switching)onOpened(result.repository.path);
       installOverview(base,refresh);setLoadedSession(session);queueRoot.current=result.repository.path;setPath(result.repository.path);setFresh(!result.diagnostics.some(d=>d.code==='stale-response'));
       if(!refresh){setReaderTrail([]);setListTypes(new Set());setReviewKey(null);setFlowEntry(null);setRecordedSelected(null);setRecordedNode(null);if(active.current.view==='recorded')setView('canvas');setUnitSelected(null);setUnitNodeSelected(null);setUnitWorktree(base.repository.path);setUnitView('artifacts');setUnitPlanning(false);setTaskChange(null);setTaskSelected(null);setDeliveryChange(null);setDeliveryPhase(null);setExpanded(new Set());setExpandedTypes(new Set());setSelection(null);setFilter('');setUnitFilter('');if(!switching){setPlanning(false);setFlowKnowledge('established');}setCompletionState('idle');setDocument(null);}
     }catch(error){if(session===generation.current&&error.name!=='AbortError'){setError(error.message);setFresh(false);}}
@@ -463,7 +464,7 @@ export function ProjectExplorer({active: isActive = true, initialPath = "", onOp
   const hasDetails=Boolean(view==='canvas'?(artifact||reviewKey||taskContext||deliveryContext):view==='units'?unitSelected:view==='flows'?flowSelected:recordedSelected);
   return (
     <RuntimeProvider snapshot={snapshot} active={isActive}><div className="app">
-      <header className="topbar">
+      <header className="topbar" hidden={Boolean(snapshot)}>
         <div className="brand">
           <span className="brand-icon">⌘</span>
           <div>
@@ -478,6 +479,7 @@ export function ProjectExplorer({active: isActive = true, initialPath = "", onOp
       </header>
       <form
         className="open-bar"
+        hidden={Boolean(snapshot)&&!editingRepo}
         onSubmit={(e) => {
           e.preventDefault();
           open(path);
@@ -499,11 +501,14 @@ export function ProjectExplorer({active: isActive = true, initialPath = "", onOp
         <button
           type="button"
           disabled={!snapshot}
+          hidden={Boolean(snapshot)}
           onClick={() => open(projectRoot, true)}
         >
           Refresh
         </button>
+        {snapshot&&<button type="button" onClick={()=>{setPath(projectRoot);setEditingRepo(false);}}>Cancel</button>}
       </form>
+      {snapshot&&<div className="source-bar"><strong>Artifact Plane</strong><span title={snapshot.repository.path}>{snapshot.repository.path.split('/').at(-1)} · {snapshot.repository.branch||'Detached HEAD'}</span><button onClick={()=>setEditingRepo(true)}>Change repository</button><button onClick={()=>open(projectRoot,true)}>Refresh</button><small>Read-only</small></div>}
       {error && (
         <div role="alert" className="error-banner">
           {error}
@@ -538,16 +543,11 @@ export function ProjectExplorer({active: isActive = true, initialPath = "", onOp
                 </small>
               </div>
               <Worktrees workflow={snapshot.workflow} selected={unitWorktree} onSelect={activateWorktree} busy={busy}/>{openingWorktree&&<p role="status">Opening {openingWorktree}…</p>}
-              {view==='units'?<SearchField label="Search units of work" value={unitFilter} onChange={setUnitFilter}/>:view!=='flows'&&<>
-                <label className="sr-only" htmlFor={`artifact-filter-${tabId}`}>Filter artifacts</label>
-                <input id={`artifact-filter-${tabId}`} className="filter" placeholder="Filter artifacts…" value={filter} onChange={event=>setFilter(event.target.value)}/>
-              </>}
+              {view==='units'?<SearchField label="Search units of work" value={unitFilter} onChange={setUnitFilter}/>:view!=='flows'&&<SearchField label="Filter artifact list" value={filter} onChange={setFilter}/>}
               <nav aria-label="Artifacts" style={{display:view === "units" || view === "flows" ? "none" : undefined}}>
                 {snapshot.artifacts
                   .filter((a) =>
-                    `${a.id} ${a.title}`
-                      .toLowerCase()
-                      .includes(filter.toLowerCase()),
+                    matchesName(filter,a.id,a.title),
                   )
                   .map((a) => (
                     <button
@@ -563,6 +563,7 @@ export function ProjectExplorer({active: isActive = true, initialPath = "", onOp
                     </button>
                   ))}
               </nav>
+              {view==='canvas'&&filter&&<p className="tiny" role="status">{snapshot.artifacts.some(a=>matchesName(filter,a.id,a.title))?'Only the artifact list is filtered.':'No artifacts match this title or ID. The graph is unchanged.'}{artifact&&!matchesName(filter,artifact.id,artifact.title)&&' Selected artifact is outside the current results.'}</p>}
               <div ref={setFlowSidebar} className="flow-sidebar-slot" style={{display:view=== "flows" ? undefined : "none"}}/>
               {view!=="flows"&&<RecordedPicker selected={recordedSelected} onSelect={id=>{setRecordedSelected(id);setRecordedNode(null);if(id)setView('recorded');}}/>}
               {view === "units" && <UnitList snapshot={snapshot} worktreePath={unitWorktree} filter={unitFilter} selected={unitSelected} onSelect={value=>{setUnitSelected(value);setUnitView('artifacts');setUnitNodeSelected(null);}}/>}
@@ -772,7 +773,7 @@ export function ProjectExplorer({active: isActive = true, initialPath = "", onOp
                     on canvas
                   </button>
                   {changeList}
-                  <section className="relationships">
+                  <details className="relationships"><summary>Dependencies</summary>
                     <h3>
                       {planning ? "Planning" : "Established"} dependencies
                     </h3>
@@ -786,7 +787,7 @@ export function ProjectExplorer({active: isActive = true, initialPath = "", onOp
                       value={reachability.downstream}
                       onSelect={selectArtifact}
                     />
-                  </section>
+                  </details>
                   <section>
                     <h3>Knowledge elements</h3>
                     {artifact.elements.length ? (
@@ -796,14 +797,14 @@ export function ProjectExplorer({active: isActive = true, initialPath = "", onOp
                           <div className="knowledge-type" key={group.key}>
                             <button
                               className="type-toggle inspector-type"
-                              aria-label={group.ariaLabel + " in inspector"}
+                              aria-label={group.ariaLabel.replace("Change histories","Historical documents") + " in inspector"}
                               aria-expanded={open}
                               onClick={() =>
                                 toggleList(group.key)
                               }
                             >
                               <span>
-                                {open ? "▾" : "▸"} {group.label}
+                                {open ? "▾" : "▸"} {group.label==='Change histories'?'Historical documents':group.label}
                               </span>
                               <span className="type-count">{group.count}</span>
                             </button>
@@ -837,10 +838,10 @@ export function ProjectExplorer({active: isActive = true, initialPath = "", onOp
                   </section>
                 </>
               )}
-              <section>
+              {refs.length>0&&<section>
                 <h3>References</h3>
                 <ReferenceList references={refs} onTarget={selectTarget} />
-              </section>
+              </section>}
               <section>
                 <button onClick={()=>{if(element?.source?.startsWith('change:'))chooseKnowledge('planning');openFlows({artifact:artifact.id,worktree:selectedWorktree?.path||snapshot.repository.path,...(element?{ids:[element.id]}:{})});}}>Find participating flows</button>
                 {element&&<button onClick={()=>readElement(element)}>Read document</button>}
