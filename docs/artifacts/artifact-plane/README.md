@@ -22,7 +22,7 @@ Version 1.10.0, its originating delivery tasks, and implementation landed on mai
 
 ## Active change
 
-- [Evidence-based change review and context handoff](changes/change-evidence-review-context/README.md)
+- [Consistent search and readable graph labels](changes/change-search-label-usability/README.md)
 
 
 ## Knowledge snapshot
@@ -66,3 +66,7 @@ Version 1.11.0 is established through merged PR #21. The complete knowledge snap
 ## Proposed minor version
 
 [Version 1.12.0](versions/1.12.0/README.md) contains the approved evidence corrections, selected-change review and source-backed context handoff. Its [originating plan](changes/change-evidence-review-context/tasks/README.md) retains task evidence. It awaits team review and merge.
+
+## Proposed search and readability patch
+
+[Version 1.12.1](versions/1.12.1/README.md) adds live named filtering, explicit Artifact participation and measured graph labels. Its [delivery plan](changes/change-search-label-usability/tasks/README.md) retains implementation evidence. PR #24 merged the 1.12.0 knowledge and implementation; its historical preparation text above remains unchanged. Patch 1.12.1 awaits team review and merge.

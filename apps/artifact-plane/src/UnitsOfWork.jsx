@@ -1,3 +1,4 @@
+import {matchesName} from './SearchField.jsx';
 import React,{useMemo,useState} from 'react';
 import {ReactFlow,ReactFlowProvider,Background,Controls,Handle,Position} from '@xyflow/react';
 import {unitCanvas,unitNode,unitKey} from './unit-canvas.js';
@@ -18,8 +19,12 @@ function UnitNode({data,selected}) {
 const nodeTypes={unit:UnitNode};
 export function UnitList({snapshot,worktreePath,selected,onSelect,filter}) {
  const worktrees=snapshot.workflow?.worktrees||[],worktree=worktrees.find(w=>w.path===worktreePath)||worktrees.find(w=>w.selected);
+ const matches=(worktree?.unitsOfWork||[]).filter(u=>matchesName(filter,u.id,u.title));
+ const selectionOutside=selected&&!(matches||[]).some(u=>selected===unitKey(worktree,u));
  return <section className="unit-list">
-  <nav aria-label="Units of work">{(worktree?.unitsOfWork||[]).filter(u=>`${u.id} ${u.title}`.toLowerCase().includes(filter.toLowerCase())).map(unit=><button className={`artifact-list-item ${selected===unitKey(worktree,unit)?'active':''}`} key={unit.id} onClick={()=>onSelect(unitKey(worktree,unit))}><span>{unit.title}</span><small>{unit.members.length} participating changes · {completionLabel(unit.completion)}</small></button>)}</nav>
+  <nav aria-label="Units of work">{matches.map(unit=><button className={`artifact-list-item ${selected===unitKey(worktree,unit)?'active':''}`} key={unit.id} onClick={()=>onSelect(unitKey(worktree,unit))}><span>{unit.title}</span><small>{unit.members.length} participating changes · {completionLabel(unit.completion)}</small></button>)}</nav>
+  {!!worktree?.unitsOfWork?.length&&!matches.length&&<p role="status">No units match this title or ID.</p>}
+  {selectionOutside&&<p className="flow-selection-note">Selected unit is outside the current results.</p>}
   {!worktree?.unitsOfWork?.length&&<p className="muted">No unit-of-work briefs in this worktree. Explore artifacts and delivery work in Dependencies.</p>}
  </section>;
 }

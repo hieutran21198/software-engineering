@@ -120,15 +120,15 @@ test("B1-B7: explore, expand, select, pan, zoom, proposals, diagnostics, refresh
     await expect(page.locator(".react-flow__node-element")).toHaveCount(2);
     expect(await zoom()).toBe(beforeCollapseZoom);
     await expect(
-      page.locator(".react-flow__edge").filter({ hasText: "removal proposed" }),
+      page.locator(".safe-edge-label").filter({ hasText: "removal proposed" }),
     ).toHaveCount(1);
     await page.getByRole("button", { name: "Planning", exact: true }).click();
     await expect(
-      page.locator(".react-flow__edge").filter({ hasText: "removal proposed" }),
+      page.locator(".safe-edge-label").filter({ hasText: "removal proposed" }),
     ).toHaveCount(0);
     await expect(
       page
-        .locator(".react-flow__edge")
+        .locator(".safe-edge-label")
         .filter({ hasText: "addition proposed" }),
     ).toHaveCount(1);
     await page.getByText(/repository diagnostic/).click();

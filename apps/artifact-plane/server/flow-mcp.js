@@ -9,12 +9,12 @@ export function createFlowMcpServer({service,reviewService,roots=[],stateDir}={}
  let flows=service,reviews=reviewService;
  const getService=()=>flows??=createFlowService({roots,stateDir});
  const getReviews=()=>reviews??=createReviewService({roots});
- const server=new McpServer({name:'artifact-plane-flows',version:'1.12.0'});
+ const server=new McpServer({name:'artifact-plane-flows',version:'1.12.1'});
  const common={path:z.string().optional(),worktree:z.string().optional(),knowledge:z.enum(['planning','established','all']).optional(),limit:z.number().int().min(1).max(100).optional(),budget:z.number().int().min(0).max(100000).optional(),cursor:z.string().max(10000).optional()};
  const tools=[
-  ['search_flows','Find flows by exact ID, keywords and local semantic similarity.','search',{query:z.string().max(4000).optional()}],
+  ['search_flows','Filter flow titles and IDs, or rank by exact ID, keywords and local semantic similarity.','search',{query:z.string().max(4000).optional(),match:z.enum(['title','discovery']).optional(),artifact:z.string().optional()}],
   ['get_flow','Read a flow, its steps and explicit supporting relationships.','detail',{flow:z.string().min(1).max(10000)}],
-  ['get_impact_context','Traverse all known reverse relationships independently of search ranking.','impact',{ids:z.array(z.string().max(10000)).min(1).max(100)}],
+  ['get_impact_context','Traverse all known reverse relationships independently of search ranking.','impact',{ids:z.array(z.string().max(10000)).min(1).max(100),artifact:z.string().optional()}],
   ['read_flow_source','Read a registered source belonging to the selected flow context.','source',{flow:z.string().min(1).max(10000),source:z.string().max(10000)}],
  ];
  for(const [name,description,operation,selectors] of tools)server.registerTool(name,{description,inputSchema:z.strictObject({...common,...selectors}),annotations:{readOnlyHint:true,destructiveHint:false,idempotentHint:true,openWorldHint:false}},async args=>{

@@ -96,7 +96,7 @@ export function canvasGraph(
       id: `dependency:${e.source}:${e.target}`,
       source,
       target,
-      type: "smoothstep",
+      type: "readable",
       label:
         status === "proposed-add"
           ? "addition proposed"
@@ -134,7 +134,7 @@ export function canvasGraph(
       id: `reference:${ref.id}`,
       source: prerequisite,
       target: consumer,
-      type: "smoothstep",
+      type: "readable",
       label: ref.resolved ? "reference" : "unresolved",
       style: { stroke: color, strokeWidth: 1.5, strokeDasharray: "3 4" },
       markerEnd: { type: "arrowclosed", color },

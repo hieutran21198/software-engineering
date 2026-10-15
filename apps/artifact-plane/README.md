@@ -215,6 +215,11 @@ The installer downloads public assets for Xenova/paraphrase-multilingual-MiniLM-
 
 POST /api/flows/query accepts path, optional worktree and knowledge (planning, established, all), and operation (search, detail, impact, source). Search takes query; detail takes flow; impact takes ids; source takes flow and a source ID returned by detail. limit is 1–100, budget is 0–100000 characters, and cursor continues a page. Response fields include context, revision, generation, freshness, completeness, diagnostics, pagination and omissions. Source selectors never accept arbitrary file paths. Refresh invalidates stale cursors. Repository observation also checks explicitly registered supporting source bytes, including repeated edits to an already dirty file.
 
+Search also accepts optional match (title or discovery). Omission preserves ranked discovery. Title mode trims the query, normalizes Unicode NFC and case, and filters titles and IDs by literal substring before paging. Exact titles and unambiguous exact IDs sort first; other matches use natural title order. An empty query retains newest-first browsing. Title mode does not initialize or run the embedding model.
+
+Search and impact accept optional artifact, a safe artifact ID in the selected snapshot. The scope includes owned flows and flows owned elsewhere that participate through recorded relationships. Apply this complete eligibility set before ranking or paging. Impact with ids intersects both sets and retains the requested impact reasons. Responses add data.artifactOptions with id/title summaries, including artifacts with no flows. These options do not prove participation. Unknown artifacts and selectors on other operations are rejected. Cursors bind the normalized query, match, artifact, worktree, knowledge and revision; start a new query when any selector changes. search_flows and get_impact_context expose the same optional selectors through MCP.
+
+
 Use stdio MCP from an explicitly configured client. Example registration (replace both absolute paths):
 
 ```json
