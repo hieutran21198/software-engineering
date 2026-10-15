@@ -44,6 +44,8 @@ flow:
         - measured-edge-labels
         - label-browser-checks
         - spacing-control-contract
+        - shared-presentation
+        - presentation-checks
   transitions:
     - from: select
       to: validate
@@ -129,13 +131,22 @@ flow:
       requires: Present inspector blocks and native controls consistently without
         changing evidence or journey meaning.
       basis: documented
+    - id: shared-presentation
+      kind: implementation
+      path: apps/artifact-plane/src/style.css
+      requires: Share native dropdown appearance and scoped inspector rhythm.
+      basis: static
+    - id: presentation-checks
+      kind: test
+      path: apps/artifact-plane/test/browser/presentation.spec.js
+      requires: Check measured gaps, native dropdown styles, keyboard access and
+        completion feedback.
+      basis: static
   gaps:
     - The flow documents discovery behavior, not complete knowledge coverage or
       artifact establishment.
     - New contextual review navigation is specified but not implemented or
       browser-validated yet.
-    - New spacing and dropdown consistency requires approved implementation and
-      rendered validation.
   exclusions:
     - Arbitrary filesystem browsing and automatic repository edits.
   artifact: artifact-plane

@@ -70,3 +70,7 @@ Version 1.11.0 is established through merged PR #21. The complete knowledge snap
 ## Proposed search and readability patch
 
 [Version 1.12.1](versions/1.12.1/README.md) adds live named filtering, explicit Artifact participation and measured graph labels. Its [delivery plan](changes/change-search-label-usability/tasks/README.md) retains implementation evidence. PR #24 merged the 1.12.0 knowledge and implementation; its historical preparation text above remains unchanged. Patch 1.12.1 awaits team review and merge.
+
+## Proposed presentation patch
+
+[Version 1.12.2](versions/1.12.2/README.md) improves inspector spacing and native dropdown consistency. Its [originating plan](changes/change-spacing-control-consistency/tasks/README.md) retains delivery evidence. PR #25 merged search/readability knowledge and implementation; historical preparation text remains unchanged. Patch 1.12.2 awaits team review and merge.

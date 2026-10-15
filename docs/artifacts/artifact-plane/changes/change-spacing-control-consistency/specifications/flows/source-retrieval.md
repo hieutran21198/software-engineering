@@ -56,6 +56,8 @@ flow:
         - evidence-review-contract
         - ranking-checks
         - spacing-control-contract
+        - shared-presentation
+        - presentation-checks
   transitions:
     - from: context
       to: discover
@@ -178,11 +180,20 @@ flow:
       requires: Present inspector blocks and native controls consistently without
         changing evidence or journey meaning.
       basis: documented
+    - id: shared-presentation
+      kind: implementation
+      path: apps/artifact-plane/src/style.css
+      requires: Share native dropdown appearance and scoped inspector rhythm.
+      basis: static
+    - id: presentation-checks
+      kind: test
+      path: apps/artifact-plane/test/browser/presentation.spec.js
+      requires: Check measured gaps, native dropdown styles, keyboard access and
+        completion feedback.
+      basis: static
   gaps:
     - Retrieval ranks candidates; it does not prove compatibility or complete
       system discovery.
-    - New spacing and dropdown consistency requires approved implementation and
-      rendered validation.
   exclusions:
     - Arbitrary paths, credential files, hosted embedding calls and inferred
       approval.

@@ -17,3 +17,7 @@ Specification self-check completed in the same session as Plan. No implementatio
 - [Concrete plan](tasks/README.md)
 
 Requirement, Specification and Plan self-checks completed. The new plan awaits explicit approval. No implementation files changed.
+
+## Approved implementation
+
+The user explicitly approved this concrete plan. Shared styles and completion feedback were implemented on the dedicated branch. Earlier phase self-checks record preparation boundaries; validation and proposed-version publication remain separate.

@@ -35,6 +35,8 @@ flow:
         - evidence-review-contract
         - worktree-checks
         - spacing-control-contract
+        - shared-presentation
+        - presentation-checks
   transitions:
     - from: bind
       to: observe
@@ -92,11 +94,20 @@ flow:
       requires: Present inspector blocks and native controls consistently without
         changing evidence or journey meaning.
       basis: documented
+    - id: shared-presentation
+      kind: implementation
+      path: apps/artifact-plane/src/style.css
+      requires: Share native dropdown appearance and scoped inspector rhythm.
+      basis: static
+    - id: presentation-checks
+      kind: test
+      path: apps/artifact-plane/test/browser/presentation.spec.js
+      requires: Check measured gaps, native dropdown styles, keyboard access and
+        completion feedback.
+      basis: static
   gaps:
     - Observed lifecycle activity and reported checks do not prove task DoD,
       plan approval or artifact establishment.
-    - New spacing and dropdown consistency requires approved implementation and
-      rendered validation.
   exclusions:
     - Starting agents, granting permissions, changing artifact knowledge or
       maintaining ADD workflow state.

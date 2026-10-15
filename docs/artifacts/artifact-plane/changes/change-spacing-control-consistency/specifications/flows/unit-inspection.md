@@ -39,6 +39,9 @@ flow:
         - evidence-review-contract
         - publication-checks
         - spacing-control-contract
+        - shared-presentation
+        - presentation-checks
+        - completion-feedback
   transitions:
     - from: brief
       to: resolve
@@ -120,11 +123,25 @@ flow:
       requires: Present inspector blocks and native controls consistently without
         changing evidence or journey meaning.
       basis: documented
+    - id: shared-presentation
+      kind: implementation
+      path: apps/artifact-plane/src/style.css
+      requires: Share native dropdown appearance and scoped inspector rhythm.
+      basis: static
+    - id: presentation-checks
+      kind: test
+      path: apps/artifact-plane/test/browser/presentation.spec.js
+      requires: Check measured gaps, native dropdown styles, keyboard access and
+        completion feedback.
+      basis: static
+    - id: completion-feedback
+      kind: implementation
+      path: apps/artifact-plane/src/UnitsOfWork.jsx
+      requires: Keep one unloaded summary and preserve distinct reasons.
+      basis: static
   gaps:
     - Recorded passing assertions are not independently executed tests; missing
       merge evidence stays unresolved.
-    - New spacing and dropdown consistency requires approved implementation and
-      rendered validation.
   exclusions:
     - Creating unit members from shared flow participation.
   artifact: artifact-plane

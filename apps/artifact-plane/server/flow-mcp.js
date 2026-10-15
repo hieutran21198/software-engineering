@@ -9,7 +9,7 @@ export function createFlowMcpServer({service,reviewService,roots=[],stateDir}={}
  let flows=service,reviews=reviewService;
  const getService=()=>flows??=createFlowService({roots,stateDir});
  const getReviews=()=>reviews??=createReviewService({roots});
- const server=new McpServer({name:'artifact-plane-flows',version:'1.12.1'});
+ const server=new McpServer({name:'artifact-plane-flows',version:'1.12.2'});
  const common={path:z.string().optional(),worktree:z.string().optional(),knowledge:z.enum(['planning','established','all']).optional(),limit:z.number().int().min(1).max(100).optional(),budget:z.number().int().min(0).max(100000).optional(),cursor:z.string().max(10000).optional()};
  const tools=[
   ['search_flows','Filter flow titles and IDs, or rank by exact ID, keywords and local semantic similarity.','search',{query:z.string().max(4000).optional(),match:z.enum(['title','discovery']).optional(),artifact:z.string().optional()}],

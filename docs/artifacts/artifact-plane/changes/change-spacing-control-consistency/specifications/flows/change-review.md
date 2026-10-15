@@ -50,6 +50,8 @@ flow:
         - review-checks
         - browser-checks
         - spacing-control-contract
+        - shared-presentation
+        - presentation-checks
   transitions:
     - from: select
       to: compare
@@ -98,11 +100,20 @@ flow:
       requires: Present inspector blocks and native controls consistently without
         changing evidence or journey meaning.
       basis: documented
+    - id: shared-presentation
+      kind: implementation
+      path: apps/artifact-plane/src/style.css
+      requires: Share native dropdown appearance and scoped inspector rhythm.
+      basis: static
+    - id: presentation-checks
+      kind: test
+      path: apps/artifact-plane/test/browser/presentation.spec.js
+      requires: Check measured gaps, native dropdown styles, keyboard access and
+        completion feedback.
+      basis: static
   gaps:
     - Declared current is not a historical code predecessor; recorded
       relationships are not exhaustive impact.
-    - New spacing and dropdown consistency requires approved implementation and
-      rendered validation.
   exclusions:
     - Code-diff review, historical code reconstruction, approval and repository
       writes.
