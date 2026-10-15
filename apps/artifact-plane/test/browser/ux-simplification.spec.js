@@ -71,3 +71,15 @@ test('direct Markdown navigation retains exact sources and rejects forged callba
   expect(errors).toEqual([]);expect(await fingerprint(fixture.root)).toEqual(before);
  }finally{await fixture.cleanup();}
 });
+
+test('selected-unit completion loads automatically and failed evidence has local retry',async({page})=>{
+ const {unitFixture}=await import('../unit-fixtures.js');const fixture=await fixtureRepository(unitFixture()),before=await fingerprint(fixture.root);let fail=true;const reads=[];
+ try{
+  await page.route('**/api/repository/query',async route=>{const body=route.request().postDataJSON();if(body.section==='completion'){reads.push(body);await new Promise(r=>setTimeout(r,150));if(fail){await route.fulfill({status:500,contentType:'application/json',body:JSON.stringify({error:'Evidence temporarily unavailable'})}).catch(()=>{});return;}}await route.continue().catch(()=>{});});
+  await page.goto('/');await page.getByLabel('Repository path').fill(fixture.root);await page.getByRole('button',{name:'Open repository',exact:true}).click();await expect(page.getByRole('status',{name:'Repository update status'})).toHaveText('Current');expect(reads).toHaveLength(0);
+  await page.getByRole('button',{name:'Units of work',exact:true}).click();await page.getByRole('navigation',{name:'Units of work'}).getByRole('button',{name:/Tenant login/}).click();
+  const completion=page.getByRole('region',{name:'Completion evidence'});await expect(completion).toContainText('Checking completion…');await expect(completion.getByRole('alert')).toContainText('Evidence temporarily unavailable');await expect(page.getByRole('button',{name:'Load completion evidence',exact:true})).toHaveCount(0);
+  fail=false;await completion.getByRole('button',{name:'Retry completion evidence'}).click();await expect(completion).toContainText('Completion supported by documented evidence');expect(reads.every(r=>r.unit==='tenant-login')).toBe(true);
+  expect(await fingerprint(fixture.root)).toEqual(before);
+ }finally{await fixture.cleanup();}
+});

@@ -1,3 +1,4 @@
+import {postJSON} from './request.js';
 import {labelledEdgeTypes,GraphLabelLayout} from './GraphLabels.jsx';
 import React,{useEffect,useMemo,useState,useRef,useId} from 'react';
 import {ReactFlow,ReactFlowProvider,Background,Handle,Position} from '@xyflow/react';
@@ -7,7 +8,7 @@ import SearchField, {normalizeName} from './SearchField.jsx';
 import {flowCanvas} from './flow-canvas.js';
 function FlowNode({data}){return <div className="flow-node"><Handle type="target" position={Position.Left} isConnectable={false}/><small>{data.kind}{data.artifact&&` · ${data.artifact}`}</small><strong>{data.title}</strong><Handle type="source" position={Position.Right} isConnectable={false}/></div>;}
 const nodeTypes={flow:FlowNode};
-async function query(body,signal){const response=await fetch('/api/flows/query',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(body),signal});const result=await response.json();if(!response.ok)throw Object.assign(Error(result.error?.message||result.error||'Flow request failed'),{status:response.status});return result;}
+const query=(body,signal)=>postJSON('/api/flows/query',body,signal);
 function sourceName(id,sources=[]){
  const known=sources.find(source=>source.id===id);if(known)return known.path;
  try{const tuple=JSON.parse(id);if(Array.isArray(tuple)&&typeof tuple.at(-1)==='string')return tuple.at(-1);}catch{}

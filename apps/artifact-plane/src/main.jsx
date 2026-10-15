@@ -267,8 +267,8 @@ export function ProjectExplorer({active: isActive = true, initialPath = "", onOp
   }
   const snapshotRef=useRef(snapshot),overviewRef=useRef(null),queueRef=useRef(null),queueRoot=useRef(null),eventsRef=useRef(null),generation=useRef(0),reloadRef=useRef(null);
   snapshotRef.current=snapshot;
-  const [loadedSession,setLoadedSession]=useState(0),[overviewEpoch,setOverviewEpoch]=useState(0),[sectionState,setSectionState]=useState('Not loaded'),[connected,setConnected]=useState(false),[fresh,setFresh]=useState(false),[document,setDocument]=useState(null),[completionOpen,setCompletionOpen]=useState(false),[requestedSource,setRequestedSource]=useState(null);
-  const active=useRef(null);active.current={unitSelected,unitView,unitPlanning,unitWorktree,view,selection,taskChange,taskSelected,deliveryChange,deliveryPhase,unitNodeSelected,reviewKey};
+  const [loadedSession,setLoadedSession]=useState(0),[overviewEpoch,setOverviewEpoch]=useState(0),[sectionState,setSectionState]=useState('Not loaded'),[connected,setConnected]=useState(false),[fresh,setFresh]=useState(false),[document,setDocument]=useState(null),[completionState,setCompletionState]=useState('idle'),[completionError,setCompletionError]=useState(''),[sectionRetry,setSectionRetry]=useState(0),[requestedSource,setRequestedSource]=useState(null);
+  const active=useRef(null);active.current={overviewEpoch,unitSelected,unitView,unitPlanning,unitWorktree,view,selection,taskChange,taskSelected,deliveryChange,deliveryPhase,unitNodeSelected,reviewKey};
   const completionController=useRef(null);
   function installOverview(base,refresh){
     const current=active.current,previous=snapshotRef.current;
@@ -290,7 +290,7 @@ export function ProjectExplorer({active: isActive = true, initialPath = "", onOp
       const base=result.data;
       setProjectRoot(result.repository.path);if(!switching)onOpened(result.repository.path);
       installOverview(base,refresh);setLoadedSession(session);queueRoot.current=result.repository.path;setPath(result.repository.path);setFresh(!result.diagnostics.some(d=>d.code==='stale-response'));
-      if(!refresh){setReaderTrail([]);setListTypes(new Set());setReviewKey(null);setFlowEntry(null);setRecordedSelected(null);setRecordedNode(null);if(active.current.view==='recorded')setView('canvas');setUnitSelected(null);setUnitNodeSelected(null);setUnitWorktree(base.repository.path);setUnitView('artifacts');setUnitPlanning(false);setTaskChange(null);setTaskSelected(null);setDeliveryChange(null);setDeliveryPhase(null);setExpanded(new Set());setExpandedTypes(new Set());setSelection(null);setFilter('');setUnitFilter('');if(!switching){setPlanning(false);setFlowKnowledge('established');}setCompletionOpen(false);setDocument(null);}
+      if(!refresh){setReaderTrail([]);setListTypes(new Set());setReviewKey(null);setFlowEntry(null);setRecordedSelected(null);setRecordedNode(null);if(active.current.view==='recorded')setView('canvas');setUnitSelected(null);setUnitNodeSelected(null);setUnitWorktree(base.repository.path);setUnitView('artifacts');setUnitPlanning(false);setTaskChange(null);setTaskSelected(null);setDeliveryChange(null);setDeliveryPhase(null);setExpanded(new Set());setExpandedTypes(new Set());setSelection(null);setFilter('');setUnitFilter('');if(!switching){setPlanning(false);setFlowKnowledge('established');}setCompletionState('idle');setDocument(null);}
     }catch(error){if(session===generation.current&&error.name!=='AbortError'){setError(error.message);setFresh(false);}}
     finally{if(session===generation.current){setBusy(false);setOpeningWorktree(null);}}
   };
@@ -338,16 +338,20 @@ export function ProjectExplorer({active: isActive = true, initialPath = "", onOp
       else if(active.current.taskSelected&&!taskSelection(next.workflow,key,active.current.taskSelected)?.task)setTaskSelected(null);
     }).catch(error=>{if(error.name!=='AbortError'&&session===generation.current){setSectionState('Error');setFresh(false);setError(error.message);}});
     return()=>controller.abort();
-  },[isActive,snapshot?.repository.path,overviewEpoch,view,unitSelected,unitView,unitPlanning,taskChange,deliveryChange,reviewKey]);
+  },[isActive,snapshot?.repository.path,overviewEpoch,view,unitSelected,unitView,unitPlanning,taskChange,deliveryChange,reviewKey,sectionRetry]);
   async function loadCompletion(){
     const key=active.current.unitSelected,root=projectRoot;if(!key||!root)return;
-    completionController.current?.abort();const controller=new AbortController();completionController.current=controller;const session=generation.current,[worktree,unit]=JSON.parse(key);setCompletionOpen(true);
-    try{const result=await repositoryQuery({path:root,worktree,unit,section:'completion'},controller.signal);if(session!==generation.current||active.current.unitSelected!==key||controller.signal.aborted)return;
+    completionController.current?.abort();const controller=new AbortController();completionController.current=controller;const session=generation.current,epoch=overviewEpoch,[worktree,unit]=JSON.parse(key);setCompletionState('loading');setCompletionError('');
+    try{const result=await repositoryQuery({path:root,worktree,unit,section:'completion'},controller.signal);if(session!==generation.current||active.current.unitSelected!==key||active.current.overviewEpoch!==epoch||controller.signal.aborted)return;
       setSnapshot(current=>{const existing=unitContext(current,key);if(!existing)return current;return mergeUnit(current,key,{...existing.unit,completion:result.data.completion,completionEpoch:overviewEpoch,evidence:result.data.evidence,diagnostics:result.data.diagnostics,members:existing.unit.members.map(m=>({...m,establishmentEvidence:result.data.members.find(n=>n.artifact===m.artifact)?.establishmentEvidence||m.establishmentEvidence}))});});
-    }catch(error){if(error.name!=='AbortError')setError(error.message);}
+      setCompletionState('loaded');
+    }catch(error){if(error.name!=='AbortError'&&!controller.signal.aborted&&session===generation.current&&active.current.unitSelected===key&&active.current.overviewEpoch===epoch){setCompletionState('error');setCompletionError(error.message);}}
   }
-  useEffect(()=>{completionController.current?.abort();setCompletionOpen(false);},[unitSelected,view]);
-  useEffect(()=>{if(isActive&&completionOpen&&view==='units')loadCompletion();},[isActive,overviewEpoch]);
+  useEffect(()=>{
+    completionController.current?.abort();setCompletionState('idle');setCompletionError('');
+    if(isActive&&view==='units'&&unitSelected)loadCompletion();
+    return()=>completionController.current?.abort();
+  },[isActive,unitSelected,view,overviewEpoch,loadedSession]);
   const toggle = useCallback(
     (id) =>
       setExpanded((current) => {
@@ -688,6 +692,7 @@ export function ProjectExplorer({active: isActive = true, initialPath = "", onOp
           {snapshot && taskContext && <div style={{display:view === "canvas" ? "contents" : "none"}}><TaskGraph key={taskChange} context={taskContext} selection={taskSelected} onSelect={setTaskSelected} onBack={()=>{setTaskChange(null);setTaskSelected(null);}}/></div>}
           {snapshot && view==='recorded' && <RecordedView id={recordedSelected} selection={recordedNode} onSelect={setRecordedNode}/>}
           {snapshot && <Flows path={projectRoot} worktree={unitWorktree} epoch={overviewEpoch} isActive={isActive&&view==="flows"} entry={flowEntry} knowledge={flowKnowledge} artifacts={snapshot.artifacts.map(a=>({id:a.id,title:a.title}))} sidebar={flowSidebar} inspector={flowInspector} onSelection={setFlowSelected} onRead={openReader}/>}
+          {(sectionState==='Error'||sectionState==='Stale')&&<div className="section-retry" role="alert">Evidence could not be updated. <button onClick={()=>setSectionRetry(n=>n+1)}>Retry evidence</button></div>}
           {snapshot && view === "units" && <UnitView loading={sectionState} context={selectedUnit} view={unitView} onView={value=>{setUnitView(value);setUnitNodeSelected(null);}} planning={unitPlanning} onPlanning={value=>{setUnitPlanning(value);setUnitNodeSelected(null);}} selection={unitNodeSelected} onSelect={setUnitNodeSelected}/>}
         </main>
         {reader&&<Reader entry={reader} root={projectRoot} worktree={unitWorktree} epoch={overviewEpoch} onBack={backReader} backLabel={readerTrail.length>1?'previous document':undefined} onClose={closeReader} targets={navigationTargets} onNavigate={openReader}/>}
@@ -726,7 +731,7 @@ export function ProjectExplorer({active: isActive = true, initialPath = "", onOp
           aria-label="Selection details"
           inert={reader?true:undefined}
         >
-          {view==='canvas'&&reviewKey ? <div ref={setReviewInspector} className="review-inspector-slot"/> : view==='flows' ? <div ref={setFlowInspector} className="flow-inspector-slot"/> : view==='recorded' ? <RecordedDetails id={recordedSelected} selection={recordedNode} onSelect={setRecordedNode}/> : view === "units" ? <UnitDetails onFlow={entry=>{const owner=entry.flow?.split(':')[0],member=selectedUnit?.unit.members.find(m=>m.artifact===owner);if(member?.sourcePath?.includes('/changes/')||member?.establishmentEvidence?.state==='proposed')chooseKnowledge('planning');openFlows(entry);}} onDocument={source=>openReader({source,parent:'unit',scope:{unit:selectedUnit.unit.id}})} document={document} onCompletion={loadCompletion} context={selectedUnit} view={unitView} planning={unitPlanning} selection={unitNodeSelected} onSelect={setUnitNodeSelected}/> : taskContext ? <TaskGraphDetails onRead={()=>openReader({source:taskContext.task.path,parent:'task',scope:{artifact:taskContext.change.artifact,change:taskContext.change.name}})} document={document} context={taskContext} onClear={()=>setTaskSelected(null)}/> : deliveryContext ? <ChangeDetails context={deliveryContext} phase={deliveryPhase} onPhase={setDeliveryPhase} onBack={()=>{setDeliveryChange(null);setDeliveryPhase(null);}} onTaskGraph={openTaskGraph} onReview={()=>setReviewKey(deliveryChange)}>{changeList}</ChangeDetails> : artifact ? (
+          {view==='canvas'&&reviewKey ? <div ref={setReviewInspector} className="review-inspector-slot"/> : view==='flows' ? <div ref={setFlowInspector} className="flow-inspector-slot"/> : view==='recorded' ? <RecordedDetails id={recordedSelected} selection={recordedNode} onSelect={setRecordedNode}/> : view === "units" ? <UnitDetails onFlow={entry=>{const owner=entry.flow?.split(':')[0],member=selectedUnit?.unit.members.find(m=>m.artifact===owner);if(member?.sourcePath?.includes('/changes/')||member?.establishmentEvidence?.state==='proposed')chooseKnowledge('planning');openFlows(entry);}} onDocument={source=>openReader({source,parent:'unit',scope:{unit:selectedUnit.unit.id}})} document={document} onCompletion={loadCompletion} completionState={completionState} completionError={completionError} context={selectedUnit} view={unitView} planning={unitPlanning} selection={unitNodeSelected} onSelect={setUnitNodeSelected}/> : taskContext ? <TaskGraphDetails onRead={()=>openReader({source:taskContext.task.path,parent:'task',scope:{artifact:taskContext.change.artifact,change:taskContext.change.name}})} document={document} context={taskContext} onClear={()=>setTaskSelected(null)}/> : deliveryContext ? <ChangeDetails loading={sectionState} context={deliveryContext} phase={deliveryPhase} onPhase={setDeliveryPhase} onBack={()=>{setDeliveryChange(null);setDeliveryPhase(null);}} onTaskGraph={openTaskGraph} onReview={()=>setReviewKey(deliveryChange)}>{changeList}</ChangeDetails> : artifact ? (
             <>
               <div className="details-heading">
                 <span className="eyebrow">

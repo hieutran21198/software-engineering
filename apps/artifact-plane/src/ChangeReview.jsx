@@ -1,7 +1,8 @@
+import {postJSON} from './request.js';
 import React,{useEffect,useRef,useState} from 'react';
 import {createPortal} from 'react-dom';
 import {formatContextMarkdown} from './context-packet.js';
-async function query(body,signal){const response=await fetch('/api/review/query',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(body),signal});const result=await response.json();if(!response.ok)throw Error(result.error||'Review could not be read.');return result;}
+const query=(body,signal)=>postJSON('/api/review/query',body,signal);
 const json=value=>JSON.stringify(value,null,2);
 export default function ChangeReview({root,contextKey,epoch,session,active,updating,repositoryFresh,inspector,onBack}){
  const [packet,setPacket]=useState(null),[status,setStatus]=useState('Loading'),[error,setError]=useState(''),[selected,setSelected]=useState(null),[sources,setSources]=useState({}),[sourceStatus,setSourceStatus]=useState('Loading'),[feedback,setFeedback]=useState(''),[request,setRequest]=useState({cursor:null,retry:0});
