@@ -30,3 +30,7 @@ Four unique task IDs form an acyclic graph with three resolved edges. Metadata s
 ## Artifact-filter plan amendment
 
 The same four-task DAG now includes the user-requested Artifact selector and contextual Find participating flows navigation. Named-search owns complete eligibility, scoped options and API/cursor parity. Shared-controls owns the selector, per-project state and entry preselection. Integrated validation checks cross-owner participation, composite queries, unavailable artifacts and delayed replies. No new supplier or task edge is required. Recorded executions was inspected for the user’s question and is not redesigned. This updated concrete plan requires explicit approval before implementation.
+
+## Implementation approval
+
+The user explicitly approved the updated concrete plan, including Artifact filtering and contextual entry. Implementation is authorized on the dedicated branch. Existing ADD 2.1.0 supplying knowledge is present on main. Proposed patch 1.12.1 remains subject to validation and team review/merge.
