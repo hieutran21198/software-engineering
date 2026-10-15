@@ -113,7 +113,7 @@ export default function Flows({path,worktree,epoch,isActive,entry,knowledge,side
   {artifact&&<p className="tiny">Participation includes recorded relationships across flow owners.</p>}
   <div role="status" aria-label="Flow search status">{pending||loading?'Searching…':error?'Search failed':list?.freshness==='stale'?'Stale results — retry':list?`${list.data.flows?.length||0} of ${list.data.total??list.data.flows?.length??0} flows loaded`: 'Loading flows…'}</div>
   <nav aria-label="System flows">
-   {list&&!pending&&!loading&&!(list.data?.flows||[]).length&&<p>No matching flows. No recorded match does not prove absence of behavior.</p>}
+   {list&&!pending&&!loading&&!(list.data?.flows||[]).length&&<p>{search||artifact||impact?'No matching flows.':'Legacy knowledge may have no flow records.'} No recorded match does not prove absence of behavior.</p>}
    {!pending&&(list?.data?.flows||[]).map(f=><button key={f.id} aria-pressed={selected===f.id||selected===f.logicalId} onClick={()=>{setError('');setSelected(f.id);}}><strong>{f.title}</strong><small>{f.logicalId} · {f.source} · {f.state}</small><small>{f.createdAt?`Created ${new Date(f.createdAt).toISOString().slice(0,10)}`:'Creation date unknown'}</small></button>)}
    <div ref={setSentinel}/>{list?.pagination?.nextCursor&&<button disabled={pending||loading} onClick={loadMore}>{loading?'Loading more…':'Load more'}</button>}
    {error&&<><p role="alert">{error}</p><button onClick={()=>{setError('');setRetry(n=>n+1);}}>Retry flow request</button></>}
