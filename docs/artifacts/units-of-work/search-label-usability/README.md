@@ -82,3 +82,7 @@ Requirement, Specification and Plan completed with separate phase commits and ex
 ## Limits and publication
 
 Artifact scope follows explicit recorded participation across owners; it does not prove global code impact. Long expanded labels can need Fit View or zoom. Behavior discovery uses existing local model availability and explicit submission. Version 1.12.1 and this outcome await required review and merge; the root still declares 1.11.0. No automatic merge, lifecycle repair or established completion is claimed.
+
+## Review handoff
+
+[PR #25](https://github.com/hieutran21198/software-engineering/pull/25) is proposed for team review and merge. Its local validation evidence is recorded above. Completion remains unsupported until the member version and required implementation establish on main.
