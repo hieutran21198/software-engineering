@@ -1,11 +1,17 @@
 import {postJSON} from './request.js';
 import React,{useEffect,useRef,useState} from 'react';
 import {createPortal} from 'react-dom';
+import Markdown from './Markdown.jsx';
+import ReviewDiff from './ReviewDiff.jsx';
+import {comparisonLimits} from './line-comparison.js';
 import {formatContextMarkdown} from './context-packet.js';
 const query=(body,signal)=>postJSON('/api/review/query',body,signal);
 const json=value=>JSON.stringify(value,null,2);
 export default function ChangeReview({root,contextKey,epoch,session,active,updating,repositoryFresh,inspector,onBack}){
  const [packet,setPacket]=useState(null),[status,setStatus]=useState('Loading'),[error,setError]=useState(''),[selected,setSelected]=useState(null),[sources,setSources]=useState({}),[sourceStatus,setSourceStatus]=useState('Loading'),[feedback,setFeedback]=useState(''),[request,setRequest]=useState({cursor:null,retry:0});
+ const [fullComparison,setFullComparison]=useState(null),[comparisonLoading,setComparisonLoading]=useState(false),[comparisonError,setComparisonError]=useState('');
+ const comparisonController=useRef(null);
+ useEffect(()=>()=>comparisonController.current?.abort(),[root,contextKey,epoch,session,selected,active]);
  const identity=JSON.stringify([root,contextKey,epoch,session]),current=useRef(null),pageRef=useRef(null);
  const [worktree,artifact,change]=JSON.parse(contextKey),body={path:root,worktree,artifact,change};
  const ready=active&&!updating&&repositoryFresh&&status==='Loaded'&&packet?.freshness==='fresh'&&pageRef.current?.identity===identity&&pageRef.current?.request===request;
@@ -40,9 +46,34 @@ export default function ChangeReview({root,contextKey,epoch,session,active,updat
   Promise.all(['baseline','change'].map(async side=>{const pointer=record[side];if(!pointer)return [side,null];const result=await query({...body,operation:'source',source:pointer.id},controller.signal);if(result.revision!==revision||result.freshness!=='fresh')throw Error('Source revision changed; reload the review.');return [side,result.data];})).then(values=>{if(!controller.signal.aborted&&current.current.identity===identity&&current.current.selected===selected){setSources(Object.fromEntries(values));setSourceStatus('Loaded');}}).catch(e=>{if(!controller.signal.aborted&&current.current.identity===identity&&current.current.selected===selected){setSourceStatus('Error');setError(e.message);setStatus('Stale');}});
   return()=>controller.abort();
  },[packet?.revision,selected,active,updating,status,identity]);
- async function moreSource(side){const source=sources[side];if(!ready||!source?.nextCursor)return;const captured=current.current;setSourceStatus('Loading');try{const result=await query({...body,operation:'source',source:source.id,cursor:source.nextCursor});if(current.current.identity!==captured.identity||current.current.revision!==captured.revision||current.current.selected!==captured.selected||!current.current.ready)return;if(result.revision!==captured.revision||result.freshness!=='fresh')throw Error('Source revision changed; reload the review.');setSources(value=>({...value,[side]:result.data}));setSourceStatus('Loaded');}catch(e){if(current.current.identity===captured.identity&&current.current.revision===captured.revision&&current.current.selected===captured.selected){setError(e.message);setStatus('Stale');}}}
+ useEffect(()=>{setFullComparison(null);setComparisonError('');setComparisonLoading(false);},[identity,selected]);
+ async function moreSource(side){setFullComparison(null);const source=sources[side];if(!ready||!source?.nextCursor)return;const captured=current.current;setSourceStatus('Loading');try{const result=await query({...body,operation:'source',source:source.id,cursor:source.nextCursor});if(current.current.identity!==captured.identity||current.current.revision!==captured.revision||current.current.selected!==captured.selected||!current.current.ready)return;if(result.revision!==captured.revision||result.freshness!=='fresh')throw Error('Source revision changed; reload the review.');setSources(value=>({...value,[side]:result.data}));setSourceStatus('Loaded');}catch(e){if(current.current.identity===captured.identity&&current.current.revision===captured.revision&&current.current.selected===captured.selected){setError(e.message);setStatus('Stale');}}}
+ async function loadFullComparison(){
+  if(!ready)return;const captured=current.current,record=packet.data.records.find(r=>r.id===selected);setComparisonLoading(true);setComparisonError('');
+  const matches=()=>current.current.identity===captured.identity&&current.current.selected===captured.selected&&current.current.revision===captured.revision&&current.current.ready;
+  const controller=new AbortController();comparisonController.current?.abort();comparisonController.current=controller;
+  try{
+   const texts={baseline:'',change:''};
+   for(const side of ['baseline','change']){
+    if(!record[side])continue;
+    let cursor=null;
+    do{
+     const result=await query({...body,operation:'source',source:record[side].id,...(cursor?{cursor}:{})},controller.signal);
+     if(!matches())return;if(result.revision!==captured.revision||result.freshness!=='fresh')throw Error('Source revision changed; reload the review.');
+     const part=result.data;if(part.offset!==texts[side].length||(!part.text.length&&part.nextCursor))throw Error('Source excerpts do not form a complete comparison.');
+     texts[side]+=part.text;cursor=part.nextCursor;
+     if(texts.baseline.length+texts.change.length>comparisonLimits.characters||texts[side].split('\n').length>comparisonLimits.lines+1)throw Error('Comparison too large. Use raw source excerpts below.');
+    }while(cursor);
+   }
+   if(matches())setFullComparison({selected,revision:captured.revision,texts});
+  }catch(e){if(matches()&&!controller.signal.aborted)setComparisonError(e.message);}
+  finally{if(matches())setComparisonLoading(false);}
+ }
  async function exportPacket(format){if(!current.current.ready)return;const captured=current.current;try{const text=format==='json'?json(packet)+'\n':formatContextMarkdown(packet);if(format==='copy'){await navigator.clipboard.writeText(text);if(current.current.identity===captured.identity&&current.current.revision===captured.revision&&current.current.ready)setFeedback('Markdown copied.');}else{const url=URL.createObjectURL(new Blob([text],{type:format==='json'?'application/json':'text/markdown;charset=utf-8'})),link=document.createElement('a');try{link.href=url;link.download=`${artifact}-${change}-context.${format==='json'?'json':'md'}`;document.body.appendChild(link);link.click();setFeedback(`${format==='json'?'JSON':'Markdown'} download requested.`);}finally{link.remove();setTimeout(()=>URL.revokeObjectURL(url),1000);}}}catch{if(current.current.identity===captured.identity&&current.current.revision===captured.revision&&current.current.ready)setFeedback(`${format==='copy'?'Copy':'Download'} failed. Retry when local browser access is available.`);}}
- const record=packet?.data.records.find(r=>r.id===selected),displayStatus=updating?'Updating':!repositoryFresh&&packet?'Stale':status;
+ const record=packet?.data.records.find(r=>r.id===selected);
+ const full=fullComparison?.selected===selected&&fullComparison?.revision===packet?.revision?fullComparison.texts:null;
+ const complete=Boolean(full)||Boolean(record&&sourceStatus==='Loaded'&&['baseline','change'].every(side=>!record[side]||(sources[side]?.offset===0&&!sources[side]?.nextCursor&&sources[side]?.text.length===sources[side]?.totalCharacters)));
+ const displayStatus=updating?'Updating':!repositoryFresh&&packet?'Stale':status;
  const records=unchanged=>
 <nav aria-label={unchanged?'Unchanged knowledge':'Changed knowledge'} className="review-records">{packet.data.records.filter(r=>(r.status==='unchanged')===unchanged).map(r=>
 <button key={r.id} aria-pressed={selected===r.id} onClick={()=>setSelected(r.id)}>{r.status} · {r.path}</button>)}</nav>;
@@ -85,16 +116,16 @@ export default function ChangeReview({root,contextKey,epoch,session,active,updat
 <h2>{artifact} / {change}</h2>
 </div>
 <div role="status" aria-label="Review status">{displayStatus}</div>
-<p className="review-path">Worktree: {worktree}</p>{packet&&<>
+{packet&&<>
 <p>Baseline: declared-current {packet.context.baseline.version||(packet.data.baseline.state==='initial'?'None (initial)':'Unavailable')} · {packet.data.baseline.state}</p>
-<p className="review-path">HEAD: {packet.context.head}</p>
-<p className="review-path">Captured revision: {packet.revision}</p>
-</>}<div className="review-actions">
+<section aria-label="Proposed scope and purpose"><h3>Purpose and scope</h3><Markdown text={packet.data.sources.find(s=>s.id===packet.data.scope.source?.id)?.text||'No scope excerpt available.'}/></section>
+<details className="review-context"><summary>Captured source details</summary><p className="review-path">Worktree: {worktree}</p><p>HEAD: {packet.context.head}</p><p>Captured revision: {packet.revision}</p></details>
+</>}<details className="review-export"><summary>Export context · Loaded records page</summary><div className="review-actions">
 <button disabled={!ready} onClick={()=>exportPacket('copy')}>Copy Markdown</button>
 <button disabled={!ready} onClick={()=>exportPacket('markdown')}>Download Markdown</button>
 <button disabled={!ready} onClick={()=>exportPacket('json')}>Download JSON</button>
+</div></details>
 <button disabled={updating} onClick={()=>setRequest({cursor:null,retry:request.retry+1})}>Reload review</button>
-</div>
 <p role="status" aria-label="Export feedback">{feedback}</p>{error&&<p role="alert">{error}</p>}
  {packet&&<>
 <section className="review-warnings" aria-label="Review limitations">
@@ -111,24 +142,20 @@ export default function ChangeReview({root,contextKey,epoch,session,active,updat
 <p key={s.id}>Shortened: {s.path} · {s.omittedCharacters} characters omitted</p>)}
  </details>
 </section>
- <details className="review-scope">
-<summary>Proposed scope and purpose</summary>
-<code>{packet.data.scope.source?.path||'Scope source unavailable'}</code>
-<pre>{packet.data.sources.find(s=>s.id===packet.data.scope.source?.id)?.text||'No scope excerpt available.'}</pre>
-</details>
  <h3>Changed knowledge</h3>{records(false)}{!packet.data.records.some(r=>r.status!=='unchanged')&&<p>No changed knowledge on this page.</p>}<details className="review-unchanged">
 <summary>Unchanged governing knowledge</summary>{records(true)}</details>
 <p>Loaded records {packet.data.records.length?packet.pagination.offset+1:0}–{packet.pagination.offset+packet.data.records.length} of {packet.pagination.totalRecords}.</p>
 <div className="review-actions">{pageRef.current?.cursor&&<button disabled={!ready} onClick={()=>setRequest({cursor:null,retry:request.retry+1})}>First records page</button>}{packet.pagination.nextCursor&&<button disabled={!ready} onClick={()=>setRequest({cursor:packet.pagination.nextCursor,retry:request.retry+1})}>Next records page</button>}</div>{record&&<section aria-label="Knowledge comparison">
 <h3>{record.path} · {record.status}</h3>
 <p role="status" aria-label="Comparison status">{sourceStatus}</p>
-<div className="review-comparison">{['baseline','change'].map(side=>
+<ReviewDiff before={full?.baseline||sources.baseline?.text||''} after={full?.change||sources.change?.text||''} complete={complete} onLoad={loadFullComparison} loading={comparisonLoading} error={comparisonError}/>
+<details className="raw-source-excerpts"><summary>Raw source excerpts</summary><div className="review-comparison">{['baseline','change'].map(side=>
 <section key={side} aria-label={side==='baseline'?'Before':'After'}>
 <h4>{side==='baseline'?'Before':'After'}</h4>{!record[side]?<p>No {side==='baseline'?'baseline':'change'} source ({record.status}).</p>:<>
 <code>{record[side].path}</code>
 <details><summary>Source details</summary><p className="review-path">SHA256: {record[side].fingerprint}</p></details>{sources[side]?.id===record[side].id&&<>
 <p>Characters {sources[side].offset}–{sources[side].offset+sources[side].text.length} of {sources[side].totalCharacters}</p>
-<pre>{sources[side].text}</pre>{sources[side].omittedCharacters>0&&<p>{sources[side].omittedCharacters} characters remain.</p>}{sources[side].nextCursor&&<button disabled={!ready||sourceStatus==='Loading'} onClick={()=>moreSource(side)}>Next {side==='baseline'?'before':'after'} excerpt</button>}</>}</>}</section>)}</div>
+<pre>{sources[side].text}</pre>{sources[side].omittedCharacters>0&&<p>{sources[side].omittedCharacters} characters remain.</p>}{sources[side].nextCursor&&<button disabled={!ready||sourceStatus==='Loading'} onClick={()=>moreSource(side)}>Next {side==='baseline'?'before':'after'} excerpt</button>}</>}</>}</section>)}</div></details>
 </section>}</>}
  </section>}{active&&inspector&&createPortal(details,inspector)}</>;
 }

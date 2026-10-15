@@ -94,3 +94,26 @@ test('compact setup and scoped artifact filtering keep recovery and graph contex
   await expect(page.getByLabel('Recorded executions',{exact:true})).toHaveCount(0);
  }finally{await fixture.cleanup();}
 });
+
+test('review leads with purpose and highlights only complete compared sources',async({page})=>{
+ const files=new Map([
+ ['docs/artifacts/demo/README.md',rootReadme('Demo','1.0.0')],
+ ['docs/artifacts/demo/versions/1.0.0/README.md','# Baseline'],
+ ['docs/artifacts/demo/versions/1.0.0/requirements/main.md','# Rules\n\nMembers may sign in.\n'],
+ ['docs/artifacts/demo/changes/change-next/README.md','# Improve login\n\nRequire explicit sign-in.'],
+ ['docs/artifacts/demo/changes/change-next/requirements/main.md','# Rules\n\nMembers must sign in.\n']
+ ]);const fixture=await fixtureRepository(files),before=await fingerprint(fixture.root);
+ try{
+  await page.goto('/');await page.getByLabel('Repository path').fill(fixture.root);await page.getByRole('button',{name:'Open repository',exact:true}).click();await page.getByRole('navigation',{name:'Artifacts'}).getByRole('button',{name:/Demo/}).click();await page.getByRole('button',{name:/^change-next/}).click();await page.getByRole('button',{name:'Review change',exact:true}).click();
+  const review=page.getByRole('region',{name:'Change review',exact:true});await expect(review.getByLabel('Comparison status')).toHaveText('Loaded');await expect(review.getByRole('region',{name:'Proposed scope and purpose'})).toContainText('Require explicit sign-in.');await expect(review.locator('.diff-line.remove')).toContainText('Members may sign in.');await expect(review.locator('.diff-line.add')).toContainText('Members must sign in.');await expect(review.getByRole('button',{name:'Download JSON'})).toBeHidden();await review.getByText('Export context · Loaded records page',{exact:true}).click();await expect(review.getByRole('button',{name:'Download JSON'})).toBeVisible();
+  expect(await fingerprint(fixture.root)).toEqual(before);
+ }finally{await fixture.cleanup();}
+});
+
+test('partial review sources require explicit complete loading before diff alignment',async({page})=>{
+ const prefix='docs/artifacts/demo/',files=new Map([[prefix+'README.md',rootReadme('Demo','1.0.0')],[prefix+'versions/1.0.0/README.md','# Baseline'],[prefix+'versions/1.0.0/requirements/main.md','# Before\n\n'+'a'.repeat(13000)],[prefix+'changes/change-next/README.md','# Change\n\nReview long source.'],[prefix+'changes/change-next/requirements/main.md','# After\n\n'+'b'.repeat(13000)]]),fixture=await fixtureRepository(files);
+ try{
+  await page.goto('/');await page.getByLabel('Repository path').fill(fixture.root);await page.getByRole('button',{name:'Open repository',exact:true}).click();await page.getByRole('navigation',{name:'Artifacts'}).getByRole('button',{name:/Demo/}).click();await page.getByRole('button',{name:/^change-next/}).click();await page.getByRole('button',{name:'Review change',exact:true}).click();
+  const passages=page.getByRole('region',{name:'Changed passages'});await expect(passages).toContainText('Partial source excerpts');await expect(passages.locator('.diff-line')).toHaveCount(0);await passages.getByRole('button',{name:'Load full comparison',exact:true}).click();await expect(passages.locator('.diff-line.add')).not.toHaveCount(0);await expect(passages.locator('.diff-line.remove')).not.toHaveCount(0);await expect(passages.getByRole('button',{name:'Load full comparison',exact:true})).toHaveCount(0);
+ }finally{await fixture.cleanup();}
+});
