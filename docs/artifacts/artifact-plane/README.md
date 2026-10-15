@@ -22,7 +22,7 @@ Version 1.10.0, its originating delivery tasks, and implementation landed on mai
 
 ## Active change
 
-- [Evidence-based change review and context handoff](changes/change-evidence-review-context/README.md)
+- [Consistent search and readable graph labels](changes/change-search-label-usability/README.md)
 
 
 ## Knowledge snapshot
