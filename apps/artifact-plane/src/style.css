@@ -1,4 +1,9 @@
 :root {
+  --space-1:4px;
+  --space-2:8px;
+  --space-3:12px;
+  --space-4:16px;
+  --space-6:24px;
   font-family:
     Inter,
     ui-sans-serif,
@@ -20,7 +25,8 @@ body {
   margin: 0;
 }
 button,
-input {
+input,
+select {
   font: inherit;
 }
 button {
@@ -41,6 +47,7 @@ button:disabled {
 }
 button:focus-visible,
 input:focus-visible,
+select:focus-visible,
 summary:focus-visible {
   outline: 2px solid #aaa1ff;
   outline-offset: 3px;
@@ -994,13 +1001,13 @@ summary {
 .recorded-picker { display:flex; flex-direction:column; gap:7px; margin:16px 0; padding-top:12px; border-top:1px solid #354059; }
 .recorded-picker select { width:100%; }
 .recorded-meta { font-size:11px; color:#b9c4d9; padding:8px 12px; overflow-wrap:anywhere; }
-.recorded-picker select { padding:10px; border:1px solid #3c4c68; border-radius:7px; background:#18263b; color:#dbe4f5; }
+
 .prerequisite-toggle { display:flex; align-items:center; gap:6px; font-size:11px; color:#c8d4e8; }
 .prerequisite-toggle input { width:auto; }
 
 .worktree-browser { margin-bottom:16px; font-size:11px; line-height:1.6; }
 .worktree-browser label { display:block; margin-bottom:6px; }
-.worktree-browser select { width:100%; padding:8px; border:1px solid #435574; border-radius:6px; background:#19263c; color:#d4deef; }
+.worktree-browser select { width:100%; }
 .worktree-details { margin:8px 0; overflow-wrap:anywhere; }
 .worktree-details summary { cursor:pointer; }
 .worktree-details p { margin:6px 0; }
@@ -1108,7 +1115,7 @@ summary {
 .named-search-input input {width:100%;min-width:0;flex:1;}
 .named-search-input button {flex:none;padding:8px;font-size:11px;}
 .flow-filter {display:flex;flex-direction:column;gap:6px;margin:12px 0;min-width:0;}
-.flow-filter select {min-width:0;width:100%;padding:8px;border:1px solid #435574;border-radius:6px;background:#19263c;color:#d4deef;}
+.flow-filter select {width:100%;}
 .flow-selection-note {padding:8px 10px;margin:10px 0;background:#26334b;color:#c4cde0;border-radius:6px;}
 .flow-list [aria-label="Flow search status"] {font-size:12px;color:#b8c1d1;margin:8px 0;}
 /* Measured edge labels occupy clear space; leaders retain their association. */
@@ -1117,3 +1124,41 @@ summary {
 .safe-edge-leader path { fill:none; stroke:#9aaac5; stroke-width:1; stroke-dasharray:3 3; }
 .safe-edge-disclosure summary { pointer-events:auto; cursor:pointer; }
 .safe-edge-disclosure p { margin:8px 0 0; }
+
+/* Native fields share appearance; their containers own width and spacing. */
+select {
+  min-width:0;
+  max-width:100%;
+  padding:var(--space-2) var(--space-3);
+  border:1px solid #435574;
+  border-radius:6px;
+  background:#19263c;
+  color:#d4deef;
+  line-height:1.4;
+  font-size:12px;
+}
+select:disabled {opacity:.45;cursor:default;}
+.worktree-browser label {margin-bottom:var(--space-2);}
+.recorded-picker,.flow-filter {gap:var(--space-2);}
+.flow-content>label:not(.flow-support-toggle) {gap:var(--space-2);}
+
+/* Direct-child stacks leave Markdown internals and graph cards alone. */
+:is(.details-panel,.workflow-details,.flow-content,.review-details)>section,
+.runtime-details {
+  margin-block:var(--space-6) 0;
+}
+:is(.details-panel,.workflow-details,.flow-content,.review-details)>section>:where(h3,p,button,div,details,ul,label),
+.runtime-details>:where(h3,p,div,details),
+:is(.workflow-task,.unit-criterion,.review-comparison>section,.runtime-details>details)>:where(h3,h4,p,button,div,details,code,pre) {
+  margin-block:0;
+}
+:is(.details-panel,.workflow-details,.flow-content,.review-details)>section>*+*,
+.runtime-details>*+* {margin-top:var(--space-3);}
+:is(.details-panel,.workflow-details,.flow-content,.review-details)>section>button+p,
+:is(.workflow-task,.unit-criterion,.review-comparison>section,.runtime-details>details)>*+* {margin-top:var(--space-2);}
+:is(.workflow-task,.unit-criterion,.review-comparison>section)>button {max-width:100%;white-space:normal;overflow-wrap:anywhere;}
+.flow-content>label select {width:100%;}
+.review-details>p,.review-details>details,.review-details>div {margin-top:var(--space-3);}
+.change-review>h3 {margin-block:var(--space-6) var(--space-3);}
+:is(.details-panel,.workflow-details,.flow-content,.review-details)>section>button {display:block;max-width:100%;white-space:normal;overflow-wrap:anywhere;}
+.review-details>h3 {margin-block:var(--space-6) var(--space-3);}
