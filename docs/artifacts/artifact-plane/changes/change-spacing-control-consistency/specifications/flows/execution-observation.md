@@ -34,6 +34,7 @@ flow:
         - runtime-tests
         - evidence-review-contract
         - worktree-checks
+        - spacing-control-contract
   transitions:
     - from: bind
       to: observe
@@ -84,9 +85,18 @@ flow:
       path: apps/artifact-plane/test/browser/runtime.spec.js
       requires: Verify matching worktree observations and retained captured identities.
       basis: static
+    - id: spacing-control-contract
+      kind: element
+      artifact: artifact-plane
+      element: specifications/spacing-control-consistency.md
+      requires: Present inspector blocks and native controls consistently without
+        changing evidence or journey meaning.
+      basis: documented
   gaps:
     - Observed lifecycle activity and reported checks do not prove task DoD,
       plan approval or artifact establishment.
+    - New spacing and dropdown consistency requires approved implementation and
+      rendered validation.
   exclusions:
     - Starting agents, granting permissions, changing artifact knowledge or
       maintaining ADD workflow state.

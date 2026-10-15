@@ -43,6 +43,7 @@ flow:
         - evidence-review-contract
         - measured-edge-labels
         - label-browser-checks
+        - spacing-control-contract
   transitions:
     - from: select
       to: validate
@@ -121,11 +122,20 @@ flow:
       requires: Check actual long, loop, reverse and parallel geometry at 1440 and 700
         widths.
       basis: static
+    - id: spacing-control-contract
+      kind: element
+      artifact: artifact-plane
+      element: specifications/spacing-control-consistency.md
+      requires: Present inspector blocks and native controls consistently without
+        changing evidence or journey meaning.
+      basis: documented
   gaps:
     - The flow documents discovery behavior, not complete knowledge coverage or
       artifact establishment.
     - New contextual review navigation is specified but not implemented or
       browser-validated yet.
+    - New spacing and dropdown consistency requires approved implementation and
+      rendered validation.
   exclusions:
     - Arbitrary filesystem browsing and automatic repository edits.
   artifact: artifact-plane

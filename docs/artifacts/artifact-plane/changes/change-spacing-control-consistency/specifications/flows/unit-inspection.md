@@ -38,6 +38,7 @@ flow:
         - units
         - evidence-review-contract
         - publication-checks
+        - spacing-control-contract
   transitions:
     - from: brief
       to: resolve
@@ -112,9 +113,18 @@ flow:
       path: apps/artifact-plane/test/browser/search-usability.spec.js
       requires: Exercise live unit filtering, clear and consistent flow controls.
       basis: static
+    - id: spacing-control-contract
+      kind: element
+      artifact: artifact-plane
+      element: specifications/spacing-control-consistency.md
+      requires: Present inspector blocks and native controls consistently without
+        changing evidence or journey meaning.
+      basis: documented
   gaps:
     - Recorded passing assertions are not independently executed tests; missing
       merge evidence stays unresolved.
+    - New spacing and dropdown consistency requires approved implementation and
+      rendered validation.
   exclusions:
     - Creating unit members from shared flow participation.
   artifact: artifact-plane

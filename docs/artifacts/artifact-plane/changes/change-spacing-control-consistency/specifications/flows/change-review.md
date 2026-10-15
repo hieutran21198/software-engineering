@@ -49,6 +49,7 @@ flow:
         - review-interface
         - review-checks
         - browser-checks
+        - spacing-control-contract
   transitions:
     - from: select
       to: compare
@@ -90,9 +91,18 @@ flow:
       path: apps/artifact-plane/test/browser/change-review.spec.js
       requires: Exercise review navigation, exports, refresh and delayed replies.
       basis: static
+    - id: spacing-control-contract
+      kind: element
+      artifact: artifact-plane
+      element: specifications/spacing-control-consistency.md
+      requires: Present inspector blocks and native controls consistently without
+        changing evidence or journey meaning.
+      basis: documented
   gaps:
     - Declared current is not a historical code predecessor; recorded
       relationships are not exhaustive impact.
+    - New spacing and dropdown consistency requires approved implementation and
+      rendered validation.
   exclusions:
     - Code-diff review, historical code reconstruction, approval and repository
       writes.

@@ -55,6 +55,7 @@ flow:
         - adapters-tests
         - evidence-review-contract
         - ranking-checks
+        - spacing-control-contract
   transitions:
     - from: context
       to: discover
@@ -170,9 +171,18 @@ flow:
       requires: Verify complete named matches, cross-owner participation, contextual
         entry and delayed replies.
       basis: static
+    - id: spacing-control-contract
+      kind: element
+      artifact: artifact-plane
+      element: specifications/spacing-control-consistency.md
+      requires: Present inspector blocks and native controls consistently without
+        changing evidence or journey meaning.
+      basis: documented
   gaps:
     - Retrieval ranks candidates; it does not prove compatibility or complete
       system discovery.
+    - New spacing and dropdown consistency requires approved implementation and
+      rendered validation.
   exclusions:
     - Arbitrary paths, credential files, hosted embedding calls and inferred
       approval.
