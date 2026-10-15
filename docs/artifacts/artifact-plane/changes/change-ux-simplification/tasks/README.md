@@ -50,3 +50,7 @@ The proposed release is 1.13.0 because this outcome adds a main-area reader and 
 Use the existing Node and browser suites, build and read-only fixture conventions. Add meaningful behavior/security/diff checks, not tests that merely repeat markup. Inspect actual rendered geometry/screenshots, async failures and keyboard interaction. Root Go tests/vet and website build cover knowledge integration. Record exact commands and observed limitations only when executed.
 
 Seven unique task IDs and six prerequisite edges form one acyclic chain ending at integration/publication. Every UX requirement has executable task DoD; all eight affected flow records have contract support and will receive actual evidence. Required upstream establishment and user approval are separate from the task chain. KISS uses existing services and removes duplicate actions/state coupling; STE keeps labels and partial-evidence limits precise. No preparation blocker remains.
+
+## Implementation approval
+
+The user explicitly approved this concrete plan and proposed 1.13.0 in the conversation. Implementation is authorized on the dedicated branch. Rechecked origin/main: ADD declares 2.1.0 with publication review; no new artifact prerequisite is introduced. Preserve pending presentation work and stop for team review/merge after PR preparation.

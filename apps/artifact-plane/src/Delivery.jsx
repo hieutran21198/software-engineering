@@ -4,22 +4,21 @@ const stateLabel = state => state === 'documented-complete' ? 'Documented comple
 const natural = new Intl.Collator('en', {numeric:true});
 export const changeKey = (worktree, change) => JSON.stringify([worktree.path, change.artifact, change.name]);
 
-export function Worktrees({workflow, selected, onSelect, onOpen, busy}) {
+export function Worktrees({workflow, selected, onSelect, busy}) {
  const controlId=useId();
  const worktrees = workflow?.worktrees || [];
  const worktree = worktrees.find(w => w.path === selected) || worktrees.find(w => w.selected);
  return <section className="worktree-browser" aria-label="Registered worktrees">
   <label htmlFor={controlId}>Worktree</label>
   <select id={controlId} value={worktree?.path || ''} onChange={event => onSelect(event.target.value)}>
-   {worktrees.map(w => <option key={w.path} value={w.path}>{w.branch || (w.detached ? 'Detached HEAD' : 'Unknown branch')} · {w.selected ? 'opened' : w.availability} · {w.path}</option>)}
+   {worktrees.map(w => <option key={w.path} value={w.path} disabled={w.availability!=='readable'}>{w.branch || (w.detached ? 'Detached HEAD' : 'Unknown branch')} · {w.path===selected ? 'active' : w.availability} · {w.path}</option>)}
   </select>
   {worktree && <details className="worktree-details">
    <summary>Worktree details</summary><p>{worktree.path}</p>
-   <p>{worktree.branch || 'Detached HEAD'} · {worktree.availability}{worktree.selected ? ' · Opened repository' : ''}{worktree.locked ? ' · Locked' : ''}{worktree.prunable ? ' · Prunable' : ''}</p>
+   <p>{worktree.branch || 'Detached HEAD'} · {worktree.availability}{worktree.path===selected ? ' · Active source' : ''}{worktree.locked ? ' · Locked' : ''}{worktree.prunable ? ' · Prunable' : ''}</p>
    <code className="full-commit">{worktree.head || 'No commits'}</code>
    {worktree.diagnostics.map((d,i) => <p className="workflow-diagnostic" key={i}>{d.message}</p>)}
   </details>}
-  {worktree && !worktree.selected && <button disabled={busy || worktree.availability !== 'readable'} onClick={() => onOpen(worktree.path)}>Open worktree</button>}
   {workflow?.diagnostics.map((d,i) => <p className="workflow-diagnostic" key={i}>{d.message}</p>)}
  </section>;
 }

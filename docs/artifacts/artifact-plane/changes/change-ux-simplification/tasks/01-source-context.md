@@ -19,11 +19,11 @@ No internal task prerequisite. Explicit approval of this concrete plan and reche
 
 ## Definition of Done
 
-- [ ] Distinct real registered worktrees with equal artifact/unit/task IDs display their own branch, dependencies, knowledge, delivery, review, flow and runtime context after a single selection; no Git checkout occurs.
-- [ ] A→B→C delayed replies, failed/unavailable target, refresh and project deactivation preserve committed source identity and reject obsolete data and errors.
-- [ ] Canonical project-tab identity/persistence remains the opened root; active worktree selection cannot close or replace another project tab.
-- [ ] Focused browser checks pass and fixture file/Git fingerprints remain unchanged.
+- [x] Distinct real registered worktrees with equal artifact/unit/task IDs display their own branch, dependencies, knowledge, delivery, review, flow and runtime context after a single selection; no Git checkout occurs.
+- [x] A→B→C delayed replies, failed/unavailable target, refresh and project deactivation preserve committed source identity and reject obsolete data and errors.
+- [x] Canonical project-tab identity/persistence remains the opened root; active worktree selection cannot close or replace another project tab.
+- [x] Focused browser checks pass and fixture file/Git fingerprints remain unchanged.
 
 ## Evidence
 
-No implementation checks have run for this task. Record actual commands, observed results, source references and limitations here after approved execution.
+Production build passed. Focused Chromium UX checks passed (2 cases): complete distinct worktree content replaces old metadata, markdown reads retain project-root/target selectors, refresh follows the target, canonical tab identity stays fixed, failed switches retain the committed source, and a delayed superseded switch cannot replace it. Both fixture file/Git fingerprints remain unchanged. Source inspection confirms Flows/review/section queries share projectRoot and explicit worktree, while RuntimeProvider receives the installed target snapshot. Full cross-view regression and visual checks remain the integration task.

@@ -197,6 +197,7 @@ export function ProjectExplorer({active: isActive = true, initialPath = "", onOp
     [snapshot, setSnapshot] = useState(null),
     [busy, setBusy] = useState(false),
     [error, setError] = useState("");
+  const [projectRoot, setProjectRoot] = useState(initialPath), [openingWorktree,setOpeningWorktree]=useState(null);
   const [expanded, setExpanded] = useState(new Set()),
     [selection, setSelection] = useState(null),
     [planning, setPlanning] = useState(false);
@@ -272,34 +273,30 @@ export function ProjectExplorer({active: isActive = true, initialPath = "", onOp
     if(refresh&&current.selection&&!base.artifacts.some(a=>a.id===current.selection.artifact&&(!current.selection.element||a.elements.some(e=>e.id===current.selection.element))))setSelection(null);
     setSnapshot(next);setOverviewEpoch(value=>value+1);
   }
-  reloadRef.current=async(repositoryPath,refresh,signal,session)=>{
+  reloadRef.current=async(repositoryPath,refresh,signal,session,targetWorktree=null,switching=false)=>{
     setBusy(true);setFresh(false);setError('');
     try{
-      const result=await repositoryQuery({path:repositoryPath,section:'overview'},signal);
-      if(session!==generation.current)return;
-      let base=result.data;
-      const selected=active.current.unitWorktree;
-      if(refresh&&selected&&selected!==base.repository.path&&base.workflow.worktrees.some(w=>w.path===selected)){
-        const other=await repositoryQuery({path:base.repository.path,section:'overview',worktree:selected},signal);
-        if(session!==generation.current)return;
-        base={...base,workflow:{...base.workflow,worktrees:base.workflow.worktrees.map(w=>w.path===selected?other.data.workflow.worktrees.find(t=>t.path===selected):w)}};
-      }
-      onOpened(base.repository.path);installOverview(base,refresh);setLoadedSession(session);queueRoot.current=base.repository.path;setPath(base.repository.path);setFresh(!result.diagnostics.some(d=>d.code==='stale-response'));
-      if(!refresh){setReviewKey(null);setFlowEntry(null);setRecordedSelected(null);setRecordedNode(null);if(active.current.view==='recorded')setView('canvas');setUnitSelected(null);setUnitNodeSelected(null);setUnitWorktree(base.repository.path);setUnitView('artifacts');setUnitPlanning(false);setTaskChange(null);setTaskSelected(null);setDeliveryChange(null);setDeliveryPhase(null);setExpanded(new Set());setExpandedTypes(new Set());setSelection(null);setFilter('');setUnitFilter('');setPlanning(false);setFlowKnowledge('established');setCompletionOpen(false);setDocument(null);}
+      const target=targetWorktree||(refresh?active.current.unitWorktree:null);
+      const result=await repositoryQuery({path:repositoryPath,section:'overview',...(target?{worktree:target}:{})},signal);
+      if(session!==generation.current||signal.aborted)return;
+      const base=result.data;
+      setProjectRoot(result.repository.path);if(!switching)onOpened(result.repository.path);
+      installOverview(base,refresh);setLoadedSession(session);queueRoot.current=result.repository.path;setPath(result.repository.path);setFresh(!result.diagnostics.some(d=>d.code==='stale-response'));
+      if(!refresh){setReviewKey(null);setFlowEntry(null);setRecordedSelected(null);setRecordedNode(null);if(active.current.view==='recorded')setView('canvas');setUnitSelected(null);setUnitNodeSelected(null);setUnitWorktree(base.repository.path);setUnitView('artifacts');setUnitPlanning(false);setTaskChange(null);setTaskSelected(null);setDeliveryChange(null);setDeliveryPhase(null);setExpanded(new Set());setExpandedTypes(new Set());setSelection(null);setFilter('');setUnitFilter('');if(!switching){setPlanning(false);setFlowKnowledge('established');}setCompletionOpen(false);setDocument(null);}
     }catch(error){if(session===generation.current&&error.name!=='AbortError'){setError(error.message);setFresh(false);}}
-    finally{if(session===generation.current)setBusy(false);}
+    finally{if(session===generation.current){setBusy(false);setOpeningWorktree(null);}}
   };
-  function open(repositoryPath,refresh=false){
+  function open(repositoryPath,refresh=false,targetWorktree=null,switching=false){
     if(refresh&&queueRef.current&&queueRoot.current===repositoryPath)return queueRef.current.request();
     queueRef.current?.close();eventsRef.current?.close();completionController.current?.abort();const session=++generation.current;setConnected(false);
-    queueRoot.current=repositoryPath;let first=!refresh;const queue=refreshQueue(signal=>{const initial=first;first=false;return reloadRef.current(repositoryPath,!initial,signal,session);});queueRef.current=queue;return queue.request();
+    queueRoot.current=repositoryPath;let first=!refresh;const queue=refreshQueue(signal=>{const initial=first;first=false;return reloadRef.current(repositoryPath,!initial,signal,session,initial?targetWorktree:null,initial&&switching);});queueRef.current=queue;return queue.request();
   }
   useEffect(()=>{
-    if(isActive){const root=snapshotRef.current?.repository.path||queueRoot.current||initialPath;if(root)open(root,Boolean(snapshotRef.current));}
+    if(isActive){const root=queueRoot.current||initialPath;if(root)open(root,Boolean(snapshotRef.current));}
     else{generation.current++;queueRef.current?.close();queueRef.current=null;eventsRef.current?.close();completionController.current?.abort();setConnected(false);setFresh(false);setBusy(false);}
   },[isActive]);
   useEffect(()=>{
-    const root=snapshot?.repository.path;if(!isActive||!root)return;const session=generation.current;
+    const root=projectRoot;if(!isActive||!root||!snapshot)return;const session=generation.current;
     const refresh=()=>{if(session===generation.current)queueRef.current?.request();};
     const connect=()=>{eventsRef.current?.close();const source=new EventSource('/api/repository/events?path='+encodeURIComponent(root));eventsRef.current=source;
       source.onmessage=event=>{if(session!==generation.current||eventsRef.current!==source)return;try{const value=JSON.parse(event.data);setConnected(Boolean(value.available));setFresh(false);if(value.available)refresh();}catch{setConnected(false);setFresh(false);}};
@@ -308,16 +305,16 @@ export function ProjectExplorer({active: isActive = true, initialPath = "", onOp
     const offline=()=>{eventsRef.current?.close();setConnected(false);setFresh(false);};const online=()=>{connect();refresh();};
     if(navigator.onLine)connect();window.addEventListener('focus',refresh);window.addEventListener('online',online);window.addEventListener('offline',offline);
     return()=>{eventsRef.current?.close();window.removeEventListener('focus',refresh);window.removeEventListener('online',online);window.removeEventListener('offline',offline);};
-  },[isActive,snapshot?.repository.path,loadedSession]);
+  },[isActive,projectRoot,snapshot?.repository.path,loadedSession]);
   useEffect(()=>()=>{generation.current++;queueRef.current?.close();eventsRef.current?.close();completionController.current?.abort();},[]);
+  function activateWorktree(target){
+    if(target===unitWorktree&&!openingWorktree)return;
+    const entry=snapshot?.workflow.worktrees.find(w=>w.path===target);
+    if(entry?.availability!=='readable'){setError(entry?.diagnostics.map(d=>d.message).join(' ')||'This worktree is unavailable.');return;}
+    setOpeningWorktree(target);open(projectRoot,false,target,true);
+  }
   useEffect(()=>{
-    const root=snapshot?.repository.path,target=unitWorktree;if(!isActive||!root||!target||target===root||overviewRef.current?.workflow.worktrees.find(w=>w.path===target)?.availability!=='readable'||overviewRef.current?.workflow.worktrees.find(w=>w.path===target)?.loadState==='loaded')return;
-    const controller=new AbortController(),session=generation.current;
-    repositoryQuery({path:root,worktree:target,section:'overview'},controller.signal).then(result=>{if(session!==generation.current)return;const base=overviewRef.current;const next={...base,workflow:{...base.workflow,worktrees:base.workflow.worktrees.map(w=>w.path===target?result.data.workflow.worktrees.find(t=>t.path===target):w.selected?w:{...w,loadState:'not-loaded',unitsOfWork:[]})}};installOverview(next,true);}).catch(error=>{if(error.name!=='AbortError')setError(error.message);});
-    return()=>controller.abort();
-  },[isActive,snapshot?.repository.path,unitWorktree]);
-  useEffect(()=>{
-    const root=snapshot?.repository.path,base=overviewRef.current;if(!isActive||!root||!base)return;if(view==='canvas'&&reviewKey){setSectionState('Not loaded');return;}
+    const root=projectRoot,base=overviewRef.current;if(!isActive||!root||!base)return;if(view==='canvas'&&reviewKey){setSectionState('Not loaded');return;}
     const controller=new AbortController(),session=generation.current;let key,body;
     if(view==='units'&&unitSelected){const [worktree,unit]=JSON.parse(unitSelected);if(!unitContext(base,unitSelected))return;key=unitSelected;body={path:root,worktree,unit,section:unitView,...(unitView==='artifacts'?{dependencyMode:unitPlanning?'planning':'established'}:{})};}
     else if(view==='canvas'&&(taskChange||deliveryChange)){key=taskChange||deliveryChange;const [worktree,artifact,change]=JSON.parse(key);body={path:root,worktree,artifact,change,section:taskChange?'implementation':'workflow'};}
@@ -335,7 +332,7 @@ export function ProjectExplorer({active: isActive = true, initialPath = "", onOp
     return()=>controller.abort();
   },[isActive,snapshot?.repository.path,overviewEpoch,view,unitSelected,unitView,unitPlanning,taskChange,deliveryChange,reviewKey]);
   async function loadCompletion(){
-    const key=active.current.unitSelected,root=snapshotRef.current?.repository.path;if(!key||!root)return;
+    const key=active.current.unitSelected,root=projectRoot;if(!key||!root)return;
     completionController.current?.abort();const controller=new AbortController();completionController.current=controller;const session=generation.current,[worktree,unit]=JSON.parse(key);setCompletionOpen(true);
     try{const result=await repositoryQuery({path:root,worktree,unit,section:'completion'},controller.signal);if(session!==generation.current||active.current.unitSelected!==key||controller.signal.aborted)return;
       setSnapshot(current=>{const existing=unitContext(current,key);if(!existing)return current;return mergeUnit(current,key,{...existing.unit,completion:result.data.completion,completionEpoch:overviewEpoch,evidence:result.data.evidence,diagnostics:result.data.diagnostics,members:existing.unit.members.map(m=>({...m,establishmentEvidence:result.data.members.find(n=>n.artifact===m.artifact)?.establishmentEvidence||m.establishmentEvidence}))});});
@@ -412,7 +409,7 @@ export function ProjectExplorer({active: isActive = true, initialPath = "", onOp
   const selectedUnit = unitContext(snapshot,unitSelected,unitNodeSelected);
   const taskContext = taskSelection(snapshot?.workflow, taskChange, taskSelected);
   const deliveryContext = taskSelection(snapshot?.workflow, deliveryChange, null);
-  const selectedWorktree = snapshot?.workflow?.worktrees.find(w=>w.selected);
+  const selectedWorktree = snapshot?.workflow?.worktrees.find(w=>w.path===unitWorktree);
   useEffect(()=>setRequestedSource(null),[unitSelected,unitView,unitNodeSelected,view,selection?.artifact,selection?.element,taskSelected]);
   const documentSource=requestedSource||(view==='units'?selectedUnit?(unitNode(selectedUnit,unitView,unitPlanning,unitNodeSelected)?.source||unitNode(selectedUnit,unitView,unitPlanning,unitNodeSelected)?.step?.evidence[0]?.file||selectedUnit.unit.path):null:view==='canvas'?taskContext?.task?.path||element?.file||(artifact?`docs/artifacts/${artifact.id}/README.md`:null):null);
   const documentScope=view==='units'&&selectedUnit?{worktree:selectedUnit.worktree.path,unit:selectedUnit.unit.id}:taskContext?{worktree:taskContext.worktree.path,artifact:taskContext.change.artifact,change:taskContext.change.name}:artifact?{artifact:artifact.id,...(element?.source.startsWith('change:')?{change:element.source.slice(7)}:{})}:null;
@@ -421,7 +418,7 @@ export function ProjectExplorer({active: isActive = true, initialPath = "", onOp
     if(!isActive)return;
     if(!documentSource||!documentScope){setDocument(null);return;}const controller=new AbortController(),session=generation.current;
     setDocument(current=>current?.identity===documentIdentity?{...current,status:'Loading'}:{source:documentSource,markdown:'',status:'Loading'});
-    repositoryQuery({path:snapshot.repository.path,section:'markdown',source:documentSource,...documentScope},controller.signal).then(result=>{if(!controller.signal.aborted&&session===generation.current)setDocument({...result.data,identity:documentIdentity,status:'Loaded'});}).catch(error=>{if(error.name!=='AbortError'&&session===generation.current)setDocument({source:documentSource,markdown:'',status:'Error',error:error.message});});
+    repositoryQuery({path:projectRoot,worktree:unitWorktree,section:'markdown',source:documentSource,...documentScope},controller.signal).then(result=>{if(!controller.signal.aborted&&session===generation.current)setDocument({...result.data,identity:documentIdentity,status:'Loaded'});}).catch(error=>{if(error.name!=='AbortError'&&session===generation.current)setDocument({source:documentSource,markdown:'',status:'Error',error:error.message});});
     return()=>controller.abort();
   },[isActive,documentIdentity,overviewEpoch]);
   const deliveryHistoryKey = artifact && historyKey(artifact.id, 'delivery-histories');
@@ -429,7 +426,7 @@ export function ProjectExplorer({active: isActive = true, initialPath = "", onOp
   const changeList = artifact && <ChangeList worktree={selectedWorktree} artifact={artifact.id} selected={deliveryChange} onSelect={selectDelivery} historiesOpen={expandedTypes.has(deliveryHistoryKey)} onToggleHistories={()=>toggleType(artifact.id,deliveryHistoryKey)}/>;
   useEffect(()=>{
     if(!isActive||!artifact||!selectedWorktree||!expandedTypes.has(deliveryHistoryKey))return;
-    const controller=new AbortController(),session=generation.current,root=snapshot.repository.path;
+    const controller=new AbortController(),session=generation.current,root=projectRoot;
     const candidates=selectedWorktree.changes.filter(c=>c.artifact===artifact.id&&c.history&&c.loadState==='not-loaded');
     (async()=>{for(const c of candidates){if(controller.signal.aborted)return;try{const result=await repositoryQuery({path:root,worktree:selectedWorktree.path,artifact:c.artifact,change:c.name,section:'history'},controller.signal);if(controller.signal.aborted||session!==generation.current)return;
       const patch=current=>({...current,workflow:{...current.workflow,worktrees:current.workflow.worktrees.map(w=>w.path===selectedWorktree.path?{...w,changes:w.changes.map(change=>change.artifact===c.artifact&&change.name===c.name?{...change,lastCommitAt:result.data.lastCommitAt,historyReason:result.data.historyReason,loadState:'summary-loaded'}:change)}:w)}});
@@ -484,7 +481,7 @@ export function ProjectExplorer({active: isActive = true, initialPath = "", onOp
         <button
           type="button"
           disabled={!snapshot}
-          onClick={() => open(snapshot.repository.path, true)}
+          onClick={() => open(projectRoot, true)}
         >
           Refresh
         </button>
@@ -522,7 +519,7 @@ export function ProjectExplorer({active: isActive = true, initialPath = "", onOp
                     : "Working tree is clean"}
                 </small>
               </div>
-              <Worktrees workflow={snapshot.workflow} selected={unitWorktree} onSelect={value=>{setUnitWorktree(value);setUnitSelected(null);setUnitNodeSelected(null);}} onOpen={root=>open(root)} busy={busy}/>
+              <Worktrees workflow={snapshot.workflow} selected={unitWorktree} onSelect={activateWorktree} busy={busy}/>{openingWorktree&&<p role="status">Opening {openingWorktree}…</p>}
               {view==='units'?<SearchField label="Search units of work" value={unitFilter} onChange={setUnitFilter}/>:view!=='flows'&&<>
                 <label className="sr-only" htmlFor={`artifact-filter-${tabId}`}>Filter artifacts</label>
                 <input id={`artifact-filter-${tabId}`} className="filter" placeholder="Filter artifacts…" value={filter} onChange={event=>setFilter(event.target.value)}/>
@@ -673,10 +670,10 @@ export function ProjectExplorer({active: isActive = true, initialPath = "", onOp
             </details>
           )}
           </div>
-          {snapshot && reviewKey && <ChangeReview root={snapshot.repository.path} contextKey={reviewKey} epoch={overviewEpoch} session={loadedSession} active={isActive&&view==='canvas'} updating={busy} repositoryFresh={fresh} inspector={reviewInspector} onBack={()=>setReviewKey(null)}/>}
+          {snapshot && reviewKey && <ChangeReview root={projectRoot} contextKey={reviewKey} epoch={overviewEpoch} session={loadedSession} active={isActive&&view==='canvas'} updating={busy} repositoryFresh={fresh} inspector={reviewInspector} onBack={()=>setReviewKey(null)}/>}
           {snapshot && taskContext && <div style={{display:view === "canvas" ? "contents" : "none"}}><TaskGraph key={taskChange} context={taskContext} selection={taskSelected} onSelect={setTaskSelected} onBack={()=>{setTaskChange(null);setTaskSelected(null);}}/></div>}
           {snapshot && view==='recorded' && <RecordedView id={recordedSelected} selection={recordedNode} onSelect={setRecordedNode}/>}
-          {snapshot && <Flows path={snapshot.repository.path} worktree={unitWorktree} epoch={overviewEpoch} isActive={isActive&&view==="flows"} entry={flowEntry} knowledge={flowKnowledge} artifacts={snapshot.artifacts.map(a=>({id:a.id,title:a.title}))} sidebar={flowSidebar} inspector={flowInspector}/>}
+          {snapshot && <Flows path={projectRoot} worktree={unitWorktree} epoch={overviewEpoch} isActive={isActive&&view==="flows"} entry={flowEntry} knowledge={flowKnowledge} artifacts={snapshot.artifacts.map(a=>({id:a.id,title:a.title}))} sidebar={flowSidebar} inspector={flowInspector}/>}
           {snapshot && view === "units" && <UnitView loading={sectionState} context={selectedUnit} view={unitView} onView={value=>{setUnitView(value);setUnitNodeSelected(null);}} planning={unitPlanning} onPlanning={value=>{setUnitPlanning(value);setUnitNodeSelected(null);}} selection={unitNodeSelected} onSelect={setUnitNodeSelected}/>}
         </main>
         <div
