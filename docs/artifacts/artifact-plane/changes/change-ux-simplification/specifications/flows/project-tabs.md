@@ -11,6 +11,7 @@ flow:
     - id: restore
       title: Validate and restore project preferences
       supports:
+        - ux-simplification-contract
         - preferences
     - id: open
       title: Create or select a canonical project tab
@@ -47,6 +48,12 @@ flow:
       to: open
       condition: No project remains or a new one is requested.
   support:
+    - id: ux-simplification-contract
+      kind: element
+      artifact: artifact-plane
+      element: specifications/ux-simplification.md
+      requires: Disambiguate equal project names while preserving canonical project identity and active worktree isolation.
+      basis: documented
     - id: preferences
       kind: implementation
       path: apps/artifact-plane/src/project-tabs.js
@@ -77,3 +84,7 @@ flow:
 ## Coverage
 
 The structured record owns this named journey, source reasons, evidence basis, gaps and exclusions. Sources are documented/static support; recorded task checks validate this map separately.
+
+## Simpler exploration
+
+Disambiguate equal project names while preserving canonical project identity and active worktree isolation. The detailed contract owns behavior and recovery limits. This is documented preparatory behavior; validation evidence is pending approved implementation.

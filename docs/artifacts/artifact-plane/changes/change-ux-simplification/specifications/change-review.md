@@ -39,3 +39,7 @@ Bind requests to project session plus review context/revision. Abort/ignore old 
 ## Self-check
 
 The service separates declared-current comparison from publication and historical claims. Contracts cover removals, source safety, paging, ambiguity, races and return navigation. KISS uses text and existing readers/graphs; STE names evidence limits. No upstream change, new dependency or Plan blocker is needed.
+
+## Focused comparison presentation
+
+Apply ux-simplification.md for purpose-first review, complete bounded line comparisons, honest partial/large-source fallback, source recovery deadlines and secondary loaded-page exports. Captured source identity, baseline meaning, publication uncertainty and external packet shapes remain unchanged.

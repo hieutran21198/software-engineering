@@ -13,3 +13,10 @@ The root continues to declare 1.11.0. Existing ADD 2.1.0 is the supplier; there 
 ## Requirement self-check
 
 All ten audit findings have observable acceptance criteria. The audit is direct product observation and source inspection, not measured user research. Slow review loading was observed but its cause is unresolved; implementation must reproduce and diagnose it before claiming a repair. The user request supplies the outcome and scope, so no additional interview fact blocks Specification. KISS removes redundant interactions and reuses existing controls. STE preserves precise evidence and freshness meanings. No implementation is authorized by this phase.
+
+- [Simplified exploration contract](specifications/ux-simplification.md)
+- [Contained reading decision](decisions/011-contained-reading-navigation.md)
+
+## Specification self-check
+
+The same capable session completed Specification after Requirement. Existing contracts were amended for shared disclosure, project labels, selected completion, flow reading and review presentation. Eight stable flow records receive documented contract support. Source containment and evidence meanings are preserved. All eleven acceptance criteria have contracts and validation cases. KISS and STE checks pass. Implementation remains subject to the concrete Plan and explicit approval.

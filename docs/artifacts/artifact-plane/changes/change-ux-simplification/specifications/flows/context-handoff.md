@@ -12,6 +12,7 @@ flow:
     - id: request
       title: Select a permitted context and excerpt budget
       supports:
+        - ux-simplification-contract
         - contract
         - review-service
         - review-interface
@@ -82,6 +83,12 @@ flow:
       to: request
       condition: The source selection changes or a stale/error reply requires a new read.
   support:
+    - id: ux-simplification-contract
+      kind: element
+      artifact: artifact-plane
+      element: specifications/ux-simplification.md
+      requires: Export the captured loaded records page through secondary controls with unchanged omission and revision limits.
+      basis: documented
     - id: contract
       kind: element
       artifact: artifact-plane
@@ -141,3 +148,7 @@ flow:
 # Hand off source-backed change context
 
 Tracked implementation and tests support this flow. Actual validation evidence remains in the originating delivery tasks; static support does not prove exhaustive behavior or approval.
+
+## Simpler exploration
+
+Export the captured loaded records page through secondary controls with unchanged omission and revision limits. The detailed contract owns behavior and recovery limits. This is documented preparatory behavior; validation evidence is pending approved implementation.

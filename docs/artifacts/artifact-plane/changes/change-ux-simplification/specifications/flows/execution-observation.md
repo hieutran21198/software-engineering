@@ -12,6 +12,7 @@ flow:
     - id: bind
       title: Bind a listed task and capture its graph context
       supports:
+        - ux-simplification-contract
         - store
         - worktree-checks
     - id: observe
@@ -52,6 +53,12 @@ flow:
       to: retain
       condition: Observation ends, disconnects or becomes stale.
   support:
+    - id: ux-simplification-contract
+      kind: element
+      artifact: artifact-plane
+      element: specifications/ux-simplification.md
+      requires: Keep current observation bound to the active worktree and hide navigation only after a successful empty context read.
+      basis: documented
     - id: store
       kind: implementation
       path: apps/artifact-plane/server/runtime-store.js
@@ -119,3 +126,7 @@ flow:
 ## Coverage
 
 The structured record owns this named journey, source reasons, evidence basis, gaps and exclusions. Sources are documented/static support; recorded task checks validate this map separately.
+
+## Simpler exploration
+
+Keep current observation bound to the active worktree and hide navigation only after a successful empty context read. The detailed contract owns behavior and recovery limits. This is documented preparatory behavior; validation evidence is pending approved implementation.

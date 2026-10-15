@@ -49,3 +49,7 @@ The live-reload.md contract in this specification directory defines automatic re
 ## Deferred exploration
 
 The lazy-loading.md contract in this directory defines on-demand views and detail. Deferred evidence remains Not loaded and never substitutes for complete establishment or completion checks. Existing complete response shapes remain available through the legacy explore endpoint.
+
+## Selected-unit presentation
+
+Apply ux-simplification.md for purpose-first reading, automatic selected-unit completion with local recovery, one-step source activation and secondary evidence detail. Complete evidence derivation remains unchanged.

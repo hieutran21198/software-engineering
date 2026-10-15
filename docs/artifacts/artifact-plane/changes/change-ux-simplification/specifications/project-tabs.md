@@ -6,7 +6,7 @@ Artifact Plane requirements/project-tabs.md defines the outcome. Existing specif
 
 ## Workspace and identity
 
-A workspace owns ordered tab records and one active tab ID. A record has a stable session ID and an optional canonical project path. Plus adds and selects an empty tab. Successful open assigns the canonical repository path returned by the existing overview API. A duplicate canonical path selects the existing tab and removes the redundant opening tab. Distinct worktree roots can have distinct tabs. Labels use the final path segment; full paths appear in accessible descriptions or tooltips to distinguish equal names.
+A workspace owns ordered tab records and one active tab ID. A record has a stable session ID and an optional canonical project path. Plus adds and selects an empty tab. Successful open assigns the canonical repository path returned by the existing overview API. A duplicate canonical path selects the existing tab and removes the redundant opening tab. Distinct worktree roots can have distinct tabs. Labels use the final path segment and append a shortest unique parent suffix when names collide; full paths remain in accessible descriptions or tooltips. The opened project root stays the tab identity while active worktree selection changes only its exploration context.
 
 Close selects the next tab at the closed index, otherwise the preceding tab. Closing the last tab creates a new empty tab. Add, select, and close controls have accessible names. Tabs expose selected state and keyboard navigation using the tablist pattern; close controls must not be nested inside another button.
 

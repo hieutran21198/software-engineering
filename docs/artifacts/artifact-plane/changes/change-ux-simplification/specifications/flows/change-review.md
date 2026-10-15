@@ -12,6 +12,7 @@ flow:
     - id: select
       title: Select the registered worktree and artifact change
       supports:
+        - ux-simplification-contract
         - contract
         - review-service
         - review-interface
@@ -65,6 +66,12 @@ flow:
       to: select
       condition: The source selection changes or a stale/error reply requires a new read.
   support:
+    - id: ux-simplification-contract
+      kind: element
+      artifact: artifact-plane
+      element: specifications/ux-simplification.md
+      requires: Read purpose and changed passages first with bounded full comparison and explicit partial-source fallback.
+      basis: documented
     - id: contract
       kind: element
       artifact: artifact-plane
@@ -122,3 +129,7 @@ flow:
 # Review a selected artifact change
 
 Tracked implementation and tests support this flow. Actual validation evidence remains in the originating delivery tasks; static support does not prove exhaustive behavior or approval.
+
+## Simpler exploration
+
+Read purpose and changed passages first with bounded full comparison and explicit partial-source fallback. The detailed contract owns behavior and recovery limits. This is documented preparatory behavior; validation evidence is pending approved implementation.

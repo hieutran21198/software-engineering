@@ -12,6 +12,7 @@ flow:
     - id: observe
       title: Observe shared repository fingerprints
       supports:
+        - ux-simplification-contract
         - events
     - id: notify
       title: Coalesce changes into a local SSE notification
@@ -45,6 +46,12 @@ flow:
       to: observe
       condition: Continue observing until the last client leaves.
   support:
+    - id: ux-simplification-contract
+      kind: element
+      artifact: artifact-plane
+      element: specifications/ux-simplification.md
+      requires: Refresh the active source and selected reads without stale-context replies or false empty evidence.
+      basis: documented
     - id: events
       kind: implementation
       path: apps/artifact-plane/server/repository-events.js
@@ -87,3 +94,7 @@ flow:
 ## Coverage
 
 The structured record owns this named journey, source reasons, evidence basis, gaps and exclusions. Sources are documented/static support; recorded task checks validate this map separately.
+
+## Simpler exploration
+
+Refresh the active source and selected reads without stale-context replies or false empty evidence. The detailed contract owns behavior and recovery limits. This is documented preparatory behavior; validation evidence is pending approved implementation.

@@ -12,7 +12,7 @@ Add optional match: title | discovery to search requests only. Omission means di
 
 A small shared search-field presentation supplies label, Title or ID placeholder, native input and clear action to Unit of Work and Flow named search. Units filter immediately. Flows debounce typed named requests by 250 ms to avoid duplicate reads; Enter flushes the latest request immediately. Neither requires a Search click for named filtering. Clearing resets the query/page and restores browsing.
 
-Flow search defaults to Title or ID. An explicit Behavior discovery option preserves semantic/keyword discovery and shows its Search action; Enter submits it. Semantic discovery does not execute on every keystroke. Explain that discovery ranks candidates while named search filters matches. Labels describe the active mode without exposing implementation internals.
+Flow search defaults to Title or ID. An explicit secondary Behavior discovery action preserves semantic/keyword discovery and shows its Search action; Enter submits it. Semantic discovery does not execute on every keystroke. Explain that discovery ranks candidates while named search filters matches. Labels describe the active mode without exposing implementation internals.
 
 Loading, error, no matches and ready are separate visible states. Bind callbacks and pages to project/worktree/knowledge, mode, committed query and refresh epoch; abort or ignore old replies. Reset paging on query/mode/clear. Do not retain a previous query's result payload merely because its repository revision matches. Keep valid selections as context, but visibly identify selected details outside current matches. Inactive projects pause reads. Clear preserves the current project/worktree and unrelated navigation.
 
@@ -51,3 +51,5 @@ No upstream contract or artifact dependency changes are required. The current se
 ## Artifact-scope amendment self-check
 
 The existing explicit closure supplies participation; no new graph or index authority is introduced. One compatible selector and scoped option summaries are sufficient. Filtering before ranking/paging avoids missing later or cross-owner candidates. Empty/unavailable selections and narrow element context remain explicit. KISS and STE checks pass; no new supplier or Specification blocker remains.
+
+Artifact named filtering also uses the shared field and explicit list-only scope under ux-simplification.md.

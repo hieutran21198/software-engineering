@@ -18,7 +18,7 @@ The absence of task copies from new version knowledge must not make an establish
 
 Top-level explorer buttons are Dependencies and Units of work; recorded executions remain accessible through the existing picker. Remove the standalone Workflow canvas, its mounting/selection state, and unused canvas components/helpers/tests. Keep the workflow data reader because units, worktrees, and evidence use it.
 
-Add a reusable worktree selector/details control in the repository sidebar, available in both primary views. Show path, branch/HEAD and unavailable/detached/locked/prunable states. Opening a readable worktree uses the existing explicit Open action; selection alone does not mutate Git. Remove redundant unit-only worktree selection. Preserve refresh and repository reset behavior.
+Add a reusable worktree selector/details control in the repository sidebar, available in both primary views. Show path, branch/HEAD and unavailable/detached/locked/prunable states. Selecting a readable worktree is the explicit one-step context activation action under ux-simplification.md; it never mutates Git. Remove redundant unit-only worktree selection. Preserve refresh and repository reset behavior.
 
 In the Dependencies inspector, retain artifact Change histories and add change delivery details for the selected change: phase evidence, full commit IDs, diagnostics, and a View task graph action. Render the existing TaskGraph in the dependency content area with Back to dependencies. This gives legacy repositories and ungrouped changes access without another top-level workflow canvas. Reuse phase/commit detail rendering where useful, with in-memory context namespaced by worktree/artifact/change. Clear vanished sources on refresh; keep history groups closed by default and ordered by bounded Git recency, unknown last.
 
@@ -33,3 +33,7 @@ KISS retains one delivery source and existing graph components; STE preserves ev
 ## Upstream recheck
 
 ADD 2.0.0 is established on main after PR #13 merged. Its specifications/task-retention.md matches the supplying contract used for this plan. The version declares source_change and delivery_tasks: change and retains the published originating tasks. All required upstream knowledge and implementation live in this repository. User plan approval remains valid; no material amendment is required.
+
+## Source navigation
+
+The ux-simplification.md contract makes selecting a readable registered worktree the explicit source activation action across all views. It preserves exact retained delivery and historical evidence rules.

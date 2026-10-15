@@ -11,6 +11,7 @@ flow:
     - id: select
       title: Select the project and worktree
       supports:
+        - ux-simplification-contract
         - explorer
         - search-label-contract
     - id: validate
@@ -64,6 +65,12 @@ flow:
       to: inspect
       condition: Relevant knowledge is selected.
   support:
+    - id: ux-simplification-contract
+      kind: element
+      artifact: artifact-plane
+      element: specifications/ux-simplification.md
+      requires: Switch complete worktree context and inspect purpose-first knowledge with independent graph disclosure.
+      basis: documented
     - id: explorer
       kind: implementation
       path: apps/artifact-plane/src/main.jsx
@@ -165,3 +172,7 @@ The flow explorer shows compact evidence status and expandable diagnostic and sh
 The explorer uses a lazy flow list with newest-first browsing and exact/relevance-first nonempty search in the sidebar, a selected graph in the center, and matching evidence/source details in the right inspector. Shared knowledge controls and per-project selections remain consistent across view switches. Creation dates describe the selected document record and are unknown when Git history cannot prove them.
 
 The approved search/readability change has tracked implementation and browser support. Static support identifies source responsibility; validation in the originating tasks does not prove exhaustive behavior or publication.
+
+## Simpler exploration
+
+Switch complete worktree context and inspect purpose-first knowledge with independent graph disclosure. The detailed contract owns behavior and recovery limits. This is documented preparatory behavior; validation evidence is pending approved implementation.

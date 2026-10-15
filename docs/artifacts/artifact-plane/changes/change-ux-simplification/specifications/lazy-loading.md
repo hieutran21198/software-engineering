@@ -17,7 +17,7 @@ Load sections as follows:
 - Implementation view: selected unit's authoritative listed task metadata, dependencies, checklist counts, and complete evidence for required establishment gates. Full task/element Markdown loads when selected.
 - Ungrouped changes: requested change summary/task graph/phase evidence under the same rules.
 - Other worktrees: selected-worktree overview when chosen; no detailed enumeration of every registered root at open.
-- Completion details: complete member version/publication and shared evidence checks for the selected unit, independent of which views were previously opened.
+- Completion details: automatically request complete member version/publication and shared evidence checks for the selected active unit only, independent of which views were previously opened. Show local checking/error/retry under ux-simplification.md; other units remain deferred.
 - Recorded executions: keep recorded graph context under the existing immutable execution contract. Fetch current knowledge only for explicit current-source inspection.
 
 A requested graph must include its required external dependencies/gates or explicit missing/error diagnostics. Lazy loading is not permission to truncate a graph and present it as complete. Publication checks load complete required knowledge and exact retained task sets/bytes, even if that requires more reads than normal overview loading.

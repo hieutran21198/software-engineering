@@ -11,6 +11,7 @@ flow:
     - id: brief
       title: Read the unit brief and unique membership
       supports:
+        - ux-simplification-contract
         - units
         - search-label-contract
         - shared-search-field
@@ -61,6 +62,12 @@ flow:
       to: criteria
       condition: Review returns to the unit evidence.
   support:
+    - id: ux-simplification-contract
+      kind: element
+      artifact: artifact-plane
+      element: specifications/ux-simplification.md
+      requires: Read the brief first and automatically request completion only for the selected active unit.
+      basis: documented
     - id: units
       kind: implementation
       path: apps/artifact-plane/server/units-of-work.js
@@ -154,3 +161,7 @@ flow:
 The structured record owns this named journey, source reasons, evidence basis, gaps and exclusions. Sources are documented/static support; recorded task checks validate this map separately.
 
 The approved search/readability change has tracked implementation and browser support. Static support identifies source responsibility; validation in the originating tasks does not prove exhaustive behavior or publication.
+
+## Simpler exploration
+
+Read the brief first and automatically request completion only for the selected active unit. The detailed contract owns behavior and recovery limits. This is documented preparatory behavior; validation evidence is pending approved implementation.
