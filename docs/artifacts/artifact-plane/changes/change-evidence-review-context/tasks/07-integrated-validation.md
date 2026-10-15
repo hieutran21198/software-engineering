@@ -19,8 +19,12 @@ Governing knowledge: all new requirements/contracts, existing ADD 2.1.0 gates, a
 - [x] Record real task evidence with originating tasks and combined checks in the unit; new flows reference actual tracked source/tests and disclose remaining coverage gaps.
 - [x] Prepare the complete proposed version with source_change: change-evidence-review-context and delivery_tasks: change; exclude task copies; keep current declared establishment and proposed preparation explicit until review/merge.
 - [x] Historical path sets/bytes remain unchanged; consistent root/dependency metadata and proposed version references are reviewed without rewriting delivered knowledge.
-- [ ] Push dedicated branch, open/attach a clear PR, report checks/limitations and stop for team review/merge. No auto-merge, deployment, protected-branch commit or independently certified establishment occurs.
+- [x] Push dedicated branch, open/attach a clear PR, report checks/limitations and stop for team review/merge. No auto-merge, deployment, protected-branch commit or independently certified establishment occurs.
 
 ## Evidence
 
 Combined checks passed: 253 Node tests with no skips, 46 browser cases, six rank-1 offline retrieval cases and both impact consumers, app build, Go tests/vet and website build. The real self-host query preserved repository bytes/HEAD/status. Task and flow DAGs, documentation hierarchy, complete 39-file snapshot, package/protocol version 1.12.0 and historical preservation checks passed. Detailed combined evidence remains in the owning unit. PR handoff follows these checks; publication and shared completion remain unasserted.
+
+## Handoff
+
+The dedicated branch was pushed to origin and PR #24 was opened and attached to this chat: https://github.com/hieutran21198/software-engineering/pull/24. The proposed version and integrated validation evidence are ready for team review. No merge, deployment or establishment assertion was made.
