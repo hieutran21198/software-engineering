@@ -9,3 +9,7 @@ Start with complete declared 1.11.0 knowledge and incorporate the merged 1.12.1 
 ## Requirement self-check
 
 The requested outcome concerns visible spacing and control consistency. Evidence comes from the screenshot and source inspection, not invented usability research. Preserve functional states, evidence meaning, keyboard access and graph behavior. KISS reuses existing controls; STE keeps feedback specific. No Requirement blocker remains.
+
+- [Presentation contract](specifications/spacing-control-consistency.md)
+
+Specification self-check completed in the same session as Plan. No implementation is authorized yet.
