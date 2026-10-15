@@ -41,3 +41,7 @@ For empty queries and impact, sort records by createdAt descending before cursor
 Reset pages when search, knowledge or worktree changes. On revision refresh or stale-cursor rejection, reload the first page and retain a selected detail only if it still resolves. Abort or ignore old-context page responses. Creation-date metadata follows Git revision invalidation. All snapshots orders each snapshot record by its own documented Git creation date. This amendment permits only the needed reader/index metadata and ordering additions; other backend behavior is unchanged.
 
 Specification self-check: existing cursor pagination supplies the transport and safe context binding. This design adds no workflow database or model download. Tests must cover larger lists, tie/unknown dates, page boundaries, read-only parity and stale requests before delivery evidence can pass.
+
+## Named-search amendment
+
+The search-label-usability contract governs the new explicit title/ID mode and shared normal search UI. Existing exact/keyword/semantic discovery and ranking remain the default for omitted external match selectors. Graph identity and evidence semantics remain unchanged.

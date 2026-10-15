@@ -33,3 +33,7 @@ Author specifications/flows records for repository exploration, unit inspection,
 ## Self-check
 
 P1–P9 map to reader/view, ownership, search, index, embeddings, freshness, interfaces, inventory and measurable acceptance. This refines the user-approved local/offline/HTTP+MCP plan without new scope. KISS reuses existing local primitives; STE keeps inferred evidence and completeness explicit. Upstream establishment remains an Implementation gate, not a Specification blocker.
+
+## Named-search amendment
+
+The search-label-usability contract governs the new explicit title/ID mode and shared normal search UI. Existing exact/keyword/semantic discovery and ranking remain the default for omitted external match selectors. Graph identity and evidence semantics remain unchanged.

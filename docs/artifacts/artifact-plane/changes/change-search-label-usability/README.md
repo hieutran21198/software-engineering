@@ -11,3 +11,10 @@ Source inspection confirms that UnitList filters title/ID immediately, while Flo
 ## Requirement self-check
 
 Scope includes all three user reports. Normal title/ID filtering and behavior discovery have distinct purposes. Existing HTTP/MCP discovery, graph semantics, read-only guards, prior fixes and historical evidence remain required. The sole owner is Artifact Plane; ADD 2.1.0 remains its existing supplier. KISS uses current search and graph boundaries. STE separates code evidence from the unverified screenshot. No Requirement blocker remains for Specification.
+
+- [Search and label contract](specifications/search-label-usability.md)
+- [Presentation decision](decisions/010-search-and-label-presentation.md)
+
+## Specification self-check
+
+The contract covers filtering before paging, compatible discovery, shared controls, async isolation and node-aware readable labels. The existing ADD 2.1.0 supplier is unchanged. Full model and source guards remain. No implementation is authorized by this preparation.

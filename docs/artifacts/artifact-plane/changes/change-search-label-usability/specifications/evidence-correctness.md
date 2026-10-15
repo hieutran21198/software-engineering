@@ -29,3 +29,7 @@ Pass current worktree through RuntimeProvider/signature keys and individual/unit
 ## Impact and self-check
 
 Plane owns all changes. Established ADD 2.1.0 task, unit, retention and flow contracts remain unchanged; no dependency proposal is needed. Conservative recognition can expose missing historical review evidence without modifying it. KISS uses explicit sections, existing Markdown parsing and additive JSON fields. STE distinguishes documented assertions from independent verification. No Specification blocker remains.
+
+## Named-search amendment
+
+The search-label-usability contract governs the new explicit title/ID mode and shared normal search UI. Existing exact/keyword/semantic discovery and ranking remain the default for omitted external match selectors. Graph identity and evidence semantics remain unchanged.
