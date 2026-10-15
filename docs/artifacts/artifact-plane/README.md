@@ -22,7 +22,7 @@ Version 1.10.0, its originating delivery tasks, and implementation landed on mai
 
 ## Active change
 
-- [Consistent search and readable graph labels](changes/change-search-label-usability/README.md)
+- [Consistent spacing and form controls](changes/change-spacing-control-consistency/README.md)
 
 
 ## Knowledge snapshot
