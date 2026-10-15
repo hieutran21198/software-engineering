@@ -3,6 +3,7 @@ import React,{useMemo,useState} from 'react';
 import {ReactFlow,ReactFlowProvider,Background,Controls,Handle,Position} from '@xyflow/react';
 import {unitCanvas,unitNode,unitKey} from './unit-canvas.js';
 import Markdown from './Markdown.jsx';
+import {documentSummary} from './Reader.jsx';
 import {checklistLabel} from './runtime-model.js';
 import {useTaskRuntime,RuntimeBadge,RuntimeDetails,RuntimeConnection} from './Runtime.jsx';
 export const completionLabel = completion => completion.derivation==='not-loaded'?'Completion evidence not loaded':completion.derivation==='documented-complete'?'Completion supported by documented evidence':completion.derivation==='incomplete'?'Incomplete':'Completion unknown';
@@ -49,17 +50,18 @@ export function UnitDetails({context,view,planning,selection,onSelect,document,o
  return <div className="workflow-details unit-details">
   <div className="details-heading"><span className="eyebrow">{node?`${node.kind} details`:'Unit of work'}</span>{node&&<button aria-label="Clear unit node selection" onClick={()=>onSelect(null)}>×</button>}</div>
   <h2>{node?.title||unit.title}</h2><div className="details-meta"><span>{worktree.branch||'Detached'}</span><span>{worktree.path}</span></div>
+  {!node&&<section aria-label="Unit purpose"><Markdown text={documentSummary(document?.markdown||unit.markdown)}/><button onClick={()=>onDocument?.(unit.path)}>Read brief</button></section>}
   {node?<>
    <section><h3>Governing knowledge</h3><p className="tiny">{node.source||`${node.member.artifact} / ${node.member.change}`}</p>{node.kind==='task'&&<p>Task ID: {node.task.id||'Invalid'} · Prerequisites: {node.task.dependsOn.join(', ')||'None within this plan'}</p>}
    {node.kind==='gate'&&<><p>{node.establishmentEvidence.state}</p>{node.establishmentEvidence.reasons.map((reason,i)=><p key={i}>{reason}</p>)}<p className="muted">Task checks alone do not establish this gate or authorize implementation.</p></>}
    {node.kind==='phase'&&<><p>Documented phase evidence: {node.step.state}</p>{node.step.evidence.map((e,i)=><div className="workflow-task" key={i}><p>{e.explanation}</p><p className="tiny">{e.file}</p><button onClick={()=>onDocument?.(e.file)}>Read evidence</button>{document?.source===e.file&&<Markdown text={document.markdown||''}/>}</div>)}{node.step.commits.map(c=><details key={c.id}><summary>{c.subject}</summary><code>{c.id}</code></details>)}{!node.step.evidence.length&&<p>No phase evidence available; no completion or approval is inferred.</p>}</>}
-   {node.kind==='task'&&<UnitExecution node={node} sourceWorktree={worktree.path}/>}<p className="tiny">{document?.status||'Not loaded'}{document?.error&&`: ${document.error}`}</p><Markdown text={document?.markdown||node.markdown||''}/></section>
+   {node.kind==='task'&&<UnitExecution node={node} sourceWorktree={worktree.path}/>}<p className="tiny">{document?.status||'Not loaded'}{document?.error&&`: ${document.error}`}</p>{onDocument&&node.source&&<button onClick={()=>onDocument(node.source)}>Read source</button>}</section>
   </>:<>
    <section aria-label="Completion evidence"><h3>Completion evidence</h3>{onCompletion&&<button onClick={onCompletion}>Load completion evidence</button>}<p>{completionLabel(unit.completion)}</p>{unit.completion.reasons.filter(reason=>unit.completion.derivation!=='not-loaded'||reason.trim().replace(/[.]$/,'')!==completionLabel(unit.completion)).map((reason,i)=><p key={i}>{reason}</p>)}<p className="muted">Recorded check results and publication evidence are shown; tests are not executed by this explorer.</p></section>
    <section><h3>Affected flows</h3><p>{unit.flowAssessment||"Legacy brief: flow impact was not recorded."}</p>{(unit.affectedFlows||[]).map(f=><button key={`${f.artifact}:${f.flow}`} onClick={()=>onFlow?.({flow:`${f.artifact}:${f.flow}`})}>{f.effect} · {f.artifact}:{f.flow}</button>)}</section>
    <section><h3>Participating changes</h3>{unit.members.map(m=><div className="workflow-task" key={`${m.artifact}/${m.change}`}><strong>{m.artifact} / {m.change}</strong><p>{m.deliveredVersion?`Delivered v${m.deliveredVersion}`:'No delivered version'} · {m.establishmentEvidence.state}</p><p className="tiny">{m.sourcePath||'Unresolved knowledge source'}</p></div>)}</section>
    <section><h3>Shared acceptance criteria</h3>{unit.acceptance.map(c=><div className="unit-criterion" key={c.id}><strong>{c.id}{c.integration?' · Integration':''}</strong><p>{c.criterion}</p>{unit.evidence.filter(e=>e.criterion===c.id).map((e,i)=><details key={i}><summary>{e.result} · {e.method}</summary><p className="tiny">{e.source}</p>{e.resolved?<><button onClick={()=>onDocument?.(e.source.split('#')[0])}>Read evidence</button>{document?.source===e.source.split('#')[0]?<Markdown text={document.markdown}/>:<p>Evidence details not loaded.</p>}</>:<p>Evidence details unavailable.</p>}</details>)}</div>)}</section>
-   <section><h3>Brief</h3><p className="tiny">{unit.path}</p><p className="tiny">{document?.status||'Not loaded'}</p><Markdown text={document?.markdown||unit.markdown||''}/></section>
+
   </>}
   {unit.diagnostics.length>0&&<section><h3>Knowledge diagnostics</h3>{unit.diagnostics.map((d,i)=><p key={i}><strong>{d.code}</strong> · {d.path}<br/>{d.message}</p>)}</section>}
  </div>;

@@ -35,7 +35,7 @@ export function TaskGraph({context, selection, onSelect, onBack}) {
   <div className="workflow-legend">Arrows show task prerequisites · Redundant task edges hidden unless all prerequisites are shown · Checklists are documented evidence</div>
  </div>;
 }
-export function TaskGraphDetails({context, onClear, document}) {
+export function TaskGraphDetails({context, onClear, document, onRead}) {
  const {worktree, change, task} = context;
  const inherited = task && change.tasks.find(t => t.path === task.path)?.inherited;
  const execution=useTaskRuntime(change.artifact,change.name,task?.path,undefined,worktree.path);
@@ -47,7 +47,7 @@ export function TaskGraphDetails({context, onClear, document}) {
   {task ? <>
    <section><h3>Task metadata</h3><p>ID: {task.id || 'Invalid declaration'}</p><p className="tiny">{task.path}</p><p>Prerequisites: {task.dependsOn.length ? task.dependsOn.join(', ') : change.taskGraph.state === 'invalid' ? 'See declaration and diagnostics' : 'None within this plan'}</p></section>
    <section><h3>Documented checklist</h3><p>{task.checked} checked · {task.unchecked} unchecked · {task.state}{inherited ? ' · Inherited / historical evidence' : ''}</p><p className="muted">This evidence does not verify completion, plan approval, or running agents. External artifact gates still apply.</p></section>
-   <RuntimeDetails value={execution}/><p className="tiny">{document?.status||'Not loaded'}</p><Markdown text={document?.markdown||task.body||''}/>
+   <RuntimeDetails value={execution}/><p className="tiny">{document?.status||'Not loaded'}</p><button onClick={onRead}>Read task</button>
   </> : <p className="muted">Select a task to inspect its scope, prerequisites, DoD, and evidence.</p>}
  </div>;
 }

@@ -39,3 +39,23 @@ test('failed and superseded worktree switches keep the committed source',async({
   fail=false;await page.getByLabel('Worktree',{exact:true}).selectOption(other);await page.getByLabel('Worktree',{exact:true}).selectOption(fixture.root);await expect(page.getByRole('status',{name:'Repository update status'})).toHaveText('Current');await expect(page.getByLabel('Worktree',{exact:true})).toHaveValue(fixture.root);await expect(page.locator('.repo-info')).not.toContainText('feature/delayed');
  }finally{await rm(other,{recursive:true,force:true});await fixture.cleanup();}
 });
+
+test('reading is primary and list disclosure preserves graph nodes and viewport',async({page})=>{
+ const fixture=await fixtureRepository(orderingFixture()),before=await fingerprint(fixture.root);
+ try{
+  await page.goto('/');await page.getByLabel('Repository path').fill(fixture.root);await page.getByRole('button',{name:'Open repository',exact:true}).click();
+  await expect(page.getByRole('complementary',{name:'Selection details'})).toBeHidden();
+  await page.getByRole('navigation',{name:'Artifacts'}).getByRole('button',{name:/Knowledge/}).click();
+  const panel=page.getByRole('complementary',{name:'Selection details'});
+  await expect(panel.getByLabel('Artifact overview')).toContainText('knowledge');
+  const nodes=await page.locator('.canvas-surface .react-flow__node').count(),viewport=await page.locator('.canvas-surface .react-flow__viewport').getAttribute('style');
+  await panel.getByRole('button',{name:'Requirements in inspector',exact:true}).click();
+  expect(await page.locator('.canvas-surface .react-flow__node').count()).toBe(nodes);
+  await panel.getByRole('button',{name:'requirements/need.md version:1.0.0',exact:true}).click();
+  const reader=page.getByRole('region',{name:'Knowledge reader'});await expect(reader).toContainText('requirements/need.md');await expect(panel).toBeHidden();
+  await reader.getByRole('button',{name:'Back to artifact',exact:true}).click();await expect(reader).toHaveCount(0);await expect(panel).toBeVisible();
+  expect(await page.locator('.canvas-surface .react-flow__viewport').getAttribute('style')).toBe(viewport);
+  for(const width of [390,700,851,1440]){await page.setViewportSize({width,height:1000});await panel.getByRole('button',{name:'Read overview',exact:true}).click();await expect(page.getByRole('region',{name:'Knowledge reader'})).toContainText('Knowledge');expect(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth)).toBe(true);await page.getByRole('button',{name:'Back to graph',exact:true}).click();}
+  expect(await fingerprint(fixture.root)).toEqual(before);
+ }finally{await fixture.cleanup();}
+});

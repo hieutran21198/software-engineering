@@ -19,11 +19,11 @@ Applicable DoD for source-context must pass first. Explicit approval of this con
 
 ## Definition of Done
 
-- [ ] Artifact overview and unit purpose/brief precede routine relationships/evidence controls; selected documents render in the main reading area with clear parent/graph return.
-- [ ] Opening inspector/list sections and selecting list documents do not add graph nodes or alter pan/zoom; explicit canvas expansion and graph reference reveal still work.
-- [ ] Reading successive sources and returning preserves exact source selection and viewport; worktree replacement clears incompatible history and missing source leaves a usable Back action.
-- [ ] At 390/700/851/1440 widths and resized inspector widths, reader, graph controls and keyboard return remain usable without horizontal page overflow.
+- [x] Artifact overview and unit purpose/brief precede routine relationships/evidence controls; selected documents render in the main reading area with clear parent/graph return.
+- [x] Opening inspector/list sections and selecting list documents do not add graph nodes or alter pan/zoom; explicit canvas expansion and graph reference reveal still work.
+- [x] Reading successive sources and returning preserves exact source selection and viewport; worktree replacement clears incompatible history and missing source leaves a usable Back action.
+- [x] At 390/700/851/1440 widths and resized inspector widths, reader, graph controls and keyboard return remain usable without horizontal page overflow.
 
 ## Evidence
 
-No implementation checks have run for this task. Record actual commands, observed results, source references and limitations here after approved execution.
+Production build and focused Chromium reading check passed. The check verifies no initial empty inspector, overview purpose before navigation, list disclosure without added graph nodes, main reader and explicit return, identical React Flow viewport transform after return, repository fingerprint preservation and no horizontal page overflow at 390/700/851/1440. The first fixture attempt used a nonexistent README and was corrected to its actual requirement path. A genuine viewport shift from resizing the canvas during reader opening was fixed by placing the reader across the workspace while keeping graph and inspector geometry mounted. Unit brief and task/source reader entry points share the same reader. Full integrated journeys and screenshots remain in task 07.

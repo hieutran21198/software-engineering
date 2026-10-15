@@ -26,7 +26,7 @@ function Evidence({result,diagnostics=false}){
  const omissions=result.omissions||[];
  return <div className="flow-evidence"><div className="flow-status"><span>Freshness: {typeof result.freshness==='string'?result.freshness:JSON.stringify(result.freshness)}</span><span>Coverage: {typeof result.completeness==='string'?result.completeness:JSON.stringify(result.completeness)}</span><details><summary>Index details</summary><p>Generation {result.generation}</p></details></div>{diagnostics&&<Diagnostics items={result.diagnostics}/>} {!!omissions.length&&<details className="flow-omissions"><summary>{omissions.length} shortened source{omissions.length===1?'':'s'}</summary><p>Some source text was shortened to fit the response budget. Inspect a source to read further excerpts.</p><ul>{omissions.map((item,i)=><li key={i}><code>{sourceName(item.source,result.data?.sources)}</code><span>{item.characters.toLocaleString()} characters omitted</span>{sourceName(item.source,result.data?.sources)==='Source identity unavailable'&&<details><summary>Source identity</summary><code>{item.source}</code></details>}</li>)}</ul></details>}</div>;
 }
-export default function Flows({path,worktree,epoch,isActive,entry,knowledge,sidebar,inspector,artifacts=[]}){
+export default function Flows({path,worktree,epoch,isActive,entry,knowledge,sidebar,inspector,onSelection,onRead,artifacts=[]}){
  const artifactControl=useId(),modeControl=useId();
  const [text,setText]=useState(''),[search,setSearch]=useState(''),[match,setMatch]=useState('title'),[artifact,setArtifact]=useState('');
  const [impact,setImpact]=useState(null),[list,setList]=useState(null),[selected,setSelected]=useState(null),[detail,setDetail]=useState(null),[source,setSource]=useState(null),[document,setDocument]=useState(null),[expanded,setExpanded]=useState(false),[node,setNode]=useState(null),[error,setError]=useState(''),[cursor,setCursor]=useState(null),[sourceCursor,setSourceCursor]=useState(null),[loading,setLoading]=useState(false),[retry,setRetry]=useState(0),[sentinel,setSentinel]=useState(null),[options,setOptions]=useState(null);
@@ -96,6 +96,7 @@ export default function Flows({path,worktree,epoch,isActive,entry,knowledge,side
  const submit=()=>{setSearch(match==='title'?normalizeName(text):text.trim());setImpact(null);setCursor(null);setRetry(n=>n+1);};
  const artifactOptions=options?.scope===optionScope&&options.epoch===epoch?options.items:(!worktree||worktree===path?artifacts:[]);
  const missingArtifact=artifact&&!artifactOptions.some(a=>a.id===artifact);
+ useEffect(()=>{onSelection?.(Boolean(selected));},[selected,onSelection]);
  const flow=detail?.data?.flow,graph=useMemo(()=>flowCanvas(detail?.data?.graph,flow,expanded,node),[detail,flow,expanded,node]);
  const supports=(flow?.support||[]).filter(s=>!node||s.targetId===node||(flow.steps||[]).find(t=>t.nodeId===node)?.supports.includes(s.id));
  if(!isActive)return null;
