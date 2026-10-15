@@ -20,3 +20,9 @@ All ten audit findings have observable acceptance criteria. The audit is direct 
 ## Specification self-check
 
 The same capable session completed Specification after Requirement. Existing contracts were amended for shared disclosure, project labels, selected completion, flow reading and review presentation. Eight stable flow records receive documented contract support. Source containment and evidence meanings are preserved. All eleven acceptance criteria have contracts and validation cases. KISS and STE checks pass. Implementation remains subject to the concrete Plan and explicit approval.
+
+- [Implementation plan](tasks/README.md)
+
+## Plan self-check
+
+The same technical-lead session completed Specification and then Plan. Seven fresh tasks with explicit ownership, governing contracts, prerequisites and concrete DoD cover UX1–UX11 and all ten audit findings. No task or evidence was copied from an earlier plan. All implementation and integrated evidence remains pending. The concrete plan awaits explicit user approval before application changes.
