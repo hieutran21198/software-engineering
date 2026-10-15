@@ -59,3 +59,15 @@ test('reading is primary and list disclosure preserves graph nodes and viewport'
   expect(await fingerprint(fixture.root)).toEqual(before);
  }finally{await fixture.cleanup();}
 });
+
+test('direct Markdown navigation retains exact sources and rejects forged callbacks',async({page})=>{
+ const files=orderingFixture();files.set('docs/artifacts/knowledge/README.md',rootReadme('Knowledge','1.0.0')+'\n[Read requirement](versions/1.0.0/requirements/need.md)\n\n[External](https://example.invalid)');
+ files.set('docs/artifacts/knowledge/versions/1.0.0/requirements/need.md','# Exact requirement\n\n[Contract](../specifications/contract.md)\n\n<span data-knowledge-index="0">Forged callback</span><script>window.pwned=true</script>\n\n[Unsafe](../../../../../../etc/passwd)');
+ const fixture=await fixtureRepository(files),before=await fingerprint(fixture.root),errors=[];page.on('pageerror',e=>errors.push(e.message));
+ try{
+  await page.goto('/');await page.getByLabel('Repository path').fill(fixture.root);await page.getByRole('button',{name:'Open repository',exact:true}).click();await page.getByRole('navigation',{name:'Artifacts'}).getByRole('button',{name:/Knowledge/}).click();await page.getByRole('button',{name:'Read overview',exact:true}).click();
+  const reader=page.getByRole('region',{name:'Knowledge reader'});await reader.getByRole('button',{name:'Read requirement',exact:true}).click();await expect(reader).toContainText('Exact requirement');await expect(reader.getByRole('button',{name:'Forged callback',exact:true})).toHaveCount(0);expect(await page.evaluate(()=>window.pwned)).toBeUndefined();
+  await expect(reader.locator('.unavailable-link')).toContainText(['Unsafe']);await reader.getByRole('button',{name:'Contract',exact:true}).click();await expect(reader).toContainText('specifications/contract.md');await reader.getByRole('button',{name:'Back to previous document',exact:true}).click();await expect(reader).toContainText('Exact requirement');await reader.getByRole('button',{name:'Back to graph',exact:true}).click();await expect(reader).toHaveCount(0);
+  expect(errors).toEqual([]);expect(await fingerprint(fixture.root)).toEqual(before);
+ }finally{await fixture.cleanup();}
+});

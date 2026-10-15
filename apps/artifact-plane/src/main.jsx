@@ -23,6 +23,7 @@ import {unitContext, unitNode} from './unit-canvas.js';
 import {refreshQueue,repositoryQuery,mergeUnit,mergeChange} from './reload.js';
 import Markdown from "./Markdown.jsx";
 import Reader, {documentSummary} from "./Reader.jsx";
+import {knowledgeTargets} from "./knowledge-navigation.js";
 import {RuntimeProvider} from "./Runtime.jsx";
 import {RecordedPicker,RecordedView,RecordedDetails} from "./RecordedExecutions.jsx";
 import {TaskGraph, TaskGraphDetails} from "./TaskGraph.jsx";
@@ -454,6 +455,7 @@ export function ProjectExplorer({active: isActive = true, initialPath = "", onOp
         element: node.data.element.id,
       });
   };
+  const navigationTargets=useMemo(()=>knowledgeTargets(snapshot,selectedUnit),[snapshot,selectedUnit]);
   const hasDetails=Boolean(view==='canvas'?(artifact||reviewKey||taskContext||deliveryContext):view==='units'?unitSelected:view==='flows'?flowSelected:recordedSelected);
   return (
     <RuntimeProvider snapshot={snapshot} active={isActive}><div className="app">
@@ -688,7 +690,7 @@ export function ProjectExplorer({active: isActive = true, initialPath = "", onOp
           {snapshot && <Flows path={projectRoot} worktree={unitWorktree} epoch={overviewEpoch} isActive={isActive&&view==="flows"} entry={flowEntry} knowledge={flowKnowledge} artifacts={snapshot.artifacts.map(a=>({id:a.id,title:a.title}))} sidebar={flowSidebar} inspector={flowInspector} onSelection={setFlowSelected} onRead={openReader}/>}
           {snapshot && view === "units" && <UnitView loading={sectionState} context={selectedUnit} view={unitView} onView={value=>{setUnitView(value);setUnitNodeSelected(null);}} planning={unitPlanning} onPlanning={value=>{setUnitPlanning(value);setUnitNodeSelected(null);}} selection={unitNodeSelected} onSelect={setUnitNodeSelected}/>}
         </main>
-        {reader&&<Reader entry={reader} root={projectRoot} worktree={unitWorktree} epoch={overviewEpoch} onBack={backReader} onClose={closeReader}/>}
+        {reader&&<Reader entry={reader} root={projectRoot} worktree={unitWorktree} epoch={overviewEpoch} onBack={backReader} backLabel={readerTrail.length>1?'previous document':undefined} onClose={closeReader} targets={navigationTargets} onNavigate={openReader}/>}
         <div
           className="inspector-divider"
           hidden={!hasDetails}

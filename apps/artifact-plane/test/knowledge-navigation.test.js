@@ -1,0 +1,8 @@
+import {test} from 'node:test';
+import assert from 'node:assert/strict';
+import {resolveKnowledgeLink,knowledgeTargets} from '../src/knowledge-navigation.js';
+const source='docs/artifacts/a/versions/1.0.0/specifications/a.md',target='docs/artifacts/a/versions/1.0.0/requirements/b.md';
+const targets=new Map([[target,{source:target,scope:{artifact:'a'}}]]);
+test('knowledge links resolve exact allowlisted sources and contained parent segments',()=>{assert.equal(resolveKnowledgeLink(source,'../requirements/b.md',targets).source,target);assert.equal(resolveKnowledgeLink(source,'../requirements/%62.md',targets).source,target);assert.equal(resolveKnowledgeLink(source,'#heading',targets).kind,'heading');assert.equal(resolveKnowledgeLink(source,'../../2.0.0/requirements/b.md',targets).kind,'unavailable');});
+test('unsafe, unknown and multiply encoded destinations cannot become source reads',()=>{for(const href of ['https://example.test','javascript:alert(1)','//host/a','/etc/passwd','../../../../../../etc/passwd','%00','%ZZ','..\\requirements/b.md','../%252e%252e/secrets.json','../.git/config','../requirements/b.md?x=1'])assert.equal(resolveKnowledgeLink(source,href,targets).kind,'unavailable',href);});
+test('known targets retain exact change scope and do not invent historical versions',()=>{const map=knowledgeTargets({artifacts:[{id:'a',currentVersion:'1.0.0',changes:[{name:'change-next'}],elements:[{file:'docs/artifacts/a/changes/change-next/requirements/b.md',source:'change:change-next'}]}]});assert.equal(map.get('docs/artifacts/a/changes/change-next/requirements/b.md').scope.change,'change-next');assert.equal(map.has('docs/artifacts/a/versions/2.0.0/README.md'),false);});

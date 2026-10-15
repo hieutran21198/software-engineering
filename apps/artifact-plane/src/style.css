@@ -1185,3 +1185,5 @@ select:disabled {opacity:.45;cursor:default;}
 .workspace>.document-reader {left:220px;}
 @media(max-width:1150px){.workspace>.document-reader{left:180px;}}
 @media(max-width:800px){.workspace>.document-reader{left:0;top:0;}.canvas-area.reading{grid-column:auto;}.workspace:has(.reading)>.sidebar{display:flex;}}
+
+.markdown .knowledge-link {display:inline;padding:0;border:0;background:transparent;color:#c8b6ff;text-decoration:underline;font:inherit;text-align:left;white-space:normal;}.markdown .knowledge-link:focus-visible{outline:2px solid #b6a0ff;outline-offset:3px;}.unavailable-link{color:inherit}.unavailable-link small{color:#b2bdce;font-size:.8em}.document-reader pre{overflow:auto;max-width:100%;}.document-reader code{overflow-wrap:anywhere;}

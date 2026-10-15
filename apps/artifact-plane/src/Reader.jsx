@@ -7,20 +7,22 @@ export function documentSummary(text=''){
  return body.split(/\n\s*\n/).find(block=>block.trim()&&!/^\s*#/.test(block))||'';
 }
 
-export default function Reader({entry,root,worktree,epoch,onBack,onClose,onNavigate}){
- const [document,setDocument]=useState(null),[error,setError]=useState(''),[retry,setRetry]=useState(0);
+export default function Reader({entry,root,worktree,epoch,onBack,onClose,onNavigate,targets,backLabel}){
+ const [document,setDocument]=useState(null),[error,setError]=useState(''),[retry,setRetry]=useState(0),[nextLoad,setNextLoad]=useState(null);
+ useEffect(()=>{setNextLoad(null);},[entry,epoch]);
  useEffect(()=>{
   const controller=new AbortController();setDocument(null);setError('');
-  const load=entry.load?entry.load(controller.signal):repositoryQuery({path:root,worktree,section:'markdown',source:entry.source,...entry.scope},controller.signal).then(r=>({markdown:r.data.markdown,source:r.data.source,partial:r.completeness==='partial'}));
+  const read=nextLoad||entry.load;
+  const load=read?read(controller.signal):repositoryQuery({path:root,worktree,section:'markdown',source:entry.source,...entry.scope},controller.signal).then(r=>({markdown:r.data.markdown,source:r.data.source,partial:r.completeness==='partial'}));
   load.then(value=>{if(!controller.signal.aborted)setDocument(value);}).catch(e=>{if(!controller.signal.aborted)setError(e.message);});
   return()=>controller.abort();
- },[entry,root,worktree,epoch,retry]);
+ },[entry,root,worktree,epoch,retry,nextLoad]);
  return <section className="document-reader" aria-label="Knowledge reader">
-  <nav aria-label="Document navigation"><button onClick={onBack}>Back to {entry.parent||'artifact'}</button><button onClick={onClose}>Back to graph</button></nav>
+  <nav aria-label="Document navigation"><button onClick={onBack}>Back to {backLabel||entry.parent||'artifact'}</button><button onClick={onClose}>Back to graph</button></nav>
   <h2>{entry.title||entry.source}</h2><details className="reader-source"><summary>Source details</summary><code>{entry.source}</code><p>{worktree}</p></details>
   {error?<div role="alert"><p>{error}</p><button onClick={()=>setRetry(n=>n+1)}>Retry source</button></div>:!document?<p role="status">Loading source…</p>:<>
-   {document.partial&&<p role="status">Partial source excerpt. Additional source text remains available in its source view.</p>}
-   <Markdown text={document.markdown||''} source={entry.source} targets={entry.targets} onNavigate={onNavigate}/>
+   {document.partial&&<p role="status">Partial source excerpt. Additional source text remains available in its source view.</p>}{document.next&&<button onClick={()=>{setDocument(null);setNextLoad(()=>document.next);}}>Next source excerpt</button>}
+   <Markdown text={document.markdown||''} source={entry.source} targets={entry.targets||targets} onNavigate={link=>onNavigate({...link,targets:entry.targets||targets})}/>
   </>}
  </section>;
 }

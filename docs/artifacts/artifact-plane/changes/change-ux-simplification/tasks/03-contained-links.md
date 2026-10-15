@@ -19,12 +19,12 @@ Applicable DoD for reading-layout must pass first. Explicit approval of this con
 
 ## Definition of Done
 
-- [ ] Known relative current/change/root/evidence links resolve from the exact displayed source; safe normalized ../ links work only when their resolved known target is allowed.
-- [ ] Cross-artifact and exact-version destinations never substitute another snapshot; missing/unsupported/external/unsafe destinations stay inert with accessible reasons and working return.
-- [ ] Flow support rows directly open their registered source ID, while unresolved support remains explicit.
-- [ ] Hostile HTML, forged callback attributes, encoded traversal, schemes, symlink escapes, .git/credential and task-directory escapes cannot execute, fetch externally or bypass server scope.
-- [ ] Focused source/Markdown/browser tests pass with unchanged fixture bytes and Git state.
+- [x] Known relative current/change/root/evidence links resolve from the exact displayed source; safe normalized ../ links work only when their resolved known target is allowed.
+- [x] Cross-artifact and exact-version destinations never substitute another snapshot; missing/unsupported/external/unsafe destinations stay inert with accessible reasons and working return.
+- [x] Flow support rows directly open their registered source ID, while unresolved support remains explicit.
+- [x] Hostile HTML, forged callback attributes, encoded traversal, schemes, symlink escapes, .git/credential and task-directory escapes cannot execute, fetch externally or bypass server scope.
+- [x] Focused source/Markdown/browser tests pass with unchanged fixture bytes and Git state.
 
 ## Evidence
 
-No implementation checks have run for this task. Record actual commands, observed results, source references and limitations here after approved execution.
+11 Node checks passed across knowledge-navigation, reader and scoped-query suites. Cases include exact allowlisted ../ resolution, Unicode/encoding boundaries, missing versions, unsafe schemes/traversal, registered roots, symlink and scope protection. Focused Chromium Markdown navigation passed: root → exact version requirement → sibling contract → prior document/graph, with no forged callback, script execution, page errors or fixture mutation. Production build passed. Markdown removes repository data attributes before inserting locally generated controls; server read authority is unchanged. Flow supporting-source rows bind returned registered IDs and preserve cursor access; integrated flow browser regressions remain in task 07.
