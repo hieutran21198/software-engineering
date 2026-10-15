@@ -13,18 +13,47 @@ affected_flows:
   - artifact: artifact-plane
     flow: repository-exploration
     effect: modify
-flow_assessment: Inspected Flows, UnitList, main search controls, flow ranking and paging, flow/dependency canvas labels and shared edge CSS. Title filtering and graph readability change existing journeys. Unlabelled task/unit graphs require regression checks, not invented label features. Screenshot geometry remains unverified. Graph participation creates no task prerequisite.
+flow_assessment: Inspected actual title/index/adapter and shared browser search
+  paths, explicit participation closure, graph edge rendering and measured label
+  fixtures. Source retrieval, unit inspection and repository exploration have
+  tracked support. Unlabelled task/unit graphs retain their existing semantics.
+  Coverage remains explicit recorded relationships, not exhaustive system or
+  code-impact discovery.
 acceptance:
   - id: named-search
-    criterion: Title and ID filtering updates visible matching results in both views, including flows outside the first browsing page.
+    criterion: Title and ID filtering updates visible matching results in both
+      views, including flows outside the first browsing page.
   - id: artifact-scope
-    criterion: Flow search scopes complete recorded participation to a visible Artifact selection, and Artifact details preselects the clicked artifact.
+    criterion: Flow search scopes complete recorded participation to a visible
+      Artifact selection, and Artifact details preselects the clicked artifact.
   - id: readable-labels
-    criterion: Edge labels remain readable without covering node content or blocking controls in representative graph fixtures.
+    criterion: Edge labels remain readable without covering node content or blocking
+      controls in representative graph fixtures.
   - id: integration
-    criterion: Discovery compatibility, async isolation, read-only behavior and previous flows pass integrated checks.
+    criterion: Discovery compatibility, async isolation, read-only behavior and
+      previous flows pass integrated checks.
     integration: true
-evidence: []
+evidence:
+  - criterion: named-search
+    method: Run integrated Node, Chromium, installed-model, source fingerprint and
+      complete knowledge checks.
+    result: passed
+    source: docs/artifacts/units-of-work/search-label-usability/README.md#combined-checks
+  - criterion: artifact-scope
+    method: Run integrated Node, Chromium, installed-model, source fingerprint and
+      complete knowledge checks.
+    result: passed
+    source: docs/artifacts/units-of-work/search-label-usability/README.md#combined-checks
+  - criterion: readable-labels
+    method: Run integrated Node, Chromium, installed-model, source fingerprint and
+      complete knowledge checks.
+    result: passed
+    source: docs/artifacts/units-of-work/search-label-usability/README.md#combined-checks
+  - criterion: integration
+    method: Run integrated Node, Chromium, installed-model, source fingerprint and
+      complete knowledge checks.
+    result: passed
+    source: docs/artifacts/units-of-work/search-label-usability/README.md#combined-checks
 ---
 
 # Consistent named search and readable graph relationships
@@ -39,4 +68,17 @@ Include title/ID search, explicit behavior discovery, Artifact filtering and con
 
 ## Validation evidence
 
-Requirement, Specification and Plan completed in separate phase commits. Self-checks confirm four tasks, three resolved prerequisite edges, eight structurally valid flow records and nine local change-document links with no ancestor destinations. No implementation files or historical snapshots were changed. Implementation checks and shared evidence are pending. No version or unit completion is asserted. The new concrete plan requires user approval before implementation.
+Requirement, Specification and Plan completed with separate phase commits and explicit user approval. Task evidence remains in the sole member change. Proposed 1.12.1 has not established; shared check assertions do not imply unit completion.
+
+## Combined checks
+
+- `FLOW_MODEL_STATE=/tmp/plane-flow-model-state npm test`: 258 passed, zero failed or skipped.
+- Production app build and complete Chromium browser suite: 56 passed, including eight new search cases, measured edge geometry at 1440/700, and retained project/flow/unit/task/review/runtime regressions. Wide and narrow screenshots were inspected.
+- Installed-model benchmark: all six expected flows ranked first with semantic retrieval enabled, fresh complete responses and both explicit adoption consumers retained.
+- Self-host title/Artifact query: eight matching snapshot records, three Artifact options, zero false no-match results and zero encoder calls. Tracked bytes, HEAD and Git status were identical before and after reads. Fixture checks also preserve inspected sources.
+- Go tests/vet and website documentation build passed.
+- Knowledge checks: four-task/three-edge DAG, eight valid flow records, sole membership, 42 byte-identical complete snapshot files, no copied tasks, 34 release links and nine change links with no ancestor destination. Historical snapshots, other outcomes and upstream knowledge were unchanged.
+
+## Limits and publication
+
+Artifact scope follows explicit recorded participation across owners; it does not prove global code impact. Long expanded labels can need Fit View or zoom. Behavior discovery uses existing local model availability and explicit submission. Version 1.12.1 and this outcome await required review and merge; the root still declares 1.11.0. No automatic merge, lifecycle repair or established completion is claimed.
