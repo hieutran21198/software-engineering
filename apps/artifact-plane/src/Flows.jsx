@@ -63,7 +63,7 @@ export default function Flows({path,worktree,epoch,isActive,entry,knowledge,side
   if(!pageCursor&&!sameScope)setList(null);
   query({...context,operation:impact?'impact':'search',...(impact?{ids:impact}:{query:search,match}),artifact:artifact||undefined,limit:20,cursor:pageCursor||undefined},controller.signal).then(result=>{
    if(controller.signal.aborted||latestRequest.current!==requestKey)return;
-   if(pageCursor&&latestList.current?.revision&&(latestList.current.revision!==result.revision||result.freshness!=='fresh')){setCursor(null);listCache.current=null;setRetry(n=>n+1);return;}
+   if(pageCursor&&latestList.current&&(latestList.current.revision!==result.revision||latestList.current.generation!==result.generation||latestList.current.data.semantic!==result.data.semantic||result.freshness!=='fresh')){setCursor(null);listCache.current=null;setRetry(n=>n+1);return;}
    setOptions({scope:optionScope,epoch,items:result.data.artifactOptions||artifacts});
    setList(previous=>{
     if(pageCursor&&previous)return {...result,data:{...result.data,flows:[...new Map([...(previous.data?.flows||[]),...(result.data?.flows||[])].map(f=>[f.id,f])).values()]}};
