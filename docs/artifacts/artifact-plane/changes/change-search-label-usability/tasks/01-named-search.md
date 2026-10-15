@@ -11,13 +11,13 @@ Own server/flow-index.js, additive HTTP/MCP search schema and focused adapter/in
 
 ## Definition of Done
 
-- [ ] Title/ID matching is normalized and complete before paging; exact and no-match cases pass, including later browsing pages.
-- [ ] Optional match selector is compatible by default and bound to cursors; actual HTTP/MCP parity and invalid cross-mode cursors pass.
-- [ ] Title mode executes zero embedding inference; installed-model default discovery remains available.
+- [x] Title/ID matching is normalized and complete before paging; exact and no-match cases pass, including later browsing pages.
+- [x] Optional match selector is compatible by default and bound to cursors; actual HTTP/MCP parity and invalid cross-mode cursors pass.
+- [x] Title mode executes zero embedding inference; installed-model default discovery remains available.
 
-- [ ] Optional artifact scope reuses complete recorded participation before ranking and paging, including cross-owner flows; option metadata includes artifacts without flows.
-- [ ] Composite title/behavior/element-impact queries and artifact-bound cursors preserve explicit context and HTTP/MCP parity; unknown selectors are rejected.
+- [x] Optional artifact scope reuses complete recorded participation before ranking and paging, including cross-owner flows; option metadata includes artifacts without flows.
+- [x] Composite title/behavior/element-impact queries and artifact-bound cursors preserve explicit context and HTTP/MCP parity; unknown selectors are rejected.
 
 ## Evidence
 
-Implementation has not started. No executable behavior is claimed by this plan.
+The integrated flow index and adapter suites passed 26 checks with the installed model and no skips. Actual HTTP/MCP fixtures cover title/ID matches beyond the first page, cross-owner participation, empty-artifact options, normalized queries, strict selectors and mode/artifact-bound cursors. Title queries do not initialize or call the encoder. Discovery-title-discovery switching preserves shared vector rows and does not re-embed documents. All six installed-model benchmark cases ranked their expected flow first; both adoption consumers were returned. No inspected repository bytes changed in the fixture checks.
