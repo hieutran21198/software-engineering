@@ -42,7 +42,7 @@ function Commit({commit}) {
  return <details className="workflow-commit"><summary><code>{commit.id.slice(0,8)}</code> {commit.subject}</summary><code className="full-commit">{commit.id}</code></details>;
 }
 
-export function ChangeDetails({context, phase, onPhase, onBack, onTaskGraph, children}) {
+export function ChangeDetails({context, phase, onPhase, onBack, onTaskGraph, onReview, children}) {
  const {worktree, change} = context;
  const step = change.steps.find(s => s.name === phase);
  return <div className="workflow-details delivery-details">
@@ -56,7 +56,7 @@ export function ChangeDetails({context, phase, onPhase, onBack, onTaskGraph, chi
   <p className="muted">{change.inferenceReason}</p>
   {change.declaredActive && <p className="tiny">Declared change; this does not prove ongoing execution.</p>}
   {worktree.diagnostics.filter(d=>d.message.includes(`${change.artifact}/${change.name}`)).map((d,i) => <p className="workflow-diagnostic" key={i}>{d.message}</p>)}
-  <button onClick={onTaskGraph}>View task graph</button>
+  <button onClick={onTaskGraph}>View task graph</button> {onReview&&<button onClick={onReview}>Review change</button>}
   <nav className="delivery-phases" aria-label="Change phases">{change.steps.map(s => <button key={s.name} aria-pressed={s.name === phase} onClick={() => onPhase(s.name)}><span>{s.name}</span><small>{stateLabel(s.state)}</small></button>)}</nav>
   {step ? <section><h3>{stateLabel(step.state)}</h3>
    {step.evidence.length ? <ul>{step.evidence.map((e,i) => <li key={i}>{e.explanation}{e.file && <small>{e.file}</small>}</li>)}</ul> : <p className="muted">No completion evidence available.</p>}

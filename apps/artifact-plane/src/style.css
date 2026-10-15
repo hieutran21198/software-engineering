@@ -1081,3 +1081,22 @@ summary {
 
 .flow-sidebar-slot {min-height:260px;flex:1 0 260px;}
 .flow-inspector-slot>.flow-content {border:0;margin:0;padding:0;}
+.change-review {position:absolute;inset:66px 0 0;overflow:auto;padding:18px;min-width:0;font-size:12px;}
+.review-heading {display:flex;align-items:center;gap:12px;flex-wrap:wrap;}
+.review-heading h2 {font-size:18px;margin:0;overflow-wrap:anywhere;}
+.review-actions {display:flex;flex-wrap:wrap;gap:8px;}
+.review-path,.review-details code {overflow-wrap:anywhere;word-break:break-word;}
+.review-records {display:flex;flex-direction:column;gap:6px;}
+.review-records button {text-align:left;white-space:normal;overflow-wrap:anywhere;}
+.review-records button[aria-pressed="true"] {border-color:#65a8ff;background:#193351;}
+.review-warnings {padding:10px;border-left:3px solid #d9b56b;background:#292518;margin:12px 0;overflow-wrap:anywhere;}
+.review-warnings p {margin:5px 0;}
+.review-comparison {display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:12px;}
+.review-comparison>section {min-width:0;border:1px solid #27324a;border-radius:6px;padding:10px;}
+.review-comparison code {display:block;overflow-wrap:anywhere;}
+.review-comparison pre,.review-details pre,.review-scope pre {white-space:pre-wrap;overflow-wrap:anywhere;word-break:break-word;max-height:420px;overflow:auto;font:11px/1.6 monospace;color:#ced9e8;}
+.review-details {font-size:12px;min-width:0;overflow-wrap:anywhere;}
+.review-details h2 {font-size:18px;}
+@media(max-width:800px){.change-review{padding:10px}.review-comparison{grid-template-columns:minmax(0,1fr)}.review-heading h2{font-size:15px}}
+
+@media(max-width:1150px){.change-review{top:88px}}
