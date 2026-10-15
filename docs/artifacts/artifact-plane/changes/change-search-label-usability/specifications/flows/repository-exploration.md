@@ -12,6 +12,7 @@ flow:
       title: Select the project and worktree
       supports:
         - explorer
+        - search-label-contract
     - id: validate
       title: Resolve a readable Git root and ADD directory
       supports:
@@ -88,11 +89,20 @@ flow:
       requires: Open selected-change review without losing artifact and delivery
         navigation.
       basis: documented
+    - id: search-label-contract
+      kind: element
+      artifact: artifact-plane
+      element: specifications/search-label-usability.md
+      requires: Define named filtering, explicit discovery and readable labelled graph
+        presentation without changing graph meaning.
+      basis: documented
   gaps:
     - The flow documents discovery behavior, not complete knowledge coverage or
       artifact establishment.
     - New contextual review navigation is specified but not implemented or
       browser-validated yet.
+    - New named-search controls and collision-aware label behavior await
+      approved implementation and executable evidence.
   exclusions:
     - Arbitrary filesystem browsing and automatic repository edits.
   artifact: artifact-plane

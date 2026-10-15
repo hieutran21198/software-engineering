@@ -18,3 +18,9 @@ Scope includes all three user reports. Normal title/ID filtering and behavior di
 ## Specification self-check
 
 The contract covers filtering before paging, compatible discovery, shared controls, async isolation and node-aware readable labels. The existing ADD 2.1.0 supplier is unchanged. Full model and source guards remain. No implementation is authorized by this preparation.
+
+- [Concrete implementation plan](tasks/README.md)
+
+## Plan self-check
+
+Four tasks cover service matching, graph labels, common controls and combined validation. Three prerequisite edges resolve with no cycle. The same capable session completed Specification and Plan sequentially. No implementation files were changed. The concrete plan awaits explicit user approval.

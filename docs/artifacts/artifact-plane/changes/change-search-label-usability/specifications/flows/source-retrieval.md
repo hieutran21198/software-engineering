@@ -16,6 +16,7 @@ flow:
         - flow-reader
         - http
         - mcp
+        - search-label-contract
     - id: discover
       title: Find ranked flow candidates and expand explicit impact
       supports:
@@ -130,9 +131,18 @@ flow:
       requires: Verify exact/relevance ordering before paging and offline
         installed-model retrieval.
       basis: static
+    - id: search-label-contract
+      kind: element
+      artifact: artifact-plane
+      element: specifications/search-label-usability.md
+      requires: Define named filtering, explicit discovery and readable labelled graph
+        presentation without changing graph meaning.
+      basis: documented
   gaps:
     - Retrieval ranks candidates; it does not prove compatibility or complete
       system discovery.
+    - New named-search controls and collision-aware label behavior await
+      approved implementation and executable evidence.
   exclusions:
     - Arbitrary paths, credential files, hosted embedding calls and inferred
       approval.

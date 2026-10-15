@@ -12,6 +12,7 @@ flow:
       title: Read the unit brief and unique membership
       supports:
         - units
+        - search-label-contract
     - id: resolve
       title: Resolve delivered versions and exact originating plans
       supports:
@@ -92,9 +93,18 @@ flow:
       requires: Reject instructional/unscoped claims and preserve real member/version
         assertions.
       basis: static
+    - id: search-label-contract
+      kind: element
+      artifact: artifact-plane
+      element: specifications/search-label-usability.md
+      requires: Define named filtering, explicit discovery and readable labelled graph
+        presentation without changing graph meaning.
+      basis: documented
   gaps:
     - Recorded passing assertions are not independently executed tests; missing
       merge evidence stays unresolved.
+    - New named-search controls and collision-aware label behavior await
+      approved implementation and executable evidence.
   exclusions:
     - Creating unit members from shared flow participation.
   artifact: artifact-plane
