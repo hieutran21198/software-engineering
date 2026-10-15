@@ -1,6 +1,6 @@
 # Named search and readable label contract
 
-Governs U1–U7. This contract supplements the retained discovery and presentation contracts without changing default external discovery behavior.
+Governs U1–U9. This contract supplements the retained discovery and presentation contracts without changing default external discovery behavior.
 
 ## Named filtering and discovery
 
@@ -15,6 +15,20 @@ A small shared search-field presentation supplies label, Title or ID placeholder
 Flow search defaults to Title or ID. An explicit Behavior discovery option preserves semantic/keyword discovery and shows its Search action; Enter submits it. Semantic discovery does not execute on every keystroke. Explain that discovery ranks candidates while named search filters matches. Labels describe the active mode without exposing implementation internals.
 
 Loading, error, no matches and ready are separate visible states. Bind callbacks and pages to project/worktree/knowledge, mode, committed query and refresh epoch; abort or ignore old replies. Reset paging on query/mode/clear. Do not retain a previous query's result payload merely because its repository revision matches. Keep valid selections as context, but visibly identify selected details outside current matches. Inactive projects pause reads. Clear preserves the current project/worktree and unrelated navigation.
+
+## Artifact scope and contextual entry
+
+Add optional artifact to search and impact requests. It is a safe artifact identifier from the selected repository/worktree snapshot, not a filesystem selector. Omission means All artifacts. Invalid syntax, an unknown artifact or use on other operations produces the existing 422 selector error. HTTP, search_flows and get_impact_context expose the same compatible optional selector. Other tools retain their existing fields and strict validation.
+
+Derive the complete eligible flow set with existing explicit reverse relationships for artifact:<id>. This includes flows owned by that artifact and flows owned elsewhere that reference or use its recorded knowledge. It creates no artifact dependency, workflow prerequisite or unit membership. Preserve the existing explicit-relationship coverage warning. An artifact dependency without recorded flow participation is not independently sufficient. Apply eligibility before title matching, keyword/semantic ranking cutoffs and pagination; do not filter a global top-20 result or the currently loaded browser page. For an impact request with explicit element IDs, intersect the complete requested impact closure with the selected artifact's complete participation set and retain the narrower impact reasons.
+
+Search/impact results add artifactOptions containing safe id/title summaries from the current scoped snapshot, including artifacts with no flow records. These are UI options, not evidence of participation. Names are inert text. Default requests without artifact retain existing results and ordering. Bind cursors, caches, response identity and pending queries to artifact in addition to match/query/context/revision. Changing artifact resets result paging and invalidates old replies; old cursors from another artifact fail instead of silently mixing results.
+
+The flow sidebar contains a labelled native Artifact selector with All artifacts and the current snapshot's artifact names. It works with both named filtering and Behavior discovery. Preserve it when text is entered/cleared, search mode changes, knowledge mode changes or the ordinary Flows tab is revisited. Keep it per project session. When a selected artifact disappears, show it as unavailable and request an explicit new selection rather than silently broadening to All artifacts.
+
+Find participating flows passes the clicked artifact ID into the flow entry context and opens the flow view. It replaces any earlier artifact scope, query and result page; the selected dropdown is immediately visible. Artifact-level entry browses that artifact's participation with an empty title query. Element-level entry additionally retains its existing specific relationship selector. Selecting another artifact releases the old element restriction. A new query can replace element-specific discovery while retaining artifact scope. Keep the existing switch to Planning for selected change knowledge; do not silently enable All snapshots. The selected worktree remains explicit.
+
+Tests must include another owner's participating flow, an unrelated same-owner/other-owner control, an artifact with no flows, eligible matches beyond 20 records, composite title/discovery filtering, clear behavior, unknown/deleted artifacts, mode/context-bound cursors and delayed artifact replies. Actual HTTP/MCP results must agree. Browser checks select one artifact manually then click another artifact's Find participating flows and verify the dropdown, request scope and visible results.
 
 ## Edge text placement
 
@@ -33,3 +47,7 @@ Browser fixtures reproduce node/label intersections on both labelled graph famil
 ## Specification self-check
 
 No upstream contract or artifact dependency changes are required. The current session completes Specification and Plan sequentially. KISS adds one explicit match selector and one shared presentation mechanism where duplication is demonstrated. Alternatives appear in ADR 010. STE names filtering, discovery, capture and visibility precisely. Screenshot geometry remains unverified; fixture reproduction is a task DoD rather than invented evidence. No blocker remains for Plan.
+
+## Artifact-scope amendment self-check
+
+The existing explicit closure supplies participation; no new graph or index authority is introduced. One compatible selector and scoped option summaries are sufficient. Filtering before ranking/paging avoids missing later or cross-owner candidates. Empty/unavailable selections and narrow element context remain explicit. KISS and STE checks pass; no new supplier or Specification blocker remains.

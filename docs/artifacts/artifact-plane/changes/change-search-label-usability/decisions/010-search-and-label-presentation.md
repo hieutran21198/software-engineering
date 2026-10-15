@@ -2,11 +2,12 @@
 
 ## Decision
 
-Use literal title/ID filtering as the normal shared UI interaction. Keep behavior discovery explicit and preserve existing external discovery defaults. Place graph labels with node-aware geometry and clear-space fallback; do not change graph knowledge.
+Use literal title/ID filtering as the normal shared UI interaction. Scope Flow results with an explicit Artifact selector using recorded participation rather than only ownership. Keep behavior discovery explicit and preserve existing external discovery defaults. Place graph labels with node-aware geometry and clear-space fallback; do not change graph knowledge.
 
 ## Alternatives and reasons
 
 - Keep only ranked discovery: a small corpus can return nearly the same candidates for a title, which does not meet named filtering expectations.
+- Filter only flow ownership: misses flows owned elsewhere that use the selected artifact, contradicting Find participating flows. Reuse explicit participation traversal.
 - Filter only the first returned page in the browser: misses matching flows outside that page. Filter metadata before paging in the shared service instead.
 - Hide semantic results below a score threshold: scores are not calibrated relevance probabilities, and the user requested predictable title matching.
 - Run semantic search on every keystroke: adds inference and race costs for an ordinary title lookup. Keep explicit discovery submission.
