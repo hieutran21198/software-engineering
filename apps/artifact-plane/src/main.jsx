@@ -16,6 +16,7 @@ import {
   Position,
 } from "@xyflow/react";
 import Flows from './Flows.jsx';
+import SearchField from './SearchField.jsx';
 import ChangeReview from './ChangeReview.jsx';
 import {UnitList, UnitView, UnitDetails} from './UnitsOfWork.jsx';
 import {unitContext, unitNode} from './unit-canvas.js';
@@ -200,6 +201,7 @@ export function ProjectExplorer({active: isActive = true, initialPath = "", onOp
     [selection, setSelection] = useState(null),
     [planning, setPlanning] = useState(false);
   const [expandedTypes, setExpandedTypes] = useState(new Set());
+  const [unitFilter,setUnitFilter]=useState("");
   const [reviewKey,setReviewKey]=useState(null),[reviewInspector,setReviewInspector]=useState(null);
   const [deliveryChange, setDeliveryChange] = useState(null), [deliveryPhase, setDeliveryPhase] = useState(null);
   const [taskChange, setTaskChange] = useState(null), [taskSelected, setTaskSelected] = useState(null);
@@ -208,7 +210,7 @@ export function ProjectExplorer({active: isActive = true, initialPath = "", onOp
   const [flowEntry,setFlowEntry]=useState(null);
   const [flowKnowledge,setFlowKnowledge]=useState("established"),[flowSidebar,setFlowSidebar]=useState(null),[flowInspector,setFlowInspector]=useState(null);
   const chooseKnowledge=value=>{setFlowKnowledge(value);if(value!=="all")setPlanning(value==="planning");};
-  const openFlows=entry=>{if(entry!==null)setFlowEntry(entry);setView("flows");};
+  const openFlows=entry=>{if(entry!==null){if(entry.worktree)setUnitWorktree(entry.worktree);setFlowEntry(entry);}setView("flows");};
   const [recordedSelected,setRecordedSelected]=useState(null),[recordedNode,setRecordedNode]=useState(null);
   const [filter, setFilter] = useState("");
   const workspaceRef = useRef(null);
@@ -283,7 +285,7 @@ export function ProjectExplorer({active: isActive = true, initialPath = "", onOp
         base={...base,workflow:{...base.workflow,worktrees:base.workflow.worktrees.map(w=>w.path===selected?other.data.workflow.worktrees.find(t=>t.path===selected):w)}};
       }
       onOpened(base.repository.path);installOverview(base,refresh);setLoadedSession(session);queueRoot.current=base.repository.path;setPath(base.repository.path);setFresh(!result.diagnostics.some(d=>d.code==='stale-response'));
-      if(!refresh){setReviewKey(null);setFlowEntry(null);setRecordedSelected(null);setRecordedNode(null);if(active.current.view==='recorded')setView('canvas');setUnitSelected(null);setUnitNodeSelected(null);setUnitWorktree(base.repository.path);setUnitView('artifacts');setUnitPlanning(false);setTaskChange(null);setTaskSelected(null);setDeliveryChange(null);setDeliveryPhase(null);setExpanded(new Set());setExpandedTypes(new Set());setSelection(null);setFilter('');setPlanning(false);setFlowKnowledge('established');setCompletionOpen(false);setDocument(null);}
+      if(!refresh){setReviewKey(null);setFlowEntry(null);setRecordedSelected(null);setRecordedNode(null);if(active.current.view==='recorded')setView('canvas');setUnitSelected(null);setUnitNodeSelected(null);setUnitWorktree(base.repository.path);setUnitView('artifacts');setUnitPlanning(false);setTaskChange(null);setTaskSelected(null);setDeliveryChange(null);setDeliveryPhase(null);setExpanded(new Set());setExpandedTypes(new Set());setSelection(null);setFilter('');setUnitFilter('');setPlanning(false);setFlowKnowledge('established');setCompletionOpen(false);setDocument(null);}
     }catch(error){if(session===generation.current&&error.name!=='AbortError'){setError(error.message);setFresh(false);}}
     finally{if(session===generation.current)setBusy(false);}
   };
@@ -521,17 +523,10 @@ export function ProjectExplorer({active: isActive = true, initialPath = "", onOp
                 </small>
               </div>
               <Worktrees workflow={snapshot.workflow} selected={unitWorktree} onSelect={value=>{setUnitWorktree(value);setUnitSelected(null);setUnitNodeSelected(null);}} onOpen={root=>open(root)} busy={busy}/>
-              <label className="sr-only" htmlFor={`artifact-filter-${tabId}`}>
-                {view === "units" ? "Filter units of work" : "Filter artifacts"}
-              </label>
-              <input
-                id={`artifact-filter-${tabId}`}
-                className="filter"
-                style={{display:view=== "flows" ? "none" : undefined}}
-                placeholder={view === "units" ? "Filter units of work…" : "Filter artifacts…"}
-                value={filter}
-                onChange={(e) => setFilter(e.target.value)}
-              />
+              {view==='units'?<SearchField label="Search units of work" value={unitFilter} onChange={setUnitFilter}/>:view!=='flows'&&<>
+                <label className="sr-only" htmlFor={`artifact-filter-${tabId}`}>Filter artifacts</label>
+                <input id={`artifact-filter-${tabId}`} className="filter" placeholder="Filter artifacts…" value={filter} onChange={event=>setFilter(event.target.value)}/>
+              </>}
               <nav aria-label="Artifacts" style={{display:view === "units" || view === "flows" ? "none" : undefined}}>
                 {snapshot.artifacts
                   .filter((a) =>
@@ -555,7 +550,7 @@ export function ProjectExplorer({active: isActive = true, initialPath = "", onOp
               </nav>
               <div ref={setFlowSidebar} className="flow-sidebar-slot" style={{display:view=== "flows" ? undefined : "none"}}/>
               {view!=="flows"&&<RecordedPicker selected={recordedSelected} onSelect={id=>{setRecordedSelected(id);setRecordedNode(null);if(id)setView('recorded');}}/>}
-              {view === "units" && <UnitList snapshot={snapshot} worktreePath={unitWorktree} filter={filter} selected={unitSelected} onSelect={value=>{setUnitSelected(value);setUnitView('artifacts');setUnitNodeSelected(null);}}/>}
+              {view === "units" && <UnitList snapshot={snapshot} worktreePath={unitWorktree} filter={unitFilter} selected={unitSelected} onSelect={value=>{setUnitSelected(value);setUnitView('artifacts');setUnitNodeSelected(null);}}/>}
             </>
           ) : (
             <p className="muted sidebar-help">
@@ -680,7 +675,7 @@ export function ProjectExplorer({active: isActive = true, initialPath = "", onOp
           {snapshot && reviewKey && <ChangeReview root={snapshot.repository.path} contextKey={reviewKey} epoch={overviewEpoch} session={loadedSession} active={isActive&&view==='canvas'} updating={busy} repositoryFresh={fresh} inspector={reviewInspector} onBack={()=>setReviewKey(null)}/>}
           {snapshot && taskContext && <div style={{display:view === "canvas" ? "contents" : "none"}}><TaskGraph key={taskChange} context={taskContext} selection={taskSelected} onSelect={setTaskSelected} onBack={()=>{setTaskChange(null);setTaskSelected(null);}}/></div>}
           {snapshot && view==='recorded' && <RecordedView id={recordedSelected} selection={recordedNode} onSelect={setRecordedNode}/>}
-          {snapshot && <Flows path={snapshot.repository.path} worktree={unitWorktree} epoch={overviewEpoch} isActive={isActive&&view==="flows"} entry={flowEntry} knowledge={flowKnowledge} sidebar={flowSidebar} inspector={flowInspector}/>}
+          {snapshot && <Flows path={snapshot.repository.path} worktree={unitWorktree} epoch={overviewEpoch} isActive={isActive&&view==="flows"} entry={flowEntry} knowledge={flowKnowledge} artifacts={snapshot.artifacts.map(a=>({id:a.id,title:a.title}))} sidebar={flowSidebar} inspector={flowInspector}/>}
           {snapshot && view === "units" && <UnitView loading={sectionState} context={selectedUnit} view={unitView} onView={value=>{setUnitView(value);setUnitNodeSelected(null);}} planning={unitPlanning} onPlanning={value=>{setUnitPlanning(value);setUnitNodeSelected(null);}} selection={unitNodeSelected} onSelect={setUnitNodeSelected}/>}
         </main>
         <div
@@ -825,7 +820,7 @@ export function ProjectExplorer({active: isActive = true, initialPath = "", onOp
                 <ReferenceList references={refs} onTarget={selectTarget} />
               </section>
               <section>
-                <button onClick={()=>{if(element?.source?.startsWith('change:'))chooseKnowledge('planning');openFlows({ids:[element?.id||`artifact:${artifact.id}`]});}}>Find participating flows</button>
+                <button onClick={()=>{if(element?.source?.startsWith('change:'))chooseKnowledge('planning');openFlows({artifact:artifact.id,worktree:selectedWorktree?.path||snapshot.repository.path,...(element?{ids:[element.id]}:{})});}}>Find participating flows</button>
                 <h3>{element ? "Content" : "Overview"}</h3>
                 <p className="tiny">{document?.status||'Not loaded'}{document?.error&&`: ${document.error}`}</p><Markdown text={document?.markdown||''} />
               </section>
