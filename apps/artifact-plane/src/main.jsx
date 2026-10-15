@@ -1,3 +1,4 @@
+import {labelledEdgeTypes,GraphLabelLayout} from './GraphLabels.jsx';
 import React, {
   useCallback,
   useEffect,
@@ -10,7 +11,6 @@ import { createRoot } from "react-dom/client";
 import {
   ReactFlow,
   ReactFlowProvider,
-  Controls,
   Background,
   Handle,
   Position,
@@ -616,6 +616,7 @@ export function ProjectExplorer({active: isActive = true, initialPath = "", onOp
                 nodes={graph.nodes}
                 edges={graph.edges}
                 nodeTypes={nodeTypes}
+                edgeTypes={labelledEdgeTypes}
                 onNodeClick={onNodeClick}
                 fitView
                 fitViewOptions={{ padding: 0.18 }}
@@ -629,8 +630,8 @@ export function ProjectExplorer({active: isActive = true, initialPath = "", onOp
                 colorMode="dark"
                 proOptions={{}}
               >
+                <GraphLabelLayout/>
                 <Background color="#334059" gap={24} size={1} />
-                <Controls showInteractive={false} />
               </ReactFlow>
             </div>
           )}

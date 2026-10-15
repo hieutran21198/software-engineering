@@ -1,12 +1,12 @@
+import {labelledEdgeTypes,GraphLabelLayout} from './GraphLabels.jsx';
 import React,{useEffect,useMemo,useState,useRef} from 'react';
-import {ReactFlow,ReactFlowProvider,Background,Controls,Handle,Position,useReactFlow} from '@xyflow/react';
+import {ReactFlow,ReactFlowProvider,Background,Handle,Position} from '@xyflow/react';
 import {createPortal} from 'react-dom';
 import Markdown from './Markdown.jsx';
 import SearchField, {normalizeName} from './SearchField.jsx';
 import {flowCanvas} from './flow-canvas.js';
 function FlowNode({data}){return <div className="flow-node"><Handle type="target" position={Position.Left} isConnectable={false}/><small>{data.kind}{data.artifact&&` · ${data.artifact}`}</small><strong>{data.title}</strong><Handle type="source" position={Position.Right} isConnectable={false}/></div>;}
 const nodeTypes={flow:FlowNode};
-function FitFlow(){const {fitView}=useReactFlow(),anchor=useRef(null);useEffect(()=>{if(!anchor.current)return;let frame;const resize=()=>{cancelAnimationFrame(frame);frame=requestAnimationFrame(()=>fitView({padding:.2}));};const observer=new ResizeObserver(resize);observer.observe(anchor.current.closest('.flow-surface'));resize();return()=>{observer.disconnect();cancelAnimationFrame(frame);};},[fitView]);return <span ref={anchor} className="sr-only"/>;}
 async function query(body,signal){const response=await fetch('/api/flows/query',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(body),signal});const result=await response.json();if(!response.ok)throw Object.assign(Error(result.error?.message||result.error||'Flow request failed'),{status:response.status});return result;}
 function sourceName(id,sources=[]){
  const known=sources.find(source=>source.id===id);if(known)return known.path;
@@ -124,6 +124,6 @@ export default function Flows({path,worktree,epoch,isActive,entry,knowledge,side
  </>}</section>;
  return <>{sidebar&&createPortal(left,sidebar)}{inspector&&createPortal(right,inspector)}<section className="flows-view" aria-label="Flow exploration">
  {impact&&<p>Related flow candidates from explicit known relationships. Review contracts to determine change impact.</p>}<Diagnostics items={[...(list?.diagnostics||[]),...(detail?.diagnostics||[]),...(document?.diagnostics||[])]}/><Evidence result={list}/>
- {!flow?<p role="status">{selected?'Loading flow…':'Select a flow from the sidebar.'}</p>:flow.state==='invalid'?<p role="alert">Invalid flow record. No execution order is inferred.</p>:<><h2>{flow.title}</h2><label className="flow-support-toggle"><input type="checkbox" checked={expanded} onChange={e=>setExpanded(e.target.checked)}/>Show supporting nodes</label><div className="flow-surface"><ReactFlowProvider key={flow.id}><ReactFlow nodes={graph.nodes} edges={graph.edges} nodeTypes={nodeTypes} onNodeClick={(_,n)=>setNode(n.id)} fitView nodesDraggable={false} nodesConnectable={false} deleteKeyCode={null} colorMode="dark"><FitFlow/><Background/><Controls showInteractive={false}/></ReactFlow></ReactFlowProvider></div><p className="tiny">Arrows show behavior transitions and support. Participation does not create prerequisites or unit membership.</p></>}
+ {!flow?<p role="status">{selected?'Loading flow…':'Select a flow from the sidebar.'}</p>:flow.state==='invalid'?<p role="alert">Invalid flow record. No execution order is inferred.</p>:<><h2>{flow.title}</h2><label className="flow-support-toggle"><input type="checkbox" checked={expanded} onChange={e=>setExpanded(e.target.checked)}/>Show supporting nodes</label><div className="flow-surface"><ReactFlowProvider key={flow.id}><ReactFlow nodes={graph.nodes} edges={graph.edges} nodeTypes={nodeTypes} edgeTypes={labelledEdgeTypes} minZoom={0.1} onNodeClick={(_,n)=>setNode(n.id)} fitView nodesDraggable={false} nodesConnectable={false} deleteKeyCode={null} colorMode="dark"><GraphLabelLayout/><Background/></ReactFlow></ReactFlowProvider></div><p className="tiny">Arrows show behavior transitions and support. Participation does not create prerequisites or unit membership.</p></>}
  </section></>;
 }
