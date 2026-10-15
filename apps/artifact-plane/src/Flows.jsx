@@ -1,5 +1,5 @@
 import {labelledEdgeTypes,GraphLabelLayout} from './GraphLabels.jsx';
-import React,{useEffect,useMemo,useState,useRef} from 'react';
+import React,{useEffect,useMemo,useState,useRef,useId} from 'react';
 import {ReactFlow,ReactFlowProvider,Background,Handle,Position} from '@xyflow/react';
 import {createPortal} from 'react-dom';
 import Markdown from './Markdown.jsx';
@@ -27,6 +27,7 @@ function Evidence({result,diagnostics=false}){
  return <div className="flow-evidence"><div className="flow-status"><span>Freshness: {typeof result.freshness==='string'?result.freshness:JSON.stringify(result.freshness)}</span><span>Coverage: {typeof result.completeness==='string'?result.completeness:JSON.stringify(result.completeness)}</span><details><summary>Index details</summary><p>Generation {result.generation}</p></details></div>{diagnostics&&<Diagnostics items={result.diagnostics}/>} {!!omissions.length&&<details className="flow-omissions"><summary>{omissions.length} shortened source{omissions.length===1?'':'s'}</summary><p>Some source text was shortened to fit the response budget. Inspect a source to read further excerpts.</p><ul>{omissions.map((item,i)=><li key={i}><code>{sourceName(item.source,result.data?.sources)}</code><span>{item.characters.toLocaleString()} characters omitted</span>{sourceName(item.source,result.data?.sources)==='Source identity unavailable'&&<details><summary>Source identity</summary><code>{item.source}</code></details>}</li>)}</ul></details>}</div>;
 }
 export default function Flows({path,worktree,epoch,isActive,entry,knowledge,sidebar,inspector,artifacts=[]}){
+ const artifactControl=useId(),modeControl=useId();
  const [text,setText]=useState(''),[search,setSearch]=useState(''),[match,setMatch]=useState('title'),[artifact,setArtifact]=useState('');
  const [impact,setImpact]=useState(null),[list,setList]=useState(null),[selected,setSelected]=useState(null),[detail,setDetail]=useState(null),[source,setSource]=useState(null),[document,setDocument]=useState(null),[expanded,setExpanded]=useState(false),[node,setNode]=useState(null),[error,setError]=useState(''),[cursor,setCursor]=useState(null),[sourceCursor,setSourceCursor]=useState(null),[loading,setLoading]=useState(false),[retry,setRetry]=useState(0),[sentinel,setSentinel]=useState(null),[options,setOptions]=useState(null);
  const latestList=useRef(null);latestList.current=list;
@@ -99,13 +100,13 @@ export default function Flows({path,worktree,epoch,isActive,entry,knowledge,side
  const supports=(flow?.support||[]).filter(s=>!node||s.targetId===node||(flow.steps||[]).find(t=>t.nodeId===node)?.supports.includes(s.id));
  if(!isActive)return null;
  const left=<section className="flow-list" aria-label="Flow browsing">
-  <label className="flow-filter">Artifact<select value={artifact} onChange={event=>{setArtifact(event.target.value);setImpact(null);setCursor(null);}}>
+  <div className="flow-filter"><label htmlFor={artifactControl}>Artifact</label><select id={artifactControl} value={artifact} onChange={event=>{setArtifact(event.target.value);setImpact(null);setCursor(null);}}>
    <option value="">All artifacts</option>{missingArtifact&&<option value={artifact}>{artifact}{options?.scope===optionScope?' · unavailable':''}</option>}
    {artifactOptions.map(a=><option key={a.id} value={a.id}>{a.title} · {a.id}</option>)}
-  </select></label>
-  <label className="flow-filter">Search mode<select value={match} onChange={event=>{const mode=event.target.value;setMatch(mode);setImpact(null);setCursor(null);setSearch(mode==='title'?normalizeName(text):'');}}>
+  </select></div>
+  <div className="flow-filter"><label htmlFor={modeControl}>Search mode</label><select id={modeControl} value={match} onChange={event=>{const mode=event.target.value;setMatch(mode);setImpact(null);setCursor(null);setSearch(mode==='title'?normalizeName(text):'');}}>
    <option value="title">Title or ID</option><option value="discovery">Behavior discovery</option>
-  </select></label>
+  </select></div>
   <SearchField label="Search flows" value={text} onChange={changeText} onSubmit={submit} placeholder={match==='title'?'Title or ID':'Describe a behavior or enter an ID'} submit={match==='discovery'}/>
   <p className="tiny">{impact?'Related flow candidates':!search?'Newest records first':match==='title'?'Title or ID matches':'Relevance first'}</p>
   {match==='discovery'&&<p className="tiny">Discovery ranks related candidates. Submit a behavior to search.</p>}
