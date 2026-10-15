@@ -5,6 +5,7 @@ import { fileURLToPath } from "node:url";
 import { exploreRepository } from "./reader.js";
 import {repositoryService, repositoryFingerprint, registeredSourceFingerprint} from './repository-events.js';
 import {createFlowService} from './flow-index.js';
+import {createReviewService} from './change-review.js';
 import {queryRepository} from './repository-query.js';
 import { runtimeService } from "./runtime-api.js";
 const DIST = fileURLToPath(new URL("../dist/", import.meta.url));
@@ -33,8 +34,10 @@ export function createAppServer(options = {}) {
   const runtime = runtimeService(options);
   let flows=options.flowService;
   const getFlows=()=>flows??=(createFlowService({stateDir:options.stateDir,roots:options.flowRoots||[]}));
+  let reviews=options.reviewService;
+  const getReviews=()=>reviews??=createReviewService({roots:options.reviewRoots||options.flowRoots||[]});
   const observation=options.repositoryObservation||{};
-  const repositories=repositoryService({...observation,sample:async(root,settings)=>{const base=await (observation.sample||repositoryFingerprint)(root,settings);return registeredSourceFingerprint(root,base,flows?.observedSources(root)||[],settings);}});
+  const repositories=repositoryService({...observation,sample:async(root,settings)=>{const base=await (observation.sample||repositoryFingerprint)(root,settings);return registeredSourceFingerprint(root,base,[...(flows?.observedSources(root)||[]),...(reviews?.observedSources(root)||[])],settings);}});
   const server = createServer(async (req, res) => {
     try {
       const host = `127.0.0.1:${req.socket.localPort}`;
@@ -55,7 +58,7 @@ export function createAppServer(options = {}) {
         if (!runtime.subscribe(req, res, security)) return json(res, 429, {error: "Too many observation clients."});
         return;
       }
-      if (["/api/explore", "/api/runtime/query", "/api/repository/query", "/api/flows/query"].includes(url.pathname)) {
+      if (["/api/explore", "/api/runtime/query", "/api/repository/query", "/api/flows/query", "/api/review/query"].includes(url.pathname)) {
         if (req.method !== "POST")
           return json(res, 405, { error: "Use POST to explore a repository." });
         if (
@@ -81,6 +84,7 @@ export function createAppServer(options = {}) {
           if (typeof body?.path !== "string" || !body.path || body.context !== undefined && typeof body.context !== "string") return json(res, 400, {error: "Supply a repository path and optional context ID."});
           return json(res, 200, runtime.query(body.path, body.context));
         }
+        if(url.pathname==='/api/review/query')return json(res,200,await getReviews().query(body));
         if(url.pathname==='/api/flows/query')return json(res,200,await getFlows().query(body));
         if(url.pathname==='/api/repository/query')return json(res,200,await queryRepository(body));
         return json(res, 200, await exploreRepository(body?.path));

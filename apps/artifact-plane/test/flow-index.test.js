@@ -88,6 +88,24 @@ async function setup(t, options = {}) {
   return { service, stateDir };
 }
 const query = { path: "/repo", operation: "search", query: "membership" };
+test('search relevance and unique exact IDs beat newer records before paging', async (t) => {
+  const record=fixture();
+  record.graph.flows[0].createdAt='2020-01-01T00:00:00.000Z';
+  record.graph.flows.push({...record.graph.flows[0],id:'/repo:new',localId:'new',logicalId:'owner:new',title:'New unrelated journey',createdAt:'2025-01-01T00:00:00.000Z'});
+  const {service}=await setup(t,{loader:async()=>structuredClone(record),embedder:{signature:'ranking-fixture',embed:async texts=>texts.map(text=>text.includes('New unrelated')?[0,1]:[1,0])}});
+  for(const value of ['owner:login','login','/repo:flow','  owner:login  ']){
+    const first=await service.query({...query,query:value,limit:1});
+    assert.equal(first.data.flows[0].id,'/repo:flow');
+    const next=await service.query({...query,query:value.trim(),limit:1,cursor:first.pagination.nextCursor});
+    assert.equal(next.data.flows[0].id,'/repo:new');
+  }
+  const ranked=await service.query({...query,limit:1});
+  assert.equal(ranked.data.flows[0].id,'/repo:flow');
+  for(const value of ['', '  ']){
+    const browse=await service.query({...query,query:value,limit:1});
+    assert.equal(browse.data.flows[0].id,'/repo:new');
+  }
+});
 test("FTS and graph remain available when model is missing", async (t) => {
   const { service } = await setup(t);
   const result = await service.query(query);

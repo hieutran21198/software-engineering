@@ -22,7 +22,7 @@ Version 1.10.0, its originating delivery tasks, and implementation landed on mai
 
 ## Active change
 
-- [Flow readability](changes/change-flow-readability/README.md)
+- [Evidence-based change review and context handoff](changes/change-evidence-review-context/README.md)
 
 
 ## Knowledge snapshot
@@ -59,6 +59,10 @@ Version 1.11.0 is established through merged PR #21. The complete knowledge snap
 - [Flow requirements](versions/1.11.0/requirements/flows.md)
 - [Flow contract](versions/1.11.0/specifications/flows.md)
 
-## Proposed patch
+## Retained patch record
 
-[Version 1.11.1](versions/1.11.1/README.md) improves flow status, shortened-source details, shared controls and synchronized panels with lazy newest-first pagination. Its approved [delivery plan](changes/change-flow-readability/tasks/README.md) contains validation evidence. It remains proposed until review and merge; the current established version is 1.11.0.
+[Version 1.11.1](versions/1.11.1/README.md) improves flow status, shortened-source details, shared controls and synchronized panels with lazy newest-first pagination. Its approved [delivery plan](changes/change-flow-readability/tasks/README.md) contains validation evidence. PR #23 merged its knowledge and implementation. Its historical preparation text is retained; this change does not infer a lifecycle repair. The root continues to declare 1.11.0.
+
+## Proposed minor version
+
+[Version 1.12.0](versions/1.12.0/README.md) contains the approved evidence corrections, selected-change review and source-backed context handoff. Its [originating plan](changes/change-evidence-review-context/tasks/README.md) retains task evidence. It awaits team review and merge.

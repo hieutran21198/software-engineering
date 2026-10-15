@@ -118,7 +118,7 @@ function validate(body) {
       !body.ids.every((x) => typeof x === "string" && x.length < 10000))
   )
     throw new ExploreError(422, "Select up to 100 impact IDs");
-  return { ...body, knowledge, operation, limit, budget };
+  return { ...body, query: body.query?.trim(), knowledge, operation, limit, budget };
 }
 const summary = (f) => ({
   id: f.id,
@@ -378,6 +378,7 @@ export function createFlowService({
     mark("indexValidationMs");
     const generation = cached?.generation || 0;
     const omissions = [];
+    let exactMatch = null;
     let data,
       items = [],
       total = 0;
@@ -426,6 +427,7 @@ export function createFlowService({
           .filter((f) => [f.id, f.logicalId, f.localId].includes(query))
           .map((f) => f.id);
       ranks.push(exact);
+      exactMatch = exact.length === 1 ? exact[0] : null;
       const terms = query.match(/[\p{L}\p{N}_-]+/gu) || [];
       if (terms.length && cached?.revision === record.revision) {
         const rows = db
@@ -469,11 +471,6 @@ export function createFlowService({
         );
       items = record.graph.flows
         .filter((f) => !query || scores.has(f.id))
-        .sort(
-          (a, b) =>
-            (scores.get(b.id) || 0) - (scores.get(a.id) || 0) ||
-            a.id.localeCompare(b.id),
-        )
         .map((f) => ({ ...summary(f), score: scores.get(f.id) || 0 }));
       total = items.length;
       data = { flows: items, total, semantic };
@@ -576,7 +573,12 @@ export function createFlowService({
           throw new ExploreError(422, "Invalid or stale cursor");
         }
       }
-      items.sort((a,b)=>{const x=Date.parse(a.createdAt),y=Date.parse(b.createdAt),knownX=Number.isFinite(x),knownY=Number.isFinite(y);return Number(knownY)-Number(knownX)||(knownX&&knownY?y-x:0)||a.id.localeCompare(b.id);});
+      if (body.operation === 'search' && body.query) {
+        items.sort((a,b) => Number(b.id === exactMatch) - Number(a.id === exactMatch)
+          || b.score - a.score || a.id.localeCompare(b.id));
+      } else {
+        items.sort((a,b)=>{const x=Date.parse(a.createdAt),y=Date.parse(b.createdAt),knownX=Number.isFinite(x),knownY=Number.isFinite(y);return Number(knownY)-Number(knownX)||(knownX&&knownY?y-x:0)||a.id.localeCompare(b.id);});
+      }
       data.flows = items.slice(offset, offset + body.limit);
       data.total = total;
       data.next =

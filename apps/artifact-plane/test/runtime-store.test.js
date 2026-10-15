@@ -7,6 +7,7 @@ import {spawn} from 'node:child_process';
 import {DatabaseSync} from 'node:sqlite';
 import {RuntimeStore,FRESHNESS_MS} from '../server/runtime-store.js';
 import {fixtureRepository,fingerprint,git} from './fixtures.js';
+import {taskRuntime} from '../src/runtime-model.js';
 import {runtimeFixture,bind} from './runtime-fixtures.js';
 const prefix='docs/artifacts/demo/changes/change-live/';
 const event=(store,kind,fields={})=>store.observe({session_id:'session',hook_event_name:kind,turn_id:'turn-1',...fields});
@@ -75,4 +76,47 @@ test('separate repositories isolate equal task IDs and invalid plans cannot bind
   const first=await bind(s,a.root),second=await bind(s,b.root,'a.md','second-session');assert.notEqual(first.repository,second.repository);assert.equal(s.query(a.root).attempts.length,1);assert.equal(s.query(b.root).attempts.length,1);
   await writeFile(join(b.root,prefix+'tasks/README.md'),'---\ntasks: [missing.md]\n---\n# Invalid');await assert.rejects(bind(s,b.root),/unavailable/);
  }finally{s.close();await a.cleanup();await b.cleanup();}
+});
+
+test('identical worktree plans, aliases and captured revisions keep separate attribution',async()=>{
+ const f=await runtimeFixture(),other=f.root+'-identity',alias=join(f.stateDir,'checkout-alias');
+ git(f.root,'worktree','add','-qb','identity-test',other);
+ const s=new RuntimeStore({stateDir:f.stateDir});
+ try{
+  const first=await bind(s,f.root,'a.md','first');
+  const second=await bind(s,other,'a.md','second');
+  assert.equal(first.repository,second.repository);assert.notEqual(first.context,second.context);
+  s.observe({session_id:'first',hook_event_name:'UserPromptSubmit',turn_id:'one'});
+  s.observe({session_id:'second',hook_event_name:'UserPromptSubmit',turn_id:'two'});
+  const data=s.query(f.root),a=data.attempts.find(a=>a.id===first.attempt);
+  const identity={artifact:a.artifact,change:a.change,path:a.path,signature:a.signature,sourceWorktree:f.root};
+  const runtime={data,connected:true,now:Date.now()};
+  assert.deepEqual(taskRuntime(runtime,identity).attempts.map(a=>a.id),[first.attempt]);
+  assert.deepEqual(taskRuntime(runtime,{...identity,sourceWorktree:other}).attempts.map(a=>a.id),[second.attempt]);
+  await symlink(f.root,alias);const aliased=await bind(s,alias,'a.md','alias');
+  assert.equal(aliased.context,first.context);assert.equal(s.query(f.root).attempts.at(-1).sourceWorktree,f.root);
+  await writeFile(join(f.root,'unrelated.txt'),'Unrelated HEAD change');git(f.root,'add','unrelated.txt');git(f.root,'-c','user.name=Fixture','-c','user.email=fixture@example.invalid','commit','-qm','Unrelated edit');
+  const changedHead=await bind(s,f.root,'a.md','new-head');assert.notEqual(changedHead.context,first.context);
+  const later=s.query(f.root),newAttempt=later.attempts.find(a=>a.id===changedHead.attempt);
+  assert.notEqual(newAttempt.sourceRevision,a.sourceRevision);
+  assert.ok(taskRuntime({...runtime,data:later},identity).attempts.some(attempt=>attempt.id===first.attempt&&attempt.sourceRevision===a.sourceRevision));
+  await writeFile(join(f.root,prefix+'tasks/a.md'),'---\nid: a\ndepends_on: []\n---\n# Changed bytes');
+  const changedBytes=await bind(s,f.root,'a.md','new-bytes');const changedAttempt=s.query(f.root).attempts.find(a=>a.id===changedBytes.attempt);
+  assert.deepEqual(taskRuntime({...runtime,data:s.query(f.root)},{...identity,signature:changedAttempt.signature}).attempts.map(a=>a.id),[changedBytes.attempt]);
+  git(f.root,'worktree','remove','--force',other);
+  const archived=s.query(f.root);assert.equal(archived.contexts.find(c=>c.id===second.context).sourceMissing,true);
+  assert.equal(taskRuntime({...runtime,data:archived},{...identity,contextId:second.context}).attempts[0].sourceWorktree,other);
+  assert.ok(!taskRuntime({...runtime,data:archived},identity).attempts.some(a=>a.id===second.attempt));
+ }finally{s.close();await f.cleanup();}
+});
+
+test('legacy attempt JSON stays readable only in explicit recorded context',async()=>{
+ const f=await runtimeFixture(),s=new RuntimeStore({stateDir:f.stateDir});try{
+  const binding=await bind(s,f.root),attempt=s.query(f.root).attempts[0];
+  delete attempt.sourceWorktree;delete attempt.sourceRevision;s.saveAttempt(attempt);
+  const data=s.query(f.root),identity={artifact:attempt.artifact,change:attempt.change,path:attempt.path,signature:attempt.signature,sourceWorktree:f.root};
+  assert.equal(taskRuntime({data,connected:true},identity).state,'waiting');
+  assert.equal(taskRuntime({data,connected:true},{...identity,contextId:binding.context}).attempts[0].id,binding.attempt);
+  assert.equal(s.db.prepare('PRAGMA user_version').get().user_version,1);
+ }finally{s.close();await f.cleanup();}
 });
