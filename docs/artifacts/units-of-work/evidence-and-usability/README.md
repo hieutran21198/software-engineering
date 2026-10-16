@@ -100,3 +100,7 @@ Preparation checks passed: 10 fresh tasks, 14 internal dependency edges, two uni
 ## Combined checks
 
 The upstream ADD member passes Go tests/vet, bundle fidelity, scaffold assembly, adoption checks and the documentation production build. The complete proposed 2.3.0 snapshot retains provenance and excludes tasks. Sources and methods are recorded in its originating tasks. These are upstream results only. Plane implementation and shared acceptance remain pending the required upstream review/merge and contract recheck. The earlier approval remains valid for the unchanged downstream tasks.
+
+## Upstream review
+
+[PR #28](https://github.com/hieutran21198/software-engineering/pull/28) carries the validated ADD 2.3.0 proposal and approved downstream preparation. Its team review and merge, followed by exact protected-contract/delivery recheck, gate Plane implementation. The approval already covers the unchanged ten-task plan and proposed versions. The shared outcome remains incomplete.
