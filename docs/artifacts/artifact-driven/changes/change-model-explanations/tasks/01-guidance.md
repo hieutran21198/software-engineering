@@ -23,4 +23,4 @@ Canonical and embedded guidance match. Existing legacy examples remain valid. Ne
 
 ## Evidence
 
-Not executed during preparation. Record actual commands, results and limitations after implementation.
+Passed: GOCACHE=/tmp/plane-domain-go-cache go test ./internal/adopt ./src/archs/artifact-driven. The adoption suite covers fresh/repeated copying, conflict preflight, dry run, containment and complete bundle preservation; canonical filesystem fidelity also passed. node /tmp/check-plane-domain.mjs parsed all three YAML guidance examples and checked shared model identity across two illustrative journeys, explicit proposed selectors and a self-loop. Six deliberately invalid model/participant/source cases were rejected by the authoring check. The examples explicitly identify missing target evidence and do not assert observed execution. Canonical and embedded copies of all three changed guidance pages are byte-identical. git diff --check passed. This is documentation/authoring validation, not a claim that Plane already interprets the new semantic layer. KISS reuses existing selectors/support and STE preserves evidence limits.

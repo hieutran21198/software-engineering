@@ -22,3 +22,7 @@ The user accepted the recommended scope. The concrete Requirement, Specification
 ## Plan self-check
 
 4 unique task IDs form an acyclic chain. Each task has scope, governing contracts, prerequisites and concrete DoD. Requirement coverage is complete; cross-artifact establishment stays separate from internal prerequisites. KISS reuses existing metadata, graph, Reader and retrieval. STE states evidence and coverage limits. No preparation blocker remains; execution waits for concrete-plan approval and applicable publication gates.
+
+## Plan approval
+
+The user explicitly approved this concrete seven-task plan and the proposed compatible versions in the conversation. Approval covers the stated scope; upstream establishment and predecessor publication gates remain separate. Execute the sequential task plan without changing earlier outcomes.

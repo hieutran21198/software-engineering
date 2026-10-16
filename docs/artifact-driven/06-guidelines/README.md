@@ -5,7 +5,7 @@ Use these guides to adopt ADD and carry out the first artifact change. They supp
 | Guide | Purpose |
 | --- | --- |
 | [Getting started](getting-started.md) | Choose a knowledge workspace, identify an artifact, and complete the first change. |
-| [System flows](system-flows.md) | Define named journeys, supporting elements, evidence, and flow maintenance. |
+| [System flows](system-flows.md) | Define named journeys, reusable models, interactions, supporting evidence and flow maintenance. |
 | [Units of work](units-of-work.md) | Group artifact changes around one outcome and record shared validation knowledge. |
 | [Writing artifacts](writing-artifacts.md) | Write root READMEs, requirements, specifications, decisions, and task plans. |
 | [Adopting from a release](adopting-from-git.md) | Download a verified binary, copy ADD, and let the consumer AI set up its harness. Includes an agent-ready request. |

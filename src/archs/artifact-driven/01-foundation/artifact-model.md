@@ -93,6 +93,14 @@ In this example, authentication depends on tenant. Paths are relative to `docs/a
 
 Each node is an artifact. Edges indicate Implementation prerequisites: required upstream changes complete and establish their versions before dependent Implementation proceeds. Requirement, Specification, and Plan can prepare against proposed contracts, then recheck them against the established contracts before Implementation. Detailed interface contracts remain in specifications.
 
+## Explain dependency relationships
+
+An artifact edge records a supplier-to-consumer implementation prerequisite. Its declaration alone does not explain which capability the consumer needs. Record that explanation in the consuming knowledge element's existing reference: owning artifact, supplying element and nonempty requires reason, with explicit proposed selectors where applicable.
+
+Readers can collect those reasons for the matching selected consumer snapshot and actual supplier edge. Keep established and proposed relationships distinct. Missing or unresolved references remain information gaps; graph reachability and model participation do not prove a dependency reason or compatibility. Transitive paths contain several direct relationships and need an explanation for each edge.
+
+Models inside artifacts and their flow interactions describe domain meaning. They are separate from artifact prerequisites and source documents. See [model and flow guidance](../06-guidelines/system-flows.md#models-inside-artifacts).
+
 ## Proposed Dependencies
 
 Store proposed edge updates in the dependent artifact's active change, for example `authentication/changes/change-tenant-login/dependencies.yaml`:

@@ -1,6 +1,6 @@
 # System flow knowledge contract
 
-Governs F1–F7 in requirements/flows.md. This is the proposed ADD input contract consumed by the downstream changes in the same unit.
+Governs F1–F7 in requirements/flows.md. This retains the established step/support contract. The optional model and interaction extension is owned by specifications/model-explanations.md.
 
 ## Ownership and identity
 
@@ -56,7 +56,7 @@ flow:
 
 Project artifact ownership, specification elements, flows, steps and supporting sources into a typed derived view. contains, supports, references-flow and transition edges have distinct meanings. One element can support several steps/flows; store its identity once within a snapshot. Group by artifact without converting participation into an artifact prerequisite or unit membership.
 
-Allow step branches, joins, loops and disconnected records. Do not apply DAG validation or a topological-order claim to the runtime flow graph. Reject malformed YAML and duplicate keys, unsafe/duplicate IDs, owner mismatch, missing required fields, invalid basis/kind, invalid entry/transition/support endpoints and unsafe paths. Missing targets, evidence and ambiguous snapshot selectors are diagnostics, not invented connections. Keep safely readable records and do not present an invalid flow as a valid execution order. Unknown fields do not create new edges or workflow states.
+Allow step branches, joins, loops and disconnected records. Do not apply DAG validation or a topological-order claim to the runtime flow graph. Reject malformed YAML and duplicate keys, unsafe/duplicate IDs, owner mismatch, missing required fields, invalid basis/kind, invalid entry/transition/support endpoints and unsafe paths. Missing targets, evidence and ambiguous snapshot selectors are diagnostics, not invented connections. Keep safely readable records and do not present an invalid flow as a valid execution order. Optional models, participants and interactions follow specifications/model-explanations.md and preserve valid legacy steps when that semantic layer is invalid. Other unknown fields do not create new edges or workflow states.
 
 ## Unit flow impact
 
