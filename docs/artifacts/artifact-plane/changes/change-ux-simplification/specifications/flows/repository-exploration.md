@@ -11,6 +11,7 @@ flow:
     - id: select
       title: Select the project and worktree
       supports:
+        - reading-controls-contract
         - ux-simplification-contract
         - ux-browser-checks
         - explorer
@@ -66,6 +67,12 @@ flow:
       to: inspect
       condition: Relevant knowledge is selected.
   support:
+    - id: reading-controls-contract
+      kind: element
+      artifact: artifact-plane
+      element: specifications/reading-controls.md
+      requires: Show larger headings, adjustable navigation and inert highlighted source code.
+      basis: documented
     - id: ux-browser-checks
       kind: test
       path: apps/artifact-plane/test/browser/ux-simplification.spec.js
@@ -184,3 +191,7 @@ The approved search/readability change has tracked implementation and browser su
 ## Simpler exploration
 
 Switch complete worktree context and inspect purpose-first knowledge with independent graph disclosure. The detailed contract owns behavior and recovery limits. Executed browser checks are recorded in the originating integration task. Observed fixture support does not establish a version or prove exhaustive usability coverage.
+
+## Requested reading controls
+
+The reading-controls contract adds heading hierarchy, a bounded accessible sidebar divider and local syntax colors. This extension has documented support only; existing observed checks cover the prior behavior. Fresh task evidence is required before treating these additions as observed.

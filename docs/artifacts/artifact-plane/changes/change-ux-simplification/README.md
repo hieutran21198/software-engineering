@@ -34,3 +34,7 @@ The preparation records above describe their phase gates. After explicit user ap
 ## Requested reading-control extension
 
 The user requested larger titles, a resizable left panel and highlighted code panels after reviewing the running proposal. UX12–UX14 extend this same outcome. Existing implementation and checks remain retained. Fresh follow-up tasks will cover only the added work; the prepared version snapshot will be reconciled after approved implementation and validation. PR #26 is still open and unmerged. No application changes are made during this preparation.
+
+- [Requested reading controls](specifications/reading-controls.md)
+
+Follow-up Specification self-check: UX12–UX14 have precise responsive, keyboard, source-preservation and sanitization contracts. No new artifact gate or ADR is needed. The existing proposed version is retained until validated reconciliation.
