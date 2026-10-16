@@ -6,12 +6,12 @@ The declared baseline is Artifact Plane 1.11.0. PR #23 is merged on local main a
 
 The existing artifact-plane -> artifact-driven dependency remains. ADD 2.1.0 is declared established and merged through PR #20; no upstream contract change is required for this outcome.
 
-- [Evidence correctness requirements](requirements/evidence-correctness.md)
-- [Review and context requirements](requirements/change-review-context.md)
-- [Evidence corrections contract](specifications/evidence-correctness.md)
-- [Selected-change review](specifications/change-review.md)
-- [Context packet contract](specifications/context-packets.md)
-- [Shared review service decision](decisions/009-derived-change-review-context.md)
+- Evidence correctness requirements
+- Review and context requirements
+- Evidence corrections contract
+- Selected-change review
+- Context packet contract
+- Shared review service decision
 - [Implementation plan](tasks/README.md)
 
 ## Requirement discovery
@@ -31,3 +31,7 @@ Specification covers evidence-recognition scope, search ordering, source-worktre
 ## Implementation approval
 
 The user explicitly accepted the concrete seven-task plan and proposed compatible minor version 1.12.0. Implementation proceeded on a dedicated branch after the required ADD 2.1.0 supplier was verified. The phase self-checks above record the discovery and planning boundaries; they are not current implementation blockers.
+
+## Retained record
+
+The knowledge copy of this delivered change was removed when the legacy records were converted. Git history of this directory keeps it; the plan and evidence remain in tasks.

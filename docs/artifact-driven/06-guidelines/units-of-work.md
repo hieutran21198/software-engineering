@@ -51,7 +51,7 @@ A version record contains no knowledge and no tasks. Delivery always resolves to
 
 Resolve a member from its retained change directory and the version records of its artifact, including historical versions. If no version names the change, retained change knowledge is preparatory. If neither exists, report missing-member. Several version claims are ambiguous.
 
-Legacy snapshot versions hold copied knowledge. A legacy version README that declares delivery_tasks: change resolves delivery to its retained source_change tasks; a legacy version without the marker keeps version-owned tasks. Invalid marker values are diagnostic failures. Do not write delivery_tasks in new version records. Legacy versions without provenance remain readable; do not guess their source by name, timestamp, or matching bytes, and do not rewrite established snapshots.
+Legacy snapshot versions hold copied knowledge. A legacy version README that declares delivery_tasks: change resolves delivery to its retained source_change tasks; a legacy version without the marker keeps version-owned tasks. Invalid marker values are diagnostic failures. Do not write delivery_tasks in new version records. Legacy versions without provenance remain readable; do not guess their source by name, timestamp, or matching bytes, and do not edit established snapshots. A conversion can delete them and keeps their historical results.
 
 ## Shared evidence
 

@@ -10,11 +10,15 @@ Observe Codex through configured lifecycle hooks and explicit session-to-task bi
 
 ## Knowledge
 
-- [Execution requirements](requirements/codex-execution.md)
+- Execution requirements
 
 Baseline knowledge and historical evidence are copied from 1.6.0. They do not validate this feature. Version preparation will add source_change provenance to the delivered snapshot.
 
-- [Execution specification](specifications/codex-execution.md)
-- [Observer decision](decisions/006-codex-observer.md)
+- Execution specification
+- Observer decision
 
 - [Implementation plan](tasks/README.md)
+
+## Retained record
+
+The knowledge copy of this delivered change was removed when the legacy records were converted. Git history of this directory keeps it; the plan and evidence remain in tasks.

@@ -115,7 +115,7 @@ The body states the compatibility level with its reason, summarizes the resultin
 
 ## Legacy Snapshot Layout
 
-Readers still accept the snapshot-copy layout of older artifacts. Do not rewrite established legacy snapshots. To move an artifact to the in-place layout, follow the [migration procedure](../01-foundation/artifact-model.md#legacy-layout-and-migration).
+Readers still accept the snapshot-copy layout of older artifacts. Do not edit established legacy snapshots; a conversion can delete them because Git keeps them. To move an artifact to the in-place layout, follow the [migration procedure](../01-foundation/artifact-model.md#legacy-layout-and-migration).
 
 ## System-flow specifications
 

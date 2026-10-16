@@ -21,4 +21,4 @@ This artifact uses the in-place layout. Working knowledge is in requirements, sp
 - [Specification](specifications/framework.md) and [flow contract](specifications/flows.md)
 - [Decision](decisions/001-shared-knowledge.md)
 
-Version records are in versions; 1.0.0 and 1.1.0 are complete legacy snapshots and stay unchanged. Change records and retained delivery plans are in changes.
+Version records are in versions. Records 1.0.0 and 1.1.0 were converted from complete legacy snapshots; each one gives the Git command that finds its knowledge. Change records and retained delivery plans are in changes.

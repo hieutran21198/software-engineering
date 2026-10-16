@@ -15,3 +15,7 @@ The user approved the draft Flow Knowledge, Visualization, and Agent Retrieval p
 ## Upstream recheck
 
 PR #20 merged. ADD 2.1.0 knowledge, retained originating task paths/bytes and canonical/packaged implementation match protected main and the contract used in preparation. Required upstream establishment is verified. Continue the unchanged user-approved tasks; no additional approval or workflow registry is needed.
+
+## Retained record
+
+The knowledge copy of this delivered change was removed when the legacy records were converted. Git history of this directory keeps it; the plan and evidence remain in tasks.

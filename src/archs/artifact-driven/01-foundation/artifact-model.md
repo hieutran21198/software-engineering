@@ -151,7 +151,7 @@ Older artifacts can use the snapshot-copy layout. Readers still accept it. In th
 - A version directory holds a complete copy of the resulting knowledge. Versions prepared with provenance declare `source_change` and `delivery_tasks: change`. Versions without `delivery_tasks` keep version-owned task semantics. An invalid marker value is a diagnostic failure.
 - References can carry `status` and `change` selectors and can appear in fenced YAML blocks.
 
-Never rewrite an established legacy snapshot, and do not add or infer provenance for it. A change directory with copied knowledge directories is a retained legacy record, never an open in-place change. For in-place artifacts, readers ignore `dag.yaml` and `dependencies.yaml` and report them as unused. Selectors have no effect on in-place artifacts.
+Do not edit the knowledge of an established legacy snapshot, and do not add or infer provenance for it. You can delete it in a conversion (step 5), because Git keeps it. A change directory with copied knowledge directories is a retained legacy record, never an open in-place change. For in-place artifacts, readers ignore `dag.yaml` and `dependencies.yaml` and report them as unused. Selectors have no effect on in-place artifacts.
 
 Migrate one artifact at a time on a change branch. Do the steps by hand or with a migration tool:
 
@@ -159,7 +159,7 @@ Migrate one artifact at a time on a change branch. Do the steps by hand or with 
 2. Copy `versions/<current_version>/requirements`, `specifications` and `decisions` to the artifact directory. If an open change carries copied knowledge, copy that knowledge instead, because it already contains the proposal. Then delete the copied knowledge directories from the change; the change keeps `README.md` and `tasks/`.
 3. Replace the Markdown declarations in the artifact README with the identity record. Remove prose that describes proposed or established state; readers now derive that state.
 4. Apply the edges of the open change's `dependencies.yaml` to `depends_on`, then delete the file. Delete `docs/artifacts/dag.yaml` when no legacy artifact remains.
-5. Leave the knowledge directories of `versions/<version>/` and delivered change directories unchanged.
+5. Optionally convert the retained legacy records. Delete the knowledge directories of `versions/<version>/` and the copied knowledge and `dependencies.yaml` of delivered changes. Delete version-owned tasks that are byte-identical to the originating change's tasks; keep task sets without such a copy, and keep the copied knowledge of a change that no version names. Remove `delivery_tasks` markers, point evidence and links at the retained change tasks, and restate affirmative prose publication reviews as `publication_reviews` after you verify the merged PRs. The knowledge of a converted version is `versions/<version>/` in the tree of the commit that introduced its README. Without conversion, leave these directories unchanged.
 6. Verify byte equality between the new working knowledge and its source, an unchanged dependency graph, resolved flows and units, and the layout detection.
 
 A migration that changes no knowledge bytes keeps the current version number and adds no version record. A migration inside a change that also changes knowledge follows the normal version rule.

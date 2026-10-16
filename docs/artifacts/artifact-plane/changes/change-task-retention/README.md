@@ -8,10 +8,14 @@ Baseline knowledge comes from 1.7.0. The task-copy rule in that baseline is supe
 
 ## Knowledge
 
-- [Requirements](requirements/task-retention.md)
-- [Delivery and navigation contract](specifications/task-retention.md)
+- Requirements
+- Delivery and navigation contract
 - [Implementation plan](tasks/README.md)
 
 ## Implementation and publication
 
 The user approved the plan and confirmed Plane 1.8.0. ADD 2.0.0 was verified established before implementation. Reader, navigation, and integrated checks passed; actual evidence remains in the tasks directory. The proposed 1.8.0 snapshot contains no task copies. Stop for team review and merge after PR preparation.
+
+## Retained record
+
+The knowledge copy of this delivered change was removed when the legacy records were converted. Git history of this directory keeps it; the plan and evidence remain in tasks.

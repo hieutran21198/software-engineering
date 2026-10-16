@@ -1,5 +1,5 @@
 ---
-current_version: 1.14.0
+current_version: 1.15.0
 depends_on: [artifact-driven]
 ---
 
@@ -23,4 +23,4 @@ This artifact uses the in-place layout. Working knowledge is in requirements, sp
 - [In-place layout reading](specifications/knowledge-layout-reading.md)
 - [Local server decision](decisions/001-local-server.md) and [derived workflow decision](decisions/002-derived-workflow.md)
 
-Version records are in versions; 1.5.0 to 1.13.0 are complete legacy snapshots and stay unchanged. Change records and retained delivery plans are in changes.
+Version records are in versions. Records 1.5.0 to 1.13.0 were converted from complete legacy snapshots; each one gives the Git command that finds its knowledge. Change records and retained delivery plans are in changes.

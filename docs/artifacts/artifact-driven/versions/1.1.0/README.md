@@ -8,11 +8,15 @@ ADD owns task metadata, graph validation, plan membership, and delivered bundle 
 
 ## Proposed knowledge
 
-- [Requirements](requirements/task-dag.md)
-- [Task graph specification](specifications/task-dag.md)
+- Requirements
+- Task graph specification
 - [Implementation plan](tasks/README.md)
-- [Task metadata decision](decisions/004-derived-task-graph.md)
+- Task metadata decision
 
 ## Proposed release
 
 ADD 1.1.0 adds the task DAG contract and preserves legacy plans. The user confirmed this version after implementation validation. The full snapshot and publication declarations remain proposed until team merge. Artifact Plane consumes this contract in a separately prepared change; it has not been implemented.
+
+## Knowledge snapshot
+
+This record was converted from the legacy snapshot layout. Its knowledge is `docs/artifacts/artifact-driven/versions/1.1.0/` in the tree of the first-parent commit on main that introduced this README: `git log --first-parent --diff-filter=A main -- docs/artifacts/artifact-driven/versions/1.1.0/README.md`.

@@ -6,10 +6,10 @@ Run existing checks for cmd/se-adopt, internal/adopt, embedded bundles and websi
 
 ## Governing knowledge
 
-- [Requirements](../requirements/baseline.md): R4–R5, R7–R8; A2/A5/A6.
-- [Delivery contract](../specifications/delivery.md).
-- [Embedded adoption decision](../decisions/002-embedded-safe-adoption.md).
-- [Publishing decision](../decisions/003-derived-documentation.md).
+- Requirements: R4–R5, R7–R8; A2/A5/A6.
+- Delivery contract.
+- Embedded adoption decision.
+- Publishing decision.
 
 ## Prerequisites
 

@@ -12,7 +12,11 @@ The proposed artifact has no established dependencies. Existing ADD and Artifact
 
 ## Knowledge
 
-- [Requirements](requirements/framework.md)
-- [Knowledge and delivery specification](specifications/framework.md)
-- [Architecture decision](decisions/001-shared-knowledge.md)
+- Requirements
+- Knowledge and delivery specification
+- Architecture decision
 - [Implementation plan](tasks/README.md)
+
+## Retained record
+
+The knowledge copy of this delivered change was removed when the legacy records were converted. Git history of this directory keeps it; the plan and evidence remain in tasks.

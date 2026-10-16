@@ -17,11 +17,11 @@ evidence:
   - criterion: live-visibility
     method: Run browser acceptance for artifact identity, state transitions, agents, concurrent branches, and reconnect behavior.
     result: passed
-    source: docs/artifacts/artifact-plane/versions/1.7.0/tasks/24-runtime-graphs.md#evidence
+    source: docs/artifacts/artifact-plane/changes/change-codex-execution/tasks/24-runtime-graphs.md#evidence
   - criterion: durable-history
     method: Run restart and removed-worktree fixtures plus archived browser navigation.
     result: passed
-    source: docs/artifacts/artifact-plane/versions/1.7.0/tasks/21-runtime-store.md#evidence
+    source: docs/artifacts/artifact-plane/changes/change-codex-execution/tasks/21-runtime-store.md#evidence
   - criterion: integration
     method: Run integrated Node, build, Chromium, repository fidelity, and installed hook discovery checks.
     result: passed
@@ -29,7 +29,7 @@ evidence:
   - criterion: visualization-clarity
     method: Run graph projection checks and screenshot-specific browser acceptance in both graph views.
     result: passed
-    source: docs/artifacts/artifact-plane/versions/1.7.0/tasks/26-visualization-clarity.md#evidence
+    source: docs/artifacts/artifact-plane/changes/change-codex-execution/tasks/26-visualization-clarity.md#evidence
 ---
 
 # Codex execution visualization

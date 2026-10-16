@@ -4,13 +4,13 @@ The user reports crowded content and inconsistent dropdowns across Artifact Plan
 
 Start with complete declared 1.11.0 knowledge and incorporate the merged 1.12.1 contracts. PR #25 is merged; this does not silently alter the root lifecycle declaration. Artifact Plane is the sole owner; ADD 2.1.0 remains its existing supplier. Historical evidence and implementation stay intact.
 
-- [Requirements](requirements/spacing-control-consistency.md)
+- Requirements
 
 ## Requirement self-check
 
 The requested outcome concerns visible spacing and control consistency. Evidence comes from the screenshot and source inspection, not invented usability research. Preserve functional states, evidence meaning, keyboard access and graph behavior. KISS reuses existing controls; STE keeps feedback specific. No Requirement blocker remains.
 
-- [Presentation contract](specifications/spacing-control-consistency.md)
+- Presentation contract
 
 Specification self-check completed in the same session as Plan. No implementation is authorized yet.
 
@@ -21,3 +21,7 @@ Requirement, Specification and Plan self-checks completed. The new plan awaits e
 ## Approved implementation
 
 The user explicitly approved this concrete plan. Shared styles and completion feedback were implemented on the dedicated branch. Earlier phase self-checks record preparation boundaries; validation and proposed-version publication remain separate.
+
+## Retained record
+
+The knowledge copy of this delivered change was removed when the legacy records were converted. Git history of this directory keeps it; the plan and evidence remain in tasks.

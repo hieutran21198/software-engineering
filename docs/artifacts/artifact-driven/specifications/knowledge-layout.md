@@ -91,7 +91,7 @@ Readers derive the following facts; none is stored:
 | Proposed knowledge | Files in the checked-out tree whose bytes differ from established knowledge, including additions and removals. |
 | Open change | A change directory that no version record names in source_change and that contains no knowledge directories. A change directory with copied knowledge directories is a retained legacy record, never an open in-place change. |
 | Established version | current_version in the protected branch's identity record, whose version record exists there. |
-| Version snapshot | The tree of the first-parent protected-branch commit that introduced versions/<version>/README.md. A tag `<artifact>/<version>` on that commit is optional. |
+| Version snapshot | The tree of the first-parent protected-branch commit that introduced versions/<version>/README.md. A tag `<artifact>/<version>` on that commit is optional. For a converted legacy version, the knowledge is versions/<version>/ in that same tree. |
 | Dependency graph | depends_on of identity records. Proposed edges are the difference between the checked-out and protected identity records. Cycles are diagnostics in both views. |
 | Phase evidence | self_check in requirement, specification and plan documents; evidence_records and checklists in tasks; the version record. |
 | Approval | Not a file fact. Authorization comes from the user, as today. |
@@ -116,7 +116,7 @@ Migrate one artifact at a time on a change branch. The procedure is repeatable b
 2. Copy versions/<current_version>/requirements, specifications and decisions to the artifact directory. If the artifact has an open change that carries copied knowledge, copy the open change's knowledge instead, because it already contains the proposal, and delete the change's copied knowledge directories; the change keeps README.md and tasks/.
 3. Replace the Markdown declarations in the artifact README with the identity record. Remove prose that describes proposed or established state; that state is now derived.
 4. Delete dependencies.yaml from the open change after applying its edges to depends_on. Delete docs/artifacts/dag.yaml when no legacy artifact remains.
-5. Leave versions/<version>/ knowledge directories and delivered change directories untouched.
+5. Optionally convert the retained legacy records, in the same or a later change. Delete the knowledge directories of versions/<version>/ and the copied knowledge directories and dependencies.yaml of delivered changes. Delete version-owned tasks that are byte-identical to the originating change's tasks, and keep task sets that have no such copy. Keep the copied knowledge of a change that no version names; it remains a retained legacy record. Remove delivery_tasks markers. Point unit evidence and links at the retained change tasks, or name the Git snapshot in plain text. Restate affirmative prose publication reviews as publication_reviews after verifying the merged PRs. Every deleted file must exist unchanged in the commit that introduced its version. Without conversion, leave these directories untouched.
 6. Verify byte equality between the new working knowledge and its source, an unchanged dependency graph, resolved flows and units, and the layout detection.
 
 A migration that changes no knowledge bytes keeps the current version number and adds no version record. A migration inside a change that also changes knowledge follows the normal version rule.
@@ -131,4 +131,4 @@ Record the following before and after migration of this repository, with the met
 
 ## Specification self-check
 
-N1 to N10 map to layout, records, identity, derived facts, lifecycle, migration, guidance and measurement. Established legacy snapshots are not rewritten. KISS removes copies, a stored index and prose parsing instead of adding a model file; STE keeps derivations and failure cases explicit. No Specification blocker prevents Plan.
+N1 to N10 map to layout, records, identity, derived facts, lifecycle, migration, guidance and measurement. Converted legacy snapshots stay recoverable from the commit that introduced them; unconverted snapshots are not rewritten. KISS removes copies, a stored index and prose parsing instead of adding a model file; STE keeps derivations and failure cases explicit. No Specification blocker prevents Plan.

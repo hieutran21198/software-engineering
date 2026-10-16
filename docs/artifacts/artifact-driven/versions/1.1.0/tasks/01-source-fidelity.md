@@ -6,11 +6,11 @@ Review and correct recovered knowledge under docs/artifacts/artifact-driven/chan
 
 ## Governing knowledge
 
-- [Requirements and acceptance criteria](../requirements/baseline.md): R1–R4, R6, R8–R9; A1–A4.
-- [Source inventory](../requirements/evidence.md).
-- [Knowledge contract](../specifications/knowledge.md).
-- [Delivery contract](../specifications/delivery.md).
-- [Boundary decision](../decisions/001-knowledge-and-boundary.md).
+- Requirements and acceptance criteria: R1–R4, R6, R8–R9; A1–A4.
+- Source inventory.
+- Knowledge contract.
+- Delivery contract.
+- Boundary decision.
 
 ## Prerequisites
 

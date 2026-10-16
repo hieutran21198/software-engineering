@@ -11,8 +11,8 @@ apps/artifact-plane plain graph modules, server/task-graph.js, graph tests. Work
 
 ## Governing knowledge
 
-- [Requirements](../requirements/units-of-work.md)
-- [Specification](../specifications/units-of-work.md)
+- Requirements
+- Specification
 
 ## Prerequisites
 

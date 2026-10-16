@@ -8,14 +8,14 @@ Artifact Plane is the sole owner. Start from complete declared 1.11.0 knowledge,
 
 The root continues to declare 1.11.0. Existing ADD 2.1.0 is the supplier; there is no proposed artifact dependency. Preserve historical snapshots, source-change provenance, recorded execution history, complete evidence rules and read-only boundaries. New delivery tasks will be created during Plan.
 
-- [UX requirements](requirements/ux-simplification.md)
+- UX requirements
 
 ## Requirement self-check
 
 All ten audit findings have observable acceptance criteria. The audit is direct product observation and source inspection, not measured user research. Slow review loading was observed but its cause is unresolved; implementation must reproduce and diagnose it before claiming a repair. The user request supplies the outcome and scope, so no additional interview fact blocks Specification. KISS removes redundant interactions and reuses existing controls. STE preserves precise evidence and freshness meanings. No implementation is authorized by this phase.
 
-- [Simplified exploration contract](specifications/ux-simplification.md)
-- [Contained reading decision](decisions/011-contained-reading-navigation.md)
+- Simplified exploration contract
+- Contained reading decision
 
 ## Specification self-check
 
@@ -35,10 +35,14 @@ The preparation records above describe their phase gates. After explicit user ap
 
 The user requested larger titles, a resizable left panel and highlighted code panels after reviewing the running proposal. UX12–UX14 extend this same outcome. Existing implementation and checks remain retained. Fresh follow-up tasks will cover only the added work; the prepared version snapshot will be reconciled after approved implementation and validation. PR #26 is still open and unmerged. No application changes are made during this preparation.
 
-- [Requested reading controls](specifications/reading-controls.md)
+- Requested reading controls
 
 Follow-up Specification self-check: UX12–UX14 have precise responsive, keyboard, source-preservation and sanitization contracts. No new artifact gate or ADR is needed. The existing proposed version is retained until validated reconciliation.
 
 ## Validated reading controls
 
 The user approved the concrete follow-up plan. Tasks 08–11 implement larger headings, bounded accessible left navigation resizing and highlighted source/fenced code. Fresh integrated evidence is retained in task 11. The complete 1.13.0 proposal includes this extension; earlier phase gates and earlier delivered checks above remain historical records for their original scope.
+
+## Retained record
+
+The knowledge copy of this delivered change was removed when the legacy records were converted. Git history of this directory keeps it; the plan and evidence remain in tasks.

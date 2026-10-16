@@ -97,6 +97,28 @@ flow_assessment: Investigated named journeys in all three artifacts using
   artifact contracts, shipped guidance, entry points and tests. ADD records are
   supplied in its member change. The inventory contains five ADD, six Plane and three Story-Driven flows.
   Supporting source relationships are documented or static; gaps remain explicit. No exhaustive runtime-path coverage is asserted.
+publication_reviews:
+  - artifact: artifact-driven
+    version: 2.1.0
+    source: docs/artifacts/units-of-work/flow-discovery-and-retrieval/README.md#publication-review
+    required_changes:
+      - repository: https://github.com/hieutran21198/software-engineering
+        scope: ADD 2.1.0 knowledge, bundled implementation and retained delivery tasks
+        pull_request: https://github.com/hieutran21198/software-engineering/pull/20
+  - artifact: artifact-plane
+    version: 1.11.0
+    source: docs/artifacts/units-of-work/flow-discovery-and-retrieval/README.md#publication-review
+    required_changes:
+      - repository: https://github.com/hieutran21198/software-engineering
+        scope: Plane 1.11.0 knowledge, application and retained delivery tasks
+        pull_request: https://github.com/hieutran21198/software-engineering/pull/21
+  - artifact: story-driven
+    version: 1.1.0
+    source: docs/artifacts/units-of-work/flow-discovery-and-retrieval/README.md#publication-review
+    required_changes:
+      - repository: https://github.com/hieutran21198/software-engineering
+        scope: story-driven 1.1.0 knowledge and retained delivery tasks
+        pull_request: https://github.com/hieutran21198/software-engineering/pull/21
 ---
 
 # Flow discovery and retrieval
@@ -134,3 +156,5 @@ story-driven 1.1.0: All required knowledge and implementation changes have lande
 ## Post-merge verification
 
 The completion query reports documented-complete with no reasons or diagnostics, and all three members resolve as established. Protected-main comparison checked 54 ADD, 67 Plane and 21 Story-Driven files across their delivered snapshots and originating changes. All paths and bytes remain unchanged. This review updates only the current unit brief and artifact overviews; it preserves published snapshots and task evidence.
+
+The publication_reviews records restate the affirmative reviews above in structured form after the legacy records were converted on 16 October 2026. The coordinator verified with `gh pr view` that each listed PR is merged (#10, #20 and #21).

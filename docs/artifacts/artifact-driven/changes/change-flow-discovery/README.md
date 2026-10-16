@@ -11,3 +11,7 @@ The complete 2.0.0 snapshot, originating delivery tasks, and required implementa
 ## Preparation and approval
 
 The user approved the draft Flow Knowledge, Visualization, and Agent Retrieval plan and instructed implementation in this session. Detailed tasks refine that scope. No new scope or dependency gate is authorized. New flow contracts remain proposed until required publication.
+
+## Retained record
+
+The knowledge copy of this delivered change was removed when the legacy records were converted. Git history of this directory keeps it; the plan and evidence remain in tasks.

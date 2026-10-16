@@ -14,6 +14,10 @@ ADD owns the reusable model and delivered guidance. Artifact Plane owns interpre
 
 ## Knowledge
 
-- [Requirements](requirements/units-of-work.md)
-- [Specification](specifications/units-of-work.md)
-- [Plan](tasks/README.md)
+- Requirements
+- Specification
+- [Plan](../../changes/change-units-of-work/tasks/README.md)
+
+## Knowledge snapshot
+
+This record was converted from the legacy snapshot layout. Its knowledge is `docs/artifacts/artifact-driven/versions/1.2.0/` in the tree of the first-parent commit on main that introduced this README: `git log --first-parent --diff-filter=A main -- docs/artifacts/artifact-driven/versions/1.2.0/README.md`.

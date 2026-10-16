@@ -11,9 +11,9 @@ Repository: software-engineering. Create methodology and three execution skills 
 
 ## Governing knowledge
 
-- [Requirements](../requirements/framework.md)
-- [Specification](../specifications/framework.md)
-- [Decision](../decisions/001-shared-knowledge.md)
+- Requirements
+- Specification
+- Decision
 
 ## Prerequisites
 

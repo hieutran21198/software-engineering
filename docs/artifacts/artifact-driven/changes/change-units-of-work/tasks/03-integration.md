@@ -6,10 +6,10 @@ Integrate validated knowledge in docs/artifacts/artifact-driven. Add one parent 
 
 ## Governing knowledge
 
-- [Requirements](../requirements/baseline.md): all acceptance criteria, especially A5–A7.
-- [Knowledge contract](../specifications/knowledge.md).
-- [Delivery contract](../specifications/delivery.md).
-- [Boundary decision](../decisions/001-knowledge-and-boundary.md).
+- Requirements: all acceptance criteria, especially A5–A7.
+- Knowledge contract.
+- Delivery contract.
+- Boundary decision.
 
 ## Prerequisites
 

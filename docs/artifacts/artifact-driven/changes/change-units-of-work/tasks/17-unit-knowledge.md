@@ -11,8 +11,8 @@ docs/artifact-driven/01-foundation, 02-methodology, 03-execution/skills, 06-guid
 
 ## Governing knowledge
 
-- [Requirements](../requirements/units-of-work.md)
-- [Specification](../specifications/units-of-work.md)
+- Requirements
+- Specification
 
 ## Prerequisites
 
