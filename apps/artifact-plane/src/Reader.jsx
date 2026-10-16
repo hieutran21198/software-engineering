@@ -1,4 +1,5 @@
 import React,{useEffect,useRef,useState} from 'react';
+import CodePanel from './CodePanel.jsx';
 import Markdown from './Markdown.jsx';
 import {repositoryQuery} from './reload.js';
 
@@ -31,7 +32,7 @@ export default function Reader({entry,root,worktree,epoch,onBack,onClose,onNavig
   <h2>{entry.title||entry.source}</h2><details className="reader-source"><summary>Source details</summary><code>{entry.source}</code><p>{worktree}</p></details>
   {error?<div role="alert"><p>{error}</p><button onClick={()=>setRetry(n=>n+1)}>Retry source</button></div>:!document?<p role="status">Loading source…</p>:<>
    {document.partial&&<p role="status">Partial source excerpt. Additional source text remains available in its source view.</p>}{document.next&&<button onClick={()=>{setDocument(null);setNextLoad(()=>document.next);}}>Next source excerpt</button>}
-   {entry.source.endsWith('.md')?<Markdown text={document.markdown||''} source={entry.source} targets={entry.targets||targets} onNavigate={link=>onNavigate({...link,targets:entry.targets||targets})}/>:<pre>{document.markdown||''}</pre>}
+   {entry.source.endsWith('.md')?<Markdown text={document.markdown||''} source={entry.source} targets={entry.targets||targets} onNavigate={link=>onNavigate({...link,targets:entry.targets||targets})}/>:<CodePanel text={document.markdown||''} source={entry.source}/>}
   </>}
  </section>;
 }

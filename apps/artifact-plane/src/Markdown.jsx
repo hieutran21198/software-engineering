@@ -1,6 +1,7 @@
 import React,{useMemo} from 'react';
 import {marked,Renderer} from 'marked';
 import DOMPurify from 'dompurify';
+import {codePanelHTML} from './code-highlight.js';
 import {resolveKnowledgeLink} from './knowledge-navigation.js';
 const forbidden=['img','svg','math','iframe','form','input','button','style'];
 const rawOptions={FORBID_TAGS:forbidden,FORBID_ATTR:['href','src','style','id','name','target'],ALLOW_DATA_ATTR:false};
@@ -9,6 +10,7 @@ const slug=text=>text.trim().toLowerCase().replace(/[^\p{L}\p{N}\s-]/gu,'').repl
 export default function Markdown({text='',source,targets,onNavigate}){
  const {html,links}=useMemo(()=>{
   const content=text.replace(/^---\r?\n[\s\S]*?\r?\n---(?:\r?\n|$)/,''),links=[],renderer=new Renderer();
+  renderer.code=({text,lang})=>codePanelHTML(text,lang||'');
   renderer.html=token=>DOMPurify.sanitize(token.text,rawOptions);
   renderer.link=function({href,tokens}){
    const label=this.parser.parseInline(tokens);

@@ -19,10 +19,10 @@ The listed prerequisite must satisfy its applicable DoD. The original seven-task
 
 ## Definition of Done
 
-- [ ] Explicit source/fence languages select only the ten specified local grammars. Known inputs show syntax tokens in a readable panel; unknown, erroneous and over-20,000-character blocks show full escaped plain code without truncation.
-- [ ] Raw returned source, Unicode, whitespace and final newlines remain exact; fence payload is unformatted. Malicious HTML, resource loads and forged link markers remain inert. Source paging/partial labels and inline code are preserved. Record the registry-verified dependency version and measured production build.
-- [ ] Focused affected checks pass and their actual commands, results and limitations are recorded here. KISS/STE self-check confirms no extra controls, settings store or semantic changes.
+- [x] Explicit source/fence languages select only the ten specified local grammars. Known inputs show syntax tokens in a readable panel; unknown, erroneous and over-20,000-character blocks show full escaped plain code without truncation.
+- [x] Raw returned source, Unicode, whitespace and final newlines remain exact; fence payload is unformatted. Malicious HTML, resource loads and forged link markers remain inert. Source paging/partial labels and inline code are preserved. Record the registry-verified dependency version and measured production build.
+- [x] Focused affected checks pass and their actual commands, results and limitations are recorded here. KISS/STE self-check confirms no extra controls, settings store or semantic changes.
 
 ## Evidence
 
-No implementation or checks have run for this follow-up task. Earlier delivered checks are retained in their original tasks and do not validate this scope.
+Registry lookup verified highlight.js 11.12.0; the direct dependency is pinned and only the ten approved grammars are bundled. Two Node checks pass for all grammars/aliases, Unicode, escaped hostile text, empty and oversized fallback, and exact newline reconstruction. Fourteen Chromium cases pass across flow source paging/isolation and the new controls: actual HTTP JavaScript source has highlighted keywords and exactly preserved CRLF, fenced JS/YAML has tokens, unknown fences stay exact plain text, inline code/prose remain distinct, forged markers/scripts remain inert and all four viewport widths avoid page overflow. Code screenshots were inspected at 390 and 1440. Production build passed: JavaScript 704.27 kB / 223.49 kB gzip versus prior 637.80 / 201.34; no runtime model or hosted service was added. The initial build failed because the inherited ignored dependency symlinks were disturbed by installation; clean independent dependency installs restored both checkouts, with no original tracked changes. Source text is escaped and highlighting markup is sanitized at each rendering boundary. KISS/STE self-check passed.

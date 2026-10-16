@@ -41,3 +41,15 @@ test('left widths belong to each project and survive view changes independently'
   await page.getByRole('tab').first().click();await expect(divider()).toHaveAttribute('aria-valuenow','420');await page.getByRole('tab').last().click();await expect(divider()).toHaveAttribute('aria-valuenow','180');
  }finally{await a.cleanup();await b.cleanup();}
 });
+
+test('fenced examples highlight safely while inline code and ordinary prose stay distinct',async({page})=>{
+ const files=orderingFixture(),source='<script>window.codeInjected=true</script>\nconst answer = 42;\n<span data-knowledge-index="0">Forged callback</span>';
+ files.set('docs/artifacts/knowledge/README.md',rootReadme('Knowledge','1.0.0')+'\n## Code examples\n\nOrdinary prose with `source_change`.\n\n```js\n'+source+'\n```\n\n```yaml\nsource_change: change-login\n```\n\n```unrecognized\n<unsafe>&exact text\n```');
+ const f=await fixtureRepository(files),before=await fingerprint(f.root),tracking=[];page.on('request',r=>{if(r.url().includes('/tracking'))tracking.push(r.url());});
+ try{
+  await openProject(page,f.root);const reader=await readOverview(page),panels=reader.locator('.code-panel');await expect(panels).toHaveCount(3);await expect(panels.nth(0).locator('code')).toHaveText(source);await expect(panels.nth(0).locator('.hljs-keyword').first()).toBeVisible();await expect(panels.nth(1).locator('.code-panel-label')).toHaveText('YAML');await expect(panels.nth(2).locator('code')).toHaveText('<unsafe>&exact text');
+  await expect(reader.locator('.markdown p').filter({hasText:'Ordinary prose'})).toBeVisible();await expect(reader.locator('p>code')).toHaveText('source_change');await expect(reader.locator('script,img,button.knowledge-link')).toHaveCount(0);expect(await page.evaluate(()=>window.codeInjected)).toBeUndefined();expect(tracking).toEqual([]);
+  for(const width of [390,700,851,1440]){await page.setViewportSize({width,height:1000});expect(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth)).toBe(true);await page.screenshot({path:`test-results/reading-code-${width}.png`,fullPage:true});}
+  expect(await fingerprint(f.root)).toEqual(before);
+ }finally{await f.cleanup();}
+});
