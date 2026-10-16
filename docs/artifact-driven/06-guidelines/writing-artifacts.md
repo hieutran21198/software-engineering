@@ -95,6 +95,8 @@ Keep external artifact references and their reasons in specifications and task p
 
 Record commands or review methods, results, and relevant code/test references with tasks. Keep failed and incomplete checks visible. Retain delivered task evidence while any version or outcome references it. Do not overwrite a delivered plan for later work. Correct changed behavior in a new change and recheck its evidence. Historical evidence corrections remain visible in Git and remove affected completion support until revalidated.
 
+Optional [evidence records](evidence-records.md) store explicit check facts and publication reviews in existing files. A source reference points to the owning check detail; avoid repeating results across records. Structured fields do not authorize work or prove execution.
+
 ## Unit-of-Work Brief
 
 Use the [unit-of-work format](units-of-work.md) for outcome scope, structured membership, shared acceptance criteria, and combined evidence. Do not copy task plans or dependency graphs into the brief. Keep each fact under its owning artifact or outcome.

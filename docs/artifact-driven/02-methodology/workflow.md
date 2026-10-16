@@ -42,6 +42,8 @@ Validate each member's task DoD and the combined outcome. Completion requires al
 
 Dependent implementation still waits for required upstream establishment, even when both artifacts belong to the same unit. Preparing a unit does not bypass the plan approval or team merge gates. Historical completion uses delivered versions and their linked originating delivery records rather than later current versions. New versions exclude tasks and declare source_change plus delivery_tasks: change; retain the originating change and verify publication before using its evidence. Missing knowledge or merge evidence remains unresolved.
 
+Use [evidence records and reconciliation](../06-guidelines/evidence-records.md) within these existing checks. Reconcile a stale declaration from required merge and protected-ref evidence; keep failed validation distinct from merged publication.
+
 ## Corrections
 
 | Problem | Return to |

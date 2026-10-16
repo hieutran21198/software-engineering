@@ -14,6 +14,8 @@ Record the checks performed, outcomes, and relevant code or test references in t
 
 Prefer executable tests and contract checks for repeatable criteria. Use explicit review or analysis for criteria that require judgment. Do not require frontier-model review of every task.
 
+Optional [structured evidence records](../06-guidelines/evidence-records.md) make check and publication facts independent of exact prose. Keep their details with the owning task or phase. A document self-check does not complete other work. Invalid or conflicting explicit records cannot support favorable legacy fallback.
+
 ## Integration Validation
 
 One implementation coordinator checks the combined results after related implementations are available. Confirm that:
