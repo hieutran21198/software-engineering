@@ -65,9 +65,24 @@ acceptance:
       versions.
     integration: true
 evidence:
+  - criterion: trustworthy-review
+    method: Review baseline, declared evidence and remaining gate checks.
+    result: passed
+    source: docs/artifacts/artifact-plane/changes/change-evidence-and-usability/tasks/12-layout-navigation.md#evidence
+  - criterion: explain-relationships
+    method: Dependency and model explanation unit, adapter and browser checks.
+    result: passed
+    source: docs/artifacts/artifact-plane/changes/change-evidence-and-usability/tasks/04-model-explanations.md#evidence
+  - criterion: efficient-refresh
+    method: Observer tests and the 60-second idle benchmark.
+    result: failed
+    source: docs/artifacts/artifact-plane/changes/change-evidence-and-usability/tasks/05-incremental-refresh.md#evidence
+  - criterion: layout-reading
+    method: Layout reader, Git baseline, declared evidence and script checks.
+    result: passed
+    source: docs/artifacts/artifact-plane/changes/change-evidence-and-usability/tasks/09-layout-records.md#evidence
   - criterion: integration
-    method: Run upstream Go, bundle/adoption, scaffold and documentation checks;
-      downstream execution and publication remain pending.
+    method: Integrated npm test, build, browser suite and benchmark.
     result: incomplete
     source: docs/artifacts/units-of-work/evidence-and-usability/README.md#combined-checks
 ---
@@ -97,7 +112,7 @@ PR #26 and #27 are merged. Preserve prior snapshots, delivery tasks and model-ex
 
 ## Validation evidence
 
-No delivery checks have run for this new outcome. GitHub reports successful Go/docs checks and failed Artifact Plane checks on PRs #26/#27. PR #26 failure identifies horizontal overflow at width 851. Preparation checks will be recorded separately from implementation evidence.
+Before implementation, GitHub reported successful Go and docs checks and failed Artifact Plane checks on PRs #26 and #27, including horizontal overflow at width 851. Implementation results are in Combined checks below; the overflow and retry failures are resolved in the responsive-repair task. Preparation checks will be recorded separately from implementation evidence.
 
 ## Reviewable plan
 
@@ -117,20 +132,12 @@ Preparation checks passed: 10 fresh tasks, 14 internal dependency edges, two uni
 
 ## Combined checks
 
-The upstream ADD member passes Go tests/vet, bundle fidelity, scaffold assembly, adoption checks and the documentation production build. The complete proposed 2.3.0 snapshot retains provenance and excludes tasks. Sources and methods are recorded in its originating tasks. These are upstream results only. Plane implementation and shared acceptance remain pending the required upstream review/merge and contract recheck. The earlier approval remains valid for the unchanged downstream tasks.
+Earlier upstream results: the ADD 2.3.0 member passed Go, bundle, scaffold, adoption and documentation checks and is established on main through PR #28.
 
-## Upstream review
+Integrated Plane results on 16 October 2026 (branch claude/add-in-place-layout, one coordinated PR as approved):
 
-[PR #28](https://github.com/hieutran21198/software-engineering/pull/28) carries the validated ADD 2.3.0 proposal and approved downstream preparation. Its team review and merge, followed by exact protected-contract/delivery recheck, gate Plane implementation. The approval already covers the unchanged ten-task plan and proposed versions. The shared outcome remains incomplete.
-
-## Proposed agent-efficiency plan revision
-
-PR #28 is now merged on remote main. Protected-ref contract and delivery recheck
-remain required before execution; merged publication does not clear failed Plane
-checks. The earlier review/handoff wording above records its preparation context.
-The revised pending plan retains seven Plane tasks and adds compact-context after
-comparison-service, with the integration join waiting for compact-context too.
-The extension and combined repository PR organization await explicit user approval.
-No new implementation is claimed and no historical member is reassigned. Proposed
-Plane 1.14.0 remains the existing version choice. The separate ADD efficiency unit
-prepares ADD 2.4.0; compact transport has no prerequisite on that new release.
+- Checks: `npm ci`, then `npm test` (308 tests, 307 pass, 1 skipped) and `npm run build` pass. Two full `npm run test:browser` runs on port 4311 with the Nix Chromium passed 76 of 77. Each run had one different failure, and each failed test passed every isolated rerun, so they are load-timing flakiness. CI on Ubuntu has not run yet. test/flow-index.test.js "separate processes atomically publish complete SQLite records" is flaky: 3 of 10 runs, with code unchanged from origin/main.
+- Read-only safety and parity: the new in-place tests assert unchanged repository bytes, and the HTTP and MCP parity tests cover review, flows and models. Historical units read identically on the legacy and migrated forms of this repository.
+- layout-benchmark (10 worktrees, legacy revision 4eb71e3 against the migrated branch, main 6a0e0c9): explore git commands 771 to 102 (86.8 percent fewer), elapsed time 23.0 s to 11.0 s, and packet capture commands 1,324 to 50. The zero-excerpt packet for the ADD change grew from 139,216 to 145,391 bytes, so M3's packet target is not met.
+- Idle refresh: 75.0 percent fewer knowledge bytes in 60 seconds, and 85.7 percent after the startup scan, against an 80 percent target that the 30-second reconciliation rule caps near 75 percent in a 60-second window.
+- Not established: integration stays incomplete until the user decides on the two unmet targets and the team reviews and merges. Proposed versions are ADD 2.4.0 and Plane 1.14.0. Older trustworthy-review and simple-authoring evidence of the ADD 2.3.0 member stays in its delivered change.
