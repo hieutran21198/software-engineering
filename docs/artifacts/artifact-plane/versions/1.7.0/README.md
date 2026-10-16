@@ -14,11 +14,15 @@ Observe Codex through configured lifecycle hooks and explicit session-to-task bi
 
 ## Knowledge
 
-- [Execution requirements](requirements/codex-execution.md)
+- Execution requirements
 
 Baseline knowledge and historical evidence are copied from 1.6.0. They do not validate this feature. Version preparation will add source_change provenance to the delivered snapshot.
 
-- [Execution specification](specifications/codex-execution.md)
-- [Observer decision](decisions/006-codex-observer.md)
+- Execution specification
+- Observer decision
 
-- [Implementation plan](tasks/README.md)
+- [Implementation plan](../../changes/change-codex-execution/tasks/README.md)
+
+## Knowledge snapshot
+
+This record was converted from the legacy snapshot layout. Its knowledge is `docs/artifacts/artifact-plane/versions/1.7.0/` in the tree of the first-parent commit on main that introduced this README: `git log --first-parent --diff-filter=A main -- docs/artifacts/artifact-plane/versions/1.7.0/README.md`.

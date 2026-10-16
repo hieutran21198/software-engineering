@@ -11,8 +11,8 @@ apps/artifact-plane tests/build; coordinator-owned artifact tasks and shared out
 
 ## Governing knowledge
 
-- [Requirements](../requirements/units-of-work.md)
-- [Specification](../specifications/units-of-work.md)
+- Requirements
+- Specification
 
 ## Prerequisites
 

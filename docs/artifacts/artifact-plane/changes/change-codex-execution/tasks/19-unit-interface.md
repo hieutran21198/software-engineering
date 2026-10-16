@@ -11,8 +11,8 @@ apps/artifact-plane/src/main.jsx, Workflow.jsx, TaskGraph.jsx, shared React Flow
 
 ## Governing knowledge
 
-- [Requirements](../requirements/units-of-work.md)
-- [Specification](../specifications/units-of-work.md)
+- Requirements
+- Specification
 
 ## Prerequisites
 

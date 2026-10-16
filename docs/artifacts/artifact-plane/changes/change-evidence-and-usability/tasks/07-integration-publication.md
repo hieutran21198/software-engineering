@@ -1,6 +1,6 @@
 ---
 id: integration-publication
-depends_on: [layout-reader, git-baseline, declared-evidence, layout-navigation, knowledge-scripts, model-explanations, incremental-refresh, responsive-repair]
+depends_on: [layout-reader, git-baseline, declared-evidence, layout-navigation, knowledge-scripts, history-conversion, model-explanations, incremental-refresh, responsive-repair]
 ---
 
 # Validate the combined outcome and prepare Plane review

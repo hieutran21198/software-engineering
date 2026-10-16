@@ -196,10 +196,11 @@ Two optional scripts reuse the readers without the server or browser. ADD remain
 ```sh
 node scripts/validate-knowledge.mjs /path/to/repository
 node scripts/migrate-layout.mjs /path/to/repository [--artifact <id>] [--version <v>] [--write]
+node scripts/migrate-layout.mjs /path/to/repository --convert-history [--artifact <id>] [--write]
 node scripts/layout-benchmark.mjs /path/to/repository <legacy-rev> <migrated-rev> [--worktrees <n>]
 ```
 
-`validate-knowledge` prints scanner, snapshot, task, unit and flow diagnostics as JSON and exits 1 when any diagnostic is an error. `migrate-layout` applies the ADD migration procedure to legacy artifacts. It is a dry run unless `--write` is given, refuses ambiguous or outdated version declarations (confirm with `--version`), writes only inside `docs/artifacts`, never overwrites, and reports the files it creates, changes and deletes with byte equivalence. Review the remaining README prose by hand. `layout-benchmark` compares packet bytes and explore git commands for two revisions.
+`validate-knowledge` prints scanner, snapshot, task, unit and flow diagnostics as JSON and exits 1 when any diagnostic is an error. `migrate-layout` applies the ADD migration procedure to legacy artifacts. It is a dry run unless `--write` is given, refuses ambiguous or outdated version declarations (confirm with `--version`), writes only inside `docs/artifacts`, never overwrites, and reports the files it creates, changes and deletes with byte equivalence. Review the remaining README prose by hand. With `--convert-history` it converts retained legacy records of in-place artifacts: it deletes copied knowledge in version and change directories, version-owned tasks that are byte-identical to the originating change's tasks, delivered `dependencies.yaml` files and `delivery_tasks` markers. It refuses files that differ from HEAD, keeps unmatched task sets, and lists links into removed files for you to fix. Git keeps every removed snapshot. `layout-benchmark` compares packet bytes and explore git commands for two revisions.
 
 ## Units of work
 

@@ -60,7 +60,7 @@ test('arbitrary linked source and bare legacy assertion arguments cannot supply 
 });
 
 test('real specification review instructions cannot establish published fixture knowledge; repository stays unchanged',async t=>{
- const specification=await readFile(new URL('../../../docs/artifacts/artifact-plane/versions/1.11.1/specifications/units-of-work.md',import.meta.url),'utf8');
+ const specification=await readFile(new URL('../../../docs/artifact-driven/02-methodology/validation.md',import.meta.url),'utf8');
  assert.match(specification,/all required knowledge and implementation/i);
  const files=unitFixture();
  for(const [path,body] of files) files.set(path,body.replaceAll(assertion,''));

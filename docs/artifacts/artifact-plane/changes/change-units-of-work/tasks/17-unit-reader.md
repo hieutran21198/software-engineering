@@ -11,8 +11,8 @@ apps/artifact-plane/server/reader.js, workflow.js; plain unit parser module; exi
 
 ## Governing knowledge
 
-- [Requirements](../requirements/units-of-work.md)
-- [Specification](../specifications/units-of-work.md)
+- Requirements
+- Specification
 
 ## Prerequisites
 

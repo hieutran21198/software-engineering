@@ -1,6 +1,5 @@
 ---
 source_change: change-flow-discovery
-delivery_tasks: change
 ---
 
 # ADD 2.1.0 — owned system flow knowledge
@@ -11,14 +10,18 @@ This compatible addition defines named system flows, evidence-linked support and
 
 Version 2.1.0 is proposed for user/team review. Local main currently establishes 2.0.0. This version establishes only after all required knowledge, bundled implementation and retained delivery evidence land through required review/merge. Plane and Story-Driven implementation still wait for that establishment and contract recheck. The shared unit is not complete.
 
-- [Flow requirements](requirements/flows.md)
-- [Flow input contract](specifications/system-flows.md)
-- [Ownership decision](decisions/007-owned-flow-knowledge.md)
-- [Adoption flow](specifications/flows/adoption.md)
-- [Change delivery flow](specifications/flows/change-delivery.md)
-- [Dependency gate flow](specifications/flows/dependency-gates.md)
-- [Unit validation flow](specifications/flows/unit-validation.md)
-- [Version publication flow](specifications/flows/version-publication.md)
+- Flow requirements
+- Flow input contract
+- Ownership decision
+- Adoption flow
+- Change delivery flow
+- Dependency gate flow
+- Unit validation flow
+- Version publication flow
 - [Originating plan and evidence](../../changes/change-flow-discovery/tasks/README.md)
 
 Delivery tasks remain in their originating change; this snapshot contains no task copies. Historical versions and delivery evidence remain unchanged.
+
+## Knowledge snapshot
+
+This record was converted from the legacy snapshot layout. Its knowledge is `docs/artifacts/artifact-driven/versions/2.1.0/` in the tree of the first-parent commit on main that introduced this README: `git log --first-parent --diff-filter=A main -- docs/artifacts/artifact-driven/versions/2.1.0/README.md`.

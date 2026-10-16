@@ -17,15 +17,23 @@ evidence:
   - criterion: knowledge-contract
     method: Review the delivered contract, validate YAML examples, and run full Go adoption/fidelity tests and the website build.
     result: passed
-    source: docs/artifacts/artifact-driven/versions/1.2.0/tasks/18-unit-delivery-validation.md#evidence
+    source: docs/artifacts/artifact-driven/changes/change-units-of-work/tasks/18-unit-delivery-validation.md#evidence
   - criterion: aggregate-exploration
     method: Run unit canvas and browser checks for all three views, exact-source navigation, diagnostics, refresh, and responsive layouts.
     result: passed
-    source: docs/artifacts/artifact-plane/versions/1.6.0/tasks/19-unit-interface.md#evidence
+    source: docs/artifacts/artifact-plane/changes/change-units-of-work/tasks/19-unit-interface.md#evidence
   - criterion: integration
     method: Run the complete Node and Chromium suites, production build, and repository adoption/fidelity checks.
     result: passed
     source: docs/artifacts/units-of-work/unit-of-work-exploration/README.md#combined-validation-evidence
+publication_reviews:
+  - artifact: artifact-driven
+    version: 1.2.0
+    source: docs/artifacts/units-of-work/unit-of-work-exploration/README.md#publication-review
+    required_changes:
+      - repository: https://github.com/hieutran21198/software-engineering
+        scope: ADD 1.2.0 knowledge, implementation and retained delivery tasks
+        pull_request: https://github.com/hieutran21198/software-engineering/pull/10
 ---
 
 # Unit-of-work grouping and exploration
@@ -47,3 +55,5 @@ Shared fixtures cover contract reading and all three views with external prerequ
 ## Publication review
 
 artifact-driven 1.2.0: All required knowledge and implementation changes have landed on main. The user reported PR #10 merged; Git verification found the complete delivered contract on origin/main and the local main reference was fast-forwarded to it. The recorded outcome membership remains unchanged.
+
+The publication_reviews records restate the affirmative reviews above in structured form after the legacy records were converted on 16 October 2026. The coordinator verified with `gh pr view` that each listed PR is merged (#10, #20 and #21).

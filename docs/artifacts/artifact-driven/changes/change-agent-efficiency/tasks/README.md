@@ -8,6 +8,7 @@ tasks:
   - 03-json-cli.md
   - 04-migrate-repository.md
   - 05-measure-and-publish.md
+  - 06-convert-history.md
 ---
 
 # ADD agent efficiency and in-place layout implementation plan
@@ -21,6 +22,7 @@ This is a new plan awaiting explicit approval. No implementation has started. Su
 3. [Expose adoption results as optional JSON](03-json-cli.md), after preflight.
 4. [Migrate this repository's artifacts](04-migrate-repository.md), after guidance.
 5. [Measure, validate and prepare ADD 2.4.0](05-measure-and-publish.md), after guidance, JSON and migration.
+6. [Convert the retained legacy records](06-convert-history.md), after migration. Added by the user-approved amendment of 16 October 2026; integration is rechecked after it.
 
 Tasks 01 and 02 can run concurrently in separate worktrees; the coordinator keeps knowledge updates central. Sequential execution is valid. No extra reviewer or role session is required. TL performed Specification and Plan in this session.
 

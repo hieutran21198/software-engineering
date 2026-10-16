@@ -10,6 +10,10 @@ ADD owns the reusable model and delivered guidance. Artifact Plane owns interpre
 
 ## Knowledge
 
-- [Requirements](requirements/units-of-work.md)
-- [Specification](specifications/units-of-work.md)
+- Requirements
+- Specification
 - [Plan](tasks/README.md)
+
+## Retained record
+
+The knowledge copy of this delivered change was removed when the legacy records were converted. Git history of this directory keeps it; the plan and evidence remain in tasks.

@@ -11,8 +11,8 @@ src/archs/artifact-driven tests, internal/adopt tests, website delivery; coordin
 
 ## Governing knowledge
 
-- [Requirements](../requirements/units-of-work.md)
-- [Specification](../specifications/units-of-work.md)
+- Requirements
+- Specification
 
 ## Prerequisites
 

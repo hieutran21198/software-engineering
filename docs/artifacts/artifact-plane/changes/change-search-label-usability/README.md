@@ -6,14 +6,14 @@ The root declares 1.11.0. This change starts with its complete knowledge and inc
 
 Source inspection confirms that UnitList filters title/ID immediately, while Flows submits a separate search state and receives ranked discovery candidates. Flow labels use default smoothstep midpoints and Dagre layout without label dimensions or node-collision checks. Dependency labels also use default edge rendering. The screenshot could not be decoded by the available viewer; its exact graph and geometry are not independently verified.
 
-- [Requirements](requirements/search-label-usability.md)
+- Requirements
 
 ## Requirement self-check
 
 Scope includes all three user reports. Normal title/ID filtering and behavior discovery have distinct purposes. Existing HTTP/MCP discovery, graph semantics, read-only guards, prior fixes and historical evidence remain required. The sole owner is Artifact Plane; ADD 2.1.0 remains its existing supplier. KISS uses current search and graph boundaries. STE separates code evidence from the unverified screenshot. No Requirement blocker remains for Specification.
 
-- [Search and label contract](specifications/search-label-usability.md)
-- [Presentation decision](decisions/010-search-and-label-presentation.md)
+- Search and label contract
+- Presentation decision
 
 ## Specification self-check
 
@@ -34,3 +34,7 @@ Find participating flows currently enters reverse-relationship discovery with an
 ## Approved delivery
 
 The user explicitly approved the updated four-task plan, including Artifact filtering and contextual entry. Implementation proceeded on a dedicated branch after ADD 2.1.0 was verified on main. Earlier self-checks record phase boundaries, not current implementation blockers. The proposed patch awaits integrated validation and team review.
+
+## Retained record
+
+The knowledge copy of this delivered change was removed when the legacy records were converted. Git history of this directory keeps it; the plan and evidence remain in tasks.

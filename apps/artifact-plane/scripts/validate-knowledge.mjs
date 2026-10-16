@@ -37,7 +37,8 @@ export async function validateKnowledge(path) {
 }
 if (import.meta.url === `file://${process.argv[1]}`) {
   const path = process.argv[2];
-  if (!path) {console.error('Usage: validate-knowledge.mjs <repository>');process.exit(2);}
-  try {const result = await validateKnowledge(path);console.log(JSON.stringify(result, null, 1));process.exit(result.counts.errors ? 1 : 0);}
-  catch (error) {console.log(JSON.stringify({error: error.message, status: error.status ?? null}));process.exit(2);}
+  // Set exitCode instead of exiting so large JSON reports flush to pipes.
+  if (!path) {console.error('Usage: validate-knowledge.mjs <repository>');process.exitCode = 2;}
+  else try {const result = await validateKnowledge(path);console.log(JSON.stringify(result, null, 1));process.exitCode = result.counts.errors ? 1 : 0;}
+  catch (error) {console.log(JSON.stringify({error: error.message, status: error.status ?? null}));process.exitCode = 2;}
 }

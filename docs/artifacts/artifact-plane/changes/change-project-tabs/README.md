@@ -8,8 +8,8 @@ All knowledge and implementation belong to this repository. The established arti
 
 ## Knowledge
 
-- [Project tab requirements](requirements/project-tabs.md)
-- [Project tab contract](specifications/project-tabs.md)
+- Project tab requirements
+- Project tab contract
 - [Implementation plan](tasks/README.md)
 
 ## Requirement self-check
@@ -27,3 +27,7 @@ Approved implementation and integrated validation passed. See the current task e
 ## Publication handoff
 
 Version 1.10.0 is confirmed and the proposed snapshot is committed on the dedicated branch. Automatic permission review initially rejected publication because destination authorization was not verified. The user then explicitly authorized publishing the implementation and documentation to hieutran21198/software-engineering and opening a PR. The branch is pushed and [review PR #19](https://github.com/hieutran21198/software-engineering/pull/19) is open. Team review and merge remain required for establishment.
+
+## Retained record
+
+The knowledge copy of this delivered change was removed when the legacy records were converted. Git history of this directory keeps it; the plan and evidence remain in tasks.

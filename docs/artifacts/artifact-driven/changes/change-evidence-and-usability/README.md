@@ -13,3 +13,7 @@ This is the single active change for this artifact. Retain all older changes, ta
 ## Scope and gates
 
 This member belongs only to the evidence-and-usability unit. Requirements, Specification and Plan are separate commits. The completed new plan requires explicit approval. Plane consumption of new ADD evidence contracts waits for their establishment and contract recheck. No implementation, version declaration repair or passing delivery evidence is authorized by preparation alone.
+
+## Retained record
+
+The knowledge copy of this delivered change was removed when the legacy records were converted. Git history of this directory keeps it; the plan and evidence remain in tasks.
