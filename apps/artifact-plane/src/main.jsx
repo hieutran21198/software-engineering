@@ -6,6 +6,7 @@ import React, {
   useRef,
   useState,
 } from "react";
+import {panelLayout} from './panel-layout.js';
 import Workspace from "./Workspace.jsx";
 import { createRoot } from "react-dom/client";
 import {
@@ -225,28 +226,14 @@ export function ProjectExplorer({active: isActive = true, initialPath = "", onOp
   const [recordedSelected,setRecordedSelected]=useState(null),[recordedNode,setRecordedNode]=useState(null);
   const [filter, setFilter] = useState("");
   const workspaceRef = useRef(null);
-  const [panelWidth, setPanelWidth] = useState(340),
-    [panelMax, setPanelMax] = useState(640);
-  useEffect(() => {
-    const workspace = workspaceRef.current;
-    const measure = () => {
-      const width = workspace.getBoundingClientRect().width;
-      if (width <= 800) return;
-      const sidebar = workspace
-        .querySelector(".sidebar")
-        .getBoundingClientRect().width;
-      const max = Math.max(
-        240,
-        Math.min(640, Math.floor(width - sidebar - 300)),
-      );
-      setPanelMax(max);
-      setPanelWidth((current) => Math.max(240, Math.min(max, current)));
-    };
-    const observer = new ResizeObserver(measure);
-    observer.observe(workspace);
-    measure();
-    return () => observer.disconnect();
-  }, []);
+  const [panelPreference,setPanelWidth]=useState(340),[sidebarPreference,setSidebarPreference]=useState(null),[workspaceWidth,setWorkspaceWidth]=useState(window.innerWidth);
+  useEffect(()=>{
+    const workspace=workspaceRef.current,measure=()=>setWorkspaceWidth(workspace.getBoundingClientRect().width);
+    const observer=new ResizeObserver(measure);observer.observe(workspace);measure();return()=>observer.disconnect();
+  },[]);
+  const resizeSidebar=width=>setSidebarPreference(Math.max(180,Math.min(sidebarMax,width)));
+  function dragSidebar(event){if(event.currentTarget.hasPointerCapture(event.pointerId))resizeSidebar(event.clientX-workspaceRef.current.getBoundingClientRect().left);}
+  function sidebarKeyboard(event){const widths={ArrowRight:sidebarWidth+20,ArrowLeft:sidebarWidth-20,Home:180,End:sidebarMax};if(Object.hasOwn(widths,event.key)){event.preventDefault();resizeSidebar(widths[event.key]);}}
   const resizePanel = (width) =>
     setPanelWidth(Math.max(240, Math.min(panelMax, width)));
   function dragPanel(event) {
@@ -463,6 +450,7 @@ export function ProjectExplorer({active: isActive = true, initialPath = "", onOp
   };
   const navigationTargets=useMemo(()=>knowledgeTargets(snapshot,selectedUnit),[snapshot,selectedUnit]);
   const hasDetails=Boolean(view==='canvas'?(artifact||reviewKey||taskContext||deliveryContext):view==='units'?unitSelected:view==='flows'?flowSelected:recordedSelected);
+  const {sidebar:sidebarWidth,inspector:panelWidth,sidebarMax,inspectorMax:panelMax}=panelLayout(workspaceWidth,sidebarPreference,panelPreference,hasDetails);
   return (
     <RuntimeProvider snapshot={snapshot} active={isActive}><div className="app">
       <header className="topbar" hidden={Boolean(snapshot)}>
@@ -518,9 +506,9 @@ export function ProjectExplorer({active: isActive = true, initialPath = "", onOp
       <div
         className={`workspace ${hasDetails?'':'without-inspector'}`}
         ref={workspaceRef}
-        style={{ "--inspector-width": panelWidth + "px" }}
+        style={{ "--inspector-width": panelWidth + "px", "--sidebar-width": sidebarWidth + "px" }}
       >
-        <aside className="sidebar">
+        <aside className="sidebar" id={`navigation-panel-${tabId}`}>
           <div className="sidebar-title">
             <span className="eyebrow">Repository</span>
             {snapshot && (
@@ -580,6 +568,10 @@ export function ProjectExplorer({active: isActive = true, initialPath = "", onOp
             <span>Source of truth</span>
           </div>
         </aside>
+        <div className="navigation-divider inspector-divider" role="separator" aria-label="Resize navigation panel" aria-orientation="vertical" aria-valuemin={180} aria-valuemax={sidebarMax} aria-valuenow={sidebarWidth} aria-controls={`navigation-panel-${tabId}`} tabIndex={0}
+          onKeyDown={sidebarKeyboard} onPointerDown={event=>{if(event.button!==0)return;event.preventDefault();event.currentTarget.focus();event.currentTarget.setPointerCapture(event.pointerId);}}
+          onPointerMove={dragSidebar} onPointerUp={event=>{if(event.currentTarget.hasPointerCapture(event.pointerId))event.currentTarget.releasePointerCapture(event.pointerId);}}
+          onPointerCancel={event=>{if(event.currentTarget.hasPointerCapture(event.pointerId))event.currentTarget.releasePointerCapture(event.pointerId);}}/>
         <main className={`canvas-area ${reader?'reading':''}`}>
           <div className="canvas-toolbar">
             <div>
