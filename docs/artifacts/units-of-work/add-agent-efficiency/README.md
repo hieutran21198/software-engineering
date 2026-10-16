@@ -13,13 +13,31 @@ affected_flows:
   - artifact: artifact-driven
     flow: version-publication
     effect: modify
-flow_assessment: Inspected foundation, phases, four role skills, adoption CLI,
-  embedded assets, source-backed retrieval, task/unit/publication readers, CI,
-  protected remote history and retained plans. Covers adoption diagnostics,
-  context loading and retained delivery. Plane context-handoff remains owned by
-  the existing evidence-and-usability outcome. Hosted harnesses, all consumer
-  repositories and live visual UX are excluded.
+  - artifact: artifact-driven
+    flow: dependency-gates
+    effect: modify
+  - artifact: artifact-driven
+    flow: unit-validation
+    effect: modify
+flow_assessment: Inspected foundation, methodology, guidelines, four role skills,
+  adoption CLI, embedded bundle, project artifacts, Plane readers, graph
+  projections, MCP adapters, CI, protected refs and retained plans. Measured
+  duplication, front matter use, reader cost, phase and completion derivation and
+  packet size on this repository. The in-place layout changes how change-delivery,
+  version-publication, dependency-gates and unit-validation resolve proposed and
+  established knowledge; adoption gains aggregate diagnostics. Plane reading of
+  the layout is owned by the Plane's active change in the evidence-and-usability
+  unit. Hosted harnesses, other consumer repositories and live UX are excluded.
 acceptance:
+  - id: layout
+    criterion: An artifact keeps its knowledge once at its root; a change adds a
+      record and edits in place; a version adds one record; readers derive
+      established and proposed knowledge from the protected branch; legacy
+      snapshots stay readable and unchanged.
+  - id: migration
+    criterion: This repository's three artifacts are migrated with byte-identical
+      knowledge, an unchanged dependency graph, resolved flows and units, and no
+      index or proposal files on the in-place path.
   - id: adoption
     criterion: One preflight reports every independently discoverable safe
       destination conflict in stable order without changing consumer files;
@@ -29,67 +47,40 @@ acceptance:
       session, load governing context on demand and recover from existing
       knowledge, Git and packets without assuming approval or freshness.
   - id: consistency
-    criterion: Current guidance agrees that new versions exclude tasks and
-      preserve referenced originating plans and historical evidence.
+    criterion: Current guidance agrees that versions are records, delivery stays
+      in originating changes, and historical evidence is preserved.
+  - id: measurements
+    criterion: Recorded before and after measurements show zero copied knowledge
+      files, a packet at least 80 percent smaller and at least 50 percent fewer
+      git commands on this repository, with methods and limits.
   - id: integration
-    criterion: CLI regressions, safety checks, bundle parity, repeatable
-      efficiency measurements and documentation build support a compatible
-      complete ADD release without altering established snapshots.
+    criterion: Go, bundle, adoption, scaffold, documentation and link checks pass
+      and support a complete ADD release without altering established snapshots.
     integration: true
 evidence: []
 ---
 
-# Reduce ADD adoption and agent recovery effort
+# Simplify ADD knowledge for humans and agents
 
 ## Included scope
 
-ADD-owned adoption diagnostics, session context loading, retention-rule correction,
-regressions and measurements. The coordinator owns this brief and shared evidence.
-The new change starts from the complete ADD 2.3.0 snapshot without copied tasks.
+ADD-owned in-place knowledge layout, records and identity rules, Git-based lifecycle derivation, legacy compatibility, migration procedure, bundle and skill guidance, migration of this repository's artifacts, adoption diagnostics, progressive role context, retention correction, regressions and measurements. The coordinator owns this brief and shared evidence.
 
 ## Excluded scope
 
-Harness registration, automatic upgrades, a change runner, automatic approvals,
-merge/deploy automation, new roles, caches or workflow databases. No historical
-outcome membership or established snapshot is rewritten.
+A workflow database or stored index, a new role or approval field, automatic merges or publication, pruning or rewriting legacy directories, renaming existing changes or units, simplifying the flow schema, harness registration, a change runner, and Plane implementation. Plane reading of the in-place layout belongs to the Plane's active change in the [evidence-and-usability unit](../evidence-and-usability/README.md); that work waits for this contract to establish and creates no membership edge.
 
-## Related ongoing work
+## Investigation evidence
 
-The [repository audit](audit.md) covers both ADD and Plane. Plane remains in the
-existing evidence-and-usability unit and its existing active change. Its planned
-compact-packet extension is reviewed with this plan but does not join this unit.
-The delivered ADD member of that older outcome retains its membership and evidence.
-The two units do not create dependency edges. The compact API does not require the
-new ADD release; role guidance uses capability detection and existing fallback.
+The [repository audit](audit.md) of the earlier session covers context loading, adoption preflight and retention. The [knowledge layout requirements](../../artifact-driven/changes/change-agent-efficiency/requirements/knowledge-layout.md) record the layout measurements: 72 percent byte-identical copies under docs/artifacts, 145 flow files for 15 flows, 19 of 21 changes with unknown phase, 11 of 15 units with unknown completion, 14.1 s and 800 git commands per explore, and 116,052-character zero-excerpt packets. Methods: a Python census over docs/artifacts (file hashes, front matter keys, per-change identity to version files), git diff-tree over merged PRs, and the Plane's own exploreRepository and review service run against this worktree.
 
 ## Preparation and approval
 
-Requirement, Specification and Plan are preparatory knowledge. This request requires
-approval of the revised implementation plan before code changes. Existing unchanged
-Plane authorization remains recorded in its originating plan; the compact extension
-and affected integration join require renewed approval. Suggested new ADD version:
-2.4.0, a compatible minor release; suggested Plane 1.14.0 remains the pending plan's
-version. Confirm or override these with implementation approval.
+Requirement, Specification and Plan are preparatory knowledge. Implementation requires explicit approval of the plan. Suggested ADD version: 2.4.0, a compatible minor release that adds a layout and keeps legacy artifacts readable; the user can select 3.0.0 if the guidance change is considered breaking. Plane 1.14.0 remains the Plane plan's version.
 
 - [ADD implementation plan](../../artifact-driven/changes/change-agent-efficiency/tasks/README.md)
-- [Existing Plane plan with proposed extension](../../artifact-plane/changes/change-evidence-and-usability/tasks/README.md)
-
-The combined review has four new ADD tasks and one new Plane task. Seven pending
-Plane tasks are reused. One repository PR will carry both proposed versions after
-integrated checks; separate unit evidence and unchanged artifact gates remain.
+- [Plane plan with in-place reading](../../artifact-plane/changes/change-evidence-and-usability/tasks/README.md)
 
 ## Combined checks
 
-No implementation checks have run for this outcome. Audit baseline checks are
-recorded in audit.md and do not satisfy new task DoD. Record executed combined
-checks here after approval and implementation, with task-owned detail references.
-
-## Preparation validation
-
-The existing task/unit/flow readers passed checks for the new ADD plan and amended
-Plane plan: 12 tasks, 16 internal edges, 13 flow definitions, and unique membership
-across all 15 readable units. Checked 59 relative Markdown targets/hierarchy links
-with no missing targets or ancestor-page references. git diff --check passed.
-All new task DoD items remain unchecked. Changes are confined to project knowledge;
-canonical/embedded guidance, application/CLI implementation and established snapshots
-remain unchanged. These results validate preparation, not the proposed behavior.
+No implementation checks have run for this outcome. Record executed combined checks here after approval and implementation, with task-owned detail references.

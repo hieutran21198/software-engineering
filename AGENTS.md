@@ -26,6 +26,6 @@ The coordinator owns membership and shared evidence. Keep artifact-local require
 
 Prepare source_change provenance and delivery_tasks: change in each new version README. Keep tasks and DoD evidence in their originating changes, link new versions to those plans, and exclude tasks from new snapshots. New changes create fresh plans without historical task copies. Retain delivered changes while referenced. Preserve delivered versions and referenced evidence for historical outcomes; do not rewrite established legacy snapshots or invent their membership. Record combined checks in the brief and reference delivered task evidence where sufficient. Completion requires all member versions to establish and all shared acceptance/integration criteria to have supporting evidence.
 
-The [current unit of work](docs/artifacts/units-of-work/task-retention-and-navigation/README.md) groups the ADD and Artifact Plane changes for task retention and navigation simplification.
+The [current unit of work](docs/artifacts/units-of-work/add-agent-efficiency/README.md) prepares the in-place knowledge layout, adoption diagnostics and role context reuse; Plane reading of that layout is prepared in the [evidence-and-usability unit](docs/artifacts/units-of-work/evidence-and-usability/README.md).
 
 Harness setup alone does not authorize a domain change, implementation, commits, pushes, or merges. Preserve existing edits and unrelated instructions.

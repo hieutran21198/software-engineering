@@ -32,10 +32,14 @@ affected_flows:
     effect: modify
 flow_assessment: Inspected canonical phase and evidence rules, publication
   parsing, selected-change review and MCP adapters, observer sampling and tests,
-  model-explanations preparation, protected main and PR 26/27 checks. Coverage
-  includes authoring, publication, evidence consumption, review, models and
-  refresh. Exhaustive runtime discovery, Story migration and hosted integrations
-  are excluded.
+  model-explanations preparation, protected main and PR 26/27 checks. The
+  16 October 2026 investigation added layout detection, Git-based comparison,
+  declared-evidence derivation and version-record resolution for the proposed
+  ADD in-place layout; these modify repository-exploration, change-review,
+  context-handoff, repository-refresh and unit-inspection. Coverage includes
+  authoring, publication, evidence consumption, review, models and refresh.
+  Exhaustive runtime discovery, Story migration and hosted integrations are
+  excluded.
 acceptance:
   - id: trustworthy-review
     criterion: A reader can identify the baseline, distinguish inherited work,
@@ -50,10 +54,11 @@ acceptance:
     criterion: Idle observation reads at least 80 percent fewer knowledge bytes on
       the same large fixture while bounded reconciliation detects missed
       changes.
-  - id: compact-context
-    criterion: An opt-in agent packet fits a declared complete UTF-8 response
-      budget, preserves uncertainty and supports revision-bound continuation
-      without changing default clients.
+  - id: layout-reading
+    criterion: The Plane reads in-place and legacy artifacts, resolves established
+      knowledge from the protected branch for both, compares working knowledge
+      through Git, derives phase evidence from declared fields, resolves version
+      records, and supplies deterministic validate and migrate scripts.
   - id: integration
     criterion: Upstream establishment, integrated behavior, responsive layout,
       read-only safety, bundle parity and required checks support the delivered
@@ -77,6 +82,10 @@ The proposed agent-efficiency extension adds compact HTTP/MCP context retrieval
 to the existing Plane member. It preserves this unit's membership and delivered
 ADD member. Its new contract, task and affected integration join require approval
 before execution. No compact-context implementation or validation is claimed.
+
+## In-place layout reading
+
+The investigation of 16 October 2026 selected an in-place knowledge layout for ADD (see the [add-agent-efficiency unit](../add-agent-efficiency/README.md)). This unit's Plane member now owns reading that layout and the validate and migrate scripts. The single knowledge tree removes the inherited-copy noise and most of the packet size that the publication-evidence, comparison-service, comparison-interface and compact-context tasks addressed; those tasks are superseded. Plane implementation waits for the ADD in-place contract to establish. Membership and the delivered ADD member are unchanged.
 
 ## Excluded scope
 
