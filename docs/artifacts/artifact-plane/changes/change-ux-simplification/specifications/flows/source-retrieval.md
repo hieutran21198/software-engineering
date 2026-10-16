@@ -13,6 +13,7 @@ flow:
       title: Select the repository, worktree and knowledge context
       supports:
         - ux-simplification-contract
+        - ux-browser-checks
         - query
         - flow-reader
         - http
@@ -77,6 +78,13 @@ flow:
     - from: freshness
       to: return
   support:
+    - id: ux-browser-checks
+      kind: test
+      path: apps/artifact-plane/test/browser/ux-simplification.spec.js
+      requires: Exercise the scoped user journey and its preserved evidence boundaries.
+      basis: observed
+      evidence:
+        - docs/artifacts/artifact-plane/changes/change-ux-simplification/tasks/07-integration-publication.md
     - id: ux-simplification-contract
       kind: element
       artifact: artifact-plane
@@ -223,4 +231,4 @@ The approved search/readability change has tracked implementation and browser su
 
 ## Simpler exploration
 
-Open exact allowed sources directly with contained local links and a scoped return path. The detailed contract owns behavior and recovery limits. This is documented preparatory behavior; validation evidence is pending approved implementation.
+Open exact allowed sources directly with contained local links and a scoped return path. The detailed contract owns behavior and recovery limits. Executed browser checks are recorded in the originating integration task. Observed fixture support does not establish a version or prove exhaustive usability coverage.

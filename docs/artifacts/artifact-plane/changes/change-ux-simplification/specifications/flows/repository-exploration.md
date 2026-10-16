@@ -12,6 +12,7 @@ flow:
       title: Select the project and worktree
       supports:
         - ux-simplification-contract
+        - ux-browser-checks
         - explorer
         - search-label-contract
     - id: validate
@@ -65,6 +66,13 @@ flow:
       to: inspect
       condition: Relevant knowledge is selected.
   support:
+    - id: ux-browser-checks
+      kind: test
+      path: apps/artifact-plane/test/browser/ux-simplification.spec.js
+      requires: Exercise the scoped user journey and its preserved evidence boundaries.
+      basis: observed
+      evidence:
+        - docs/artifacts/artifact-plane/changes/change-ux-simplification/tasks/07-integration-publication.md
     - id: ux-simplification-contract
       kind: element
       artifact: artifact-plane
@@ -175,4 +183,4 @@ The approved search/readability change has tracked implementation and browser su
 
 ## Simpler exploration
 
-Switch complete worktree context and inspect purpose-first knowledge with independent graph disclosure. The detailed contract owns behavior and recovery limits. This is documented preparatory behavior; validation evidence is pending approved implementation.
+Switch complete worktree context and inspect purpose-first knowledge with independent graph disclosure. The detailed contract owns behavior and recovery limits. Executed browser checks are recorded in the originating integration task. Observed fixture support does not establish a version or prove exhaustive usability coverage.

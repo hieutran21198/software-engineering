@@ -13,6 +13,7 @@ flow:
       title: Select a permitted context and excerpt budget
       supports:
         - ux-simplification-contract
+        - ux-browser-checks
         - contract
         - review-service
         - review-interface
@@ -83,6 +84,13 @@ flow:
       to: request
       condition: The source selection changes or a stale/error reply requires a new read.
   support:
+    - id: ux-browser-checks
+      kind: test
+      path: apps/artifact-plane/test/browser/change-review.spec.js
+      requires: Exercise the scoped user journey and its preserved evidence boundaries.
+      basis: observed
+      evidence:
+        - docs/artifacts/artifact-plane/changes/change-ux-simplification/tasks/07-integration-publication.md
     - id: ux-simplification-contract
       kind: element
       artifact: artifact-plane
@@ -151,4 +159,4 @@ Tracked implementation and tests support this flow. Actual validation evidence r
 
 ## Simpler exploration
 
-Export the captured loaded records page through secondary controls with unchanged omission and revision limits. The detailed contract owns behavior and recovery limits. This is documented preparatory behavior; validation evidence is pending approved implementation.
+Export the captured loaded records page through secondary controls with unchanged omission and revision limits. The detailed contract owns behavior and recovery limits. Executed browser checks are recorded in the originating integration task. Observed fixture support does not establish a version or prove exhaustive usability coverage.

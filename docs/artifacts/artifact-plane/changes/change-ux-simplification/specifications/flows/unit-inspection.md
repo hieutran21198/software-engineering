@@ -12,6 +12,7 @@ flow:
       title: Read the unit brief and unique membership
       supports:
         - ux-simplification-contract
+        - ux-browser-checks
         - units
         - search-label-contract
         - shared-search-field
@@ -62,6 +63,13 @@ flow:
       to: criteria
       condition: Review returns to the unit evidence.
   support:
+    - id: ux-browser-checks
+      kind: test
+      path: apps/artifact-plane/test/browser/units-of-work.spec.js
+      requires: Exercise the scoped user journey and its preserved evidence boundaries.
+      basis: observed
+      evidence:
+        - docs/artifacts/artifact-plane/changes/change-ux-simplification/tasks/07-integration-publication.md
     - id: ux-simplification-contract
       kind: element
       artifact: artifact-plane
@@ -164,4 +172,4 @@ The approved search/readability change has tracked implementation and browser su
 
 ## Simpler exploration
 
-Read the brief first and automatically request completion only for the selected active unit. The detailed contract owns behavior and recovery limits. This is documented preparatory behavior; validation evidence is pending approved implementation.
+Read the brief first and automatically request completion only for the selected active unit. The detailed contract owns behavior and recovery limits. Executed browser checks are recorded in the originating integration task. Observed fixture support does not establish a version or prove exhaustive usability coverage.

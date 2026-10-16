@@ -74,3 +74,7 @@ Version 1.11.0 is established through merged PR #21. The complete knowledge snap
 ## Proposed presentation patch
 
 [Version 1.12.2](versions/1.12.2/README.md) improves inspector spacing and native dropdown consistency. Its [originating plan](changes/change-spacing-control-consistency/tasks/README.md) retains delivery evidence. PR #25 merged search/readability knowledge and implementation; historical preparation text remains unchanged. Patch 1.12.2 awaits team review and merge.
+
+## Proposed simpler exploration version
+
+[Version 1.13.0](versions/1.13.0/README.md) makes reading primary, switches sources in one step and reduces navigation and review noise. Its [originating plan](changes/change-ux-simplification/tasks/README.md) retains fresh delivery tasks and executed checks. The review includes inherited pending 1.12.2 presentation work; its provenance and evidence remain unchanged. This complete compatible proposal awaits team review and merge. The declared current version remains 1.11.0.

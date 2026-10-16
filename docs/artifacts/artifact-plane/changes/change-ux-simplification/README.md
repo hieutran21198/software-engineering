@@ -26,3 +26,7 @@ The same capable session completed Specification after Requirement. Existing con
 ## Plan self-check
 
 The same technical-lead session completed Specification and then Plan. Seven fresh tasks with explicit ownership, governing contracts, prerequisites and concrete DoD cover UX1–UX11 and all ten audit findings. No task or evidence was copied from an earlier plan. All implementation and integrated evidence remains pending. The concrete plan awaits explicit user approval before application changes.
+
+## Integrated proposal
+
+The preparation records above describe their phase gates. After explicit user approval, the seven-task plan delivered the requested optimizations. The retained integration task records executed checks, corrections, the unresolved cause of the original review loading observation, and publication limits. Version 1.13.0 is prepared for review; merge and establishment remain separate.
