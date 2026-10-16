@@ -20,7 +20,7 @@ N10, K7, K8; R1 to R7, A1 to A6; specifications/knowledge-layout.md measurement 
 - [x] Record the before and after measurements in the unit brief: files and bytes under docs/artifacts and copied share, knowledge files copied by the active change, files added by the last version, and, when the Plane benchmark exists, packet size and git command count. Reference task details once.
 - [x] Validate unit membership, task and flow contracts, links, acyclicity, retained evidence and unchanged artifact dependencies with the existing readers.
 - [x] Prepare the confirmed ADD 2.4.0 as an in-place version: versions/2.4.0/README.md with source_change: change-agent-efficiency and a compatibility summary, no knowledge directories, and the identity record set to 2.4.0. Historical snapshots and retained tasks are unchanged.
-- [ ] Push the dedicated branch and open or attach the repository PR according to the publication option chosen at approval; link upstream #28 and stop for team review and merge. Do not claim establishment from PR creation.
+- [x] Push the dedicated branch and open or attach the repository PR according to the publication option chosen at approval; link upstream #28 and stop for team review and merge. Do not claim establishment from PR creation.
 
 ## Evidence
 
@@ -35,4 +35,4 @@ Executed on 16 October 2026 after the layout-guidance, json-cli and migrate-repo
   - The zero-excerpt packet grew from 139,216 to 145,391 bytes. The measurements are recorded, so the DoD item is met. The packet target belongs to the unit's measurements criterion, which records a failure.
 - Validation with the existing readers: validate-knowledge reports 0 errors. Task graphs, units and flows resolve, the two artifact edges are unchanged, and historical units read identically before and after migration. The Plane derives Requirement, Specification and Plan as documented complete from the declared self_check records.
 - Version: versions/2.4.0/README.md with source_change: change-agent-efficiency and a compatibility summary, no knowledge directories, and identity record 2.4.0. Historical snapshots and retained tasks are unchanged.
-- Publication: the dedicated branch is pushed and one coordinated PR is opened (see the PR). Upstream #28 is linked. The PR stops for team review and merge; establishment is not claimed.
+- Publication: the dedicated branch claude/add-in-place-layout is pushed, and one coordinated PR is open: https://github.com/hieutran21198/software-engineering/pull/29. Upstream #28 is linked. The PR stops for team review and merge; establishment is not claimed.
