@@ -5,7 +5,7 @@ import {runtimeFixture,bind} from '../runtime-fixtures.js';
 import {git,fingerprint} from '../fixtures.js';
 const stateDir=()=>process.env.ARTIFACT_PLANE_TEST_STATE_DIR;
 function hook(root,session,kind,extra={}){execFileSync(process.execPath,['server/runtime-cli.js','hook','--state-dir',stateDir()],{cwd:new URL('../../',import.meta.url),input:JSON.stringify({cwd:root,session_id:session,hook_event_name:kind,turn_id:'turn',...extra}),stdio:['pipe','pipe','ignore']});}
-async function open(page,root){await page.goto('/');await page.getByLabel('Repository path').fill(root);await page.getByRole('button',{name:'Open repository',exact:true}).click();await expect(page.getByRole('button',{name:'Open repository',exact:true})).toBeEnabled();}
+async function open(page,root){await page.goto('/');await page.getByLabel('Repository path').fill(root);await page.getByRole('button',{name:'Open repository',exact:true}).click();await expect(page.locator('.repo-info')).toContainText(root.split('/').at(-1));}
 async function unit(page){await page.getByRole('button',{name:'Units of work',exact:true}).click();await page.getByRole('navigation',{name:'Units of work'}).getByRole('button',{name:/Live execution/}).click();await page.getByRole('group',{name:'Unit view'}).getByRole('button',{name:'Implementation',exact:true}).click();}
 test('hooks drive concurrent nodes, validation, readable labels and preserved selection',async({page})=>{
  const f=await runtimeFixture(),s=new RuntimeStore({stateDir:stateDir()}),errors=[];page.on('pageerror',e=>errors.push(e.message));try{
@@ -29,7 +29,7 @@ test('recorded graph survives worktree removal and exposes exact archived attemp
  const f=await runtimeFixture(),other=f.root+'-worker';git(f.root,'worktree','add','-qb','worker',other);const s=new RuntimeStore({stateDir:stateDir()});try{
   const a=await bind(s,other);hook(other,'session','UserPromptSubmit');hook(other,'session','Stop');git(f.root,'worktree','remove','--force',other);
   await open(page,f.root);await page.getByLabel('Recorded executions',{exact:true}).selectOption(a.context);const view=page.getByLabel('Unit of work exploration');await expect(page.locator('.recorded-meta')).toContainText('original worktree removed');await expect(view.locator('.unit-node.task')).toHaveCount(3);await expect(view.locator('.unit-node.gate')).toContainText('unknown');await expect(view.locator('.unit-node.task').filter({hasText:'Task A'})).toContainText('Validating');
-  await page.reload();await page.getByLabel('Repository path').fill(f.root);await page.getByRole('button',{name:'Open repository',exact:true}).click();await page.getByLabel('Recorded executions',{exact:true}).selectOption(a.context);await expect(view.locator('.unit-node.task')).toHaveCount(3);await page.screenshot({path:'test-results/runtime-archived.png',fullPage:true});
+  await page.reload();await page.getByLabel('Recorded executions',{exact:true}).selectOption(a.context);await expect(view.locator('.unit-node.task')).toHaveCount(3);await page.screenshot({path:'test-results/runtime-archived.png',fullPage:true});
  }finally{s.close();await f.cleanup();}
 });
 test('identical task plans show only the selected source worktree activity',async({page})=>{
@@ -41,6 +41,22 @@ test('identical task plans show only the selected source worktree activity',asyn
   await expect(task).toContainText('No recorded execution');await expect(task).not.toContainText('other-worktree');
   await bind(s,f.root,'a.md','selected-worktree');hook(f.root,'selected-worktree','UserPromptSubmit');
   await expect(task).toContainText('Processing');await expect(task).toContainText('selected-worktree');await expect(task).not.toContainText('other-worktree');await expect(task).toContainText('Captured revision:');
-  await page.getByLabel('Worktree',{exact:true}).selectOption(other);await page.getByRole('navigation',{name:'Units of work'}).getByRole('button',{name:/Live execution/}).click();await page.getByRole('group',{name:'Unit view'}).getByRole('button',{name:'Implementation',exact:true}).click();await expect(task).toContainText('other-worktree');await expect(task).not.toContainText('selected-worktree');
+  await page.getByLabel('Worktree',{exact:true}).selectOption(other);await expect(page.locator('.repo-info')).toContainText('scope-worker');await page.getByRole('navigation',{name:'Units of work'}).getByRole('button',{name:/Live execution/}).click();await page.getByRole('group',{name:'Unit view'}).getByRole('button',{name:'Implementation',exact:true}).click();await expect(task).toContainText('other-worktree');await expect(task).not.toContainText('selected-worktree');
  }finally{s.close();git(f.root,'worktree','remove','--force',other);await f.cleanup();}
+});
+
+test('execution navigation recovers a failed read, hides an empty result and returns when recording begins',async({page})=>{
+ const f=await runtimeFixture(),store=new RuntimeStore({stateDir:stateDir()});let fail=true;
+ try{
+  await page.route('**/api/runtime/query',async route=>{if(fail)await route.fulfill({status:500,contentType:'application/json',body:JSON.stringify({error:'History temporarily unavailable'})});else await route.continue();});
+  await open(page,f.root);
+  await expect(page.getByRole('status').filter({hasText:'History temporarily unavailable'})).toBeVisible();
+  fail=false;await page.getByRole('button',{name:'Retry execution history',exact:true}).click();
+  await expect(page.locator('.recorded-picker')).toHaveCount(0);
+  const attempt=await bind(store,f.root);hook(f.root,'session','UserPromptSubmit');
+  await expect(page.getByLabel('Recorded executions',{exact:true})).toBeVisible();
+  await expect(page.getByLabel('Recorded executions',{exact:true}).locator('option').filter({hasText:/^live ·/})).toHaveCount(1);
+  await page.getByLabel('Recorded executions',{exact:true}).selectOption(attempt.context);
+  await expect(page.getByLabel('Unit of work exploration').locator('.unit-node.task').filter({hasText:'Task A'})).toContainText('Processing');
+ }finally{store.close();await f.cleanup();}
 });

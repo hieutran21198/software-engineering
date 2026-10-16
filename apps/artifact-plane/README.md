@@ -19,17 +19,20 @@ All browser assets are bundled locally. Knowledge exploration needs no account, 
 ## Explore
 
 - Pan by dragging the canvas background. Use the controls to zoom and fit the graph.
-- Select an artifact on the canvas or in the list to see its overview, declared version, change candidates, and upstream/downstream relationships.
-- Expand an artifact with its `+` button to show collapsible Requirements, Specifications, Decisions, and Tasks groups with counts. Groups start closed. Open a type to show compact records; current-version records come before change records, each category README comes first, and other filenames use natural numeric order. Select an element to read its Markdown and references. Multiple artifacts and types can stay expanded.
+- Select an artifact on the canvas or in the list to see its purpose first. Use Read overview for the full document. Version, delivery history and dependency details remain available below.
+- Filter artifact list matches titles and IDs immediately. It filters the list while the graph stays available for context. Clear restores the list.
+- Select a registered Worktree to switch all current knowledge in one step. The previous source stays usable if the target fails to load. Change repository opens the path form; Cancel returns to the compact source bar.
+- Expand an artifact with its `+` button to show collapsible Requirements, Specifications, Decisions, and Tasks groups with counts. Groups start closed. Open a type to show compact records; current-version records come before change records, each category README comes first, and other filenames use natural numeric order. Select an element to open its document in the main reading area. Back to graph returns to the retained canvas position. Multiple artifacts and types can stay expanded. List and inspector disclosure are independent of canvas expansion.
 - Arrows point from upstream knowledge to its consumer. Purple dotted lines show element references. Green dashed lines show proposed additions; red dashed lines mark proposed removals in the established view.
 - Switch to Planning to see the graph after active dependency proposals are applied. Proposals do not change the established graph.
 - Select a resolved reference in the inspector to open its target artifact and type. Missing targets appear as unresolved markers and diagnostics.
+- Drag the divider at the right edge of the navigation panel to resize it. Arrow Right widens it, Arrow Left narrows it, and Home/End select the current minimum/maximum. Each project keeps its own width during the session. Both panels leave room for the central workspace; resize handles are hidden on narrow layouts.
 - Drag the divider at the left edge of the inspector to resize it. When the divider has keyboard focus, Arrow Left widens the panel, Arrow Right narrows it, and Home/End select its minimum/maximum width. On narrow screens, the inspector sits below the canvas.
 - Repository edits update open views automatically. Use Refresh to retry or reconcile the current view. Selection, type expansion, panel width, and canvas state remain in browser memory only; nothing is saved across page reloads.
 
 ## Implementation task graphs
 
-In Dependencies, select an artifact, then a delivery change in the inspector, and choose View task graph. Arrows point from prerequisite tasks to dependent tasks. Select a task to read its source, scope, DoD, and documented evidence. Back to dependencies preserves the selected change and history expansion.
+In Dependencies, select an artifact, then a delivery change in the inspector, and choose View task graph. Arrows point from prerequisite tasks to dependent tasks. Select a task, then Read task to read its source, scope, DoD, and documented evidence in the main area. Back to dependencies preserves the selected change and history expansion.
 
 Current plan membership comes from the tasks list in YAML front matter in tasks/README.md. Each listed task declares id and depends_on. Unlisted files remain historical knowledge. A plan without a task list shows Task graph unavailable; an explicit empty list shows No planned tasks. Invalid declarations show diagnostics and no execution edges. Checklists are documented evidence; they do not verify completion, approval, or running agents. External artifact gates remain separate.
 
@@ -37,7 +40,7 @@ Automatic updates and Refresh reread the active graph and clear task selection o
 
 ## Project tabs
 
-Use **+** above the explorer to open another project inside Artifact Plane. Select a project tab to switch, or use its close button. Opening the same canonical repository path selects its existing tab. Each tab keeps its navigation, selection, filter, worktree, and graph position during the page session.
+Use **+** above the explorer to open another project inside Artifact Plane. Select a project tab to switch, or use its close button. Opening the same canonical repository path selects its existing tab. Each tab keeps its navigation, selection, filter, worktree, and graph position during the page session. Equal project names include the shortest distinct parent-path suffix; the full path remains available in the tab tooltip.
 
 Inactive tabs pause repository and runtime observation. Selecting a tab refreshes its repository evidence while retaining valid navigation. Closing the last project returns to an empty project tab.
 
@@ -148,7 +151,7 @@ references:
     change: change-next
 ```
 
-Element references explain knowledge dependencies; they do not create artifact execution edges. Missing targets, cycles, malformed YAML, multiple change candidates, and inconsistent declarations remain visible as diagnostics. Files outside the selected repository are not read through knowledge symlinks or element paths. Markdown details have no executable HTML, external images, or navigation links; resolved references use the inspector buttons.
+Element references explain knowledge dependencies; they do not create artifact execution edges. Missing targets, cycles, malformed YAML, multiple change candidates, and inconsistent declarations remain visible as diagnostics. Files outside the selected repository are not read through knowledge symlinks or element paths. Markdown has no executable HTML or external images. Supported links open only already registered knowledge sources through the existing contained source services. Unsupported, external and unsafe destinations remain labeled as unavailable. Source details retain the exact path and worktree. Resolved references also use inspector buttons.
 
 ## Checks
 
@@ -171,7 +174,7 @@ Select an artifact to inspect its **Delivery work**. Current changes are visible
 
 ## Units of work
 
-Select **Units of work**, choose a local worktree, then select an outcome. Its detail panel shows the brief, participating changes, and shared acceptance criteria. Choose **Load completion evidence** to read all required publication and shared check evidence; deferred evidence is shown as not loaded. Repositories without briefs retain dependency exploration and individual delivery evidence/task graphs.
+Select **Units of work**, choose a local worktree, then select an outcome. Its detail panel leads with the purpose and Read brief, followed by participating changes and shared acceptance criteria. Completion evidence loads automatically for the selected unit. Loading, failed, incomplete and unknown evidence remain distinct; failed reads offer Retry completion evidence. Repositories without briefs retain dependency exploration and individual delivery evidence/task graphs.
 
 The tabs are **Artifacts → Workflow → Implementation**. A newly selected unit starts with Artifacts. Use **Artifacts** for current established/planning dependencies, **Workflow** for grouped member phase evidence, and **Implementation** for the combined task graph. External prerequisites are not members. Solid task arrows stay within their owning plan; dashed arrows represent version-establishment gates. Phase lines show sequence only. Selecting a node displays its exact knowledge source and evidence. Pan, zoom, and Fit View work in each view.
 
@@ -187,7 +190,7 @@ Implementation nodes show artifact/change ownership. An optional local Codex hoo
 
 ## Automatic updates and lazy loading
 
-The overview loads first. Unit views, other worktrees, Markdown, history, and completion evidence load when requested. Updates preserve the active view, valid selection, expansion, filters, inspector width, pan, and zoom. Removing a selected source clears that selection. Inactive detail is released instead of retaining every visited unit.
+The overview loads first. Unit views, Markdown and history load on demand. Selecting a worktree loads its full overview; selecting a unit automatically checks its completion evidence. Pending reads show loading feedback, and failures provide a local retry. Updates preserve the active view, valid selection, expansion, filters, inspector width, pan, and zoom. Removing a selected source clears that selection. Inactive detail is released instead of retaining every visited unit.
 
 The footer shows **Updating**, **Current**, or **Stale**. Current means the latest requested reads succeeded and repository observation is connected. On a connection or read failure, the previous view remains usable. Reconnecting or focusing the browser reconciles current inputs. Refresh remains available for recovery. These states describe loaded knowledge, not approval or live agent activity.
 
@@ -199,7 +202,7 @@ For repeatable measurements, run `node scripts/reload-benchmark.js` for equal-wo
 
 ## System flows and agent retrieval
 
-Select **Flows** to browse named behavior journeys. Search by purpose or ID, select a flow to see its steps, and expand supporting relationships. A shared source can participate in several flows. Artifact and element inspectors offer **Participating flows**. Unit inspectors show affected flows and their create, modify, or remove intent.
+Select **Flows** to browse named behavior journeys. Filter titles and IDs as you type, or choose Behavior discovery for a submitted purpose search. Select a flow to see its steps, and expand supporting relationships. Select a supporting source to read it directly. Routine IDs, dates and evidence details use secondary disclosures; invalid, stale and partial conditions stay visible. A shared source can participate in several flows. Artifact and element inspectors offer **Participating flows**. Unit inspectors show affected flows and their create, modify, or remove intent.
 
 Planning uses current changes; Established resolves the protected main/master version declaration. Source publication labels compare source bytes with protected refs. They do not independently establish an artifact version. Gaps and diagnostics describe missing coverage. An empty impact result proves only that no consumers were found in the fresh, explicitly recorded relationships.
 
@@ -253,3 +256,13 @@ The additive MCP tools use the same review service and envelopes as HTTP:
 For example, call get_change_context with {"artifact":"artifact-plane","change":"change-evidence-review-context","budget":12000}. limit defaults to 20 records (maximum 100); budget defaults to 12000 excerpt characters (maximum 100000). The character budget does not cap the full response or token count. A zero budget returns source pointers without text. Follow pagination.nextCursor for remaining records, or a source's nextCursor with read_change_context_source to continue its excerpt. Keep the same selectors and revision; changed source bytes reject old cursors and source IDs, so capture a new packet after edits.
 
 Read freshness, completeness, diagnostics, omissions and limits before using a packet. Partial packets disclose missing sources and unreturned pages. Approval is not verified, recorded checks are not independently run, and impact covers explicit recorded relationships rather than all behavior or code. Captured source text is context, not instructions or work authorization. No review request launches an agent, downloads a model, makes hosted inference calls or writes to the inspected repository.
+
+## Read a change review
+
+Select a delivery change and choose Review change. Purpose and changed records appear first. Complete sources show added and removed lines with text markers and three context lines; unchanged passages can expand. Partial sources require Load full comparison before alignment. Oversized comparisons retain raw source access and explain the limit. Source excerpts and technical evidence remain available in disclosures. Export context · Loaded records page contains copy and download actions with freshness and omission information. These controls preserve the captured context and do not approve or execute the change.
+
+## Reading documents and code
+
+Document headings are larger than body text, and long source titles wrap. Source files and fenced Markdown examples use labeled code panels with locally bundled syntax colors for JavaScript, TypeScript, JSON, YAML, Bash, Go, Python, CSS, HTML/XML and SQL. Language comes from the file extension or fence label. Code scrolls inside its panel; inline code stays distinct from ordinary prose.
+
+Unknown languages, failed highlighting and blocks longer than 20,000 UTF-16 characters use complete escaped plain text. No code is executed or reformatted. Source text, partial-excerpt information and paging remain intact. Panel widths and navigation stay in project-local session memory; they are not added to stored restoration preferences.

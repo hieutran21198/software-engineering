@@ -1,6 +1,6 @@
 import React, {useState, useEffect} from 'react';
 import {ReactFlowProvider} from '@xyflow/react';
-import {readWorkspace, writeWorkspace, closeTab} from './project-tabs.js';
+import {readWorkspace, writeWorkspace, closeTab, projectLabels} from './project-tabs.js';
 
 const tab = path => ({id: crypto.randomUUID(), path});
 
@@ -12,6 +12,7 @@ export default function Workspace({Explorer}) {
   });
   const [warning, setWarning] = useState(initial.warning || '');
   const {tabs, activeId} = workspace;
+  const labels=projectLabels(tabs);
 
   useEffect(() => {
     const failure = writeWorkspace({setItem: (key, value) => localStorage.setItem(key, value)}, tabs, activeId);
@@ -53,7 +54,7 @@ export default function Workspace({Explorer}) {
             aria-selected={t.id === activeId} tabIndex={t.id === activeId ? 0 : -1}
             title={t.path || 'New project'} onClick={() => select(t.id)}
             onKeyDown={event => keyboard(event, index)}>
-            {t.path?.split('/').filter(Boolean).at(-1) || 'New project'}
+            {labels[index]}
           </button>
           <button className="close-project" aria-label={`Close project ${t.path || 'New project'}`}
             onClick={() => setWorkspace(current => closeTab(current.tabs, current.activeId, t.id, tab(null)))}>×</button>

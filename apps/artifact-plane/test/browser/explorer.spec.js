@@ -47,7 +47,7 @@ test("B1-B7: explore, expand, select, pan, zoom, proposals, diagnostics, refresh
       panel.getByText("Active change: change-initial"),
     ).toBeVisible();
     await nav.getByRole("button", { name: /Authentication/ }).click();
-    await expect(panel.getByText("Active change: change-login")).toBeVisible();
+    await expect(panel.getByText("Active change: change-login")).toBeVisible();await panel.getByText("Dependencies",{exact:true}).click();
     await expect(
       panel.getByRole("heading", { name: "Established dependencies" }),
     ).toBeVisible();
@@ -75,7 +75,7 @@ test("B1-B7: explore, expand, select, pan, zoom, proposals, diagnostics, refresh
     await page
       .getByRole("button", { name: "Specifications in Tenant", exact: true })
       .click();
-    await page.getByRole("button", {name:"Change histories in Authentication",exact:true}).click();
+    await page.getByRole("button", {name:"Historical documents in Authentication",exact:true}).click();
     await page.getByRole("button", {name:"change-login in Authentication",exact:true}).click();
     await page.getByRole("button", {name:"change-login · Specifications in Authentication",exact:true}).click();
     await expect(page.locator(".react-flow__node-element")).toHaveCount(3);
@@ -90,9 +90,9 @@ test("B1-B7: explore, expand, select, pan, zoom, proposals, diagnostics, refresh
         exact: true,
       }),
     ).toBeVisible();
-    await expect(panel.getByText("Stable identity rules.")).toBeVisible();
+    await panel.getByRole("button",{name:"Read document",exact:true}).click();await expect(page.getByRole("region",{name:"Knowledge reader"})).toContainText("Stable identity rules.");
     expect(await page.evaluate(() => window.compromised)).toBeUndefined();
-    await expect(panel.locator("a[href], img, script")).toHaveCount(0);
+    await expect(page.getByRole("region",{name:"Knowledge reader"}).locator("a[href], img, script")).toHaveCount(0);await page.getByRole("button",{name:"Back to graph",exact:true}).click();
     // Built-in zoom and fit controls actually change viewport state.
     const viewport = page.locator(".canvas-surface .react-flow__viewport");
     const initialTransform = await viewport.getAttribute("style");
@@ -149,9 +149,8 @@ test("B1-B7: explore, expand, select, pan, zoom, proposals, diagnostics, refresh
       "# Updated identity",
     );
     await page.getByRole("button", { name: "Refresh", exact: true }).click();
-    await expect(
-      panel.getByRole("heading", { name: "Updated identity", exact: true }),
-    ).toBeVisible();
+    await panel.getByRole('button',{name:'Read document',exact:true}).click();
+    await expect(page.getByRole('region',{name:'Knowledge reader'}).getByRole('heading',{name:'Updated identity',exact:true})).toBeVisible();
     expect(errors).toEqual([]);
     expect(external).toEqual([]);
     await page.screenshot({
@@ -206,14 +205,14 @@ test("B8-B9: collapsible type groups, logical source order, compact records, and
       "▸ Specifications1",
       "▸ Decisions1",
       "▸ Tasks5",
-      "▸ Change histories1",
+      "▸ Historical documents1",
     ]);
     await page
       .getByRole("button", { name: "Tasks in Knowledge", exact: true })
       .click();
     const records = page.locator(".react-flow__node-element");
     await expect(records).toHaveCount(5);
-    await page.getByRole("button", {name:"Change histories in Knowledge",exact:true}).click();
+    await page.getByRole("button", {name:"Historical documents in Knowledge",exact:true}).click();
     await page.getByRole("button", {name:"change-next in Knowledge",exact:true}).click();
     await page.getByRole("button", {name:"change-next · Tasks in Knowledge",exact:true}).click();
     await expect(records).toHaveCount(10);
@@ -242,9 +241,8 @@ test("B8-B9: collapsible type groups, logical source order, compact records, and
     const panel = page.getByRole("complementary", {
       name: "Selection details",
     });
-    expect(
-      await panel.locator(".element-list-item span").allTextContents(),
-    ).toEqual([...order, ...order]);
+    await panel.getByRole('button',{name:'Tasks in inspector',exact:true}).click();
+    expect(await panel.locator('.element-list-item span').allTextContents()).toEqual(order);
     await expect(
       panel.getByRole("button", { name: "Tasks in inspector", exact: true }),
     ).toHaveAttribute("aria-expanded", "true");
@@ -294,7 +292,7 @@ test('B11: history references reveal only their source and collapse preserves de
     await page.getByRole('button',{name:'Open repository'}).click();
     await page.getByRole('navigation',{name:'Artifacts'}).getByRole('button',{name:/Knowledge/}).click();
     await page.getByRole('button',{name:'Expand Knowledge',exact:true}).click();
-    const history=page.getByRole('button',{name:'Change histories in Knowledge',exact:true});
+    const history=page.getByRole('button',{name:'Historical documents in Knowledge',exact:true});
     await expect(history).toHaveAttribute('aria-expanded','false');
     await page.getByRole('button',{name:'Requirements in Knowledge',exact:true}).click();
     await expect(page.locator('.react-flow__node-element')).toHaveCount(1);

@@ -22,7 +22,7 @@ Version 1.10.0, its originating delivery tasks, and implementation landed on mai
 
 ## Active change
 
-- [Consistent search and readable graph labels](changes/change-search-label-usability/README.md)
+- [Simpler Artifact Plane exploration](changes/change-ux-simplification/README.md)
 
 
 ## Knowledge snapshot
@@ -70,3 +70,11 @@ Version 1.11.0 is established through merged PR #21. The complete knowledge snap
 ## Proposed search and readability patch
 
 [Version 1.12.1](versions/1.12.1/README.md) adds live named filtering, explicit Artifact participation and measured graph labels. Its [delivery plan](changes/change-search-label-usability/tasks/README.md) retains implementation evidence. PR #24 merged the 1.12.0 knowledge and implementation; its historical preparation text above remains unchanged. Patch 1.12.1 awaits team review and merge.
+
+## Proposed presentation patch
+
+[Version 1.12.2](versions/1.12.2/README.md) improves inspector spacing and native dropdown consistency. Its [originating plan](changes/change-spacing-control-consistency/tasks/README.md) retains delivery evidence. PR #25 merged search/readability knowledge and implementation; historical preparation text remains unchanged. Patch 1.12.2 awaits team review and merge.
+
+## Proposed simpler exploration version
+
+[Version 1.13.0](versions/1.13.0/README.md) makes reading primary, switches sources in one step and reduces navigation and review noise. The approved extension adds larger headings, resizable left navigation and highlighted source/code examples. Its [originating plan](changes/change-ux-simplification/tasks/README.md) retains fresh delivery tasks and executed checks. The review includes inherited pending 1.12.2 presentation work; its provenance and evidence remain unchanged. This complete compatible proposal awaits team review and merge. The declared current version remains 1.11.0.

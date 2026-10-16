@@ -1,0 +1,7 @@
+import React,{useMemo} from 'react';
+import {compareLines,comparisonBlocks} from './line-comparison.js';
+export default function ReviewDiff({before,after,complete,onLoad,loading,error,canLoad}){
+ const diff=useMemo(()=>complete?compareLines(before,after):null,[before,after,complete]);
+ const render=lines=><pre className="line-diff">{lines.map((line,i)=><span key={i} className={`diff-line ${line.kind}`}><span className="diff-number">{line.before||''}</span><span className="diff-number">{line.after||''}</span><span aria-label={line.kind==='add'?'Added':line.kind==='remove'?'Removed':'Unchanged'}>{line.kind==='add'?'+':line.kind==='remove'?'−':' '}</span><code>{line.text.replace(/\n$/,'')}{!line.text.endsWith('\n')&&<small> ⟵ No newline at end of file</small>}</code>{'\n'}</span>)}</pre>;
+ return <section aria-label="Changed passages"><h4>Changed passages</h4>{error&&<p role="status">{error}</p>}{!complete?<><p>Partial source excerpts. A complete aligned comparison is not available yet.</p><button disabled={loading||!canLoad} onClick={onLoad}>{loading?'Loading full comparison…':'Load full comparison'}</button></>:diff.state==='too-large'?<p role="status">{diff.reason} Use raw source excerpts below.</p>:<>{!diff.changed&&<p>No changed lines in the complete compared sources.</p>}{comparisonBlocks(diff.lines).map((block,i)=>block.kind==='unchanged'?<details key={i}><summary>{block.lines.length} unchanged lines</summary>{render(block.lines)}</details>:<React.Fragment key={i}>{render(block.lines)}</React.Fragment>)}</>}</section>;
+}

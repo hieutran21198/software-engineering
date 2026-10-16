@@ -1,0 +1,44 @@
+# Simpler Artifact Plane exploration
+
+The end-user audit found misleading worktree context, reading buried below evidence, indirect document navigation, loading represented as unknown or zero, coupled list/canvas expansion, repeated metadata, inconsistent search feedback, raw review comparisons, duplicate project labels, and persistent setup controls. The user requested optimization based on these findings.
+
+## Scope and baseline
+
+Artifact Plane is the sole owner. Start from complete declared 1.11.0 knowledge, including the merged 1.12.0 and 1.12.1 extensions. Preserve the audited branch's pending 1.12.2 presentation knowledge and implementation as an explicit preparatory baseline supplied by change-spacing-control-consistency. That proposal is not established by this change. The new branch starts from the audited presentation revision; the original branch and retained evidence are preserved.
+
+The root continues to declare 1.11.0. Existing ADD 2.1.0 is the supplier; there is no proposed artifact dependency. Preserve historical snapshots, source-change provenance, recorded execution history, complete evidence rules and read-only boundaries. New delivery tasks will be created during Plan.
+
+- [UX requirements](requirements/ux-simplification.md)
+
+## Requirement self-check
+
+All ten audit findings have observable acceptance criteria. The audit is direct product observation and source inspection, not measured user research. Slow review loading was observed but its cause is unresolved; implementation must reproduce and diagnose it before claiming a repair. The user request supplies the outcome and scope, so no additional interview fact blocks Specification. KISS removes redundant interactions and reuses existing controls. STE preserves precise evidence and freshness meanings. No implementation is authorized by this phase.
+
+- [Simplified exploration contract](specifications/ux-simplification.md)
+- [Contained reading decision](decisions/011-contained-reading-navigation.md)
+
+## Specification self-check
+
+The same capable session completed Specification after Requirement. Existing contracts were amended for shared disclosure, project labels, selected completion, flow reading and review presentation. Eight stable flow records receive documented contract support. Source containment and evidence meanings are preserved. All eleven acceptance criteria have contracts and validation cases. KISS and STE checks pass. Implementation remains subject to the concrete Plan and explicit approval.
+
+- [Implementation plan](tasks/README.md)
+
+## Plan self-check
+
+The same technical-lead session completed Specification and then Plan. Seven fresh tasks with explicit ownership, governing contracts, prerequisites and concrete DoD cover UX1–UX11 and all ten audit findings. No task or evidence was copied from an earlier plan. All implementation and integrated evidence remains pending. The concrete plan awaits explicit user approval before application changes.
+
+## Integrated proposal
+
+The preparation records above describe their phase gates. After explicit user approval, the seven-task plan delivered the requested optimizations. The retained integration task records executed checks, corrections, the unresolved cause of the original review loading observation, and publication limits. Version 1.13.0 is prepared for review; merge and establishment remain separate.
+
+## Requested reading-control extension
+
+The user requested larger titles, a resizable left panel and highlighted code panels after reviewing the running proposal. UX12–UX14 extend this same outcome. Existing implementation and checks remain retained. Fresh follow-up tasks will cover only the added work; the prepared version snapshot will be reconciled after approved implementation and validation. PR #26 is still open and unmerged. No application changes are made during this preparation.
+
+- [Requested reading controls](specifications/reading-controls.md)
+
+Follow-up Specification self-check: UX12–UX14 have precise responsive, keyboard, source-preservation and sanitization contracts. No new artifact gate or ADR is needed. The existing proposed version is retained until validated reconciliation.
+
+## Validated reading controls
+
+The user approved the concrete follow-up plan. Tasks 08–11 implement larger headings, bounded accessible left navigation resizing and highlighted source/fenced code. Fresh integrated evidence is retained in task 11. The complete 1.13.0 proposal includes this extension; earlier phase gates and earlier delivered checks above remain historical records for their original scope.

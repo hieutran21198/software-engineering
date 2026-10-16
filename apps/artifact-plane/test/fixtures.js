@@ -63,7 +63,7 @@ export function sourceFixture() {
 export function git(root, ...args) {
   return execFileSync(
     "git",
-    ["-c", "core.fsmonitor=false", "-C", root, ...args],
+    ["-c", "core.fsmonitor=false", "-c", "maintenance.auto=false", "-c", "gc.auto=0", "-C", root, ...args],
     {
       encoding: "utf8",
       env: { ...process.env, GIT_OPTIONAL_LOCKS: "0" },
