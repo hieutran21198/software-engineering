@@ -12,7 +12,7 @@ export const elementType = (element) => element.path.split("/")[0];
 // One ordering rule supplies the API, canvas, and inspector.
 export function elementGroups(artifact) {
   const rank = (source) =>
-    source === `version:${artifact.currentVersion}`
+    source === "working" || source === `version:${artifact.currentVersion}`
       ? 0
       : source === `change:${artifact.activeChange}`
         ? 1
@@ -28,7 +28,9 @@ export function elementGroups(artifact) {
       count: elements.length,
       sources: sources.map((source) => ({
         source,
-        label: source.startsWith("version:")
+        label: source === "working"
+          ? "Working knowledge"
+          : source.startsWith("version:")
           ? `Current version · ${source.slice(8)}`
           : `${source === `change:${artifact.activeChange}` ? "Active change" : "Change candidate"} · ${source.slice(7)}`,
         elements: elements
@@ -60,7 +62,8 @@ export function knowledgeGroups(artifact, expanded) {
         open: expanded.has(key), depth: prefix ? 2 : 0 });
     }
   }
-  if (artifact.currentVersion) types("version:" + artifact.currentVersion);
+  if (artifact.layout === "in-place") types("working");
+  else if (artifact.currentVersion) types("version:" + artifact.currentVersion);
   if (artifact.changes.length) {
     const key = historyKey(artifact.id);
     result.push({ key, label: "Change histories", ariaLabel: "Change histories", count: artifact.changes.length,

@@ -4,7 +4,8 @@ import { relative, resolve, isAbsolute, sep } from "node:path";
 import { execFile } from "node:child_process";
 import { promisify } from "node:util";
 import {marked} from 'marked';
-import { buildSnapshot, parseArtifact } from "../src/model.js";
+import { buildSnapshot, parseArtifact, KNOWLEDGE_KINDS } from "../src/model.js";
+import { readBaselines } from "./knowledge-baseline.js";
 const execute = promisify(execFile);
 import {gitReads} from './git-reads.js';
 import {gitSlot} from './git-process.js';
@@ -71,6 +72,8 @@ export async function scanRepository(path, options = {}) {
   const contentHash=createHash('sha256');
   const loadedPaths=new Set();
   const files = new Map(),
+    layouts = {},
+    workingBytes = new Map(),
     diagnostics = [],
     unsafeTaskPaths = new Set();
   const diagnostic = (code, path, message) =>
@@ -131,6 +134,8 @@ export async function scanRepository(path, options = {}) {
       }
       const bytes = await readFile(target);
       contentHash.update(JSON.stringify(path));contentHash.update(bytes);
+      const owner = path.match(/^docs\/artifacts\/([^/]+)\/(?:requirements|specifications|decisions)\//)?.[1];
+      if (owner && layouts[owner] === "in-place") workingBytes.set(path, bytes);
       const markdown = bytes.toString("utf8");
       if (!bytes.equals(Buffer.from(markdown, "utf8"))) {
         diagnostic("unreadable-path", path, "Knowledge file is not valid UTF-8; skipped.");
@@ -185,8 +190,12 @@ export async function scanRepository(path, options = {}) {
     if (entry.name === "units-of-work") continue;
     if (!(entry.isDirectory() || entry.isSymbolicLink())) continue;
     if (!(await load(`${prefix}/README.md`))) continue;
-    const a = parseArtifact(entry.name, files.get(`${prefix}/README.md`));
-    if (a.currentVersion)
+    // Root knowledge directories select the in-place layout for this artifact.
+    const inPlace = (await directory(prefix)).some((e) => KNOWLEDGE_KINDS.includes(e.name) && (e.isDirectory() || e.isSymbolicLink()));
+    layouts[entry.name] = inPlace ? "in-place" : "legacy";
+    const a = parseArtifact(entry.name, files.get(`${prefix}/README.md`), [], layouts[entry.name]);
+    if (inPlace) for (const kind of KNOWLEDGE_KINDS) await knowledge(`${prefix}/${kind}`);
+    else if (a.currentVersion)
       for (const kind of [
         "requirements",
         "specifications",
@@ -253,12 +262,16 @@ export async function scanRepository(path, options = {}) {
   } catch {
     throw new ExploreError(422, "Git status could not be read.");
   }
+  const inPlace = Object.keys(layouts).filter((id) => layouts[id] === "in-place").sort();
+  const baselines = await readBaselines(root, runGit, inPlace, workingBytes, diagnostics);
   const snapshot = buildSnapshot(
     files,
     { path: root, branch, head, dirty: Boolean(status), status },
     diagnostics,
+    { layouts, baselines },
   );
-  return { snapshot, files, unsafeTaskPaths, revision:contentHash.digest('hex') };
+  contentHash.update(JSON.stringify(Object.entries(baselines).map(([id, b]) => [id, b.oid ?? b.state])));
+  return { snapshot, files, unsafeTaskPaths, baselines, revision:contentHash.digest('hex') };
 }
 
 const inFlight = new Map();

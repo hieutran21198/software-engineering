@@ -11,6 +11,21 @@ const same = (a, b) => JSON.stringify(a) === JSON.stringify(b);
 const report = (ds, code, path, message) => ds.push({ code, path, message });
 export const elementId = (artifact, source, path) =>
   JSON.stringify([artifact, source, path]);
+// In-place artifacts keep one working knowledge tree; legacy artifacts keep
+// snapshot copies. Readers detect the layout per artifact.
+export const KNOWLEDGE_KINDS = ["requirements", "specifications", "decisions"];
+export const WORKING = "working";
+export function detectLayout(files, id) {
+  const prefix = `${BASE}${id}/`;
+  for (const path of files.keys())
+    if (path.startsWith(prefix) && KNOWLEDGE_KINDS.includes(path.slice(prefix.length).split("/")[0]) && path.slice(prefix.length).includes("/"))
+      return "in-place";
+  return "legacy";
+}
+// Element source of an artifact's current knowledge, by layout.
+export const currentSource = (artifact) =>
+  artifact?.layout === "in-place" ? WORKING : artifact?.currentVersion ? `version:${artifact.currentVersion}` : null;
+const info = (ds, code, path, message) => ds.push({ code, path, message, severity: "info" });
 export function safeElementPath(path) {
   return (
     typeof path === "string" &&
@@ -90,9 +105,36 @@ function markdownDependencies(text) {
   }
   return list.length ? unique(list) : undefined;
 }
-export function parseArtifact(id, markdown, ds = []) {
+// The identity record of an in-place artifact is front matter only.
+function parseIdentity(id, path, data, body, ds) {
+  const version =
+    record(data) && Object.hasOwn(data, "current_version")
+      ? data.current_version === null
+        ? null
+        : typeof data.current_version === "string" && VERSION.test(data.current_version)
+          ? data.current_version
+          : undefined
+      : undefined;
+  const deps = record(data) && Object.hasOwn(data, "depends_on") ? dependencyList(data.depends_on) : [];
+  if (version === undefined || deps === undefined)
+    report(ds, "invalid-identity", path, "The identity record needs front matter with current_version (a semantic version or null) and an optional depends_on list of artifact IDs.");
+  return {
+    id,
+    layout: "in-place",
+    title: marked.lexer(body).find((t) => t.type === "heading" && t.depth === 1)?.text || id,
+    currentVersion: version ?? null,
+    dependsOn: deps ?? [],
+    publicationReviews: record(data) ? data.publication_reviews : undefined,
+    activeChange: null,
+    activeDeclaration: [],
+    changes: [],
+    elements: [],
+  };
+}
+export function parseArtifact(id, markdown, ds = [], layout = "legacy") {
   const path = `${BASE}${id}/README.md`,
     { data, body } = frontMatter(markdown, path, ds);
+  if (layout === "in-place") return { ...parseIdentity(id, path, data, body, ds), readme: markdown };
   const versions = sections(body, [
     "current established version",
     "current version",
@@ -129,6 +171,7 @@ export function parseArtifact(id, markdown, ds = []) {
     );
   return {
     id,
+    layout: "legacy",
     title:
       marked.lexer(body).find((t) => t.type === "heading" && t.depth === 1)
         ?.text || id,
@@ -140,6 +183,81 @@ export function parseArtifact(id, markdown, ds = []) {
     changes: [],
     elements: [],
   };
+}
+const VERSION_RECORD = /^versions\/(\d+\.\d+\.\d+)\/README\.md$/;
+const COPIED = /^changes\/(change-[^/]+)\/(?:requirements|specifications|decisions)\//;
+function inPlaceArtifact(a, files, baseline, diagnostics) {
+  const prefix = `${BASE}${a.id}/`,
+    copied = new Set(),
+    versions = [];
+  for (const [path, markdown] of files) {
+    if (!path.startsWith(prefix)) continue;
+    const rest = path.slice(prefix.length),
+      version = rest.match(VERSION_RECORD),
+      copy = rest.match(COPIED);
+    if (version) {
+      const { data } = frontMatter(markdown, path, []);
+      versions.push({ version: version[1], sourceChange: record(data) && typeof data.source_change === "string" ? data.source_change : null, path });
+    }
+    if (copy) copied.add(copy[1]);
+  }
+  a.versions = versions.sort((x, y) => x.version.localeCompare(y.version, undefined, { numeric: true }));
+  for (const change of a.changes) {
+    change.layout = copied.has(change.name) ? "legacy" : "in-place";
+    change.version = versions.find((v) => v.sourceChange === change.name)?.version ?? null;
+  }
+  const open = a.changes.filter((c) => c.layout === "in-place" && !c.version);
+  if (open.length === 1) a.activeChange = open[0].name;
+  else if (open.length > 1)
+    report(diagnostics, "multiple-changes", `${prefix}changes`, "Multiple open change records; no active change was selected.");
+  if (copied.size)
+    info(diagnostics, "retained-legacy-change", `${prefix}changes`, `Retained legacy change records with copied knowledge: ${[...copied].sort().join(", ")}.`);
+  for (const v of versions) {
+    const change = a.changes.find((c) => c.name === v.sourceChange);
+    const knowledge = [...files.keys()].some((p) => p.startsWith(`${prefix}versions/${v.version}/`) && KNOWLEDGE_KINDS.includes(p.slice(`${prefix}versions/${v.version}/`.length).split("/")[0]));
+    if (knowledge && change?.layout === "in-place")
+      report(diagnostics, "version-knowledge-copy", v.path, "An in-place version record must not contain knowledge directories.");
+  }
+  // The working tree is proposed; protected-ref facts are established.
+  const working = { version: a.currentVersion, dependsOn: a.dependsOn };
+  a.baseline = baseline
+    ? { state: baseline.state, ref: baseline.ref ?? null, layout: baseline.layout ?? null, reason: baseline.reason ?? null }
+    : { state: "unread", ref: null, layout: null, reason: "No protected-ref baseline was read." };
+  if (baseline?.state === "available") {
+    a.currentVersion = baseline.currentVersion;
+    a.dependsOn = baseline.dependsOn;
+  }
+  a.proposedVersion = working.version !== a.currentVersion ? working.version : null;
+  a.proposedDependsOn = working.dependsOn;
+  if (working.version && !versions.some((v) => v.version === working.version))
+    report(diagnostics, "missing-version", prefix, `Current version ${working.version} has no version record.`);
+  a.removedKnowledge = baseline?.state === "available" ? [...(baseline.removed || [])] : [];
+  for (const [path, markdown] of files) {
+    if (!path.startsWith(prefix)) continue;
+    const rest = path.slice(prefix.length),
+      change = rest.match(/^changes\/(change-[^/]+)\/(.+)$/);
+    if (KNOWLEDGE_KINDS.includes(rest.split("/")[0]) && safeElementPath(rest))
+      a.elements.push({
+        id: elementId(a.id, WORKING, rest),
+        logicalId: `${a.id}:${rest}`,
+        artifact: a.id,
+        path: rest,
+        source: WORKING,
+        state: baseline?.state === "available" ? baseline.status?.get(path) || "added" : "unknown",
+        markdown,
+        file: path,
+      });
+    else if (change && safeElementPath(change[2]) && a.changes.some((c) => c.name === change[1]))
+      a.elements.push({
+        id: elementId(a.id, `change:${change[1]}`, change[2]),
+        artifact: a.id,
+        path: change[2],
+        source: `change:${change[1]}`,
+        markdown,
+        file: path,
+      });
+  }
+  a.elements = orderElements(a);
 }
 function checkCycles(edges, label, ds) {
   const visiting = new Set(),
@@ -167,11 +285,16 @@ function checkCycles(edges, label, ds) {
   }
   for (const node of adjacency.keys()) visit(node, []);
 }
-export function buildSnapshot(files, repository = {}, inputDiagnostics = []) {
+// options.layouts overrides layout detection per artifact. options.baselines
+// supplies protected-ref facts for in-place artifacts, read by the server.
+export function buildSnapshot(files, repository = {}, inputDiagnostics = [], options = {}) {
   const diagnostics = [...inputDiagnostics];
   const artifacts = [...files]
     .filter(([p]) => /^docs\/artifacts\/[^/]+\/README\.md$/.test(p) && p !== "docs/artifacts/units-of-work/README.md")
-    .map(([p, content]) => parseArtifact(p.split("/")[2], content, diagnostics))
+    .map(([p, content]) => {
+      const id = p.split("/")[2];
+      return parseArtifact(id, content, diagnostics, options.layouts?.[id] || detectLayout(files, id));
+    })
     .sort((a, b) => a.id.localeCompare(b.id));
   const byId = new Map(artifacts.map((a) => [a.id, a])),
     edges = [],
@@ -190,6 +313,19 @@ export function buildSnapshot(files, repository = {}, inputDiagnostics = []) {
       name,
       readme: files.get(`${prefix}changes/${name}/README.md`) || "",
     }));
+    if (a.layout === "in-place") {
+      inPlaceArtifact(a, files, options.baselines?.[a.id], diagnostics);
+      for (const source of a.dependsOn) {
+        edges.push({ source, target: a.id, status: "established" });
+        if (!a.proposedDependsOn.includes(source)) edges.push({ source, target: a.id, status: "proposed-remove" });
+      }
+      for (const source of a.proposedDependsOn)
+        if (!a.dependsOn.includes(source)) edges.push({ source, target: a.id, status: "proposed-add" });
+      for (const source of new Set([...a.dependsOn, ...a.proposedDependsOn]))
+        if (!byId.has(source))
+          report(diagnostics, "missing-artifact", `${prefix}README.md`, `Dependency artifact ${source} does not exist.`);
+      continue;
+    }
     if (a.activeDeclaration.length) {
       const links = [];
       for (const text of a.activeDeclaration) marked.walkTokens(marked.lexer(text), token => {
@@ -256,6 +392,10 @@ export function buildSnapshot(files, repository = {}, inputDiagnostics = []) {
     if (!a.activeChange) continue;
     const path = `${BASE}${a.id}/changes/${a.activeChange}/dependencies.yaml`;
     if (!files.has(path)) continue;
+    if (a.layout === "in-place") {
+      info(diagnostics, "legacy-proposal-ignored", path, "dependencies.yaml is legacy-only; edit depends_on in the identity record instead.");
+      continue;
+    }
     const proposal = yaml(files.get(path), path, diagnostics);
     if (!record(proposal)) {
       report(
@@ -319,7 +459,11 @@ export function buildSnapshot(files, repository = {}, inputDiagnostics = []) {
         "Index must contain an artifacts mapping.",
       );
     else if (index) {
+      const inPlace = artifacts.filter((a) => a.layout === "in-place").map((a) => a.id);
+      if (inPlace.length)
+        info(diagnostics, "legacy-index-ignored", indexPath, `dag.yaml is legacy-only and is ignored for in-place artifacts: ${inPlace.join(", ")}.`);
       for (const a of artifacts) {
+        if (a.layout === "in-place") continue;
         const entry = index.artifacts[a.id];
         if (
           !record(entry) ||
@@ -334,7 +478,7 @@ export function buildSnapshot(files, repository = {}, inputDiagnostics = []) {
           );
       }
       for (const id of Object.keys(index.artifacts))
-        if (!byId.has(id))
+        if (!byId.has(id) && !inPlace.length)
           report(
             diagnostics,
             "index-disagreement",
@@ -354,7 +498,7 @@ export function buildSnapshot(files, repository = {}, inputDiagnostics = []) {
           diagnostics,
         ),
         documents = [data];
-      for (const token of marked.lexer(body))
+      if (a.layout !== "in-place") for (const token of marked.lexer(body))
         if (token.type === "code" && ["yaml", "yml"].includes(token.lang) && /(?:\breferences\s*:|["\']references["\']\s*:)/.test(token.text))
           documents.push(yaml(token.text, consumer.file, diagnostics));
       for (const document of documents) {
@@ -387,10 +531,12 @@ export function buildSnapshot(files, repository = {}, inputDiagnostics = []) {
             );
             continue;
           }
-          const owner = byId.get(ref.artifact),
-            status = ref.status || "established";
+          const owner = byId.get(ref.artifact);
+          let status = ref.status || "established";
           const targetSource =
-            status === "proposed"
+            owner?.layout === "in-place"
+              ? WORKING
+              : status === "proposed"
               ? typeof ref.change === "string" &&
                 /^change-[^/\\]+$/.test(ref.change)
                 ? `change:${ref.change}`
@@ -404,6 +550,11 @@ export function buildSnapshot(files, repository = {}, inputDiagnostics = []) {
                 ? elementId(ref.artifact, targetSource, ref.element)
                 : null;
           const resolved = Boolean(targetId && allElements.has(targetId));
+          // In-place selectors have no effect; the target's bytes decide the label.
+          if (owner?.layout === "in-place" && resolved) {
+            const state = allElements.get(targetId).state;
+            status = state === "added" || state === "modified" ? "proposed" : state === "unchanged" ? "established" : status;
+          }
           const message = !safe
             ? "Element path must stay within a knowledge snapshot."
             : !owner

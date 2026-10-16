@@ -208,3 +208,93 @@ test("metadata examples inside fenced code blocks do not override root declarati
   );
   assert.ok(!view.diagnostics.some((d) => d.code === "ambiguous-version"));
 });
+
+// In-place layout: identity from front matter only, working elements, open
+// changes derived from version records, and legacy index files ignored.
+import { inPlaceFixture, mixedFixture, identity, versionRecord, sourceFixture as legacyFixture } from "./fixtures.js";
+test("L1: in-place identity comes from front matter only and Markdown declarations are ignored", () => {
+  const view = buildSnapshot(inPlaceFixture());
+  const tenant = view.artifacts.find((a) => a.id === "tenant");
+  assert.equal(tenant.layout, "in-place");
+  assert.equal(tenant.currentVersion, "1.0.0");
+  assert.deepEqual(tenant.dependsOn, []);
+  assert.deepEqual(view.edges, [{ source: "tenant", target: "authentication", status: "established" }]);
+  assert.ok(!view.diagnostics.some((d) => d.severity !== "info"), JSON.stringify(view.diagnostics));
+  const login = view.artifacts.find((a) => a.id === "authentication").elements.find((e) => e.path === "specifications/login.md");
+  assert.equal(login.source, "working");
+  assert.equal(login.logicalId, "authentication:specifications/login.md");
+  assert.equal(login.state, "unknown");
+});
+test("L1: a missing or malformed identity record is invalid without prose fallback", () => {
+  for (const readme of ["# Tenant\n\n## Current version\n\n1.0.0\n", "---\ncurrent_version: one\n---\n# Tenant\n", "---\ncurrent_version: 1.0.0\ndepends_on: tenant\n---\n# Tenant\n"]) {
+    const files = inPlaceFixture();
+    files.set("docs/artifacts/tenant/README.md", readme);
+    const view = buildSnapshot(files), tenant = view.artifacts.find((a) => a.id === "tenant");
+    assert.ok(view.diagnostics.some((d) => d.code === "invalid-identity" && d.path === "docs/artifacts/tenant/README.md"), readme);
+    assert.equal(tenant.layout, "in-place");
+    assert.ok(tenant.currentVersion === null || readme.includes("depends_on: tenant"));
+  }
+});
+test("L1: open changes derive from version records; copied-knowledge changes are retained legacy records", () => {
+  const files = inPlaceFixture();
+  files.set("docs/artifacts/authentication/changes/change-old/README.md", "# Old");
+  files.set("docs/artifacts/authentication/changes/change-old/specifications/login.md", "# Copied");
+  files.set("docs/artifacts/authentication/changes/change-login/dependencies.yaml", "artifact: authentication\nadd: [tenant]\nremove: []\n");
+  files.set("docs/artifacts/dag.yaml", "artifacts:\n  tenant: {path: tenant, depends_on: [authentication]}\n");
+  const view = buildSnapshot(files), auth = view.artifacts.find((a) => a.id === "authentication");
+  assert.equal(auth.activeChange, "change-login");
+  assert.deepEqual(auth.changes.map((c) => [c.name, c.layout, c.version]), [["change-initial", "in-place", "1.0.0"], ["change-login", "in-place", null], ["change-old", "legacy", null]]);
+  const codes = view.diagnostics.map((d) => [d.code, d.severity]);
+  assert.deepEqual(codes.filter(([, s]) => s !== "info"), []);
+  for (const code of ["retained-legacy-change", "legacy-proposal-ignored", "legacy-index-ignored"]) assert.ok(codes.some(([c]) => c === code), code);
+  assert.equal(view.edges.length, 1);
+  files.set("docs/artifacts/authentication/changes/change-second/README.md", "# Second");
+  assert.ok(buildSnapshot(files).diagnostics.some((d) => d.code === "multiple-changes"));
+});
+test("L1: knowledge directories under an in-place version record are reported", () => {
+  const files = inPlaceFixture();
+  files.set("docs/artifacts/tenant/versions/1.0.0/specifications/identity.md", "# Copy");
+  const view = buildSnapshot(files);
+  assert.ok(view.diagnostics.some((d) => d.code === "version-knowledge-copy" && d.path === "docs/artifacts/tenant/versions/1.0.0/README.md"));
+  files.delete("docs/artifacts/tenant/versions/1.0.0/README.md");
+  assert.ok(buildSnapshot(files).diagnostics.some((d) => d.code === "missing-version"));
+});
+test("L1: in-place references use front matter only; selectors have no effect", () => {
+  const files = inPlaceFixture();
+  files.set("docs/artifacts/authentication/specifications/fenced.md", "# Example\n\n```yaml\nreferences:\n  - artifact: tenant\n    element: specifications/missing.md\n    requires: example\n```\n");
+  const view = buildSnapshot(files);
+  assert.equal(view.references.length, 1);
+  const [ref] = view.references;
+  assert.equal(ref.resolved, true);
+  assert.equal(ref.targetSource, "working");
+  assert.equal(ref.status, "proposed");
+  assert.ok(!view.diagnostics.some((d) => d.code === "unresolved-reference"));
+});
+test("L1: protected-ref baselines separate established and proposed facts", () => {
+  const files = inPlaceFixture();
+  files.set("docs/artifacts/authentication/README.md", identity("Authentication", "1.1.0", []));
+  files.set("docs/artifacts/authentication/versions/1.1.0/README.md", versionRecord("change-login"));
+  const status = new Map([["docs/artifacts/tenant/specifications/identity.md", "modified"]]);
+  const view = buildSnapshot(files, {}, [], { baselines: {
+    authentication: { state: "available", ref: "refs/heads/main", currentVersion: "1.0.0", dependsOn: ["tenant"], status: new Map(), removed: ["docs/artifacts/authentication/specifications/old.md"] },
+    tenant: { state: "available", ref: "refs/heads/main", currentVersion: "1.0.0", dependsOn: [], status, removed: [] },
+  } });
+  const auth = view.artifacts.find((a) => a.id === "authentication");
+  assert.equal(auth.currentVersion, "1.0.0");
+  assert.equal(auth.proposedVersion, "1.1.0");
+  assert.equal(auth.activeChange, null);
+  assert.deepEqual(auth.removedKnowledge, ["docs/artifacts/authentication/specifications/old.md"]);
+  assert.deepEqual(view.edges.map((e) => e.status), ["established", "proposed-remove"]);
+  assert.equal(auth.elements.find((e) => e.path === "specifications/login.md").state, "added");
+  assert.equal(view.references[0].status, "proposed");
+});
+test("L7: mixed repositories read both layouts; legacy results are unchanged", () => {
+  const view = buildSnapshot(mixedFixture());
+  const tenant = view.artifacts.find((a) => a.id === "tenant"), auth = view.artifacts.find((a) => a.id === "authentication");
+  assert.equal(tenant.layout, "legacy");
+  assert.equal(auth.layout, "in-place");
+  assert.equal(view.references[0].targetSource, "version:1.0.0");
+  assert.equal(view.references[0].resolved, true);
+  const legacy = buildSnapshot(legacyFixture());
+  assert.ok(legacy.artifacts.every((a) => a.layout === "legacy"));
+});

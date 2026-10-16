@@ -92,3 +92,57 @@ test("knowledge symlinks cannot expose Git metadata", async (t) => {
   );
   assert.ok(view.diagnostics.some((d) => d.code === "unsafe-path"));
 });
+
+import { scanRepository } from "../server/reader.js";
+import { inPlaceFixture, mixedFixture, transitionRepository } from "./fixtures.js";
+test("L1/L2: in-place scans read root knowledge and protected-ref baselines without changing bytes", async (t) => {
+  const fixture = await fixtureRepository(inPlaceFixture());
+  t.after(fixture.cleanup);
+  const before = await fingerprint(fixture.root);
+  const { snapshot, baselines } = await scanRepository(fixture.root);
+  const auth = snapshot.artifacts.find((a) => a.id === "authentication");
+  assert.equal(auth.layout, "in-place");
+  assert.equal(auth.baseline.state, "available");
+  assert.equal(baselines.authentication.layout, "in-place");
+  assert.deepEqual([...new Set(auth.elements.filter((e) => e.source === "working").map((e) => e.state))], ["unchanged"]);
+  assert.equal(snapshot.references[0].status, "established");
+  assert.equal(auth.activeChange, "change-login");
+  assert.ok(auth.elements.some((e) => e.source === "change:change-login" && e.path === "tasks/README.md"));
+  assert.deepEqual(await fingerprint(fixture.root), before);
+});
+test("L2: a transition branch compares in-place knowledge with the legacy snapshot on main", async (t) => {
+  const fixture = await transitionRepository();
+  t.after(fixture.cleanup);
+  const { snapshot } = await scanRepository(fixture.root);
+  const tenant = snapshot.artifacts[0];
+  assert.equal(tenant.baseline.layout, "legacy");
+  assert.equal(tenant.currentVersion, "1.0.0");
+  assert.equal(tenant.proposedVersion, "1.1.0");
+  assert.deepEqual(Object.fromEntries(tenant.elements.filter((e) => e.source === "working").map((e) => [e.path, e.state])), { "specifications/identity.md": "unchanged", "specifications/new.md": "added" });
+  assert.deepEqual(tenant.removedKnowledge, ["docs/artifacts/tenant/versions/1.0.0/specifications/retired.md"]);
+  assert.ok(!snapshot.diagnostics.some((d) => d.severity !== "info"), JSON.stringify(snapshot.diagnostics));
+});
+test("L2: missing or disagreeing protected refs leave established in-place knowledge unknown", async (t) => {
+  const fixture = await fixtureRepository(inPlaceFixture());
+  t.after(fixture.cleanup);
+  git(fixture.root, "branch", "master");
+  await writeFile(join(fixture.root, "docs/artifacts/tenant/specifications/identity.md"), "# Changed");
+  git(fixture.root, "checkout", "-q", "master");
+  git(fixture.root, "-c", "user.name=F", "-c", "user.email=f@example.invalid", "commit", "-qam", "diverge");
+  let { snapshot } = await scanRepository(fixture.root);
+  assert.equal(snapshot.artifacts.find((a) => a.id === "tenant").baseline.state, "unknown");
+  assert.ok(snapshot.diagnostics.some((d) => d.code === "baseline-disagreement"));
+  git(fixture.root, "checkout", "-q", "--detach");
+  git(fixture.root, "branch", "-q", "-D", "main", "master");
+  ({ snapshot } = await scanRepository(fixture.root));
+  assert.ok(snapshot.diagnostics.some((d) => d.code === "missing-protected-ref"));
+  assert.ok(snapshot.artifacts.every((a) => a.baseline.state === "unknown"));
+});
+test("L7: mixed repositories load both layouts and keep legacy version knowledge", async (t) => {
+  const fixture = await fixtureRepository(mixedFixture());
+  t.after(fixture.cleanup);
+  const { snapshot, files } = await scanRepository(fixture.root);
+  assert.deepEqual(snapshot.artifacts.map((a) => [a.id, a.layout]), [["authentication", "in-place"], ["tenant", "legacy"]]);
+  assert.ok(files.has("docs/artifacts/tenant/versions/1.0.0/specifications/identity.md"));
+  assert.equal(snapshot.references[0].resolved, true);
+});
