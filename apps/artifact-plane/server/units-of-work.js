@@ -2,6 +2,7 @@ import {buildUnitGraphs} from './unit-graphs.js';
 import {parseDocument} from 'yaml';
 import {marked} from 'marked';
 import {buildTaskGraph} from './task-graph.js';
+import {protectedRefs, protectedTree, blobId} from './knowledge-baseline.js';
 
 const name = value => typeof value === 'string' && /^[a-z0-9][a-z0-9-]*$/.test(value);
 const changeName = value => typeof value === 'string' && /^change-[a-z0-9][a-z0-9-]*$/.test(value);
@@ -164,9 +165,60 @@ export async function versionSnapshot(root, git, ref, record) {
     return {state: 'available', ref, commit: commits[0], path: record};
   } catch {return {state: 'unknown', reason: 'Protected-ref history cannot be read.'};}
 }
+// Protected facts shared by all members of one read: refs, trees with blob IDs,
+// and the introducing commits of version records. Read once, used many times.
+export function protectedContext(root, git) {
+  let refs, trees = new Map(), introductions = new Map(), shallow;
+  return {
+    refs: () => refs ??= protectedRefs(root, git),
+    tree: ref => {if (!trees.has(ref.oid)) trees.set(ref.oid, protectedTree(root, git, ref.oid, ['docs/artifacts']));return trees.get(ref.oid);},
+    shallow: () => shallow ??= git(root, ['rev-parse', '--is-shallow-repository']).then(v => v === 'true'),
+    introduced: ref => {
+      if (!introductions.has(ref.oid)) introductions.set(ref.oid, git(root, ['log', '--first-parent', '--diff-filter=A', '--format=%x00%H', '--name-only', ref.oid, '--', ':(glob)docs/artifacts/*/versions/*/README.md'], true).then(raw => {
+        const map = new Map();let commit = null;
+        for (const token of raw.split(/\0|\n/)) {if (/^[a-f0-9]{40,64}$/.test(token)) commit = token;else if (token && commit) map.set(token, [...(map.get(token) || []), commit]);}
+        return map;
+      }));
+      return introductions.get(ref.oid);
+    },
+  };
+}
+async function contextPublication(root, prefix, files, reviewSource, deliveryPath, layout, context) {
+  const prefixes = [prefix, ...(deliveryPath ? [`${deliveryPath}tasks/`] : [])];
+  const refs = await context.refs();
+  if (!refs.length) return {state:'unknown', reasons:['No readable local main or master ref.'], sources:[]};
+  const selected = [...files].filter(([p]) => prefixes.some(x => p.startsWith(x)));
+  const observed = [], sources = [];
+  for (const ref of refs) {
+    const tree = await context.tree(ref), entries = [...tree].filter(([p]) => prefixes.some(x => p.startsWith(x)));
+    observed.push(JSON.stringify(entries.sort()));
+    if (entries.length && entries.length === selected.length && selected.every(([p, body]) => tree.get(p) === blobId(Buffer.from(body), ref.oid.length))) sources.push({ref: ref.ref, path: `${prefix}README.md`}, ...(deliveryPath ? [{ref: ref.ref, path: `${deliveryPath}tasks/README.md`}] : []));
+  }
+  if (new Set(observed).size > 1) return {state:'unknown',reasons:['Protected refs disagree about delivered knowledge.'],sources:[]};
+  if (!sources.length) return {state:'proposed',reasons:['Delivered knowledge or task records do not match local main or master.'],sources:[]};
+  return {sources, ref: refs.find(r => r.ref === sources[0].ref)};
+}
 // Only local protected refs establish knowledge. Branch files are never proof.
 // Keep reviewText for call compatibility; raw excerpts no longer supply evidence.
-export async function publication(root, prefix, files, git, reviewText = '', reviewSource = null, deliveryPath = null, layout = 'legacy') {
+export async function publication(root, prefix, files, git, reviewText = '', reviewSource = null, deliveryPath = null, layout = 'legacy', context = null) {
+  if (context) {
+    try {
+      const matched = await contextPublication(root, prefix, files, reviewSource, deliveryPath, layout, context);
+      if (!matched.ref) return matched;
+      const sources = matched.sources, [, artifact, version] = prefix.match(/^docs\/artifacts\/([^/]+)\/versions\/([^/]+)\/$/) || [];
+      const structured = publicationReviews(files, artifact, version, reviewSource);
+      if (structured.diagnostics.length) return {state:'unknown',reasons:structured.diagnostics.map(d=>d.message),sources:[],diagnostics:structured.diagnostics};
+      if (layout === 'in-place') {
+        if (await context.shallow()) return {state:'unknown',reasons:['Shallow history cannot resolve the version snapshot.'],sources:[]};
+        const commits = (await context.introduced(matched.ref)).get(`${prefix}README.md`) || [];
+        if (commits.length !== 1) return {state:'unknown',reasons:[commits.length ? 'The version record was introduced more than once.' : 'No introducing commit was found on the protected ref.'],sources:[]};
+        sources.push({kind:'version-snapshot', state:'available', ref: matched.ref.ref, commit: commits[0], path: `${prefix}README.md`});
+      }
+      const reviews = structured.declared ? structured.evidence : layout === 'in-place' ? [] : publicationReview(files, prefix, reviewSource);
+      sources.push(...reviews);
+      return {state: reviews.length ? 'established' : 'unverified', reasons: reviews.length ? [] : [layout === 'in-place' ? 'Knowledge is published; no publication_reviews record covers this version.' : 'Knowledge is published; all required implementation merges lack explicit scoped Publication review evidence.'], sources};
+    } catch {return {state:'unknown',reasons:['Protected-ref snapshot evidence could not be read.'],sources:[]};}
+  }
   const prefixes = [prefix, ...(deliveryPath ? [`${deliveryPath}tasks/`] : [])];
   const refs = [];
   for (const ref of ['refs/heads/main','refs/heads/master']) {
@@ -212,7 +264,7 @@ export function evidenceDetail(markdown, fragment) {
   return section.some(t=>t.type!=='space') ? section.map(t=>t.raw).join('') : null;
 }
 export async function readUnitsOfWork(root, data, changes, git, checklist, options = {}) {
-  const {files,snapshot,unsafeTaskPaths} = data, units=unitBriefs(files), owners=new Map(), publicationCache=new Map();
+  const {files,snapshot,unsafeTaskPaths} = data, units=unitBriefs(files), owners=new Map(), publicationCache=new Map(), context=protectedContext(root,git);
   for(const unit of units)for(const m of unit.members){const key=JSON.stringify([m.artifact,m.change]);const list=owners.get(key)||[];list.push(unit);owners.set(key,list);}
   for(const list of owners.values())if(new Set(list).size>1)for(const unit of new Set(list))unit.diagnostics.push({code:'duplicate-membership',path:unit.path,message:'This change is claimed by multiple units of work.'});
   for(const unit of units.filter(u=>!options.unit || u.id===options.unit)){
@@ -237,7 +289,7 @@ export async function readUnitsOfWork(root, data, changes, git, checklist, optio
       if(member.deliveredVersion && !options.deferPublication){
         const key=JSON.stringify([member.sourcePath,member.deliveryPath,unit.path]);
         if(delivery.diagnostic)member.establishmentEvidence={state:'unknown',reasons:['Delivered task source cannot be resolved.'],sources:[]};
-        else {if(!publicationCache.has(key))publicationCache.set(key,await publication(root,member.sourcePath,files,git,unit.markdown,unit.path,changeOwned?member.deliveryPath:null,artifact?.layout));member.establishmentEvidence=publicationCache.get(key);}
+        else {if(!publicationCache.has(key))publicationCache.set(key,await publication(root,member.sourcePath,files,git,unit.markdown,unit.path,changeOwned?member.deliveryPath:null,artifact?.layout,context));member.establishmentEvidence=publicationCache.get(key);}
       }
       member.knowledge=[...files].filter(([p])=>member.sourcePath && p.startsWith(member.sourcePath) || member.retainedChangePath && p.startsWith(member.retainedChangePath)).map(([path,markdown])=>({path,markdown}));
       member.markdown=files.get(`${member.sourcePath}README.md`)||'';
