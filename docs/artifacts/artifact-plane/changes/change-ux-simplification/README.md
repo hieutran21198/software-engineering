@@ -30,3 +30,7 @@ The same technical-lead session completed Specification and then Plan. Seven fre
 ## Integrated proposal
 
 The preparation records above describe their phase gates. After explicit user approval, the seven-task plan delivered the requested optimizations. The retained integration task records executed checks, corrections, the unresolved cause of the original review loading observation, and publication limits. Version 1.13.0 is prepared for review; merge and establishment remain separate.
+
+## Requested reading-control extension
+
+The user requested larger titles, a resizable left panel and highlighted code panels after reviewing the running proposal. UX12–UX14 extend this same outcome. Existing implementation and checks remain retained. Fresh follow-up tasks will cover only the added work; the prepared version snapshot will be reconciled after approved implementation and validation. PR #26 is still open and unmerged. No application changes are made during this preparation.

@@ -53,6 +53,10 @@ acceptance:
     criterion: Integrated wide/narrow keyboard and refresh journeys preserve graph
       meaning, source containment, captured evidence and unchanged fixture bytes/Git state.
     integration: true
+  - id: reading-controls
+    criterion: Document headings have a clear size hierarchy, left navigation can resize
+      accessibly without crowding the center, and source and fenced code panels
+      highlight supported syntax while preserving exact inert source text.
 evidence:
   - criterion: context
     method: Run integrated browser, source-safety and knowledge checks for this criterion.
@@ -92,6 +96,10 @@ New dashboards, domain graph semantics, ADD changes, hosted services, arbitrary 
 
 ## Combined checks
 
-The originating integration task records the complete commands, actual results, earlier failures and limitations. The combined revision passes 266 Node checks, 69 Chromium cases, the production build, root Go tests/vet and the website build. Browser cases preserve fixture bytes/Git state and cover source switching, reading/return, safe links, evidence retry, search, review, project restoration, runtime observation and responsive keyboard layouts. Five repeated task-graph runs add 15 passing cases for the intermittent initial-render correction.
+The originating integration task records the complete commands, actual results, earlier failures and limitations. The original approved implementation passed 266 Node checks, 69 Chromium cases, the production build, root Go tests/vet and the website build. Browser cases preserve fixture bytes/Git state and cover source switching, reading/return, safe links, evidence retry, search, review, project restoration, runtime observation and responsive keyboard layouts. Five repeated task-graph runs add 15 passing cases for the intermittent initial-render correction.
 
 Knowledge validation checks seven tasks/six acyclic edges, eight valid affected flows, one membership, complete snapshot categories, retained change-owned tasks and safe documentation hierarchy. This brief records passing checks. Version 1.13.0 and its originating tasks remain proposed until required knowledge and implementation merge. The inherited 1.12.2 presentation proposal is included in this review without a separate establishment claim. No merged outcome is inferred from this brief.
+
+## Reading-control extension
+
+The user's follow-up adds heading hierarchy, left navigation resizing and highlighted source/example code to this same deliverable. The new reading-controls criterion has no passing check evidence yet. Earlier recorded checks cover the original implementation; they do not validate the added behavior. Membership and affected flow identities remain unchanged. Repository exploration and source retrieval require documented presentation amendments; no new artifact dependency or runtime journey is introduced.
