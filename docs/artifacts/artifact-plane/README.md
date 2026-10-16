@@ -22,7 +22,7 @@ Version 1.10.0, its originating delivery tasks, and implementation landed on mai
 
 ## Active change
 
-- [Simpler Artifact Plane exploration](changes/change-ux-simplification/README.md)
+- [Model explanations](changes/change-model-explanations/README.md)
 
 
 ## Knowledge snapshot

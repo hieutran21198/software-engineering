@@ -20,7 +20,7 @@ ADD 2.1.0 knowledge, bundled implementation and retained delivery evidence lande
 
 ## Active change
 
-- [Flow discovery and retrieval](changes/change-flow-discovery/README.md)
+- [Model explanations](changes/change-model-explanations/README.md)
 
 
 ## Knowledge snapshot
