@@ -6,10 +6,25 @@ tasks:
   - 04-model-explanations.md
   - 05-incremental-refresh.md
   - 06-responsive-repair.md
+  - 08-compact-context.md
   - 07-integration-publication.md
 ---
 
 # artifact-plane evidence and usability plan
+
+## Proposed agent-efficiency extension
+
+The seven existing tasks and their earlier authorization are retained. Add
+[compact agent context](08-compact-context.md) after comparison-service and before
+integration-publication. This material extension and the revised integration join
+await explicit approval under the current request. Do not begin this extension
+from the earlier approval. Keep one active Plane change and existing membership.
+No new ADD 2.4.0 establishment gate is needed; verify existing ADD 2.3.0 first.
+
+There is one changed repository. The revised handoff prepares one combined PR
+for proposed ADD 2.4.0 and Plane 1.14.0 after both integrated checks, preserving the
+two units and linking merged upstream PR #28. This replaces the pending separate
+downstream PR organization only; existing upstream delivery history stays intact.
 
 ## Gates and sequence
 
@@ -21,7 +36,8 @@ Explicit approval of this new combined plan and establishment of the new ADD evi
 4. [Explain dependencies and model interactions](04-model-explanations.md)
 5. [Reduce idle full reads with bounded recovery](05-incremental-refresh.md)
 6. [Resolve the merged browser regressions](06-responsive-repair.md)
-7. [Validate the combined outcome and prepare Plane review](07-integration-publication.md)
+7. [Bound complete agent context responses](08-compact-context.md)
+8. [Validate the combined outcome and prepare Plane review](07-integration-publication.md)
 
 ## Execution
 

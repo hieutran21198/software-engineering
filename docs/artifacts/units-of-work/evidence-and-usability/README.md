@@ -113,3 +113,15 @@ The upstream ADD member passes Go tests/vet, bundle fidelity, scaffold assembly,
 ## Upstream review
 
 [PR #28](https://github.com/hieutran21198/software-engineering/pull/28) carries the validated ADD 2.3.0 proposal and approved downstream preparation. Its team review and merge, followed by exact protected-contract/delivery recheck, gate Plane implementation. The approval already covers the unchanged ten-task plan and proposed versions. The shared outcome remains incomplete.
+
+## Proposed agent-efficiency plan revision
+
+PR #28 is now merged on remote main. Protected-ref contract and delivery recheck
+remain required before execution; merged publication does not clear failed Plane
+checks. The earlier review/handoff wording above records its preparation context.
+The revised pending plan retains seven Plane tasks and adds compact-context after
+comparison-service, with the integration join waiting for compact-context too.
+The extension and combined repository PR organization await explicit user approval.
+No new implementation is claimed and no historical member is reassigned. Proposed
+Plane 1.14.0 remains the existing version choice. The separate ADD efficiency unit
+prepares ADD 2.4.0; compact transport has no prerequisite on that new release.

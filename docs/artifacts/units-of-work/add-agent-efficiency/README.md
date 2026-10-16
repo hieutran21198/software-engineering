@@ -71,8 +71,25 @@ and affected integration join require renewed approval. Suggested new ADD versio
 2.4.0, a compatible minor release; suggested Plane 1.14.0 remains the pending plan's
 version. Confirm or override these with implementation approval.
 
+- [ADD implementation plan](../../artifact-driven/changes/change-agent-efficiency/tasks/README.md)
+- [Existing Plane plan with proposed extension](../../artifact-plane/changes/change-evidence-and-usability/tasks/README.md)
+
+The combined review has four new ADD tasks and one new Plane task. Seven pending
+Plane tasks are reused. One repository PR will carry both proposed versions after
+integrated checks; separate unit evidence and unchanged artifact gates remain.
+
 ## Combined checks
 
 No implementation checks have run for this outcome. Audit baseline checks are
 recorded in audit.md and do not satisfy new task DoD. Record executed combined
 checks here after approval and implementation, with task-owned detail references.
+
+## Preparation validation
+
+The existing task/unit/flow readers passed checks for the new ADD plan and amended
+Plane plan: 12 tasks, 16 internal edges, 13 flow definitions, and unique membership
+across all 15 readable units. Checked 59 relative Markdown targets/hierarchy links
+with no missing targets or ancestor-page references. git diff --check passed.
+All new task DoD items remain unchecked. Changes are confined to project knowledge;
+canonical/embedded guidance, application/CLI implementation and established snapshots
+remain unchanged. These results validate preparation, not the proposed behavior.

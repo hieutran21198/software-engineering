@@ -14,6 +14,8 @@ This change does not add a harness registrar, scaffold runner, workflow database
 - [Baseline requirements](requirements/baseline.md)
 - [Knowledge contract](specifications/knowledge.md)
 - [Delivery contract](specifications/delivery.md)
+- [Efficiency contract](specifications/agent-efficiency.md)
+- [Implementation plan awaiting approval](tasks/README.md)
 
 ## Preparation limits
 
