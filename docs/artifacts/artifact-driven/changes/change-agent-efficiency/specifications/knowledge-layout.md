@@ -83,7 +83,7 @@ Readers derive the following facts; none is stored:
 | --- | --- |
 | Established knowledge | The artifact directory in the tree of refs/heads/main or refs/heads/master. For a legacy artifact on that ref, versions/<current_version>/. |
 | Proposed knowledge | Files in the checked-out tree whose bytes differ from established knowledge, including additions and removals. |
-| Open change | A change directory with no version record naming it in source_change. |
+| Open change | A change directory that no version record names in source_change and that contains no knowledge directories. A change directory with copied knowledge directories is a retained legacy record, never an open in-place change. |
 | Established version | current_version in the protected branch's identity record, whose version record exists there. |
 | Version snapshot | The tree of the first-parent protected-branch commit that introduced versions/<version>/README.md. A tag `<artifact>/<version>` on that commit is optional. |
 | Dependency graph | depends_on of identity records. Proposed edges are the difference between the checked-out and protected identity records. Cycles are diagnostics in both views. |

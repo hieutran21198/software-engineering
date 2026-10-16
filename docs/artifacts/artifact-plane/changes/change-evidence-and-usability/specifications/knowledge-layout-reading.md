@@ -15,7 +15,7 @@ Governs L1 to L7 and M1 to M5 in requirements/knowledge-layout.md. Implementatio
 
 scanRepository and parseArtifact detect the layout per artifact: in-place when requirements, specifications or decisions exists directly under the artifact directory, otherwise legacy. For in-place artifacts, parseArtifact reads current_version, depends_on and publication_reviews from front matter only and ignores Markdown declaration sections; a missing or malformed identity record is an invalid-identity diagnostic, not a prose fallback. Legacy artifacts keep the existing parser, including Markdown sections, dag.yaml checks and dependencies.yaml proposals.
 
-Version records are versions/<version>/README.md with source_change. On the in-place path a version directory with knowledge subdirectories is a diagnostic. Change records are changes/<change>/README.md; an open change is one that no version record names. The declared active-change link and delivery_tasks marker are not read for in-place artifacts.
+Version records are versions/<version>/README.md with source_change. On the in-place path a version directory with knowledge subdirectories is a diagnostic. Change records are changes/<change>/README.md. An open change is one that no version record names and that has no knowledge directories; a change directory with copied knowledge directories is read as a retained legacy change with an informational diagnostic. The declared active-change link and delivery_tasks marker are not read for in-place artifacts.
 
 ## Baseline and comparison through Git
 
