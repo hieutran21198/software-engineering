@@ -52,10 +52,10 @@ test('reading is primary and list disclosure preserves graph nodes and viewport'
   await panel.getByRole('button',{name:'Requirements in inspector',exact:true}).click();
   expect(await page.locator('.canvas-surface .react-flow__node').count()).toBe(nodes);
   await panel.getByRole('button',{name:'requirements/need.md version:1.0.0',exact:true}).click();
-  const reader=page.getByRole('region',{name:'Knowledge reader'});await expect(reader).toContainText('requirements/need.md');await expect(panel).toBeHidden();
-  await reader.getByRole('button',{name:'Back to artifact',exact:true}).click();await expect(reader).toHaveCount(0);await expect(panel).toBeVisible();
+  const reader=page.getByRole('region',{name:'Knowledge reader'});await expect(reader).toContainText('requirements/need.md');await expect(panel).toBeHidden();await expect(reader.getByRole('button',{name:'Back to artifact',exact:true})).toBeFocused();
+  await reader.getByRole('button',{name:'Back to artifact',exact:true}).click();await expect(reader).toHaveCount(0);await expect(panel).toBeVisible();await expect(panel.getByRole('button',{name:'requirements/need.md version:1.0.0',exact:true})).toBeFocused();
   expect(await page.locator('.canvas-surface .react-flow__viewport').getAttribute('style')).toBe(viewport);
-  for(const width of [390,700,851,1440]){await page.setViewportSize({width,height:1000});await panel.getByRole('button',{name:'Read overview',exact:true}).click();await expect(page.getByRole('region',{name:'Knowledge reader'})).toContainText('Knowledge');expect(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth)).toBe(true);await page.getByRole('button',{name:'Back to graph',exact:true}).click();}
+  for(const width of [390,700,851,1440]){await page.setViewportSize({width,height:1000});await panel.getByRole('button',{name:'Read overview',exact:true}).click();await expect(page.getByRole('region',{name:'Knowledge reader'}).locator('.markdown')).toContainText('Knowledge knowledge.');expect(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth)).toBe(true);await page.screenshot({path:`test-results/ux-reader-${width}.png`,fullPage:true});await page.getByRole('button',{name:'Back to graph',exact:true}).click();}
   expect(await fingerprint(fixture.root)).toEqual(before);
  }finally{await fixture.cleanup();}
 });
@@ -116,4 +116,9 @@ test('partial review sources require explicit complete loading before diff align
   await page.goto('/');await page.getByLabel('Repository path').fill(fixture.root);await page.getByRole('button',{name:'Open repository',exact:true}).click();await page.getByRole('navigation',{name:'Artifacts'}).getByRole('button',{name:/Demo/}).click();await page.getByRole('button',{name:/^change-next/}).click();await page.getByRole('button',{name:'Review change',exact:true}).click();
   const passages=page.getByRole('region',{name:'Changed passages'});await expect(passages).toContainText('Partial source excerpts');await expect(passages.locator('.diff-line')).toHaveCount(0);await passages.getByRole('button',{name:'Load full comparison',exact:true}).click();await expect(passages.locator('.diff-line.add')).not.toHaveCount(0);await expect(passages.locator('.diff-line.remove')).not.toHaveCount(0);await expect(passages.getByRole('button',{name:'Load full comparison',exact:true})).toHaveCount(0);
  }finally{await fixture.cleanup();}
+});
+
+test('initial compact workspace frames every artifact without a manual fit',async({page})=>{
+ const {sourceFixture}=await import('../fixtures.js'),fixture=await fixtureRepository(sourceFixture());
+ try{await page.goto('/');await page.getByLabel('Repository path').fill(fixture.root);await page.getByRole('button',{name:'Open repository',exact:true}).click();await expect(page.locator('.canvas-surface .react-flow__node')).toHaveCount(3);await expect.poll(()=>page.locator('.canvas-surface').evaluate(el=>{const bounds=el.getBoundingClientRect();return [...el.querySelectorAll('.react-flow__node')].every(n=>{const r=n.getBoundingClientRect();return r.left>=bounds.left&&r.right<=bounds.right&&r.top>=bounds.top&&r.bottom<=bounds.bottom;});})).toBe(true);}finally{await fixture.cleanup();}
 });

@@ -207,7 +207,8 @@ export function ProjectExplorer({active: isActive = true, initialPath = "", onOp
   const [expandedTypes, setExpandedTypes] = useState(new Set());
   const [listTypes,setListTypes]=useState(new Set()),[readerTrail,setReaderTrail]=useState([]),[flowSelected,setFlowSelected]=useState(false);
   const reader=readerTrail.at(-1);
-  const openReader=entry=>setReaderTrail(current=>[...current,entry]);
+  const handleFlowSelection=useCallback(selected=>{setFlowSelected(selected);setReaderTrail(current=>current.length?[]:current);},[]);
+  const openReader=entry=>setReaderTrail(current=>entry?[...current,entry]:[]);
   const closeReader=()=>{setReaderTrail([]);};
   const backReader=()=>{if(readerTrail.length===1&&reader?.scope?.artifact)setSelection({artifact:reader.scope.artifact});setReaderTrail(current=>current.slice(0,-1));};
   const toggleList=key=>setListTypes(current=>{const next=new Set(current);next.has(key)?next.delete(key):next.add(key);return next;});
@@ -418,7 +419,7 @@ export function ProjectExplorer({active: isActive = true, initialPath = "", onOp
   }
   function readElement(e){
     setSelection({artifact:e.artifact,element:e.id});setReviewKey(null);setDeliveryChange(null);setTaskChange(null);
-    openReader({source:e.file,title:e.path,parent:'artifact',scope:{artifact:e.artifact,...(e.source.startsWith('change:')?{change:e.source.slice(7)}:{})}});
+    openReader({returnFocus:e.id,source:e.file,title:e.path,parent:'artifact',scope:{artifact:e.artifact,...(e.source.startsWith('change:')?{change:e.source.slice(7)}:{})}});
   }
   function selectTarget(ref) {
     revealElement(ref.artifact, ref.targetId);
@@ -636,6 +637,7 @@ export function ProjectExplorer({active: isActive = true, initialPath = "", onOp
                 onNodeClick={onNodeClick}
                 fitView
                 fitViewOptions={{ padding: 0.18 }}
+                onInit={instance=>requestAnimationFrame(()=>requestAnimationFrame(()=>instance.fitView({padding:0.18})))}
                 nodesDraggable={false}
                 nodesConnectable={false}
                 edgesReconnectable={false}
@@ -692,7 +694,7 @@ export function ProjectExplorer({active: isActive = true, initialPath = "", onOp
           {snapshot && reviewKey && <ChangeReview root={projectRoot} contextKey={reviewKey} epoch={overviewEpoch} session={loadedSession} active={isActive&&view==='canvas'} updating={busy} repositoryFresh={fresh} inspector={reviewInspector} onBack={()=>setReviewKey(null)}/>}
           {snapshot && taskContext && <div style={{display:view === "canvas" ? "contents" : "none"}}><TaskGraph key={taskChange} context={taskContext} selection={taskSelected} onSelect={setTaskSelected} onBack={()=>{setTaskChange(null);setTaskSelected(null);}}/></div>}
           {snapshot && view==='recorded' && <RecordedView id={recordedSelected} selection={recordedNode} onSelect={setRecordedNode}/>}
-          {snapshot && <Flows path={projectRoot} worktree={unitWorktree} epoch={overviewEpoch} isActive={isActive&&view==="flows"} entry={flowEntry} knowledge={flowKnowledge} artifacts={snapshot.artifacts.map(a=>({id:a.id,title:a.title}))} sidebar={flowSidebar} inspector={flowInspector} onSelection={setFlowSelected} onRead={openReader}/>}
+          {snapshot && <Flows path={projectRoot} worktree={unitWorktree} epoch={overviewEpoch} isActive={isActive&&view==="flows"} entry={flowEntry} knowledge={flowKnowledge} artifacts={snapshot.artifacts.map(a=>({id:a.id,title:a.title}))} sidebar={flowSidebar} inspector={flowInspector} onSelection={handleFlowSelection} onRead={openReader}/>}
           {(sectionState==='Error'||sectionState==='Stale')&&<div className="section-retry" role="alert">Evidence could not be updated. <button onClick={()=>setSectionRetry(n=>n+1)}>Retry evidence</button></div>}
           {snapshot && view === "units" && <UnitView loading={sectionState} context={selectedUnit} view={unitView} onView={value=>{setUnitView(value);setUnitNodeSelected(null);}} planning={unitPlanning} onPlanning={value=>{setUnitPlanning(value);setUnitNodeSelected(null);}} selection={unitNodeSelected} onSelect={setUnitNodeSelected}/>}
         </main>
@@ -818,6 +820,7 @@ export function ProjectExplorer({active: isActive = true, initialPath = "", onOp
                                   {source.elements.map((e) => (
                                     <button
                                       className="element-list-item"
+                                      data-reader-return={e.id}
                                       key={e.id}
                                       onClick={() =>
                                         readElement(e)

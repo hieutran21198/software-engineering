@@ -2,6 +2,7 @@ import { test, expect } from "@playwright/test";
 import {
   fixtureRepository,
   orderingFixture,
+  rootReadme,
   fingerprint,
 } from "../fixtures.js";
 
@@ -18,6 +19,7 @@ test("B10: pointer/keyboard inspector resizing, bounds, Markdown reflow, selecti
         16,
       ),
   );
+  files.set('docs/artifacts/knowledge/README.md',rootReadme('Knowledge','1.0.0').replace('Knowledge knowledge.','This overview explains how readers inspect knowledge and follow dependencies. '.repeat(16)));
   const fixture = await fixtureRepository(files),
     before = await fingerprint(fixture.root);
   try {
@@ -34,7 +36,7 @@ test("B10: pointer/keyboard inspector resizing, bounds, Markdown reflow, selecti
     await panel
       .getByRole("button", { name: "Requirements in inspector", exact: true })
       .click();
-    await panel.locator(".element-list-item").first().click();
+
     const divider = page.getByRole("separator", {
       name: "Resize details panel",
     });
@@ -75,7 +77,7 @@ test("B10: pointer/keyboard inspector resizing, bounds, Markdown reflow, selecti
       .evaluate((el) => el.getBoundingClientRect().height);
     expect(wideHeight).toBeLessThan(narrowHeight);
     await expect(
-      panel.getByRole("heading", { name: requirementPath, level: 2 }),
+      panel.getByRole("heading", { name: "Knowledge", level: 2 }),
     ).toBeVisible();
     await page.getByRole("button", { name: "Fit View", exact: true }).click();
     expect(
@@ -94,7 +96,7 @@ test("B10: pointer/keyboard inspector resizing, bounds, Markdown reflow, selecti
     await expect(divider).toBeHidden();
     await expect.poll(width).toBe(700);
     await expect(
-      panel.getByRole("heading", { name: requirementPath, level: 2 }),
+      panel.getByRole("heading", { name: "Knowledge", level: 2 }),
     ).toBeVisible();
     await page.screenshot({
       path: "test-results/stacked-inspector.png",

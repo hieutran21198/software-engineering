@@ -1172,7 +1172,7 @@ select:disabled {opacity:.45;cursor:default;}
 [hidden] {display:none !important;}
 .workspace.without-inspector {grid-template-columns:220px minmax(0,1fr);}
 .document-reader {position:absolute;inset:66px 0 0;z-index:20;overflow:auto;background:#101827;padding:24px clamp(16px,4vw,64px);}
-.document-reader>nav {display:flex;flex-wrap:wrap;gap:8px;margin-bottom:20px;}
+.document-reader>nav {display:flex;flex-direction:row;flex-wrap:wrap;gap:8px;margin-bottom:20px;}
 .document-reader>h2 {overflow-wrap:anywhere;margin:16px 0;}
 .document-reader .markdown {max-width:850px;line-height:1.8;font-size:15px;}
 .document-reader .reader-source {margin:12px 0 24px;color:#a8b4c8;overflow-wrap:anywhere;}

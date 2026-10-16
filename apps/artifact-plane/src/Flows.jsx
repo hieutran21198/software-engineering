@@ -3,7 +3,6 @@ import {labelledEdgeTypes,GraphLabelLayout} from './GraphLabels.jsx';
 import React,{useEffect,useMemo,useState,useRef,useId} from 'react';
 import {ReactFlow,ReactFlowProvider,Background,Handle,Position} from '@xyflow/react';
 import {createPortal} from 'react-dom';
-import Markdown from './Markdown.jsx';
 import SearchField, {normalizeName} from './SearchField.jsx';
 import {flowCanvas} from './flow-canvas.js';
 function FlowNode({data}){return <div className="flow-node"><Handle type="target" position={Position.Left} isConnectable={false}/><small>{data.kind}{data.artifact&&` · ${data.artifact}`}</small><strong>{data.title}</strong><Handle type="source" position={Position.Right} isConnectable={false}/></div>;}
@@ -30,21 +29,21 @@ function Evidence({result,diagnostics=false}){
 export default function Flows({path,worktree,epoch,isActive,entry,knowledge,sidebar,inspector,onSelection,onRead,artifacts=[]}){
  const artifactControl=useId();
  const [text,setText]=useState(''),[search,setSearch]=useState(''),[match,setMatch]=useState('title'),[artifact,setArtifact]=useState('');
- const [impact,setImpact]=useState(null),[list,setList]=useState(null),[selected,setSelected]=useState(null),[detail,setDetail]=useState(null),[source,setSource]=useState(null),[document,setDocument]=useState(null),[expanded,setExpanded]=useState(false),[node,setNode]=useState(null),[error,setError]=useState(''),[cursor,setCursor]=useState(null),[sourceCursor,setSourceCursor]=useState(null),[loading,setLoading]=useState(false),[retry,setRetry]=useState(0),[sentinel,setSentinel]=useState(null),[options,setOptions]=useState(null);
+ const [impact,setImpact]=useState(null),[list,setList]=useState(null),[selected,setSelected]=useState(null),[detail,setDetail]=useState(null),[source,setSource]=useState(null),[expanded,setExpanded]=useState(false),[node,setNode]=useState(null),[error,setError]=useState(''),[cursor,setCursor]=useState(null),[loading,setLoading]=useState(false),[retry,setRetry]=useState(0),[sentinel,setSentinel]=useState(null),[options,setOptions]=useState(null);
  const latestList=useRef(null);latestList.current=list;
- const listScope=useRef(null),listCache=useRef(null),detailCache=useRef(null),sourceCache=useRef(null);
+ const listScope=useRef(null),listCache=useRef(null),detailCache=useRef(null);
  const context=useMemo(()=>({path,worktree:worktree||undefined,knowledge}),[path,worktree,knowledge]);
  const optionScope=JSON.stringify([path,worktree]);
  useEffect(()=>{
-  setSelected(null);setDetail(null);setSource(null);setDocument(null);setCursor(null);setSourceCursor(null);setNode(null);setExpanded(false);
+  setSelected(null);setDetail(null);setSource(null);setCursor(null);setNode(null);setExpanded(false);
   setText('');setSearch('');setMatch('title');setArtifact('');setImpact(null);setList(null);setOptions(null);
-  listCache.current=detailCache.current=sourceCache.current=null;
+  listCache.current=detailCache.current=null;
  },[path,worktree]);
  useEffect(()=>{
   if(!entry)return;
-  setSelected(entry.flow||null);setDetail(null);setSource(null);setDocument(null);setCursor(null);setSourceCursor(null);setNode(null);setExpanded(false);
+  setSelected(entry.flow||null);setDetail(null);setSource(null);setCursor(null);setNode(null);setExpanded(false);
   setText(entry.query||'');setSearch(normalizeName(entry.query));setMatch('title');setArtifact(entry.artifact||'');setImpact(entry.ids||null);setList(null);
-  listCache.current=detailCache.current=sourceCache.current=null;
+  listCache.current=detailCache.current=null;
  },[entry]);
  const pending=match==='title'&&normalizeName(text)!==search;
  useEffect(()=>{
@@ -79,20 +78,14 @@ export default function Flows({path,worktree,epoch,isActive,entry,knowledge,side
  },[requestKey,isActive]);
  const loadMore=()=>{if(!pending&&!loading&&!error&&list?.freshness==='fresh'&&list?.pagination?.nextCursor)setCursor({key:listKey,value:list.pagination.nextCursor});};
  useEffect(()=>{if(!sentinel||!isActive||pending||loading||error||!list?.pagination?.nextCursor)return;const observer=new IntersectionObserver(entries=>{if(entries.some(e=>e.isIntersecting))loadMore();},{root:sidebar,rootMargin:'40px'});observer.observe(sentinel);return()=>observer.disconnect();},[sentinel,isActive,pending,loading,error,list,sidebar,listKey]);
- useEffect(()=>{setSource(null);setSourceCursor(null);setNode(null);detailCache.current=sourceCache.current=null;},[context,selected]);
+ useEffect(()=>{setSource(null);setNode(null);detailCache.current=null;},[context,selected]);
+ useEffect(()=>{if(source&&detail&&!detail.data.sources?.some(item=>item.id===source)){setSource(null);onRead?.(null);}},[source,detail]);
  const detailKey=JSON.stringify([context,selected,epoch]),latestDetail=useRef(null);latestDetail.current=detailKey;
  useEffect(()=>{
   if(!isActive||!selected||detailCache.current===detailKey)return;
-  const controller=new AbortController();setDetail(null);setDocument(null);
-  query({...context,operation:'detail',flow:selected},controller.signal).then(result=>{if(!controller.signal.aborted&&latestDetail.current===detailKey){setSource(current=>result.data.sources?.some(item=>item.id===current)?current:null);setDetail(result);detailCache.current=detailKey;}}).catch(e=>{if(e.name!=='AbortError'&&!controller.signal.aborted&&latestDetail.current===detailKey){setError(e.message);if(e.status===422)setSelected(null);}});return()=>controller.abort();
+  const controller=new AbortController();setDetail(null);
+  query({...context,operation:'detail',flow:selected},controller.signal).then(result=>{if(!controller.signal.aborted&&latestDetail.current===detailKey){setDetail(result);detailCache.current=detailKey;}}).catch(e=>{if(e.name!=='AbortError'&&!controller.signal.aborted&&latestDetail.current===detailKey){setError(e.message);if(e.status===422)setSelected(null);}});return()=>controller.abort();
  },[detailKey,isActive]);
- useEffect(()=>{setSourceCursor(null);sourceCache.current=null;},[context,selected,source,epoch]);
- const sourceKey=JSON.stringify([detailKey,source,sourceCursor]),latestSource=useRef(null);latestSource.current=sourceKey;
- useEffect(()=>{
-  if(!isActive||!source||!detail||sourceCache.current===sourceKey)return;
-  const controller=new AbortController();setDocument(null);
-  query({...context,operation:'source',flow:detail.data.flow.id,source,cursor:sourceCursor||undefined},controller.signal).then(result=>{if(!controller.signal.aborted&&latestSource.current===sourceKey){setDocument(result);sourceCache.current=sourceKey;}}).catch(e=>{if(e.name!=='AbortError'&&!controller.signal.aborted&&latestSource.current===sourceKey)setError(e.message);});return()=>controller.abort();
- },[sourceKey,detail,isActive]);
  const changeText=value=>{setText(value);setCursor(null);if(match==='title'||!value){setImpact(null);if(!value)setSearch('');}};
  const submit=()=>{setSearch(match==='title'?normalizeName(text):text.trim());setImpact(null);setCursor(null);setRetry(n=>n+1);};
  const artifactOptions=options?.scope===optionScope&&options.epoch===epoch?options.items:(!worktree||worktree===path?artifacts:[]);
@@ -126,10 +119,10 @@ export default function Flows({path,worktree,epoch,isActive,entry,knowledge,side
  const readSource=record=>onRead?.({...sourceEntry(record),targets:new Map((detail.data.sources||[]).map(item=>[item.path,sourceEntry(item)]))});
  const right=<section className="flow-content" aria-label="Flow details">{!flow?<p role="status">{selected?'Loading flow…':'Select a flow to inspect its behavior and evidence.'}</p>:<><h2>{flow.title}</h2>{list&&!pending&&!loading&&!(list.data.flows||[]).some(f=>f.id===flow.id)&&<p className="flow-selection-note">Selected flow is outside the currently loaded results.</p>}<p><strong>Trigger:</strong> {flow.trigger}</p><p><strong>Outcome:</strong> {flow.outcome}</p><details><summary>Source and identity</summary><p>{flow.artifact} · {flow.logicalId} · {flow.source} · {flow.state}</p><p className="tiny">{flow.createdAt?`Created ${new Date(flow.createdAt).toISOString().slice(0,10)}`:'Creation date unknown'} · Date applies to this snapshot record.</p></details><Evidence result={detail}/>{flow.sourcePublication&&<details><summary>Source publication</summary><p className="tiny">{flow.sourcePublication.state}. {flow.sourcePublication.reason}</p></details>}
  <section aria-label="Flow evidence"><h3>Supporting knowledge</h3>{node&&<button onClick={()=>setNode(null)}>Show all support</button>}{supports.map(s=><div key={s.id} className="workflow-task"><strong>{s.kind} · {s.basis}</strong><p>{s.requires}</p><p>{s.file||s.element||s.path||s.flow} · {s.resolved?'Resolved':'Unresolved'}</p>{s.resolved&&detail.data.sources?.some(item=>item.path===(s.file||s.path))&&<button onClick={()=>readSource(detail.data.sources.find(item=>item.path===(s.file||s.path)))}>Read supporting source</button>}{s.sourcePublication&&s.sourcePublication.state!=='published-source'&&<p className="tiny">Source publication: {s.sourcePublication.state}. {s.sourcePublication.reason}</p>}</div>)}{!!flow.gaps?.length&&<><h3>Gaps</h3>{flow.gaps.map((g,i)=><p key={i}>{g}</p>)}</>}{!!flow.exclusions?.length&&<><h3>Exclusions</h3>{flow.exclusions.map((g,i)=><p key={i}>{g}</p>)}</>}</section>
- <label>Inspect flow source<select value={source||''} onChange={e=>{const record=detail.data.sources?.find(item=>item.id===e.target.value);if(record)readSource(record);}}><option value="">Select a referenced source</option>{(detail.data.sources||[]).map(s=><option key={s.id} value={s.id}>{s.path}</option>)}</select></label>{document&&<section aria-label="Flow source"><h3>{document.data.path}</h3><Evidence result={document}/>{document.data.path?.endsWith('.md')?<Markdown text={document.data.text||''}/>:<pre>{document.data.text}</pre>}{document.pagination?.nextCursor&&<button onClick={()=>setSourceCursor(document.pagination.nextCursor)}>Next source excerpt</button>}{sourceCursor&&<button onClick={()=>setSourceCursor(null)}>First source excerpt</button>}</section>}
+ <label>Inspect flow source<select value={source||''} onChange={e=>{const record=detail.data.sources?.find(item=>item.id===e.target.value);if(record){setSource(record.id);readSource(record);}}}><option value="">Select a referenced source</option>{(detail.data.sources||[]).map(s=><option key={s.id} value={s.id}>{s.path}</option>)}</select></label>{source&&<button onClick={()=>readSource(detail.data.sources.find(item=>item.id===source))}>Read selected source</button>}
  </>}</section>;
  return <>{sidebar&&createPortal(left,sidebar)}{inspector&&createPortal(right,inspector)}<section className="flows-view" aria-label="Flow exploration">
- {impact&&<p>Related flow candidates from explicit known relationships. Review contracts to determine change impact.</p>}<Diagnostics items={[...(list?.diagnostics||[]),...(detail?.diagnostics||[]),...(document?.diagnostics||[])]}/>
+ {impact&&<p>Related flow candidates from explicit known relationships. Review contracts to determine change impact.</p>}<Diagnostics items={[...(list?.diagnostics||[]),...(detail?.diagnostics||[])]}/>
  {!flow?<p role="status">{selected?'Loading flow…':'Select a flow from the sidebar.'}</p>:flow.state==='invalid'?<p role="alert">Invalid flow record. No execution order is inferred.</p>:<><h2>{flow.title}</h2><label className="flow-support-toggle"><input type="checkbox" checked={expanded} onChange={e=>setExpanded(e.target.checked)}/>Show supporting nodes</label><div className="flow-surface"><ReactFlowProvider key={flow.id}><ReactFlow nodes={graph.nodes} edges={graph.edges} nodeTypes={nodeTypes} edgeTypes={labelledEdgeTypes} minZoom={0.1} onNodeClick={(_,n)=>setNode(n.id)} fitView nodesDraggable={false} nodesConnectable={false} deleteKeyCode={null} colorMode="dark"><GraphLabelLayout/><Background/></ReactFlow></ReactFlowProvider></div><p className="tiny">Arrows show behavior transitions and support. Participation does not create prerequisites or unit membership.</p></>}
  </section></>;
 }

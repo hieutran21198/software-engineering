@@ -1,7 +1,6 @@
 import React, {useMemo,useState} from 'react';
 import {ReactFlow, ReactFlowProvider, Background, Controls, Handle, Position} from '@xyflow/react';
 import {taskCanvas} from './task-canvas.js';
-import Markdown from './Markdown.jsx';
 import {checklistLabel} from './runtime-model.js';
 import {useTaskRuntime,RuntimeBadge,RuntimeDetails,RuntimeConnection} from './Runtime.jsx';
 function TaskNode({data, selected}) {
@@ -25,7 +24,7 @@ function GraphMessages({graph}) {
 export function TaskGraph({context, selection, onSelect, onBack}) {
  const {worktree, change} = context;
  const [showAll,setShowAll]=useState(false);
- const graph = useMemo(()=>{const graph=taskCanvas(worktree, change, selection,showAll);return {...graph,nodes:graph.nodes.map(n=>({...n,data:{...n.data,sourceWorktree:worktree.path}}))};},[worktree, change, selection,showAll]);
+ const graph = useMemo(()=>{const graph=taskCanvas(worktree, change, selection,showAll);return {...graph,nodes:graph.nodes.map(n=>({...n,data:{...n.data,sourceWorktree:worktree.path},initialWidth:n.style.width,initialHeight:n.style.height}))};},[worktree, change, selection,showAll]);
  return <div className="task-graph-view" aria-label="Implementation task graph">
   <div className="task-graph-toolbar"><button onClick={onBack}>Back to dependencies</button><strong>{change.artifact} / {change.name}</strong><RuntimeConnection/><label className="prerequisite-toggle"><input type="checkbox" checked={showAll} onChange={e=>setShowAll(e.target.checked)}/>Show all prerequisites</label></div>
   <div className="task-graph-surface">{change.taskGraph?.state!=='not-loaded'?<ReactFlowProvider><ReactFlow nodes={graph.nodes} edges={graph.edges} nodeTypes={nodeTypes} onNodeClick={(_,node)=>onSelect(node.id)} fitView fitViewOptions={{padding:0.15}} minZoom={0.15} maxZoom={2} nodesDraggable={false} nodesConnectable={false} edgesReconnectable={false} deleteKeyCode={null} colorMode="dark">
