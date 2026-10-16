@@ -70,6 +70,12 @@ export function versionClaims(files, artifact, change) {
     return match && match[1]===artifact && frontMatter(body).value?.source_change===change;
   }).map(([path, body])=>({version:path.split('/')[4], prefix:path.slice(0,-'README.md'.length), deliveryTasks:frontMatter(body).value.delivery_tasks}));
 }
+// A version record follows the in-place rules only when its artifact is in-place,
+// it has no legacy marker and its change is an in-place change record. Legacy
+// snapshots inside migrated artifacts keep the legacy rules.
+export function recordLayout(artifact, change, claim) {
+  return artifact?.layout === 'in-place' && claim && claim.deliveryTasks === undefined && artifact.changes?.find(c => c.name === change)?.layout === 'in-place' ? 'in-place' : 'legacy';
+}
 export function deliverySource(files, artifact, change, retainedChangePath, layout = 'legacy') {
   const claims = versionClaims(files, artifact, change);
   if (claims.length !== 1) return {claims, deliveryPath:retainedChangePath, diagnostic:null};
@@ -272,8 +278,9 @@ export async function readUnitsOfWork(root, data, changes, git, checklist, optio
       const base=`docs/artifacts/${member.artifact}/`,changePath=`${base}changes/${member.change}/`,claims=versionClaims(files,member.artifact,member.change);
       const artifact=snapshot.artifacts.find(a=>a.id===member.artifact);
       member.retainedChangePath=artifact?.changes.some(c=>c.name===member.change)?changePath:null;
-      const delivery=deliverySource(files,member.artifact,member.change,member.retainedChangePath,artifact?.layout);
-      const changeOwned=claims[0]?.deliveryTasks==='change'||artifact?.layout==='in-place';
+      const layout=recordLayout(artifact,member.change,claims.length===1?claims[0]:null);
+      const delivery=deliverySource(files,member.artifact,member.change,member.retainedChangePath,layout);
+      const changeOwned=claims[0]?.deliveryTasks==='change'||layout==='in-place';
       member.deliveryPath=delivery.deliveryPath;
       if(delivery.diagnostic)unit.diagnostics.push({code:delivery.diagnostic,path:claims[0]?.prefix || changePath,message:'Delivered tasks require a valid marker and the exact retained originating plan.'});
       member.deliveredVersion=claims.length===1?claims[0].version:null;
@@ -289,7 +296,7 @@ export async function readUnitsOfWork(root, data, changes, git, checklist, optio
       if(member.deliveredVersion && !options.deferPublication){
         const key=JSON.stringify([member.sourcePath,member.deliveryPath,unit.path]);
         if(delivery.diagnostic)member.establishmentEvidence={state:'unknown',reasons:['Delivered task source cannot be resolved.'],sources:[]};
-        else {if(!publicationCache.has(key))publicationCache.set(key,await publication(root,member.sourcePath,files,git,unit.markdown,unit.path,changeOwned?member.deliveryPath:null,artifact?.layout,context));member.establishmentEvidence=publicationCache.get(key);}
+        else {if(!publicationCache.has(key))publicationCache.set(key,await publication(root,member.sourcePath,files,git,unit.markdown,unit.path,changeOwned?member.deliveryPath:null,layout,context));member.establishmentEvidence=publicationCache.get(key);}
       }
       member.knowledge=[...files].filter(([p])=>member.sourcePath && p.startsWith(member.sourcePath) || member.retainedChangePath && p.startsWith(member.retainedChangePath)).map(([path,markdown])=>({path,markdown}));
       member.markdown=files.get(`${member.sourcePath}README.md`)||'';

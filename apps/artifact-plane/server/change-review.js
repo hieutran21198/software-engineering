@@ -6,7 +6,7 @@ import {stripBodies} from './repository-query.js';
 import {parseArtifact,buildSnapshot,KNOWLEDGE_KINDS} from '../src/model.js';
 import {readBaselines} from './knowledge-baseline.js';
 import {parseWorktrees,evidenceFor} from './workflow.js';
-import {unitBriefs,versionClaims,publication} from './units-of-work.js';
+import {unitBriefs,versionClaims,publication,recordLayout} from './units-of-work.js';
 import {buildFlowGraph,flowImpact,safeFlowID,safeFlowSource} from './flow-model.js';
 const hash=value=>createHash('sha256').update(typeof value==='string'||Buffer.isBuffer(value)?value:JSON.stringify(value)).digest('hex');
 const contained=(base,path)=>{const r=relative(base,path);return r!=='..'&&!r.startsWith('..'+sep)&&!isAbsolute(r)&&!r.split(sep).includes('.git');};
@@ -98,7 +98,7 @@ async function capture(root,artifact,change){
  const snapshot=buildSnapshot(files,repository,[],{layouts,baselines:inPlace?{[artifact]:inPlace.view}:undefined});const filtered={snapshot:{...snapshot,artifacts:snapshot.artifacts.filter(a=>a.id===artifact).map(a=>({...a,changes:a.changes.filter(c=>c.name===change)}))},files,unsafeTaskPaths:new Set()};
  const workflow=(await evidenceFor(root,filtered,git,repository.head,diagnostics))[0]??null;
  if(workflow?.history)report('historical-current-comparison',selected,'Declared current is not a proven predecessor of this retained change.');
- const pub=provenanceUnavailable?{state:'unknown',reasons:['Originating snapshot evidence is unavailable.'],sources:[]}:claims.length===1?await publication(root,claims[0].prefix,files,git,'',null,claims[0].deliveryTasks==='change'||inPlace?selected:null,selectedArtifact.layout):{state:'unknown',reasons:[claims.length?'Multiple version provenance claims.':'No unique version provenance claim.'],sources:[]};
+ const pub=provenanceUnavailable?{state:'unknown',reasons:['Originating snapshot evidence is unavailable.'],sources:[]}:claims.length===1?await publication(root,claims[0].prefix,files,git,'',null,claims[0].deliveryTasks==='change'||inPlace&&recordLayout(snapshot.artifacts.find(a=>a.id===artifact),change,claims[0])==='in-place'?selected:null,recordLayout(snapshot.artifacts.find(a=>a.id===artifact),change,claims[0])):{state:'unknown',reasons:[claims.length?'Multiple version provenance claims.':'No unique version provenance claim.'],sources:[]};
  const registeredPaths=new Set(projections.flatMap(p=>p.graph.sources.map(s=>s.path)));
  const baselineKeys=new Set(inPlace?[...inPlace.baselineSources.values()].map(s=>s.path):[]);
  const kept=path=>!!inPlace&&(baselineKeys.has(path)||path.startsWith(inPlace.base)&&KNOWLEDGE_KINDS.includes(path.slice(inPlace.base.length).split('/')[0]));

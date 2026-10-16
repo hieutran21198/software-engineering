@@ -154,3 +154,12 @@ test('L4: a shallow clone cannot resolve an in-place version snapshot',async t=>
  const m=(await exploreRepository(clone)).unitsOfWork.find(u=>u.id==='initial').members[0];
  assert.equal(m.establishmentEvidence.state,'unknown');assert.ok(m.establishmentEvidence.reasons[0].includes('Shallow'));
 });
+test('L7: legacy snapshots inside a migrated artifact keep prose publication review',async()=>{
+ const files=inPlaceUnit();
+ const v='docs/artifacts/tenant/versions/0.9.0/',c='docs/artifacts/tenant/changes/change-old/';
+ files.set(v+'README.md','---\nsource_change: change-old\ndelivery_tasks: change\n---\n# Old\n\n## Publication review\n\n'+assertion+'\n');
+ files.set(v+'specifications/identity.md','# Old identity\n');
+ files.set(c+'README.md','# Old');files.set(c+'specifications/identity.md','# Old identity\n');files.set(c+'tasks/README.md','---\ntasks: []\n---\n# Plan\n');
+ files.set('docs/artifacts/units-of-work/old/README.md','---\nunit_of_work: old\nchanges:\n  - artifact: tenant\n    change: change-old\nacceptance:\n  - id: works\n    criterion: Works\nevidence: []\n---\n# Old\n');
+ const f=await fixtureRepository(files);try{const m=(await exploreRepository(f.root)).unitsOfWork.find(u=>u.id==='old').members[0];assert.equal(m.establishmentEvidence.state,'established',JSON.stringify(m.establishmentEvidence));assert.ok(m.establishmentEvidence.sources.some(s=>s.kind==='documented-merge-review'));}finally{await f.cleanup();}
+});
