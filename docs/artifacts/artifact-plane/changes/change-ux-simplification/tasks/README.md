@@ -71,3 +71,7 @@ The three user screenshots request UX12–UX14 after the original implementation
 Execute these four fresh tasks in order in the current dedicated worktree because they share CSS and rendering. Add no concurrent agents or new worktrees for this sequential extension. It remains the same unit outcome/member; the added reading-controls criterion has no passing evidence yet. No older task is reopened or copied. Same-artifact proposal reconciliation does not introduce an upstream artifact gate or infer 1.13.0 establishment. Recheck protected supplier/PR context before execution.
 
 Follow-up Plan self-check: eleven unique task IDs form one acyclic chain with ten edges, including the four fresh tasks after retained integration-publication. Scope, governing contracts, ownership, concrete DoD and integration checks cover UX12–UX14. KISS reuses existing controls and source boundaries; STE states limits and plain fallback precisely. The same capable TL session completed Specification and Plan sequentially. No preparation blocker remains. Wait for explicit user approval before implementation.
+
+## Reading-control approval
+
+The user explicitly approved the concrete UX12–UX14 amendment in the conversation. Tasks 08–11 are authorized on the current dedicated branch. PR #26 remains open; ADD 2.1.0 is the unchanged supplier. Prior checks remain historical evidence for their original scope.

@@ -602,11 +602,11 @@ nav {
   color: #b6c3d8;
 }
 .markdown h1 {
-  font-size: 17px;
+  font-size: 1.9em;
   margin: 12px 0;
 }
 .markdown h2 {
-  font-size: 14px;
+  font-size: 1.6em;
   margin: 16px 0 8px;
 }
 .markdown h3,
@@ -1192,3 +1192,10 @@ select:disabled {opacity:.45;cursor:default;}
 @media(max-width:450px){.source-bar{gap:8px;padding:8px;}.source-bar>strong,.source-bar>small{display:none;}.source-bar>span{flex-basis:100%;}.workspace{grid-template-columns:125px minmax(0,1fr);}.workspace.without-inspector{grid-template-columns:125px minmax(0,1fr);}.canvas-toolbar{height:auto;min-height:88px;}.sidebar{padding:12px 8px;}.view-toggle{max-width:100%;flex-wrap:wrap;}.source-bar button{padding:6px 10px;}}
 
 .line-diff{margin:12px 0;white-space:pre-wrap;overflow-wrap:anywhere;font:12px/1.7 monospace;}.diff-line{display:flex;gap:8px;min-height:20px;}.diff-line code{white-space:pre-wrap;min-width:0;}.diff-number{flex:0 0 24px;color:#a8b4c8;text-align:right;user-select:none;}.diff-line.add{background:#173c2c;color:#bce9cc;}.diff-line.remove{background:#462632;color:#ffd2d2;}.diff-line small{color:#b8c1d1;font-size:10px;}.review-export,.review-context{margin:16px 0;}.raw-source-excerpts{margin-top:20px;}.change-review>section[aria-label="Proposed scope and purpose"]{margin:20px 0;}
+
+/* Headings scale with the surrounding document body. */
+.markdown h3 {font-size:1.33em;}
+.markdown h4 {font-size:1.2em;}
+.markdown h5 {font-size:1.13em;margin:12px 0 6px;}
+.markdown h6 {font-size:1.07em;margin:12px 0 6px;}
+.document-reader>h2 {font-size:clamp(22px,2vw,28px);line-height:1.3;}
