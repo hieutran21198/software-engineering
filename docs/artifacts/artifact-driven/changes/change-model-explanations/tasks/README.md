@@ -24,3 +24,7 @@ The user accepted the recommended scope. The concrete Requirement, Specification
 ## Plan approval
 
 The user explicitly approved this concrete seven-task plan and the proposed compatible versions in the conversation. Approval covers the stated scope; upstream establishment and predecessor publication gates remain separate. Execute the sequential task plan without changing earlier outcomes.
+
+## Upstream validation and publication handoff
+
+Tasks 01 and 02 have executed DoD evidence. Task 03 has successful combined checks and a complete 2.2.0 proposal prepared for review; protected-ref publication remains pending. No Plane implementation task has started. The current review is stacked on the unchanged PR #26 predecessor; both publication and contract recheck remain required.

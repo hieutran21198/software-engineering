@@ -23,4 +23,8 @@ Run root Go tests/vet, bundle/adoption and website build plus Markdown hierarchy
 
 ## Evidence
 
-Not executed during preparation. Record actual commands, results and limitations after implementation.
+Upstream validation passed: GOCACHE=/tmp/plane-domain-go-cache go test ./... and go vet ./...; npm run build in website; node /tmp/check-plane-domain.mjs; git diff --check. Go coverage includes adoption, conflict/containment and canonical bundle fidelity. The website produced a successful static build. Authoring validation checked three model declarations, three participant roles, six interactions, five legacy-compatible ADD flows, 19 support targets, three guidance examples and six negative cases. Original dependency-gates entries, step IDs and transitions are unchanged. Logs are /tmp/plane-domain-go-test.log, /tmp/plane-domain-go-vet.log and /tmp/plane-domain-website.log.
+
+The user confirmed proposed 2.2.0 with plan approval. A complete snapshot is prepared with source_change: change-model-explanations and delivery_tasks: change, no copied tasks, and matching change-owned knowledge. The root current-version declaration is explicitly proposed branch state; protected main remains 2.1.0. The derived artifact dependency index is unchanged because no dependency names changed. Historical snapshots and previous originating tasks are unchanged.
+
+Publication review is still required. The focused upstream review is stacked on PR #26 because the approved planning baseline includes its pending reading/navigation work; no downstream model UI or parser implementation is included. Merge PR #26 first, retarget this review to main and review/merge the ADD delivery. Plane implementation remains unauthorized to bypass the required publication gate. These checks do not establish 2.2.0 or complete the shared outcome. KISS and STE self-check passed.

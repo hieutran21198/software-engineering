@@ -74,7 +74,7 @@ Keep source fingerprints in derived indexes, not in a second authoritative knowl
 
 ## Compatibility and dependencies
 
-This is an additive input contract. Existing artifacts, task DAGs, unit briefs and legacy snapshots remain valid. ADD owns the flow definition and reusable guidance. Plane owns readers, graph projections, indexing, visualization and agent adapters. Story-Driven owns its project flow inventory. No new artifact nodes or workflow registry are introduced. Plane retains its ADD dependency; Story-Driven proposes ADD as a knowledge prerequisite for its new flow-format delivery. Preparation may use this proposal, but dependent Implementation waits for establishment.
+The optional model extension is additive to established steps and evidence-linked support. Existing artifacts, task DAGs, unit briefs and legacy snapshots remain readable without models. ADD owns definitions and reusable guidance. Plane owns readers, graph projections, indexing, visualization and agent adapters; its new model-aware implementation waits for this contract to establish. Story-Driven retains its existing inventory without migration in this outcome. No new artifact nodes, dependencies or workflow registry are introduced.
 
 ## Self-check
 

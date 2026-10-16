@@ -23,7 +23,11 @@ acceptance:
   - id: integration
     criterion: Required upstream and predecessor publication is verified and combined contract, browser, adoption and documentation checks support delivery.
     integration: true
-evidence: []
+evidence:
+  - criterion: integration
+    method: Run upstream bundle, authoring, adoption, Go and documentation checks; downstream behavior and required publication remain pending.
+    result: incomplete
+    source: docs/artifacts/units-of-work/model-explanations/README.md#combined-checks
 ---
 
 # Understand why artifacts depend and how their models interact
@@ -54,3 +58,9 @@ Suggested compatible versions are ADD 2.2.0 and Plane 1.14.0. Approval of this p
 Requirement and Specification are complete in separate commits. Both task DAGs are checked for membership, IDs, resolved prerequisites and cycles. The scope covers all local requirements and shared acceptance, with explicit evidence gaps and no passing implementation claim. Application code, canonical reusable guidance, packages, old changes and established versions remain unchanged during preparation.
 
 Preparation validation passed: seven task records, five internal prerequisite edges, two member changes, 13 retained flow records with valid YAML, and 63 existing local link targets with no ancestor-document links. All 91 changed paths are project knowledge; no application implementation or established snapshot changed. These checks validate preparation only, not model-aware product behavior.
+
+## Combined checks
+
+The upstream ADD member passes root Go tests/vet, complete bundle/adoption checks and the website production build. Authored model/flow checks validate three models and six interactions while preserving legacy step/transition behavior. The complete proposed 2.2.0 snapshot retains delivery provenance and contains no tasks. Detailed executed evidence remains in its originating tasks. These are upstream results only.
+
+The user approved the concrete seven-task plan and proposed compatible versions. Plane code and its pilot remain unimplemented until required ADD publication is verified. PR #26 is still open at handoff preparation; this upstream review is stacked on its branch and must be retargeted to main after that predecessor merges. No shared acceptance criterion is claimed complete and no historical delivery evidence is changed.
