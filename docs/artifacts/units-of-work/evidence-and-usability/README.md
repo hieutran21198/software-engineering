@@ -18,18 +18,42 @@ affected_flows:
   - artifact: artifact-plane
     flow: repository-exploration
     effect: modify
-flow_assessment: Inspected canonical phase and evidence rules, publication parsing, selected-change review and MCP adapters, observer sampling and tests, model-explanations preparation, protected main and PR 26/27 checks. Coverage includes authoring, publication, evidence consumption, review, models and refresh. Exhaustive runtime discovery, Story migration and hosted integrations are excluded.
+  - artifact: artifact-plane
+    flow: change-review
+    effect: modify
+  - artifact: artifact-plane
+    flow: context-handoff
+    effect: modify
+  - artifact: artifact-plane
+    flow: repository-refresh
+    effect: modify
+  - artifact: artifact-plane
+    flow: unit-inspection
+    effect: modify
+flow_assessment: Inspected canonical phase and evidence rules, publication
+  parsing, selected-change review and MCP adapters, observer sampling and tests,
+  model-explanations preparation, protected main and PR 26/27 checks. Coverage
+  includes authoring, publication, evidence consumption, review, models and
+  refresh. Exhaustive runtime discovery, Story migration and hosted integrations
+  are excluded.
 acceptance:
   - id: trustworthy-review
-    criterion: A reader can identify the baseline, distinguish inherited work, inspect evidence and name the remaining gate from the selected change.
+    criterion: A reader can identify the baseline, distinguish inherited work,
+      inspect evidence and name the remaining gate from the selected change.
   - id: simple-authoring
-    criterion: One-artifact authoring uses a complete minimal scaffold and one authoritative record per check, with actionable structural diagnostics.
+    criterion: One-artifact authoring uses a complete minimal scaffold and one
+      authoritative record per check, with actionable structural diagnostics.
   - id: explain-relationships
-    criterion: Dependency and model interactions explain recorded behavior and sources with explicit information gaps.
+    criterion: Dependency and model interactions explain recorded behavior and
+      sources with explicit information gaps.
   - id: efficient-refresh
-    criterion: Idle observation reads at least 80 percent fewer knowledge bytes on the same large fixture while bounded reconciliation detects missed changes.
+    criterion: Idle observation reads at least 80 percent fewer knowledge bytes on
+      the same large fixture while bounded reconciliation detects missed
+      changes.
   - id: integration
-    criterion: Upstream establishment, integrated behavior, responsive layout, read-only safety, bundle parity and required checks support the delivered versions.
+    criterion: Upstream establishment, integrated behavior, responsive layout,
+      read-only safety, bundle parity and required checks support the delivered
+      versions.
     integration: true
 evidence: []
 ---

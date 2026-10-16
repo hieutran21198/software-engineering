@@ -23,3 +23,7 @@ Keep all four existing flow tools and inputs/results. New capabilities are addit
 ## Validation and self-check
 
 Check UI/HTTP/MCP parity, source reconstruction/stale cursors, empty/shortened text, embedded Markdown/HTML, source/root isolation, delayed replies, no-match limits, clipboard failure and unchanged inspected files/Git. Preserve actual offline-model regression. KISS shares one service and formatter without an LLM, index authority or workflow database. STE retains omissions and approval limits. No Plan blocker remains.
+
+## Evidence and comparison extension
+
+[evidence-and-comparison.md](evidence-and-comparison.md) defines optional structured evidence and explicit comparison selectors. It refines baseline selection while preserving the omitted-selector contract and source safety.

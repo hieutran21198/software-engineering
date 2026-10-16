@@ -12,31 +12,38 @@ flow:
       title: Discover the outcome, scope and candidate flows
       supports:
         - knowledge
+        - evidence-usability-contract
     - id: specification
       title: Define contracts and assess affected flow support
       supports:
         - knowledge
         - flow-contract
+        - evidence-usability-contract
     - id: plan
       title: Create fresh dependency-ordered tasks and DoD
       supports:
         - task-contract
+        - evidence-usability-contract
     - id: approval
       title: Obtain explicit approval for the concrete plan
       supports:
         - knowledge
+        - evidence-usability-contract
     - id: gate
       title: Check upstream establishment and internal prerequisites
       supports:
         - dependency-flow
+        - evidence-usability-contract
     - id: implement
       title: Implement approved tasks and validate combined behavior
       supports:
         - knowledge
+        - evidence-usability-contract
     - id: publication
       title: Prepare version and team review
       supports:
         - publication-flow
+        - evidence-usability-contract
   transitions:
     - from: requirement
       to: specification
@@ -91,8 +98,17 @@ flow:
       flow: version-publication
       requires: Publish complete resulting knowledge with retained delivery evidence.
       basis: documented
+    - id: evidence-usability-contract
+      kind: element
+      artifact: artifact-driven
+      element: specifications/evidence-records.md
+      requires: Interpret recorded checks and publication claims with explicit source
+        validation.
+      basis: documented
   gaps:
     - Approval is available conversation/Git evidence, not a field in this map.
+    - The evidence-and-usability extension is specified; implementation and
+      current integrated validation remain pending.
   exclusions:
     - An autonomous scheduler, workflow database and automatic merges.
   artifact: artifact-driven

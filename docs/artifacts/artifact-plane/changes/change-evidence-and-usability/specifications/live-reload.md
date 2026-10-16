@@ -55,3 +55,7 @@ R1–R10 map to navigation, sampled invalidation, reuse, recovery, and measureme
 ## Lazy loading extension
 
 [lazy-loading.md](lazy-loading.md) defines scoped overview/detail queries, active-section invalidation, and memory checks. It refines automatic browser reloads without removing the compatible complete explore endpoint.
+
+## Observation refinement
+
+[incremental-observation.md](incremental-observation.md) replaces routine full-byte polling with bounded notifications and periodic full reconciliation. Its intervals and fallback rules govern this change; user-facing freshness and read-only protections remain.

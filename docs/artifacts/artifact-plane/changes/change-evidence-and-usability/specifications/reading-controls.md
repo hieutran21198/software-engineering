@@ -29,3 +29,7 @@ Highlight strings using the explicit-language API and sanitize generated markup 
 Amend repository-exploration and source-retrieval presentation support with this documented contract. Other flow identities and existing observed evidence stay retained; earlier checks do not prove these new controls pass. No artifact dependency edge changes; highlight.js is a frontend package, not a new artifact supplier. Preserve the pending 1.13.0 snapshot until this extension is approved, implemented and validated, then reconcile that proposal's complete knowledge with its unchanged source_change provenance.
 
 KISS uses existing resize patterns and one shared bounded code renderer, with no new settings store or framework. STE keeps language, fallback, source and responsive limits precise. Requirements are covered without a missing domain fact. A renewed concrete plan approval remains required before implementation.
+
+## Responsive regression requirement
+
+Reproduce the PR #26 width-851 document overflow failure, diagnose actual overflowing elements and repair the layout or synchronization cause. Preserve a 300-pixel minimum canvas at width 851 and fit navigation/details within available space. At widths 390 and 700 keep existing narrow controls and internal content scrolling. At 1440 preserve saved divider preferences. Never hide document overflow merely to make the assertion pass; verify content remains reachable and keyboard resizing works.

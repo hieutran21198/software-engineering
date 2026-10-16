@@ -17,23 +17,28 @@ flow:
         - search-label-contract
         - shared-search-field
         - search-browser-checks
+        - evidence-usability-contract
     - id: resolve
       title: Resolve delivered versions and exact originating plans
       supports:
         - units
+        - evidence-usability-contract
     - id: graph
       title: Project existing artifact/task prerequisites
       supports:
         - graphs
+        - evidence-usability-contract
     - id: criteria
       title: Inspect shared criteria and evidence
       supports:
         - units
         - unit-tests
+        - evidence-usability-contract
     - id: impact
       title: Follow affected flow references
       supports:
         - flow-contract
+        - evidence-usability-contract
     - id: conclusion
       title: Report supported completion or missing proof
       supports:
@@ -44,6 +49,7 @@ flow:
         - shared-presentation
         - presentation-checks
         - completion-feedback
+        - evidence-usability-contract
   transitions:
     - from: brief
       to: resolve
@@ -74,7 +80,8 @@ flow:
       kind: element
       artifact: artifact-plane
       element: specifications/ux-simplification.md
-      requires: Read the brief first and automatically request completion only for the selected active unit.
+      requires: Read the brief first and automatically request completion only for the
+        selected active unit.
       basis: documented
     - id: units
       kind: implementation
@@ -154,9 +161,18 @@ flow:
       path: apps/artifact-plane/src/UnitsOfWork.jsx
       requires: Keep one unloaded summary and preserve distinct reasons.
       basis: static
+    - id: evidence-usability-contract
+      kind: element
+      artifact: artifact-plane
+      element: specifications/evidence-and-comparison.md
+      requires: Select comparison context and interpret evidence without inferring
+        approval or publication.
+      basis: documented
   gaps:
     - Recorded passing assertions are not independently executed tests; missing
       merge evidence stays unresolved.
+    - The evidence-and-usability extension is specified; implementation and
+      current integrated validation remain pending.
   exclusions:
     - Creating unit members from shared flow participation.
   artifact: artifact-plane

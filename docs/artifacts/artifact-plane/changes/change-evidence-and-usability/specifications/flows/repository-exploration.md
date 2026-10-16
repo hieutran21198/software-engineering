@@ -17,14 +17,25 @@ flow:
         - ux-browser-checks
         - explorer
         - search-label-contract
+        - evidence-usability-contract
     - id: validate
       title: Resolve a readable Git root and ADD directory
       supports:
         - reader
+        - evidence-usability-contract
     - id: scan
       title: Read artifact roots, knowledge selectors and references
       supports:
         - reader
+        - evidence-usability-contract
+        - model-presentation
+      interactions:
+        - from: snapshot
+          to: artifact
+          action: Read artifact identity
+          outcome: The snapshot identifies owned knowledge and declared dependencies.
+          supports:
+            - model-presentation
     - id: overview
       title: Load metadata first and scoped details on demand
       supports:
@@ -32,6 +43,16 @@ flow:
         - measured-edge-labels
         - label-placement
         - label-browser-checks
+        - evidence-usability-contract
+        - model-presentation
+      interactions:
+        - from: snapshot
+          to: version
+          action: Select declared version knowledge
+          outcome: The snapshot exposes its selected knowledge and unresolved publication
+            evidence.
+          supports:
+            - model-presentation
     - id: flows
       title: Discover named flows and supporting owners
       supports:
@@ -39,6 +60,7 @@ flow:
         - measured-edge-labels
         - label-placement
         - label-browser-checks
+        - evidence-usability-contract
     - id: inspect
       title: Inspect selected knowledge and diagnostics
       supports:
@@ -50,6 +72,16 @@ flow:
         - spacing-control-contract
         - shared-presentation
         - presentation-checks
+        - evidence-usability-contract
+        - model-presentation
+      interactions:
+        - from: snapshot
+          to: change
+          action: Inspect proposed knowledge and delivery evidence
+          outcome: The reader can inspect the selected change without inferring work
+            authorization.
+          supports:
+            - model-presentation
   transitions:
     - from: select
       to: validate
@@ -71,7 +103,8 @@ flow:
     - id: reading-controls-browser
       kind: test
       path: apps/artifact-plane/test/browser/reading-controls.spec.js
-      requires: Check visible heading hierarchy, bounded navigation geometry and inert highlighted code.
+      requires: Check visible heading hierarchy, bounded navigation geometry and inert
+        highlighted code.
       basis: observed
       evidence:
         - docs/artifacts/artifact-plane/changes/change-ux-simplification/tasks/11-reading-controls-validation.md
@@ -79,7 +112,8 @@ flow:
       kind: element
       artifact: artifact-plane
       element: specifications/reading-controls.md
-      requires: Show larger headings, adjustable navigation and inert highlighted source code.
+      requires: Show larger headings, adjustable navigation and inert highlighted
+        source code.
       basis: documented
     - id: ux-browser-checks
       kind: test
@@ -92,7 +126,8 @@ flow:
       kind: element
       artifact: artifact-plane
       element: specifications/ux-simplification.md
-      requires: Switch complete worktree context and inspect purpose-first knowledge with independent graph disclosure.
+      requires: Switch complete worktree context and inspect purpose-first knowledge
+        with independent graph disclosure.
       basis: documented
     - id: explorer
       kind: implementation
@@ -172,14 +207,46 @@ flow:
       requires: Check measured gaps, native dropdown styles, keyboard access and
         completion feedback.
       basis: static
+    - id: evidence-usability-contract
+      kind: element
+      artifact: artifact-plane
+      element: specifications/evidence-and-comparison.md
+      requires: Select comparison context and interpret evidence without inferring
+        approval or publication.
+      basis: documented
+    - id: model-presentation
+      kind: element
+      artifact: artifact-plane
+      element: specifications/model-explanations.md
+      requires: Explain owned models and evidence-linked interactions in this journey.
+      basis: documented
   gaps:
     - The flow documents discovery behavior, not complete knowledge coverage or
       artifact establishment.
     - New contextual review navigation is specified but not implemented or
       browser-validated yet.
+    - The evidence-and-usability extension is specified; implementation and
+      current integrated validation remain pending.
   exclusions:
     - Arbitrary filesystem browsing and automatic repository edits.
   artifact: artifact-plane
+  participants:
+    - id: snapshot
+      artifact: artifact-plane
+      model: repository-snapshot
+      requires: Represent selected repository knowledge.
+    - id: artifact
+      artifact: artifact-driven
+      model: artifact
+      requires: Supply artifact identity and owned knowledge.
+    - id: change
+      artifact: artifact-driven
+      model: change
+      requires: Supply proposed knowledge and retained delivery evidence.
+    - id: version
+      artifact: artifact-driven
+      model: version
+      requires: Supply complete version knowledge and provenance.
 ---
 
 # Explore a local ADD repository

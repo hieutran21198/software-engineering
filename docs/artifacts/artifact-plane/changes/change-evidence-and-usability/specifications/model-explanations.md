@@ -3,15 +3,13 @@ references:
   - artifact: artifact-driven
     element: specifications/model-explanations.md
     requires: Interpret reusable model identity, evidence-linked flow interactions and snapshot selection consistently.
-    status: proposed
-    change: change-model-explanations
 ---
 
 # Dependency explanations and model-aware flows
 
 ## Supplier contract and boundaries
 
-The proposed ADD member supplies the reusable metadata contract. Plane implementation waits for that contract's establishment and rechecks its published contents. Existing ADD 2.1.0 rules continue to govern legacy knowledge. This is an additive consumer, not another source of domain definitions.
+ADD 2.2.0 supplies the reusable metadata contract through merged PR #27. Recheck the protected contract before implementation. Legacy knowledge remains compatible. This is an additive consumer, not another source of domain definitions.
 
 ## Consumed model and flow contract
 

@@ -43,3 +43,7 @@ The service separates declared-current comparison from publication and historica
 ## Focused comparison presentation
 
 Apply ux-simplification.md for purpose-first review, complete bounded line comparisons, honest partial/large-source fallback, source recovery deadlines and secondary loaded-page exports. Captured source identity, baseline meaning, publication uncertainty and external packet shapes remain unchanged.
+
+## Evidence and comparison extension
+
+[evidence-and-comparison.md](evidence-and-comparison.md) defines optional structured evidence and explicit comparison selectors. It refines baseline selection while preserving the omitted-selector contract and source safety.

@@ -14,22 +14,27 @@ flow:
       supports:
         - unit-contract
         - flow-contract
+        - evidence-usability-contract
     - id: delivery
       title: Resolve delivered versions and exact originating plans
       supports:
         - retention-contract
+        - evidence-usability-contract
     - id: criteria
       title: Check shared acceptance and combined integration evidence
       supports:
         - unit-contract
+        - evidence-usability-contract
     - id: publication
       title: Verify protected-ref knowledge/code publication
       supports:
         - retention-contract
+        - evidence-usability-contract
     - id: report
       title: Report supported completion or explicit missing evidence
       supports:
         - unit-contract
+        - evidence-usability-contract
   transitions:
     - from: membership
       to: delivery
@@ -72,9 +77,18 @@ flow:
       element: specifications/system-flows.md
       requires: Record affected flows without creating members or prerequisites.
       basis: documented
+    - id: evidence-usability-contract
+      kind: element
+      artifact: artifact-driven
+      element: specifications/evidence-records.md
+      requires: Interpret recorded checks and publication claims with explicit source
+        validation.
+      basis: documented
   gaps:
     - Documented evidence is not independently verified test success; this
       record does not assert any unit is complete.
+    - The evidence-and-usability extension is specified; implementation and
+      current integrated validation remain pending.
   exclusions:
     - Retroactive legacy membership and replacing a historical plan with current
       tasks.

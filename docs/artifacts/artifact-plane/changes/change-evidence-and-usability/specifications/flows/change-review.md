@@ -19,6 +19,7 @@ flow:
         - review-interface
         - review-checks
         - browser-checks
+        - evidence-usability-contract
     - id: compare
       title: Compare contract knowledge with the declared current version
       supports:
@@ -27,6 +28,7 @@ flow:
         - review-interface
         - review-checks
         - browser-checks
+        - evidence-usability-contract
     - id: impact
       title: Trace recorded relationships on both comparison sides
       supports:
@@ -35,6 +37,7 @@ flow:
         - review-interface
         - review-checks
         - browser-checks
+        - evidence-usability-contract
     - id: evidence
       title: Read governing sources and missing review proof
       supports:
@@ -43,6 +46,7 @@ flow:
         - review-interface
         - review-checks
         - browser-checks
+        - evidence-usability-contract
     - id: return
       title: Return to delivery or capture the reviewed context
       supports:
@@ -54,6 +58,7 @@ flow:
         - spacing-control-contract
         - shared-presentation
         - presentation-checks
+        - evidence-usability-contract
   transitions:
     - from: select
       to: compare
@@ -78,7 +83,8 @@ flow:
       kind: element
       artifact: artifact-plane
       element: specifications/ux-simplification.md
-      requires: Read purpose and changed passages first with bounded full comparison and explicit partial-source fallback.
+      requires: Read purpose and changed passages first with bounded full comparison
+        and explicit partial-source fallback.
       basis: documented
     - id: contract
       kind: element
@@ -126,9 +132,18 @@ flow:
       requires: Check measured gaps, native dropdown styles, keyboard access and
         completion feedback.
       basis: static
+    - id: evidence-usability-contract
+      kind: element
+      artifact: artifact-plane
+      element: specifications/evidence-and-comparison.md
+      requires: Select comparison context and interpret evidence without inferring
+        approval or publication.
+      basis: documented
   gaps:
     - Declared current is not a historical code predecessor; recorded
       relationships are not exhaustive impact.
+    - The evidence-and-usability extension is specified; implementation and
+      current integrated validation remain pending.
   exclusions:
     - Code-diff review, historical code reconstruction, approval and repository
       writes.

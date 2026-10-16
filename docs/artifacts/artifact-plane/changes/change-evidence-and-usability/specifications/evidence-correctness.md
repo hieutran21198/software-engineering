@@ -33,3 +33,7 @@ Plane owns all changes. Established ADD 2.1.0 task, unit, retention and flow con
 ## Named-search amendment
 
 The search-label-usability contract governs the new explicit title/ID mode and shared normal search UI. Existing exact/keyword/semantic discovery and ranking remain the default for omitted external match selectors. Graph identity and evidence semantics remain unchanged.
+
+## Evidence and comparison extension
+
+[evidence-and-comparison.md](evidence-and-comparison.md) defines optional structured evidence and explicit comparison selectors. It refines baseline selection while preserving the omitted-selector contract and source safety.

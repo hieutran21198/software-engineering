@@ -15,23 +15,28 @@ flow:
         - ux-simplification-contract
         - ux-browser-checks
         - events
+        - evidence-usability-contract
     - id: notify
       title: Coalesce changes into a local SSE notification
       supports:
         - events
+        - evidence-usability-contract
     - id: reload
       title: Queue the active project refresh
       supports:
         - reload
+        - evidence-usability-contract
     - id: invalidate
       title: Invalidate affected flow records and source evidence
       supports:
         - flow-contract
+        - evidence-usability-contract
     - id: apply
       title: Apply only the current project generation
       supports:
         - explorer
         - reload-tests
+        - evidence-usability-contract
   transitions:
     - from: observe
       to: notify
@@ -58,7 +63,8 @@ flow:
       kind: element
       artifact: artifact-plane
       element: specifications/ux-simplification.md
-      requires: Refresh the active source and selected reads without stale-context replies or false empty evidence.
+      requires: Refresh the active source and selected reads without stale-context
+        replies or false empty evidence.
       basis: documented
     - id: events
       kind: implementation
@@ -89,9 +95,18 @@ flow:
       requires: Describe source-backed flow queries without adding authorization or
         workflow state.
       basis: documented
+    - id: evidence-usability-contract
+      kind: element
+      artifact: artifact-plane
+      element: specifications/incremental-observation.md
+      requires: Invalidate safe changed sources and periodically reconcile missed
+        filesystem events.
+      basis: documented
   gaps:
     - Referenced implementation/test observation must be registered by a flow
       retrieval context; unreferenced code changes are outside the map.
+    - The evidence-and-usability extension is specified; implementation and
+      current integrated validation remain pending.
   exclusions:
     - Recursively indexing every implementation file on every refresh.
   artifact: artifact-plane

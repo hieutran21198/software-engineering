@@ -23,6 +23,7 @@ flow:
         - http-adapter
         - mcp-adapter
         - adapter-checks
+        - evidence-usability-contract
     - id: derive
       title: Derive packet facts from one validated revision
       supports:
@@ -35,6 +36,7 @@ flow:
         - http-adapter
         - mcp-adapter
         - adapter-checks
+        - evidence-usability-contract
     - id: deliver
       title: Copy or download locally, or return through configured MCP
       supports:
@@ -47,6 +49,7 @@ flow:
         - http-adapter
         - mcp-adapter
         - adapter-checks
+        - evidence-usability-contract
     - id: continue
       title: Read omitted registered source text at the same revision
       supports:
@@ -59,6 +62,7 @@ flow:
         - http-adapter
         - mcp-adapter
         - adapter-checks
+        - evidence-usability-contract
     - id: recover
       title: Disclose stale or partial evidence and retry safely
       supports:
@@ -71,6 +75,7 @@ flow:
         - http-adapter
         - mcp-adapter
         - adapter-checks
+        - evidence-usability-contract
   transitions:
     - from: request
       to: derive
@@ -95,7 +100,8 @@ flow:
       kind: element
       artifact: artifact-plane
       element: specifications/ux-simplification.md
-      requires: Export the captured loaded records page through secondary controls with unchanged omission and revision limits.
+      requires: Export the captured loaded records page through secondary controls
+        with unchanged omission and revision limits.
       basis: documented
     - id: contract
       kind: element
@@ -146,9 +152,18 @@ flow:
       requires: Check actual HTTP/stdio parity, paging, stale revisions and repository
         fingerprints.
       basis: static
+    - id: evidence-usability-contract
+      kind: element
+      artifact: artifact-plane
+      element: specifications/evidence-and-comparison.md
+      requires: Select comparison context and interpret evidence without inferring
+        approval or publication.
+      basis: documented
   gaps:
     - A captured packet cannot prove continuing freshness or authorize
       implementation.
+    - The evidence-and-usability extension is specified; implementation and
+      current integrated validation remain pending.
   exclusions:
     - Hosted generation, external sharing, agent launch and arbitrary file reads.
 ---

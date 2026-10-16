@@ -12,26 +12,32 @@ flow:
       title: Verify applicable DoD and dependency evidence
       supports:
         - validation-guidance
+        - evidence-usability-contract
     - id: version
       title: Propose semantic version for user review
       supports:
         - validation-guidance
+        - evidence-usability-contract
     - id: snapshot
       title: Prepare complete knowledge with delivery provenance
       supports:
         - retention-contract
+        - evidence-usability-contract
     - id: review
       title: Push feature branch and open linked PRs
       supports:
         - knowledge
+        - evidence-usability-contract
     - id: establish
       title: Wait for required team review and merge
       supports:
         - knowledge
+        - evidence-usability-contract
     - id: shared
       title: Reassess shared outcome and release eligible downstream work
       supports:
         - unit-flow
+        - evidence-usability-contract
   transitions:
     - from: validate
       to: version
@@ -74,8 +80,17 @@ flow:
       flow: unit-validation
       requires: Assess the complete shared outcome from delivered member evidence.
       basis: documented
+    - id: evidence-usability-contract
+      kind: element
+      artifact: artifact-driven
+      element: specifications/evidence-records.md
+      requires: Interpret recorded checks and publication claims with explicit source
+        validation.
+      basis: documented
   gaps:
     - A proposed snapshot or PR alone does not establish the version.
+    - The evidence-and-usability extension is specified; implementation and
+      current integrated validation remain pending.
   exclusions:
     - Automatic merging, deployment, release tagging and deleting referenced
       delivery records.
