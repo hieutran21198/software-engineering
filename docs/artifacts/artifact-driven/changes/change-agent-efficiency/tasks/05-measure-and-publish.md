@@ -32,7 +32,7 @@ Executed on 16 October 2026 after the layout-guidance, json-cli and migrate-repo
   - Files added by the last version: 33 to 1.
   - Explore git commands with 10 worktrees: 771 to 102.
   - Changes with an unknown phase: 19 to 0 of 21.
-  - The zero-excerpt packet grew from 139,216 to 145,391 bytes. The measurements are recorded, so the DoD item is met. The packet target belongs to the unit's measurements criterion, which records a failure.
+  - The zero-excerpt packet grew from 139,216 to 158,117 bytes after the legacy-record conversion. The measurements are recorded, so the DoD item is met. The packet target belongs to the unit's measurements criterion, which records a failure.
 - Validation with the existing readers: validate-knowledge reports 0 errors. Task graphs, units and flows resolve, the two artifact edges are unchanged, and historical units read identically before and after migration. The Plane derives Requirement, Specification and Plan as documented complete from the declared self_check records.
 - Version: versions/2.4.0/README.md with source_change: change-agent-efficiency and a compatibility summary, no knowledge directories, and identity record 2.4.0. Historical snapshots and retained tasks are unchanged.
 - Publication: the dedicated branch claude/add-in-place-layout is pushed, and one coordinated PR is open: https://github.com/hieutran21198/software-engineering/pull/29. Upstream #28 is linked. The PR stops for team review and merge; establishment is not claimed.

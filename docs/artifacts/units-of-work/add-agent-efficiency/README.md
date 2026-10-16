@@ -111,9 +111,9 @@ Requirement, Specification and Plan are preparatory knowledge. Implementation re
 
 ## Combined checks
 
-Executed on 16 October 2026 on branch claude/add-in-place-layout after explicit user approval (ADD 2.4.0, one coordinated PR, adoption tasks kept). Task details are in the originating tasks; this section records only combined results.
+Executed on 16 October 2026 on branch claude/add-in-place-layout after explicit user approval (ADD 2.4.0, one coordinated PR, adoption tasks kept, and the later conversion of all legacy records). Task details are in the originating tasks; this section records only combined results.
 
-- Integration: `go test ./...`, `go vet ./...`, bundle fidelity, the in-place scaffold test, adoption tests and the website production build after `npm ci` pass. The bundle link script found no broken or ancestor links. versions/2.4.0/README.md is a version record with source_change, without knowledge directories or tasks, and the identity record declares 2.4.0. Established snapshots and delivered changes are unchanged (`git diff origin/main -- docs/artifacts/*/versions` shows only the two new records).
+- Integration: `go test ./...`, `go vet ./...`, bundle fidelity, the in-place scaffold test, adoption tests and the website production build after `npm ci` pass. The bundle link script found no broken or ancestor links. versions/2.4.0/README.md is a version record with source_change, without knowledge directories or tasks, and the identity record declares 2.4.0. After the approved conversion, version directories hold only records and changes hold only records and tasks; all 983 removed files are identical in their introducing commits or on origin/main.
 - Consistency: the bundle, AGENTS.md and the scaffold describe the in-place layout and keep one legacy compatibility section. The Plane reads all 15 units of work identically on the legacy and migrated forms of this repository; only this unit differs, because of its new 2.4.0 record. `node apps/artifact-plane/scripts/validate-knowledge.mjs .` reports 0 errors.
 - Measurements, as byte, file and command proxies. The benchmark is `node apps/artifact-plane/scripts/layout-benchmark.mjs . 4eb71e3 HEAD --worktrees 9` with local clones and main at 6a0e0c9. Both forms ran with the current readers.
 
@@ -121,11 +121,11 @@ Executed on 16 October 2026 on branch claude/add-in-place-layout after explicit 
   | --- | --- | --- |
   | Knowledge files copied into the active change | 38 (23 byte-identical to a version) | 0 |
   | Files added by the last version | 33 (versions/2.3.0; PR #28 added 139 files) | 1 (versions/2.4.0/README.md) |
-  | Files and bytes under docs/artifacts | 1,322 files, 5,851,350 bytes | 1,330 files, 5,903,540 bytes; legacy snapshots are preserved, so no historical bytes are removed |
+  | Files and bytes under docs/artifacts | 1,322 files, 5,851,350 bytes (71.3 percent byte-identical copies) | 350 files, 1,187,286 bytes (9.6 percent) after the approved conversion of legacy records; removed snapshots stay in Git |
   | git commands per explore, 10 worktrees | 771 (800 recorded with the earlier reader) | 102 (86.8 percent fewer) |
-  | Explore elapsed time | 23.0 s | 11.0 s |
+  | Explore elapsed time | 21.4 s | 3.4 s |
   | git commands to capture the ADD packet | 1,324 | 50 |
-  | Zero-excerpt packet for the ADD change | 139,216 bytes (116,052 characters recorded with the earlier reader) | 145,391 bytes (4 percent larger) |
+  | Zero-excerpt packet for the ADD change | 139,216 bytes (116,052 characters recorded with the earlier reader) | 158,117 bytes (14 percent larger) |
   | Changes with an unknown phase | 19 of 21 | 0 of 21 |
 
 - The measurements criterion fails on the packet target. The plan assumed that copied knowledge dominates the packet. Records were already deduplicated by path, and most bytes are flow-impact candidates and pointers to implementation and test sources registered by flows. The in-place packet lists each file once and its workflow evidence shrank from about 18 KB to 5 KB, but its total size did not fall. Zero copied files and the git command target are met. A user decision is needed: re-scope the packet target in Specification and Plan, or accept the measured result.

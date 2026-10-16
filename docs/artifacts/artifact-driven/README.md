@@ -22,4 +22,4 @@ This artifact uses the in-place layout. Working knowledge is in requirements, sp
 - [Adoption and publishing contract](specifications/delivery.md)
 - [Knowledge and boundary decision](decisions/001-knowledge-and-boundary.md) and [in-place layout decision](decisions/011-in-place-knowledge-layout.md)
 
-Version records are in versions; 1.1.0 to 2.3.0 are complete legacy snapshots and stay unchanged. Change records and retained delivery plans are in changes.
+Version records are in versions. Records 1.1.0 to 2.3.0 were converted from complete legacy snapshots; each one gives the Git command that finds its knowledge. Change records and retained delivery plans are in changes.
