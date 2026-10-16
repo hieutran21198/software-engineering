@@ -4,6 +4,7 @@ Use these guides to adopt ADD and carry out the first artifact change. They supp
 
 | Guide | Purpose |
 | --- | --- |
+| [Minimal change scaffold](minimal-change.md) | Start a one-artifact outcome with complete phase, task and evidence structure. |
 | [Getting started](getting-started.md) | Choose a knowledge workspace, identify an artifact, and complete the first change. |
 | [System flows](system-flows.md) | Define named journeys, reusable models, interactions, supporting evidence and flow maintenance. |
 | [Units of work](units-of-work.md) | Group artifact changes around one outcome and record shared validation knowledge. |

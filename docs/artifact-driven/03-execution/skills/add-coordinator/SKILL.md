@@ -64,3 +64,7 @@ For a shared outcome, record a brief using the [unit-of-work format](../../../06
 ## System-flow checks
 
 Read the [system-flow format](../../../06-guidelines/system-flows.md) when the change affects system journeys. Own affected_flows and flow_assessment in each new unit brief. Record create/modify/remove intent, discovery scope, exclusions, and gaps; explain an empty affected list. Coordinate discovery before asking for repository facts, and keep detailed behavior with its owning specifications. In existing phase and integration checks, confirm affected flow updates and concrete validation. During Version preparation, check final snapshot references and retain originating evidence. Do not infer historical membership, create a state registry, or treat flow participation as an artifact prerequisite. Existing approval and upstream establishment gates remain unchanged.
+
+## Small-change authoring
+
+Use the [minimal change scaffold](../../../06-guidelines/minimal-change.md) when one artifact and a small task plan cover the outcome. Retain complete baseline knowledge and replace all placeholders with verified facts. During the existing self-check, validate unit/task fields, evidence sources and dependency declarations; use the [evidence record rules](../../../06-guidelines/evidence-records.md) for optional explicit check and publication facts. Keep phase commits, plan approval and upstream establishment. Do not add another review step or copy old task evidence as current proof.

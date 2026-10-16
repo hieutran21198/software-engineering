@@ -36,3 +36,7 @@ When assigned a member of a unit of work, consume its outcome scope and shared a
 ## System-flow checks
 
 Read the [system-flow format](../../../06-guidelines/system-flows.md) when the change affects system journeys. During the existing Requirement self-check, investigate candidate journeys and owning elements from knowledge, entry points, contracts, implementation, and tests before asking for discoverable facts. Report discovery scope, exclusions, and gaps to the coordinator for the unit flow assessment. Missing flow definitions become authoring work; absence from an incomplete map does not prove absence from the system.
+
+## Small-change authoring
+
+Use the [minimal change scaffold](../../../06-guidelines/minimal-change.md) when one artifact and a small task plan cover the outcome. Retain complete baseline knowledge and replace all placeholders with verified facts. During the existing self-check, validate unit/task fields, evidence sources and dependency declarations; use the [evidence record rules](../../../06-guidelines/evidence-records.md) for optional explicit check and publication facts. Keep phase commits, plan approval and upstream establishment. Do not add another review step or copy old task evidence as current proof.

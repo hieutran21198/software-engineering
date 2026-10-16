@@ -52,3 +52,7 @@ Consume the [unit brief](../../../06-guidelines/units-of-work.md) when the chang
 ## System-flow checks
 
 Read the [system-flow format](../../../06-guidelines/system-flows.md) when the change affects system journeys. During the existing Specification self-check, assess compatibility and update affected flow steps, branches, supporting references, evidence basis, and gaps. During the existing Plan self-check, supply fresh tasks and concrete flow checks. Keep detailed behavior with its owning artifact; flow participation alone creates no dependency or unit membership. Proposed knowledge can support preparation, but dependent Implementation still waits for upstream establishment and plan approval.
+
+## Small-change authoring
+
+Use the [minimal change scaffold](../../../06-guidelines/minimal-change.md) when one artifact and a small task plan cover the outcome. Retain complete baseline knowledge and replace all placeholders with verified facts. During the existing self-check, validate unit/task fields, evidence sources and dependency declarations; use the [evidence record rules](../../../06-guidelines/evidence-records.md) for optional explicit check and publication facts. Keep phase commits, plan approval and upstream establishment. Do not add another review step or copy old task evidence as current proof.
