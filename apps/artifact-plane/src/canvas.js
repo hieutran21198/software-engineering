@@ -92,8 +92,11 @@ export function canvasGraph(
         : status === "proposed-remove"
           ? "#f28c82"
           : "#8b9bb4";
+    // Parallel statuses with the same endpoints stay distinct edges.
+    const base = `dependency:${e.source}:${e.target}`;
+    const reasons = e.explanations || [];
     edges.push({
-      id: `dependency:${e.source}:${e.target}`,
+      id: edges.some((x) => x.id === base) ? `${base}:${status}` : base,
       source,
       target,
       type: "readable",
@@ -102,14 +105,19 @@ export function canvasGraph(
           ? "addition proposed"
           : removal
             ? "removal proposed"
-            : "",
+            : reasons.length > 1
+              ? `${reasons.length} reasons`
+              : reasons[0]?.reason?.length <= 40
+                ? reasons[0].reason
+                : reasons.length ? "1 reason" : "",
       style: {
         stroke: color,
         strokeWidth: 2,
         ...(status !== "established" ? { strokeDasharray: "6 5" } : {}),
       },
       markerEnd: { type: "arrowclosed", color },
-      data: { status },
+      data: { status, dependency: { source: e.source, target: e.target, status } },
+      ariaLabel: `${e.target} depends on ${e.source} (${status})`,
       zIndex: 0,
     });
     layoutEdges.push([source, target]);

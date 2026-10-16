@@ -14,6 +14,28 @@ export function safeFlowSource(path) {
     /\.(?:md|go|[cm]?js|jsx|ts|tsx|py|rs|java|kt|swift|ya?ml|json|toml|sh|sql|html|css)$/i.test(path);
 }
 
+// Diagnostics that do not invalidate an otherwise valid flow record.
+const SEMANTIC_CODES = new Set(['flow-evidence-gap', 'invalid-flow-participants', 'invalid-flow-interaction']);
+// Model declarations: a top-level models list in specification front matter.
+// Identity is artifact:model-id within one snapshot; sources are evidence only.
+export function parseModels(element) {
+  if (!/^specifications\/.+\.md$/.test(element.path) || /^specifications\/flows\//.test(element.path)) return null;
+  const match = element.markdown.match(/^---\r?\n([\s\S]*?)\r?\n---(?:\r?\n|$)/);
+  if (!match || !/(?:^|\n)models\s*:/.test(match[1])) return null;
+  const diagnostics = [], models = [];
+  const report = (code, message) => diagnostics.push({code, path: element.file, message});
+  let data;
+  try {const doc = parseDocument(match[1]);if (doc.errors.length) throw Error();data = doc.toJS({maxAliasCount: 50});}
+  catch {report('invalid-model', 'Model front matter is invalid YAML or contains duplicate keys.');return {models, diagnostics};}
+  if (!Array.isArray(data?.models)) {report('invalid-model', 'models must be a list.');return {models, diagnostics};}
+  for (const m of data.models) {
+    if (!object(m) || !safeFlowID(m.id) || !text(m.title) || !text(m.description) || !Array.isArray(m.sources) || !m.sources.length || !unique(m.sources)) {report('invalid-model', 'Models need a safe id, title, description and a nonempty unique sources list.');continue;}
+    const unsafe = m.sources.filter(path => typeof path !== 'string' || !safeElementPath(path));
+    if (unsafe.length) {report('unsafe-model-source', `Model ${m.id} has unsafe sources: ${unsafe.join(', ')}.`);continue;}
+    models.push({id: m.id, title: m.title, description: m.description, sources: [...m.sources], artifact: element.artifact, source: element.source, file: element.file, elementId: element.id, logicalId: `${element.artifact}:${m.id}`});
+  }
+  return {models, diagnostics};
+}
 export function parseFlow(element, context = '') {
   if (!/^specifications\/flows\/.+\.md$/.test(element.path)) return null;
   const diagnostics = [];
@@ -55,13 +77,35 @@ export function parseFlow(element, context = '') {
     } else report('invalid-flow', 'Support kind must be element, flow, implementation or test.');
   }
   for (const key of ['gaps','exclusions']) if (f[key] !== undefined && (!Array.isArray(f[key]) || !f[key].every(text))) report('invalid-flow', `${key} must contain nonempty explanations.`);
+  // Participants and interactions are a separate semantic layer: invalid
+  // records are diagnosed and dropped without invalidating the legacy flow.
+  const participants = [];
+  if (f.participants !== undefined) {
+    if (!Array.isArray(f.participants)) report('invalid-flow-participants', 'participants must be a list.');
+    else for (const p of f.participants) {
+      const selector = p?.status === undefined && p?.change === undefined || p?.status === 'established' && p?.change === undefined || p?.status === 'proposed' && safeFlowID(p?.change) && p.change.startsWith('change-');
+      if (!object(p) || !safeFlowID(p.id) || !safeFlowID(p.artifact) || !safeFlowID(p.model) || !text(p.requires) || !selector || participants.some(x => x.id === p.id)) {report('invalid-flow-participants', 'Participants need unique safe IDs, an owning artifact, a model ID, a role and valid selectors.');continue;}
+      participants.push({id: p.id, artifact: p.artifact, model: p.model, requires: p.requires, ...(p.status ? {status: p.status} : {}), ...(p.change ? {change: p.change} : {})});
+    }
+  }
+  const participantIDs = new Set(participants.map(p => p.id));
+  const semanticSteps = steps.map(step => {
+    if (!object(step) || step.interactions === undefined) return step;
+    const interactions = [];
+    if (!Array.isArray(step.interactions)) report('invalid-flow-interaction', `Step ${step.id} interactions must be a list.`);
+    else for (const i of step.interactions) {
+      if (!object(i) || !participantIDs.has(i.from) || !participantIDs.has(i.to) || !text(i.action) || !text(i.outcome) || !Array.isArray(i.supports) || !i.supports.length || !unique(i.supports) || !i.supports.every(id => supportIDs.has(id))) {report('invalid-flow-interaction', `Step ${step.id} interactions need declared participants, action, outcome and existing support IDs.`);continue;}
+      interactions.push({from: i.from, to: i.to, action: i.action, outcome: i.outcome, supports: [...i.supports]});
+    }
+    return {...step, interactions};
+  });
   const localId=safeFlowID(f.id)?f.id:element.path;
   const id = flowKey(context, element.artifact, element.source, 'flow', localId);
-  const state=diagnostics.some(d => d.code !== 'flow-evidence-gap') ? 'invalid' : 'valid';
+  const state=diagnostics.some(d => !SEMANTIC_CODES.has(d.code)) ? 'invalid' : 'valid';
   return {...f, id, localId, artifact:element.artifact, title:text(f.title)?f.title:localId,
     trigger:text(f.trigger)?f.trigger:'',outcome:text(f.outcome)?f.outcome:'',logicalId:`${element.artifact}:${localId}`, source:element.source,
     elementId:element.id, file:element.file, markdown:element.markdown,
-    steps:state==='valid'?steps:[],support:state==='valid'?support:[],transitions:state==='valid'?transitions:[],
+    steps:state==='valid'?semanticSteps:[],participants:state==='valid'?participants:[],support:state==='valid'?support:[],transitions:state==='valid'?transitions:[],
     gaps:Array.isArray(f.gaps)?f.gaps.filter(text):[],exclusions:Array.isArray(f.exclusions)?f.exclusions.filter(text):[],diagnostics,state};
 }
 
@@ -76,6 +120,18 @@ export function buildFlowGraph(snapshot, {context = '', knowledge = 'planning'} 
     if (all.has(key)) {flow.state='invalid';all.get(key).state='invalid';diagnostics.push({code:'duplicate-flow',path:flow.file,message:'Flow identity is duplicated within its snapshot.'});}
     else all.set(key,flow);
     records.push(flow);
+  }
+  const models = new Map();
+  for (const artifact of snapshot.artifacts) for (const element of artifact.elements) {
+    const parsed = parseModels(element); if (!parsed) continue;
+    diagnostics.push(...parsed.diagnostics);
+    for (const m of parsed.models) {
+      const key = JSON.stringify([m.artifact, m.source, m.id]);
+      if (models.has(key)) {const first = models.get(key);if (first) diagnostics.push({code: 'duplicate-model', path: m.file, message: `Model ${m.logicalId} is declared more than once in ${m.source} (${first.file}).`});models.set(key, null);continue;}
+      const known = new Set(artifact.elements.filter(e => e.source === m.source).map(e => e.path)), missing = m.sources.filter(p => !known.has(p));
+      if (missing.length) {diagnostics.push({code: 'missing-model-source', path: m.file, message: `Model ${m.logicalId} sources do not exist: ${missing.join(', ')}.`});m.missingSources = missing;}
+      models.set(key, m);
+    }
   }
   const selected = new Map();
   for (const artifact of snapshot.artifacts) {
@@ -123,6 +179,35 @@ export function buildFlowGraph(snapshot, {context = '', knowledge = 'planning'} 
       if (!resolved) {const d={code:'unresolved-flow-support',path:flow.file,message:`Support ${support.id} has no unambiguous readable target.`};flow.diagnostics.push(d);diagnostics.push(d);}
       for (const step of flow.steps.filter(step => step.supports.includes(support.id))) link(step.nodeId,target,'supports',{reason:support.requires,basis:support.basis,support:support.id,flow:flow.id,resolved});
     }
+    // Participants resolve like knowledge support; missing models stay named targets.
+    for (const p of flow.participants || []) {
+      const source = knowledgeSource(p, flow), model = source ? models.get(JSON.stringify([p.artifact, source, p.model])) : undefined;
+      if (model) {
+        p.nodeId = add({id: flowKey(context, p.artifact, source, 'model', p.model), kind: 'model', title: model.title, description: model.description, artifact: p.artifact, source, logicalId: model.logicalId, file: model.file, sources: model.sources});
+        const declaring = flowKey(context, p.artifact, source, 'element', model.file);
+        sources.set(declaring, {id: declaring, path: model.file, kind: 'element', artifact: p.artifact, source});
+        for (const path of model.sources) {
+          const element = elements.get(JSON.stringify([p.artifact, source, path]));
+          if (!element) continue;
+          const target = add({id: flowKey(context, p.artifact, source, 'element', element.file), kind: 'element', title: path, artifact: p.artifact, source, file: element.file, elementId: element.id});
+          sources.set(target, {id: target, path: element.file, kind: 'element', artifact: p.artifact, source});
+          if (!edges.some(e => e.source === p.nodeId && e.target === target && e.kind === 'describes')) link(p.nodeId, target, 'describes', {resolved: true});
+        }
+      } else {
+        p.nodeId = add({id: flowKey(context, p.artifact, source || 'unresolved', 'missing-model', p.model), kind: 'missing', title: `${p.artifact}:${p.model}`, artifact: p.artifact, source, selector: {status: p.status || 'established', ...(p.change ? {change: p.change} : {})}});
+        const d = {code: model === null ? 'ambiguous-model' : 'unresolved-model', path: flow.file, message: `Participant ${p.id} has no unambiguous model ${p.artifact}:${p.model} in ${source || 'any declared source'}.`};
+        flow.diagnostics.push(d);diagnostics.push(d);
+      }
+      p.source = source;p.resolved = !!model;
+      link(flow.id, p.nodeId, 'participates', {participant: p.id, requires: p.requires, flow: flow.id, resolved: p.resolved});
+    }
+    const byParticipant = new Map((flow.participants || []).map(p => [p.id, p]));
+    for (const step of flow.steps) for (const i of step.interactions || []) {
+      const from = byParticipant.get(i.from), to = byParticipant.get(i.to), records = i.supports.map(id => flow.support.find(s => s.id === id));
+      i.resolved = from.resolved && to.resolved && records.every(s => s?.resolved);
+      i.bases = [...new Set(records.map(s => s?.basis).filter(Boolean))];
+      link(from.nodeId, to.nodeId, 'interaction', {flow: flow.id, step: step.id, action: i.action, outcome: i.outcome, supports: i.supports, bases: i.bases, resolved: i.resolved});
+    }
     for (const transition of flow.transitions) link(flow.steps.find(s => s.id===transition.from).nodeId,flow.steps.find(s => s.id===transition.to).nodeId,'transition',{condition:transition.condition || '',flow:flow.id});
   }
   // Existing element references can carry impact beyond a directly linked flow.
@@ -142,7 +227,7 @@ export function flowImpact(graph, ids) {
   const matches=(node,id)=>node.id===id||node.logicalId===id||node.elementId===id||node.file===id||id.startsWith('artifact:')&&node.artifact===id.slice(9);
   for(const id of ids)for(const node of graph.nodes)if(matches(node,id))starts.add(node.id);
   for(const edge of graph.edges) {
-    if(!['supports','references','defines'].includes(edge.kind)||edge.resolved===false)continue;
+    if(!['supports','references','defines','participates','describes'].includes(edge.kind)||edge.resolved===false)continue;
     if(!reverse.has(edge.target))reverse.set(edge.target,[]);reverse.get(edge.target).push(edge);
   }
   const queue=[...starts],visited=new Set(queue);for(const id of queue)paths.set(id,[]);

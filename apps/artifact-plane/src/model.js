@@ -588,6 +588,38 @@ export function buildSnapshot(files, repository = {}, inputDiagnostics = [], opt
         }
       }
     }
+  // Dependency explanations: the consumer's references that target the actual
+  // supplier in the consumer snapshot selected by the edge status. No reason
+  // is inferred from status or prose; an empty list means not documented.
+  for (const edge of edges) {
+    const consumer = byId.get(edge.target);
+    const selected = consumer?.layout === "in-place"
+      ? [WORKING]
+      : edge.status === "proposed-add"
+        ? [consumer?.activeChange && `change:${consumer.activeChange}`]
+        : [currentSource(consumer)];
+    edge.declaration = consumer?.layout !== "in-place" && edge.status !== "established" && consumer?.activeChange
+      ? `${BASE}${edge.target}/changes/${consumer.activeChange}/dependencies.yaml`
+      : `${BASE}${edge.target}/README.md`;
+    const seen = new Set();
+    edge.explanations = references
+      .filter((r) => r.consumerArtifact === edge.target && r.artifact === edge.source && selected.includes(r.consumerSource))
+      .map((r) => ({
+        consumer: r.consumer,
+        consumerPath: allElements.get(r.consumer)?.path ?? null,
+        source: allElements.get(r.consumer)?.file ?? null,
+        supplier: r.targetId,
+        element: r.element,
+        reason: r.reason,
+        selector: { status: r.status, source: r.targetSource },
+        resolved: r.resolved,
+        diagnostic: r.diagnostic,
+      }))
+      .filter((x) => {
+        const key = JSON.stringify([x.consumer, x.element, x.reason, x.selector]);
+        return !seen.has(key) && seen.add(key);
+      });
+  }
   checkCycles(effectiveEdges(edges), "established", diagnostics);
   checkCycles(effectiveEdges(edges, true), "planning", diagnostics);
   // Diagnostics name the layout of the artifact they apply to.

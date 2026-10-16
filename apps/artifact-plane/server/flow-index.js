@@ -416,8 +416,26 @@ export function createFlowService({
         );
       return matches[0];
     }
+    // Named models of one flow, grouped by owner on the client. Known
+    // participation lists other flows that use the same concrete model node.
+    function flowModels(flow) {
+      const nodes = new Map(record.graph.nodes.map((n) => [n.id, n]));
+      return [...new Set((flow.participants || []).map((p) => p.nodeId))].map((id) => {
+        const node = nodes.get(id) || {id, kind: "missing"};
+        const participants = flow.participants.filter((p) => p.nodeId === id);
+        const knownFlows = record.graph.edges
+          .filter((e) => e.kind === "participates" && e.target === id && e.source !== flow.id)
+          .map((e) => record.graph.flows.find((f) => f.id === e.source))
+          .filter(Boolean)
+          .map((f) => ({id: f.id, logicalId: f.logicalId, title: f.title, artifact: f.artifact, source: f.source}));
+        const sources = record.graph.edges.filter((e) => e.kind === "describes" && e.source === id).map((e) => nodes.get(e.target)?.file).filter(Boolean);
+        return {id, kind: node.kind, resolved: node.kind === "model", title: node.title, description: node.description || null, artifact: node.artifact || participants[0]?.artifact, source: node.source || null, logicalId: node.logicalId || `${participants[0]?.artifact}:${participants[0]?.model}`, file: node.file || null, sources, missingSources: (node.sources || []).filter((path) => !sources.some((file) => file.endsWith("/" + path))), selector: node.selector || null, participants: participants.map((p) => ({id: p.id, requires: p.requires})), knownFlows, coverage: "Known participation in recorded flows only."};
+      });
+    }
     function flowSources(flow) {
+      const modelFiles = flowModels(flow).flatMap((m) => [m.file, ...m.sources]).filter(Boolean);
       const paths = new Set([
+        ...modelFiles,
         flow.file,
         ...flow.support
           .map(
@@ -514,7 +532,11 @@ export function createFlowService({
           flow.id,
           ...flow.steps.map((s) => s.nodeId),
           ...flow.support.map((s) => s.targetId),
+          ...(flow.participants || []).map((p) => p.nodeId),
         ]);
+      // Model source evidence is reachable from the participating model nodes.
+      for (const edge of record.graph.edges)
+        if (edge.kind === "describes" && ids.has(edge.source)) ids.add(edge.target);
       for (const edge of record.graph.edges)
         if (
           edge.target === flow.id &&
@@ -532,11 +554,13 @@ export function createFlowService({
           ...summary(flow),
           entry_steps:flow.entry_steps||[],
           steps: flow.steps,
+          participants: flow.participants || [],
           support: flow.support,
           transitions: flow.transitions,
           diagnostics: flow.diagnostics,
         },
         graph,
+        models: flowModels(flow),
         sources: flowSources(flow).map(excerpt),
         units: record.units
           .filter((u) =>

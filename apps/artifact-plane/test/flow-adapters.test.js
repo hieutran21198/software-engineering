@@ -430,3 +430,56 @@ test("L2/L7: in-place established and planning flows have HTTP and MCP parity", 
   assert.deepEqual(titles, { established: ["Established login"], planning: ["Proposed login"] });
   assert.deepEqual(await fingerprint(fixture.root), before);
 });
+
+// Model-aware flows: graph, detail and impact parity, invalidation on model
+// definition edits, and worktree isolation of concrete model identity.
+test("P4/P5: model detail, known participation and impact have HTTP and MCP parity and refresh per worktree", async (t) => {
+  const input = inPlaceFixture();
+  input.set("src/check.js", "export const membership = true;\n");
+  const models = (title) => "---\nmodels:\n  - id: member\n    title: " + title + "\n    description: The member who signs in.\n    sources: [specifications/identity.md]\n---\n# Models\n";
+  const flow = (id) => "---\n" + JSON.stringify({flow: {id, artifact: "tenant", title: "Flow " + id, trigger: "Begin.", outcome: "Done.", entry_steps: ["check"], steps: [{id: "check", title: "Check", supports: ["identity"], interactions: [{from: "member", to: "member", action: "Check membership", outcome: "Checked.", supports: ["identity"]}]}], transitions: [], support: [{id: "identity", kind: "element", artifact: "tenant", element: "specifications/identity.md", requires: "Identity rules.", basis: "documented"}], participants: [{id: "member", artifact: "tenant", model: "member", requires: "Signs in."}]}}) + "\n---\n# Flow\n";
+  input.set("docs/artifacts/tenant/specifications/domain-model.md", models("Member"));
+  input.set("docs/artifacts/tenant/specifications/flows/login.md", flow("login"));
+  input.set("docs/artifacts/tenant/specifications/flows/report.md", flow("report"));
+  const { fixture, client, http } = await setup(t, input);
+  const before = await fingerprint(fixture.root);
+  const parity = async (args, tool) => {
+    const request = { path: fixture.root, knowledge: "planning", ...args };
+    const response = await http(request), { operation, ...rest } = request;
+    const mcp = await client.callTool({ name: tool, arguments: rest });
+    assert.equal(response.status, 200, JSON.stringify(response.body));
+    assert.deepEqual(stable(response.body), stable(mcp.structuredContent));
+    return response.body;
+  };
+  const list = await parity({ operation: "search", match: "title", artifact: "tenant", limit: 20 }, "search_flows");
+  const login = list.data.flows.find((f) => f.logicalId === "tenant:login");
+  const detail = await parity({ operation: "detail", flow: login.id }, "get_flow");
+  const [model] = detail.data.models;
+  assert.equal(model.logicalId, "tenant:member");
+  assert.equal(model.title, "Member");
+  assert.deepEqual(model.knownFlows.map((f) => f.logicalId), ["tenant:report"]);
+  assert.ok(detail.data.graph.nodes.some((n) => n.kind === "model"));
+  assert.ok(detail.data.graph.edges.some((e) => e.kind === "interaction" && e.action === "Check membership"));
+  assert.ok(detail.data.sources.some((s) => s.path === "docs/artifacts/tenant/specifications/domain-model.md"));
+  const impact = await parity({ operation: "impact", ids: ["tenant:member"], limit: 100 }, "get_impact_context");
+  assert.deepEqual(impact.data.flows.map((f) => f.logicalId).sort(), ["tenant:login", "tenant:report"]);
+  // A model definition edit invalidates the index for this worktree only.
+  const other = join(fixture.root, "..", "plane-model-worktree-" + Date.now());
+  git(fixture.root, "worktree", "add", "-q", "-b", "model-edit", other);
+  t.after(() => rm(other, { recursive: true, force: true }));
+  await writeFile(join(other, "docs/artifacts/tenant/specifications/domain-model.md"), models("Edited member"));
+  const otherList = await http({ path: fixture.root, worktree: other, knowledge: "planning", operation: "search", match: "title", artifact: "tenant", limit: 20 });
+  const otherDetail = await http({ path: fixture.root, worktree: other, knowledge: "planning", operation: "detail", flow: otherList.body.data.flows.find((f) => f.logicalId === "tenant:login").id });
+  assert.equal(otherDetail.body.data.models[0].title, "Edited member");
+  const again = await http({ path: fixture.root, knowledge: "planning", operation: "detail", flow: login.id });
+  assert.equal(again.body.data.models[0].title, "Member");
+  await writeFile(join(fixture.root, "docs/artifacts/tenant/specifications/domain-model.md"), models("Renamed member"));
+  const refreshed = await http({ path: fixture.root, knowledge: "planning", operation: "detail", flow: login.id });
+  assert.equal(refreshed.status, 200, JSON.stringify(refreshed.body));
+  assert.equal(refreshed.body.data.models[0].title, "Renamed member");
+  assert.notEqual(refreshed.body.revision, detail.revision);
+  await writeFile(join(fixture.root, "docs/artifacts/tenant/specifications/domain-model.md"), models("Member"));
+  // Reads never write: only the test's own edits and its worktree registration changed.
+  const files = (value) => Object.fromEntries(Object.entries(value).filter(([path]) => !path.startsWith(".git/")));
+  assert.deepEqual(files(await fingerprint(fixture.root)), files(before));
+});

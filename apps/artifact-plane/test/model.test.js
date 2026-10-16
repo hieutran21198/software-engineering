@@ -218,7 +218,8 @@ test("L1: in-place identity comes from front matter only and Markdown declaratio
   assert.equal(tenant.layout, "in-place");
   assert.equal(tenant.currentVersion, "1.0.0");
   assert.deepEqual(tenant.dependsOn, []);
-  assert.deepEqual(view.edges, [{ source: "tenant", target: "authentication", status: "established" }]);
+  assert.deepEqual(view.edges.map(({ source, target, status }) => ({ source, target, status })), [{ source: "tenant", target: "authentication", status: "established" }]);
+  assert.deepEqual(view.edges[0].explanations.map((x) => [x.consumerPath, x.element, x.reason, x.resolved]), [["specifications/login.md", "specifications/identity.md", "identity format", true]]);
   assert.ok(!view.diagnostics.some((d) => d.severity !== "info"), JSON.stringify(view.diagnostics));
   const login = view.artifacts.find((a) => a.id === "authentication").elements.find((e) => e.path === "specifications/login.md");
   assert.equal(login.source, "working");
