@@ -50,6 +50,10 @@ acceptance:
     criterion: Idle observation reads at least 80 percent fewer knowledge bytes on
       the same large fixture while bounded reconciliation detects missed
       changes.
+  - id: compact-context
+    criterion: An opt-in agent packet fits a declared complete UTF-8 response
+      budget, preserves uncertainty and supports revision-bound continuation
+      without changing default clients.
   - id: integration
     criterion: Upstream establishment, integrated behavior, responsive layout,
       read-only safety, bundle parity and required checks support the delivered
@@ -68,6 +72,11 @@ evidence:
 ## Included scope
 
 Resolve all six audit findings through ADD-owned evidence/scaffold guidance and Plane-owned evidence, comparison, relationship and refresh behavior. Include diagnosis and repair of the known reading-controls CI failure as integrated validation work.
+
+The proposed agent-efficiency extension adds compact HTTP/MCP context retrieval
+to the existing Plane member. It preserves this unit's membership and delivered
+ADD member. Its new contract, task and affected integration join require approval
+before execution. No compact-context implementation or validation is claimed.
 
 ## Excluded scope
 

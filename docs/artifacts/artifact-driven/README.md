@@ -24,7 +24,7 @@ ADD 2.1.0 knowledge, bundled implementation and retained delivery evidence lande
 
 ## Active change
 
-- [Evidence and usability](changes/change-evidence-and-usability/README.md)
+- [Agent efficiency](changes/change-agent-efficiency/README.md)
 
 
 ## Knowledge snapshot
