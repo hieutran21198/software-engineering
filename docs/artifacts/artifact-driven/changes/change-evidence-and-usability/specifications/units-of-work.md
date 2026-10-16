@@ -51,7 +51,7 @@ Update definitions, artifact model, author/getting-started guidance, and coordin
 
 ## Impact and self-check
 
-ADD has no upstream artifact prerequisite. Plane consumes this proposed contract after its establishment. Preserve documentation waterfall links, full required skills, bundle/adoption fidelity, and existing task DAG semantics. U1–U5 map to membership, provenance, evidence, compatibility, and diagnostics. KISS uses two small metadata extensions and references; STE distinguishes recorded evidence from verified establishment. No blocker remains for Plan.
+ADD has no upstream artifact prerequisite. Plane consumes established unit semantics. The optional publication review extension is defined in evidence-records.md and requires its own publication before dependent implementation. Preserve documentation waterfall links, full required skills, bundle/adoption fidelity, and existing task DAG semantics. U1–U5 map to membership, provenance, evidence, compatibility, and diagnostics. KISS uses two small metadata extensions and references; STE distinguishes recorded evidence from verified establishment. No blocker remains for Plan.
 
 ## Project adoption extension
 

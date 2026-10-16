@@ -21,7 +21,7 @@ cmd/se-adopt/main.go defines these inputs:
 | --dry-run | false | Validate and count pending/unchanged assets without filesystem writes. |
 | --help | false | Print usage; return success. |
 
-Unexpected positional arguments and unknown flags fail. Go flag parsing governs accepted forms; no additional configuration file or network protocol is supplied. The executable writes errors to stderr prefixed se-adopt: and exits 1. Successful adoption writes an Adopted or Would adopt line containing description, destination and counts, then a Start with README path. Result.Destination is absolute; Created counts new or would-create files and Unchanged counts byte-identical files. This recovery does not promise a machine-readable output schema beyond the existing API.
+Unexpected positional arguments and unknown flags fail. Go flag parsing governs accepted forms; no additional configuration file or network protocol is supplied. The executable writes errors to stderr prefixed se-adopt: and exits 1. Successful adoption writes an Adopted or Would adopt line containing description, destination and counts, then a Start with README path. Result.Destination is absolute; Created counts new or would-create files and Unchanged counts byte-identical files. This interface does not promise a machine-readable output schema beyond the existing API.
 
 ## Copy and failure behavior
 
@@ -39,11 +39,11 @@ The existing .github/workflows/ci.yml runs on PRs, main/master pushes, v* tags a
 
 Pages deployment is configured only on the default branch outside PRs, after Go/docs jobs pass. Tag release publication waits for Go/docs and attaches six binaries plus checksums. Tag runs do not meet the default-branch Pages condition. Configuration is evidence of delivery rules, not proof a deployment or release exists. Download instructions require assets and checksums from the same selected release and successful verification before running. Consumer download is not an executable adoption subcommand.
 
-Go module baseline is Go 1.25; website package requires Node >=22, while repo instructions and CI use Node 24. Use existing tool versions for recovery validation. No release tag or deployment is planned.
+Go module baseline is Go 1.25; website package requires Node >=22, while repo instructions and CI use Node 24. Use existing tool versions for delivery validation. No release tag or deployment is planned.
 
 ## Version boundaries and impact
 
-The initial artifact version describes the recovered complete ADD knowledge. It is separate from repository v* binary tags and Artifact Plane's app/artifact versions. No binaries, package versions or consumer interfaces change in this recovery. All supporting implementation remains inside this artifact boundary; no new dependency edge is required merely because Go imports packages or the website renders guidance.
+The artifact version describes complete ADD knowledge. It is separate from repository v* binary tags and Artifact Plane's app/artifact versions. This evidence-and-usability delivery adds bundled guidance and examples without changing CLI flags or copy semantics. All supporting implementation remains inside this artifact boundary; no new dependency edge is required merely because Go imports packages or the website renders guidance.
 
 ## Specification self-check
 

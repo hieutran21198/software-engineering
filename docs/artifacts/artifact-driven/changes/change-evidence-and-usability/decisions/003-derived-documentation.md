@@ -2,7 +2,7 @@
 
 ## Recovery basis
 
-Observed choices are recovered from current sources. Historical reasoning and original approval are not inferred. Boundary registration in ADR 001 is a proposed organizational decision for this change; existing runtime behavior is unchanged.
+Observed choices are recovered from current sources. Historical reasoning and original approval are not inferred. The artifact boundary from ADR 001 is retained. These recovered choices remain applicable; the current evidence extension is recorded separately in ADR 009.
 
 ## Context
 
@@ -14,7 +14,7 @@ Retain observed generated website/.docs, strict-link build, existing GitHub Acti
 
 ## Alternatives considered during recovery
 
-Maintaining website content separately would duplicate knowledge. Publishing project artifacts or replacing the build/release platform would change current delivery scope. Neither is required for recovery.
+Maintaining website content separately would duplicate knowledge. Publishing project artifacts or replacing the build/release platform would change current delivery scope. Neither is required for the current evidence extension.
 
 ## Consequences
 

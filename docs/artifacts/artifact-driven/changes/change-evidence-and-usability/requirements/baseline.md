@@ -2,7 +2,7 @@
 
 ## Need and constraints
 
-Recover the existing ADD capability as maintainable project knowledge. Existing documentation and implementation are primary evidence. These requirements preserve the recovered baseline. requirements/task-retention.md authorizes the current lifecycle and delivery changes.
+Maintain the existing ADD capability as complete project knowledge. Existing documentation and implementation are primary evidence. These requirements preserve the baseline; requirements/evidence-and-usability.md defines the current evidence and authoring extension.
 
 R1. Preserve the five phases: Requirement, Specification, Plan, Implementation, Version. ADR work is part of Specification. The PO owns Requirement; one TL session owns Specification and Plan; implementers and the coordinator validate implementation; team review and merge establish versions.
 
@@ -24,7 +24,7 @@ R9. Future ADD changes start from complete current artifact knowledge without hi
 
 ## Acceptance criteria
 
-A1. The initial change identifies one ADD artifact boundary and responsibilities, distinguishes Artifact Plane, and explains why no new inter-artifact prerequisite exists.
+A1. The knowledge identifies one ADD artifact boundary and responsibilities, distinguishes Artifact Plane, and explains why no new inter-artifact prerequisite exists.
 
 A2. Each recovered requirement and contract has identifiable repository evidence; documented procedures are distinct from executable behavior. Missing behavior is explicitly excluded from the baseline rather than marked complete.
 
@@ -34,13 +34,13 @@ A4. Applicable ADRs state observed choices, alternatives and consequences, disti
 
 A5. The plan contains executable or explicit-review DoD checks for source fidelity, role/bundle links, existing adoption behavior, documentation build, dependencies, and release consistency. Checks are rerun before version preparation; historical tests are not current evidence.
 
-A6. Update project knowledge, canonical bundle guidance, matching packaged delivery, and applicable project instructions for the approved retention contract. Preserve established snapshots, utility skills, CLI behavior, and unrelated work.
+A6. Update project knowledge, canonical bundle guidance, matching packaged delivery, and applicable project instructions for the approved contract. Preserve established snapshots, utility skills, CLI behavior, and unrelated work.
 
-A7. No initial established version is claimed before satisfied checks and merge. The prepared snapshot is complete without replaying the recovery change. Future changes need not copy the complete reusable guidance into their requirements.
+A7. No new established version is claimed before satisfied checks and merge. The prepared snapshot is complete without replaying earlier changes. Future changes need not copy the complete reusable guidance into their requirements.
 
 ## Potential impact
 
-ADD maintainers and consumers use the recovered contracts to scope future changes. Artifact Plane must adapt historical task/evidence resolution to the new snapshot layout after this contract establishes. Its existing artifact dependency remains unchanged. Reusable utility skills and website tooling remain implementation inputs within ADD's boundary, not independently versioned project artifacts.
+ADD maintainers and consumers use the recovered contracts to scope future changes. Artifact Plane consumes the evidence extension after its required ADD contract establishes. Historical task and snapshot resolution remain compatible. Its existing artifact dependency remains unchanged. Reusable utility skills and website tooling remain implementation inputs within ADD's boundary, not independently versioned project artifacts.
 
 ## Requirement self-check
 

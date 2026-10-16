@@ -55,7 +55,12 @@ acceptance:
       read-only safety, bundle parity and required checks support the delivered
       versions.
     integration: true
-evidence: []
+evidence:
+  - criterion: integration
+    method: Run upstream Go, bundle/adoption, scaffold and documentation checks;
+      downstream execution and publication remain pending.
+    result: incomplete
+    source: docs/artifacts/units-of-work/evidence-and-usability/README.md#combined-checks
 ---
 
 # Review and deliver ADD outcomes with clear evidence
@@ -91,3 +96,7 @@ The user approved these ten tasks and the suggested ADD 2.3.0 and Plane 1.14.0 v
 ## Preparation validation
 
 Preparation checks passed: 10 fresh tasks, 14 internal dependency edges, two unique unit members, 13 valid flow records, eight affected journeys and 21 resolving Markdown links without ancestor-page links. Existing task/unit parsers validate both plans. All current task DoD boxes remain unchecked. Only project knowledge changed; application code, canonical/embedded bundles, prior changes and established snapshots remain untouched. These checks validate the plan, not the fixes. PR #27 additionally reports a retry-button detachment timeout in execution-history recovery; task 06 covers diagnosis and focused validation.
+
+## Combined checks
+
+The upstream ADD member passes Go tests/vet, bundle fidelity, scaffold assembly, adoption checks and the documentation production build. The complete proposed 2.3.0 snapshot retains provenance and excludes tasks. Sources and methods are recorded in its originating tasks. These are upstream results only. Plane implementation and shared acceptance remain pending the required upstream review/merge and contract recheck. The earlier approval remains valid for the unchanged downstream tasks.

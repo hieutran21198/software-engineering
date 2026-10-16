@@ -1,6 +1,11 @@
 ---
 id: evidence-guidance
 depends_on: []
+evidence_records:
+  - id: task-validation
+    method: Run focused bundle/adoption checks and reconcile publication sources.
+    result: passed
+    source: docs/artifacts/artifact-driven/changes/change-evidence-and-usability/tasks/01-evidence-guidance.md#evidence
 ---
 
 # Publish structured evidence and reconciliation guidance

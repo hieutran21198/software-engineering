@@ -13,31 +13,37 @@ flow:
       supports:
         - validation-guidance
         - evidence-usability-contract
+        - explicit-evidence-guide
     - id: version
       title: Propose semantic version for user review
       supports:
         - validation-guidance
         - evidence-usability-contract
+        - explicit-evidence-guide
     - id: snapshot
       title: Prepare complete knowledge with delivery provenance
       supports:
         - retention-contract
         - evidence-usability-contract
+        - explicit-evidence-guide
     - id: review
       title: Push feature branch and open linked PRs
       supports:
         - knowledge
         - evidence-usability-contract
+        - explicit-evidence-guide
     - id: establish
       title: Wait for required team review and merge
       supports:
         - knowledge
         - evidence-usability-contract
+        - explicit-evidence-guide
     - id: shared
       title: Reassess shared outcome and release eligible downstream work
       supports:
         - unit-flow
         - evidence-usability-contract
+        - explicit-evidence-guide
   transitions:
     - from: validate
       to: version
@@ -87,10 +93,16 @@ flow:
       requires: Interpret recorded checks and publication claims with explicit source
         validation.
       basis: documented
+    - id: explicit-evidence-guide
+      kind: implementation
+      path: docs/artifact-driven/06-guidelines/evidence-records.md
+      requires: Record explicit evidence and reconcile version declarations using
+        source and merge checks.
+      basis: documented
   gaps:
     - A proposed snapshot or PR alone does not establish the version.
-    - The evidence-and-usability extension is specified; implementation and
-      current integrated validation remain pending.
+    - Guidance and scaffold checks do not independently verify consumer
+      execution, approval or remote publication.
   exclusions:
     - Automatic merging, deployment, release tagging and deleting referenced
       delivery records.

@@ -13,37 +13,45 @@ flow:
       supports:
         - knowledge
         - evidence-usability-contract
+        - explicit-evidence-guide
     - id: specification
       title: Define contracts and assess affected flow support
       supports:
         - knowledge
         - flow-contract
         - evidence-usability-contract
+        - explicit-evidence-guide
     - id: plan
       title: Create fresh dependency-ordered tasks and DoD
       supports:
         - task-contract
         - evidence-usability-contract
+        - explicit-evidence-guide
+        - minimal-scaffold-check
     - id: approval
       title: Obtain explicit approval for the concrete plan
       supports:
         - knowledge
         - evidence-usability-contract
+        - explicit-evidence-guide
     - id: gate
       title: Check upstream establishment and internal prerequisites
       supports:
         - dependency-flow
         - evidence-usability-contract
+        - explicit-evidence-guide
     - id: implement
       title: Implement approved tasks and validate combined behavior
       supports:
         - knowledge
         - evidence-usability-contract
+        - explicit-evidence-guide
     - id: publication
       title: Prepare version and team review
       supports:
         - publication-flow
         - evidence-usability-contract
+        - explicit-evidence-guide
   transitions:
     - from: requirement
       to: specification
@@ -105,10 +113,25 @@ flow:
       requires: Interpret recorded checks and publication claims with explicit source
         validation.
       basis: documented
+    - id: explicit-evidence-guide
+      kind: implementation
+      path: docs/artifact-driven/06-guidelines/evidence-records.md
+      requires: Record explicit evidence and reconcile version declarations using
+        source and merge checks.
+      basis: documented
+    - id: minimal-scaffold-check
+      kind: test
+      path: src/archs/artifact-driven/bundle_test.go
+      symbol: TestMinimalChangeScaffold
+      requires: Validate copied scaffold files, references, task structure and absent
+        initial completion claims.
+      basis: observed
+      evidence:
+        - docs/artifacts/artifact-driven/changes/change-evidence-and-usability/tasks/02-minimal-scaffold.md
   gaps:
     - Approval is available conversation/Git evidence, not a field in this map.
-    - The evidence-and-usability extension is specified; implementation and
-      current integrated validation remain pending.
+    - Guidance and scaffold checks do not independently verify consumer
+      execution, approval or remote publication.
   exclusions:
     - An autonomous scheduler, workflow database and automatic merges.
   artifact: artifact-driven

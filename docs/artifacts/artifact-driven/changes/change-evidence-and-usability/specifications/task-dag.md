@@ -41,7 +41,7 @@ Retain stable metadata, plan membership, and evidence in the originating change.
 
 Update the canonical foundation definitions/model, dependency methodology, writing/getting-started guidance, and applicable coordinator/TL/implementer role instructions. Explain that the artifact DAG node restriction applies to that graph, not the local task graph. Mirror affected files into src/archs/artifact-driven. Required utility skills remain intact. Existing adoption and publishing behavior stays governed by specifications/delivery.md.
 
-Artifact Plane consumes the existing task format and the proposed retention contract from artifact-driven/change-task-retention, element specifications/task-retention.md. ADD does not depend on Artifact Plane. No ADD artifact edge proposal is required.
+Artifact Plane consumes the existing task format and retained-delivery contract in specifications/task-retention.md. ADD does not depend on Artifact Plane. No ADD artifact edge proposal is required.
 
 ## Specification self-check
 

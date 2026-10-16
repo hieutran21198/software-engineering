@@ -1,6 +1,13 @@
 ---
 id: minimal-scaffold
-depends_on: [evidence-guidance]
+depends_on:
+  - evidence-guidance
+evidence_records:
+  - id: task-validation
+    method: Run scaffold assembly, existing YAML/unit/task readers and canonical
+      link checks.
+    result: passed
+    source: docs/artifacts/artifact-driven/changes/change-evidence-and-usability/tasks/02-minimal-scaffold.md#evidence
 ---
 
 # Provide a complete minimal authoring scaffold

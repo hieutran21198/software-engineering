@@ -2,7 +2,7 @@
 
 ## Recovery basis
 
-Observed choices are recovered from current sources. Historical reasoning and original approval are not inferred. Boundary registration in ADR 001 is a proposed organizational decision for this change; existing runtime behavior is unchanged.
+Observed choices are recovered from current sources. Historical reasoning and original approval are not inferred. The artifact boundary from ADR 001 is retained. These recovered choices remain applicable; the current evidence extension is recorded separately in ADR 009.
 
 ## Context
 

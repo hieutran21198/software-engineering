@@ -15,26 +15,31 @@ flow:
         - unit-contract
         - flow-contract
         - evidence-usability-contract
+        - explicit-evidence-guide
     - id: delivery
       title: Resolve delivered versions and exact originating plans
       supports:
         - retention-contract
         - evidence-usability-contract
+        - explicit-evidence-guide
     - id: criteria
       title: Check shared acceptance and combined integration evidence
       supports:
         - unit-contract
         - evidence-usability-contract
+        - explicit-evidence-guide
     - id: publication
       title: Verify protected-ref knowledge/code publication
       supports:
         - retention-contract
         - evidence-usability-contract
+        - explicit-evidence-guide
     - id: report
       title: Report supported completion or explicit missing evidence
       supports:
         - unit-contract
         - evidence-usability-contract
+        - explicit-evidence-guide
   transitions:
     - from: membership
       to: delivery
@@ -84,11 +89,17 @@ flow:
       requires: Interpret recorded checks and publication claims with explicit source
         validation.
       basis: documented
+    - id: explicit-evidence-guide
+      kind: implementation
+      path: docs/artifact-driven/06-guidelines/evidence-records.md
+      requires: Record explicit evidence and reconcile version declarations using
+        source and merge checks.
+      basis: documented
   gaps:
     - Documented evidence is not independently verified test success; this
       record does not assert any unit is complete.
-    - The evidence-and-usability extension is specified; implementation and
-      current integrated validation remain pending.
+    - Guidance and scaffold checks do not independently verify consumer
+      execution, approval or remote publication.
   exclusions:
     - Retroactive legacy membership and replacing a historical plan with current
       tasks.

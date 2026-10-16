@@ -20,4 +20,4 @@ Two independent tasks feeding integration, followed by validation, produce four 
 
 ## Impact and self-check
 
-Artifact Plane consumes the established format and proposed retention contract from artifact-driven/change-task-retention. ADD has no dependency on its visualizer. Scope follows the accepted discussion. KISS retains task files as the dependency source. STE preserves gates and uncertainty. No Requirement blocker remains.
+Artifact Plane consumes the established task and retention formats. ADD has no dependency on its visualizer. Scope follows the accepted discussion. KISS retains task files as the dependency source. STE preserves gates and uncertainty. No Requirement blocker remains.

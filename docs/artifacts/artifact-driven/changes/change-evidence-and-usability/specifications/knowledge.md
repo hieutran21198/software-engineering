@@ -1,6 +1,6 @@
 # Knowledge and execution contract
 
-Governs R1–R4, R6, R8–R9 and A1–A4, A7 in [baseline requirements](../requirements/baseline.md). Evidence is identified in [the inventory](../requirements/evidence.md). This retains the recovered baseline. The implementation task DAG extension is defined in specifications/task-dag.md.
+Governs R1–R4, R6, R8–R9 and A1–A4, A7 in [baseline requirements](../requirements/baseline.md). Evidence is identified in [the inventory](../requirements/evidence.md). This retains the baseline. The implementation task DAG extension is defined in specifications/task-dag.md.
 
 ## Owned concepts and responsibilities
 
@@ -44,7 +44,7 @@ Git records history; tasks in retained originating changes record durable checks
 
 ## Guidance and source reuse
 
-The canonical local bundle remains intact. Packaged Markdown under src/archs/artifact-driven and utility skill sources under src/utils/agents/skills feed the Go bundle and website. Recovery checks their correspondence to the local bundle; it does not silently choose one side of a conflict. Artifact contracts summarize stable behavior and reference identifiable sources; they do not copy all pattern or skill text. A future approved ADD change must keep affected delivered sources and the local method consistent.
+The canonical local bundle remains intact. Packaged Markdown under src/archs/artifact-driven and utility skill sources under src/utils/agents/skills feed the Go bundle and website. Delivery checks their correspondence to the local bundle; it does not silently choose one side of a conflict. Artifact contracts summarize stable behavior and reference identifiable sources; they do not copy all pattern or skill text. Each approved ADD change must keep affected delivered sources and the local method consistent.
 
 Nine pattern guides cover strategic DDD, tactical DDD, contract-driven development, behavior-driven development, event-driven development, test-driven development, ports/adapters, policy as code and continuous integration. They are selectable guidance, not executable components or mandatory extra phases.
 
@@ -55,3 +55,7 @@ All R1–R4, R6, R8–R9 behavior is recovered from the inventory. One cohesive 
 ## System flow extension
 
 Specifications/system-flows.md defines owned runtime/method journeys and unit flow assessment. Flow documents are specification elements; their runtime transitions do not become artifact or task prerequisites. Readers derive views and indexes from these records.
+
+## Explicit evidence and authoring
+
+[evidence-records.md](evidence-records.md) defines optional source-backed check and publication records, legacy compatibility and declaration reconciliation. [minimal-authoring.md](minimal-authoring.md) defines the copyable small-change guide and its validation. These additions preserve phase gates, artifact ownership and the absence of workflow state.

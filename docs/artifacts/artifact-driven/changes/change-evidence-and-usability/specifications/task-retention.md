@@ -24,4 +24,4 @@ Update canonical docs/artifact-driven and corresponding src/archs/artifact-drive
 
 ## Impact and self-check
 
-Artifact Plane consumes this proposed contract from artifact-driven/change-task-retention. Its implementation waits for ADD establishment. KISS uses existing provenance with one explicit layout marker; STE separates complete knowledge from delivery proof. All R1–R5 are covered; no Specification blocker remains.
+Artifact Plane consumes the retained delivery contract through current established ADD knowledge. The evidence extension in evidence-records.md preserves these provenance and publication checks. KISS uses existing provenance with one explicit layout marker; STE separates complete knowledge from delivery proof. All R1–R5 are covered; no Specification blocker remains.

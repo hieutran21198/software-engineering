@@ -10,11 +10,11 @@ Project knowledge lives here. The canonical local method remains in docs/artifac
 
 ## Current version
 
-2.2.0
+2.3.0
 
 ## Publication boundary
 
-PR #27 merged ADD 2.2.0 knowledge, canonical and embedded model guidance, and retained delivery evidence onto main. Local protected main and the remote main ref agree on that merge at this review. Required Go and documentation checks passed. The Artifact Plane job failed separately; its browser results are not reported as passing. Historical proposal wording remains in the delivered snapshot. The evidence-and-usability change prepares the next contract and does not establish it before merge.
+This branch prepares ADD 2.3.0. Its current-version declaration describes proposed post-merge knowledge; protected main currently declares 2.2.0. PR #27 delivered the 2.2.0 knowledge, canonical/embedded model guidance and originating evidence. Its Go/docs checks passed; its separate Plane browser failures remain recorded. Version 2.3.0 requires its own team review and merge before dependent Plane work consumes the evidence extension. Historical snapshots remain unchanged.
 
 ## Established dependencies
 
@@ -29,26 +29,26 @@ ADD 2.1.0 knowledge, bundled implementation and retained delivery evidence lande
 
 ## Knowledge snapshot
 
-- [Requirements](versions/2.2.0/requirements/baseline.md)
-- [Source inventory and capability limits](versions/2.2.0/requirements/evidence.md)
-- [Knowledge and execution contract](versions/2.2.0/specifications/knowledge.md)
-- [Adoption and publishing contract](versions/2.2.0/specifications/delivery.md)
-- [Knowledge and boundary decision](versions/2.2.0/decisions/001-knowledge-and-boundary.md)
-- [Embedded adoption decision](versions/2.2.0/decisions/002-embedded-safe-adoption.md)
-- [Publishing decision](versions/2.2.0/decisions/003-derived-documentation.md)
-- [Task DAG contract](versions/2.2.0/specifications/task-dag.md)
-- [Derived task graph decision](versions/2.2.0/decisions/004-derived-task-graph.md)
-- [Plan and validation evidence](changes/change-model-explanations/tasks/README.md)
+- [Requirements](versions/2.3.0/requirements/baseline.md)
+- [Source inventory and capability limits](versions/2.3.0/requirements/evidence.md)
+- [Knowledge and execution contract](versions/2.3.0/specifications/knowledge.md)
+- [Adoption and publishing contract](versions/2.3.0/specifications/delivery.md)
+- [Knowledge and boundary decision](versions/2.3.0/decisions/001-knowledge-and-boundary.md)
+- [Embedded adoption decision](versions/2.3.0/decisions/002-embedded-safe-adoption.md)
+- [Publishing decision](versions/2.3.0/decisions/003-derived-documentation.md)
+- [Task DAG contract](versions/2.3.0/specifications/task-dag.md)
+- [Derived task graph decision](versions/2.3.0/decisions/004-derived-task-graph.md)
+- [Plan and validation evidence](changes/change-evidence-and-usability/tasks/README.md)
 
-- [Unit-of-work requirements](versions/2.2.0/requirements/units-of-work.md)
-- [Unit-of-work contract](versions/2.2.0/specifications/units-of-work.md)
+- [Unit-of-work requirements](versions/2.3.0/requirements/units-of-work.md)
+- [Unit-of-work contract](versions/2.3.0/specifications/units-of-work.md)
 
-- [Task retention requirements](versions/2.2.0/requirements/task-retention.md)
-- [Change-owned delivery contract](versions/2.2.0/specifications/task-retention.md)
+- [Task retention requirements](versions/2.3.0/requirements/task-retention.md)
+- [Change-owned delivery contract](versions/2.3.0/specifications/task-retention.md)
 
-- [Flow requirements](versions/2.2.0/requirements/flows.md)
-- [System flow contract](versions/2.2.0/specifications/system-flows.md)
-- [Named ADD journeys](versions/2.2.0/README.md)
+- [Flow requirements](versions/2.3.0/requirements/flows.md)
+- [System flow contract](versions/2.3.0/specifications/system-flows.md)
+- [Named ADD journeys](versions/2.3.0/README.md)
 
 ## Future development
 
@@ -56,9 +56,17 @@ Start future ADD changes from the complete current established snapshot. Retain 
 
 ## Reusable models and flow interactions
 
-- [Complete 2.2.0 snapshot](versions/2.2.0/README.md)
-- [Model and interaction requirements](versions/2.2.0/requirements/model-explanations.md)
-- [Model and interaction contract](versions/2.2.0/specifications/model-explanations.md)
-- [Owned ADD models](versions/2.2.0/specifications/domain-model.md)
+- [Complete proposed 2.3.0 snapshot](versions/2.3.0/README.md)
+- [Model and interaction requirements](versions/2.3.0/requirements/model-explanations.md)
+- [Model and interaction contract](versions/2.3.0/specifications/model-explanations.md)
+- [Owned ADD models](versions/2.3.0/specifications/domain-model.md)
 
 The delivered model contract preserves declared artifact dependencies and legacy flow behavior. Its originating change retains the delivery tasks and checks. The current evidence-and-usability change has a separate fresh plan.
+
+## Explicit evidence and minimal authoring
+
+- [Evidence requirements](versions/2.3.0/requirements/evidence-and-usability.md)
+- [Check and publication evidence contract](versions/2.3.0/specifications/evidence-records.md)
+- [Minimal authoring contract](versions/2.3.0/specifications/minimal-authoring.md)
+
+The user-approved compatible proposal preserves legacy records and the existing approval/merge gates. Current validation and publication limitations are recorded in the originating plan.
