@@ -88,6 +88,8 @@ test('L6: --convert-history removes tracked legacy copies, keeps unmatched tasks
   files.set(base + 'changes/change-old/specifications/identity.md', '# Old identity\n');
   files.set(base + 'changes/change-old/dependencies.yaml', 'artifact: tenant\nadd: []\nremove: []\n');
   files.set(base + 'changes/change-old/tasks/README.md', '---\ntasks: []\n---\n# Plan\n');
+  files.set(base + 'changes/change-abandoned/README.md', '# Abandoned');
+  files.set(base + 'changes/change-abandoned/specifications/identity.md', '# Proposal\n');
   const f = await fixtureRepository(files);t.after(f.cleanup);
   const before = await fingerprint(f.root);
   const dry = await node('migrate-layout.mjs', f.root, '--convert-history');
@@ -96,7 +98,7 @@ test('L6: --convert-history removes tracked legacy copies, keeps unmatched tasks
   const plan = dry.json.plans.find(p => p.artifact === 'tenant');
   assert.deepEqual(plan.delete, [base + 'changes/change-old/dependencies.yaml', base + 'changes/change-old/specifications/identity.md', base + 'versions/0.9.0/specifications/identity.md']);
   assert.deepEqual(plan.change, [base + 'versions/0.9.0/README.md']);
-  assert.deepEqual(plan.retained.map(r => r.path), [base + 'versions/0.8.0/tasks/']);
+  assert.deepEqual(plan.retained.map(r => r.path), [base + 'versions/0.8.0/tasks/', base + 'changes/change-abandoned/']);
   const written = await node('migrate-layout.mjs', f.root, '--convert-history', '--write');
   assert.equal(written.json.written, true);
   const after = await fingerprint(f.root);

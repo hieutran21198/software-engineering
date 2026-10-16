@@ -11,7 +11,6 @@ tasks:
   - 04-model-explanations.md
   - 05-incremental-refresh.md
   - 06-responsive-repair.md
-  - 14-history-conversion.md
   - 07-integration-publication.md
 ---
 
@@ -33,8 +32,7 @@ Explicit approval of this plan and establishment of the ADD in-place layout cont
 6. [Explain dependencies and model interactions](04-model-explanations.md)
 7. [Reduce idle full reads with bounded recovery](05-incremental-refresh.md)
 8. [Resolve the merged browser regressions](06-responsive-repair.md)
-9. [Convert retained legacy records with migrate-layout](14-history-conversion.md), after the scripts. Added by the user-approved amendment of 16 October 2026.
-10. [Validate the combined outcome and prepare Plane review](07-integration-publication.md)
+9. [Validate the combined outcome and prepare Plane review](07-integration-publication.md)
 
 Tasks 05 and 06 have no internal prerequisite and can run in separate worktrees; task 04 follows navigation because it shares the inspector. Reader tasks run sequentially because they share server modules.
 

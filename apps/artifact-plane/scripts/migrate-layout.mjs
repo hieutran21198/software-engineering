@@ -144,7 +144,11 @@ export async function planConversion(path, {artifact = null} = {}) {
     }
     for (const c of a.changes) {
       const dir = `${prefix}changes/${c.name}/`;
-      for (const p of files) if (p.startsWith(dir) && KNOWLEDGE_KINDS.includes(p.slice(dir.length).split('/')[0])) remove.add(p);
+      // Only delivered changes lose their copies; an undelivered legacy change
+      // keeps them, so it stays a retained record and never looks open.
+      const copies = files.filter(p => p.startsWith(dir) && KNOWLEDGE_KINDS.includes(p.slice(dir.length).split('/')[0]));
+      if (copies.length && !c.version) retained.push({path: dir, reason: 'No version record names this change; its copied knowledge is its only proposal record.'});
+      else copies.forEach(p => remove.add(p));
       if (files.includes(`${dir}dependencies.yaml`)) {
         if (c.name === a.activeChange) retained.push({path: `${dir}dependencies.yaml`, reason: 'The open change still proposes these edges; apply them to depends_on first.'});
         else remove.add(`${dir}dependencies.yaml`);

@@ -1,6 +1,6 @@
 ---
 id: integration-publication
-depends_on: [layout-reader, git-baseline, declared-evidence, layout-navigation, knowledge-scripts, history-conversion, model-explanations, incremental-refresh, responsive-repair]
+depends_on: [layout-reader, git-baseline, declared-evidence, layout-navigation, knowledge-scripts, model-explanations, incremental-refresh, responsive-repair]
 ---
 
 # Validate the combined outcome and prepare Plane review
@@ -31,7 +31,7 @@ Executed on 16 October 2026 on the integrated branch.
 
 - Checks: `npm ci`, `npm test` (308 tests, 307 pass, 1 skipped, 0 failures), `npm run build` and two full `npm run test:browser` runs (76 of 77 each, on port 4311 with the Nix Chromium). Each run had one different failure (search-usability.spec.js:17, then units-of-work.spec.js:35). Both passed every isolated rerun, so they are load-timing flakiness and the first DoD item is checked with that limitation. PR #29 CI run 38910192888 passed on Ubuntu: go (55 s), docs (1 min 45 s) and artifact-plane (5 min 6 s, unit and browser checks). The test/flow-index.test.js SQLite startup test is flaky (3 of 10, with code unchanged from origin/main).
 - HTTP and MCP parity for review, flows and models, protected-source reads, unchanged repository bytes, validate-knowledge (0 errors on this repository) and the units comparison between the legacy and migrated forms (15 units, unchanged except the new 2.4.0 member) pass. Go and bundle checks were repeated because integration changed docs inputs.
-- Benchmark, run as `node scripts/layout-benchmark.mjs <repo> 4eb71e3 HEAD --worktrees 9`: explore git commands 771 to 102 (86.8 percent fewer; target 50 percent met) and 21.4 s to 3.4 s after the legacy-record conversion. The zero-excerpt packet is 139,216 to 158,117 bytes (remeasured after the legacy-record conversion), so the 80 percent target is not met and that DoD item stays unchecked. Packet size is dominated by impact candidates and flow-support source pointers, not copies. Details are in the unit brief.
+- Benchmark, run as `node scripts/layout-benchmark.mjs <repo> 4eb71e3 HEAD --worktrees 9`: explore git commands 771 to 102 (86.8 percent fewer; target 50 percent met) and 23.0 s to 11.0 s. The zero-excerpt packet is 139,216 to 145,391 bytes, so the 80 percent target is not met and that DoD item stays unchecked. Packet size is dominated by impact candidates and flow-support source pointers, not copies. Details are in the unit brief.
 - Version: versions/1.14.0/README.md with source_change, no knowledge directories or tasks; identity record 1.14.0; package.json and package-lock.json at 1.14.0.
 - Task order deviation: the plan text runs tasks 05 and 06 as independent worktrees, but their front matter still declares depends_on edges from the earlier plan (05 after model-explanations, 06 after incremental-refresh). Execution followed the plan text: 04, 05 and 06 ran concurrently in separate worktrees and were integrated afterwards. The declarations were not rewritten.
 - Publication: one coordinated repository PR, https://github.com/hieutran21198/software-engineering/pull/29. Merged upstream PR #28 is linked. The PR stops for team review; no merge, deployment or establishment is claimed.
