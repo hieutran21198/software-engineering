@@ -29,4 +29,8 @@ Execute sequentially on dedicated branches. Parsing, presentation and validation
 
 ## Plan self-check
 
-All requirements map to tasks with explicit ownership, governing contracts, prerequisites and observable DoD. Membership and acyclicity are checked before handoff. KISS reuses existing files/services and limits the scaffold to guidance. STE preserves verification and uncertainty boundaries. Implementation awaits explicit approval; no delivery result is claimed.
+All requirements map to tasks with explicit ownership, governing contracts, prerequisites and observable DoD. Membership and acyclicity are checked before handoff. KISS reuses existing files/services and limits the scaffold to guidance. STE preserves verification and uncertainty boundaries. The user approved this concrete plan and proposed versions in the conversation. Delivery results remain task-owned.
+
+## Plan approval
+
+The user explicitly approved the ten-task plan and suggested ADD 2.3.0 and Plane 1.14.0 versions. The unchanged approved tasks retain that authorization. Required upstream establishment remains a separate execution gate; material scope or contract changes require renewed approval.

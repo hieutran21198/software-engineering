@@ -86,7 +86,7 @@ No delivery checks have run for this new outcome. GitHub reports successful Go/d
 - [ADD plan](../../artifact-driven/changes/change-evidence-and-usability/tasks/README.md)
 - [Artifact Plane plan](../../artifact-plane/changes/change-evidence-and-usability/tasks/README.md)
 
-Approval requested for these ten tasks and the suggested compatible minor versions. This is a new plan; the earlier model-explanations approval does not authorize its expanded scope. The user may override version choices. No implementation or canonical bundle edits have been made during preparation.
+The user approved these ten tasks and the suggested ADD 2.3.0 and Plane 1.14.0 versions in the conversation. This approval covers the expanded plan. Upstream publication still gates dependent Plane implementation. Preparation changed project knowledge only.
 
 ## Preparation validation
 

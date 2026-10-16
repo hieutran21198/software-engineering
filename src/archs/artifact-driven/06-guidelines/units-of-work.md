@@ -2,6 +2,8 @@
 
 Use a unit of work to document one deliverable outcome and group its participating artifact changes. Detailed artifact knowledge and existing DAGs remain authoritative. This format is optional for legacy projects; missing legacy membership is not an error.
 
+Use [evidence records](evidence-records.md) for optional scoped publication reviews. Keep shared check references in the existing unit evidence list and check details with their owning tasks.
+
 ## Brief and membership
 
 Reserve docs/artifacts/units-of-work for outcome briefs, not artifact nodes. It has no artifact root README and is excluded from artifact discovery and dag.yaml. Each immediate child has a README with YAML front matter:

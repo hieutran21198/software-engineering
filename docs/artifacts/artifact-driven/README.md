@@ -14,7 +14,7 @@ Project knowledge lives here. The canonical local method remains in docs/artifac
 
 ## Publication boundary
 
-This working branch prepares 2.2.0 for review. Protected main still establishes 2.1.0. The prepared declaration takes effect only after the complete knowledge, bundled implementation and retained delivery record merge. Plane must verify that publication before consuming the new model contract.
+PR #27 merged ADD 2.2.0 knowledge, canonical and embedded model guidance, and retained delivery evidence onto main. Local protected main and the remote main ref agree on that merge at this review. Required Go and documentation checks passed. The Artifact Plane job failed separately; its browser results are not reported as passing. Historical proposal wording remains in the delivered snapshot. The evidence-and-usability change prepares the next contract and does not establish it before merge.
 
 ## Established dependencies
 
@@ -56,9 +56,9 @@ Start future ADD changes from the complete current established snapshot. Retain 
 
 ## Reusable models and flow interactions
 
-- [Proposed complete 2.2.0 snapshot](versions/2.2.0/README.md)
+- [Complete 2.2.0 snapshot](versions/2.2.0/README.md)
 - [Model and interaction requirements](versions/2.2.0/requirements/model-explanations.md)
 - [Model and interaction contract](versions/2.2.0/specifications/model-explanations.md)
 - [Owned ADD models](versions/2.2.0/specifications/domain-model.md)
 
-This additive proposal preserves declared artifact dependencies and legacy flow behavior. Its originating change retains fresh delivery tasks and checks. Opening the PR does not establish the version.
+The delivered model contract preserves declared artifact dependencies and legacy flow behavior. Its originating change retains the delivery tasks and checks. The current evidence-and-usability change has a separate fresh plan.
