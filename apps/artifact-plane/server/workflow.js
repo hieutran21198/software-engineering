@@ -91,12 +91,12 @@ export async function evidenceFor(root, data, git, head, diagnostics) {
     const prefix = `docs/artifacts/${artifact.id}/changes/${name}/`;
     const versionPrefix = `docs/artifacts/${artifact.id}/versions/${artifact.currentVersion}/`;
     const owned = [...files].filter(([path]) => path.startsWith(prefix) && category(path));
-    const delivery = deliverySource(files, artifact.id, name, prefix);
+    const delivery = deliverySource(files, artifact.id, name, prefix, artifact.layout);
     const claim = delivery.claims.length===1 ? delivery.claims[0] : null;
-    const changeOwned = claim?.deliveryTasks === 'change';
+    const changeOwned = claim?.deliveryTasks === 'change' || artifact.layout === 'in-place' && !!claim;
     let delivered = false;
     if (changeOwned && !delivery.diagnostic) {
-      const evidence = await publication(root, claim.prefix, files, git, '', null, prefix);
+      const evidence = await publication(root, claim.prefix, files, git, '', null, prefix, artifact.layout);
       delivered = evidence.state === 'established' && buildTaskGraph(files,prefix,checklist,data.unsafeTaskPaths).state==='available';
       if (!delivered) diagnostics.push(diagnostic('delivery-publication-unverified', `${artifact.id}/${name}: ${evidence.reasons.join(' ')}`));
     }

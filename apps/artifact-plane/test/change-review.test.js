@@ -30,3 +30,38 @@ test('canonical support aliases cannot expose tracked credential sources',async 
 test('historical publication reads originating knowledge and legacy tasks without changing current deltas',async t=>{const f=await fixture(t);await f.put(f.version+'README.md','---\nsource_change: change-test\n---\n# Origin\n## Publication review\nAll required knowledge and implementation changes have landed on main.');await f.put(f.version+'tasks/README.md','# Historical plan\n');await f.put(f.base+'README.md','---\ncurrent_version: 2.0.0\ndepends_on: []\n---\n# A');await f.put(f.base+'versions/2.0.0/README.md','# Current');await f.put(f.base+'versions/2.0.0/requirements/README.md','latest current\n');f.git('add','.');f.git('commit','-m','publish old and current snapshots');await f.put(f.change+'tasks/README.md','# Newer retained plan text');let e=await createReviewService().query(f.request);assert.equal(e.data.evidence.publication.state,'established');assert.equal(e.data.baseline.version,'2.0.0');assert.ok(e.data.records.some(r=>r.path==='requirements/README.md'&&r.baseline.path.includes('/versions/2.0.0/')));assert.ok(!e.data.sources.some(s=>s.path===f.version+'tasks/README.md'));await rm(join(f.root,f.version+'requirements'),{recursive:true});e=await createReviewService().query(f.request);assert.equal(e.data.evidence.publication.state,'unknown');assert.ok(e.diagnostics.some(d=>d.code==='unavailable-provenance'));});
 test('current legacy publication includes snapshot-owned task evidence',async t=>{const f=await fixture(t);await f.put(f.version+'README.md','---\nsource_change: change-test\n---\n# Origin\n## Publication review\nAll required knowledge and implementation changes have landed on main.');await f.put(f.version+'tasks/README.md','# Immutable snapshot plan');f.git('add','.');f.git('commit','-m','publish current legacy snapshot');await f.put(f.change+'tasks/README.md','# Retained editable plan');const e=await createReviewService().query(f.request);assert.equal(e.data.evidence.publication.state,'established');assert.ok(e.data.records.every(r=>!r.path.startsWith('tasks/')));});
 test('existing untracked knowledge cannot bypass observed-evidence tracking guards',async t=>{const f=await fixture(t);const trace=f.change+'requirements/trace.md';await f.put(trace,'untracked knowledge trace');await f.put('code.js','code');f.git('add','code.js');await f.put(f.change+'specifications/flows/trace.md',flow('trace','requirements/README.md').replace('      kind: element\n      artifact: a\n      element: requirements/README.md','      kind: implementation\n      path: code.js').replace('      basis: documented','      basis: observed\n      evidence: ['+trace+']'));const e=await createReviewService().query(f.request);assert.ok(e.data.sources.some(s=>s.path===trace&&s.kind==='knowledge'));assert.ok(e.diagnostics.some(d=>d.code==='untracked-support'&&d.path===trace));assert.ok(e.omissions.some(o=>o.path===trace&&o.reason==='Untracked or missing support.'));});
+
+// In-place layout: the review compares the working tree with the protected ref.
+import {fixtureRepository,fingerprint,git as fixtureGit,identity,versionRecord,transitionRepository} from './fixtures.js';
+async function inPlaceReview(t){
+ const base='docs/artifacts/a/',files=new Map([[base+'README.md',identity('A','1.0.0')],[base+'requirements/README.md','before\n'],[base+'requirements/gone.md','removed\n'],[base+'specifications/same.md','same\n'],[base+'versions/1.0.0/README.md',versionRecord('change-initial')],[base+'changes/change-initial/README.md','# Initial'],[base+'changes/change-initial/tasks/README.md','---\ntasks: []\n---\n# Plan']]);
+ const f=await fixtureRepository(files);t.after(f.cleanup);
+ fixtureGit(f.root,'checkout','-q','-b','change-test');
+ await mkdir(join(f.root,base+'changes/change-test/tasks'),{recursive:true});
+ await writeFile(join(f.root,base+'changes/change-test/README.md'),'# Proposed scope\n');
+ await writeFile(join(f.root,base+'changes/change-test/tasks/README.md'),'---\ntasks: []\n---\n# Plan\n');
+ await writeFile(join(f.root,base+'requirements/README.md'),'after\n');await writeFile(join(f.root,base+'requirements/new.md'),'added\n');await rm(join(f.root,base+'requirements/gone.md'));
+ return {...f,base,request:{path:f.root,artifact:'a',change:'change-test',operation:'packet',limit:100}};
+}
+test('L2: in-place review records come from the protected-ref comparison and list each file once',async t=>{
+ const f=await inPlaceReview(t),before=await fingerprint(f.root),service=createReviewService({roots:[f.root]});
+ const e=await service.query({...f.request,budget:0});
+ assert.equal(e.data.baseline.kind,'protected-ref');assert.equal(e.data.baseline.ref,'refs/heads/main');assert.equal(e.data.baseline.state,'available');
+ assert.deepEqual(e.data.records.map(r=>[r.path,r.status]),[['requirements/README.md','modified'],['requirements/gone.md','removed'],['requirements/new.md','added'],['specifications/same.md','unchanged']]);
+ const modified=e.data.records[0];assert.equal(modified.baseline.path,'main:'+f.base+'requirements/README.md');assert.equal(modified.change.path,f.base+'requirements/README.md');
+ assert.equal(e.data.records[3].baseline,null);assert.equal(new Set(e.data.sources.map(s=>s.path)).size,e.data.sources.length);
+ const page=await service.query({...f.request,operation:'source',source:e.data.sources.find(s=>s.path===modified.baseline.path).id,budget:100});assert.equal(page.data.text,'before\n');
+ assert.deepEqual(await fingerprint(f.root),before);
+});
+test('L2: a transition review compares in-place knowledge with the legacy snapshot on main',async t=>{
+ const f=await transitionRepository();t.after(f.cleanup);
+ const e=await createReviewService().query({path:f.root,artifact:'tenant',change:'change-next',operation:'review',limit:100});
+ assert.equal(e.data.baseline.baselineLayout,'legacy');assert.equal(e.data.baseline.version,'1.0.0');
+ assert.deepEqual(e.data.records.map(r=>[r.path,r.status]),[['specifications/new.md','added'],['specifications/retired.md','removed'],['specifications/identity.md','unchanged']]);
+ assert.equal(e.data.records[1].baseline.path,'main:docs/artifacts/tenant/versions/1.0.0/specifications/retired.md');
+});
+test('L2: an in-place review without a protected ref reports an unavailable baseline',async t=>{
+ const f=await inPlaceReview(t);fixtureGit(f.root,'branch','-q','-D','main');
+ const e=await createReviewService().query(f.request);
+ assert.equal(e.data.baseline.state,'unavailable');assert.deepEqual(e.data.records,[]);assert.ok(e.diagnostics.some(d=>d.code==='missing-protected-ref'));
+});

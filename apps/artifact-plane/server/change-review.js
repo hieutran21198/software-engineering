@@ -3,7 +3,8 @@ import {resolve,relative,isAbsolute,sep} from 'node:path';
 import {createHash} from 'node:crypto';
 import {ExploreError,git} from './reader.js';
 import {stripBodies} from './repository-query.js';
-import {parseArtifact,buildSnapshot} from '../src/model.js';
+import {parseArtifact,buildSnapshot,KNOWLEDGE_KINDS} from '../src/model.js';
+import {readBaselines} from './knowledge-baseline.js';
 import {parseWorktrees,evidenceFor} from './workflow.js';
 import {unitBriefs,versionClaims,publication} from './units-of-work.js';
 import {buildFlowGraph,flowImpact,safeFlowID,safeFlowSource} from './flow-model.js';
@@ -22,7 +23,7 @@ function validate(body){
  return {...body,limit:body.limit??20,budget:body.budget??12000};
 }
 async function capture(root,artifact,change){
- const diagnostics=[],files=new Map(),sources=new Map(),omissions=[];
+ const diagnostics=[],files=new Map(),sources=new Map(),omissions=[],layouts={};
  const report=(code,path,message)=>diagnostics.push({code,path,message});
  async function load(path,scope,kind='knowledge',side='context'){
   try{
@@ -48,9 +49,12 @@ async function capture(root,artifact,change){
  try{const t=await realpath(resolve(root,selected));if(!contained(resolve(root,`docs/artifacts/${artifact}/changes`),t)||!contained(root,t))throw Error();if(!(await stat(t)).isDirectory())throw Error();}catch{throw new ExploreError(404,'Selected change is missing or unsafe.');}
  const entries=await readdir(resolve(root,'docs/artifacts'),{withFileTypes:true}).catch(()=>{throw new ExploreError(404,'ADD knowledge is unavailable.');});
  let selectedArtifact,baseline;
- for(const entry of entries){if(!safeFlowID(entry.name)||entry.name==='units-of-work')continue;const prefix=`docs/artifacts/${entry.name}/`,r=await load(prefix+'README.md',prefix);if(!r)continue;const ds=[],a=parseArtifact(entry.name,r.text,ds);diagnostics.push(...ds);
-  if(entry.name===artifact){selectedArtifact=a;baseline={kind:'declared-current',version:a.currentVersion,worktree:root,head:repository.head,state:ds.some(d=>d.code==='ambiguous-version')?'unavailable':a.currentVersion?'available':'initial'};}
-  if(a.currentVersion){const version=prefix+'versions/'+a.currentVersion+'/';const exists=await stat(resolve(root,version)).catch(()=>null);const canonicalVersion=await realpath(resolve(root,version)).catch(()=>null);if(!exists?.isDirectory()||!canonicalVersion||!contained(resolve(root,version),canonicalVersion)){report('missing-baseline',version,'Declared current snapshot is missing.');if(entry.name===artifact)baseline.state='unavailable';}else{const scope=await load(version+'README.md',version,'scope','baseline');for(const category of ['requirements','specifications','decisions'])await walk(version+category,version+category,'knowledge','baseline');if(entry.name===artifact&&(!scope||diagnostics.some(d=>['unsafe-directory','unavailable-directory','ambiguous-directory'].includes(d.code)&&d.path.startsWith(version)))){baseline.state='unavailable';report('unavailable-baseline',version,'Declared current knowledge cannot be compared safely.');}}}
+ for(const entry of entries){if(!safeFlowID(entry.name)||entry.name==='units-of-work')continue;const prefix=`docs/artifacts/${entry.name}/`,r=await load(prefix+'README.md',prefix);if(!r)continue;const inPlace=(await Promise.all(KNOWLEDGE_KINDS.map(k=>lstat(resolve(root,prefix+k)).then(s=>s.isDirectory()||s.isSymbolicLink(),()=>false)))).some(Boolean);
+  const ds=[],a=parseArtifact(entry.name,r.text,ds,inPlace?'in-place':'legacy');diagnostics.push(...ds);layouts[entry.name]=a.layout;
+  if(entry.name===artifact){selectedArtifact=a;baseline=inPlace?{kind:'protected-ref',layout:'in-place',worktree:root,head:repository.head,state:'unavailable'}:{kind:'declared-current',version:a.currentVersion,worktree:root,head:repository.head,state:ds.some(d=>d.code==='ambiguous-version')?'unavailable':a.currentVersion?'available':'initial'};}
+  // In-place knowledge is the working tree; the baseline comes from Git below.
+  if(inPlace)for(const category of KNOWLEDGE_KINDS)await walk(prefix+category,prefix+category,'knowledge',entry.name===artifact?'change':'baseline');
+  else if(a.currentVersion){const version=prefix+'versions/'+a.currentVersion+'/';const exists=await stat(resolve(root,version)).catch(()=>null);const canonicalVersion=await realpath(resolve(root,version)).catch(()=>null);if(!exists?.isDirectory()||!canonicalVersion||!contained(resolve(root,version),canonicalVersion)){report('missing-baseline',version,'Declared current snapshot is missing.');if(entry.name===artifact)baseline.state='unavailable';}else{const scope=await load(version+'README.md',version,'scope','baseline');for(const category of ['requirements','specifications','decisions'])await walk(version+category,version+category,'knowledge','baseline');if(entry.name===artifact&&(!scope||diagnostics.some(d=>['unsafe-directory','unavailable-directory','ambiguous-directory'].includes(d.code)&&d.path.startsWith(version)))){baseline.state='unavailable';report('unavailable-baseline',version,'Declared current knowledge cannot be compared safely.');}}}
   const changes=entry.name===artifact?[change]:[];
   if(entry.name===artifact)for(const name of await readdir(resolve(root,prefix+'changes')).catch(()=>[]))if(safeFlowID(name)&&name.startsWith('change-')&&name!==change){const path=prefix+'changes/'+name+'/README.md';files.set(path,'');}
   for(const name of changes){const cp=prefix+'changes/'+name+'/';await load(cp+'README.md',cp,'scope','change');for(const category of ['requirements','specifications','decisions','tasks'])await walk(cp+category,cp+category,category==='tasks'?'evidence':'knowledge','change');}
@@ -58,35 +62,61 @@ async function capture(root,artifact,change){
   const versions=await readdir(resolve(root,prefix+'versions')).catch(()=>[]);for(const v of versions)if(/^\d+\.\d+\.\d+$/.test(v)&&!files.has(prefix+'versions/'+v+'/README.md'))await load(prefix+'versions/'+v+'/README.md',prefix+'versions/'+v,'provenance');
  }
  if(!selectedArtifact)throw new ExploreError(404,'Selected artifact is unavailable.');
+ let inPlace=null;
+ if(selectedArtifact.layout==='in-place'){
+  const base=`docs/artifacts/${artifact}/`,working=new Map([...files].filter(([p])=>p.startsWith(base)&&KNOWLEDGE_KINDS.includes(p.slice(base.length).split('/')[0])).map(([p,text])=>[p,Buffer.from(text)]));
+  const view=(await readBaselines(root,git,[artifact],working,diagnostics))[artifact];
+  inPlace={view,base,baselineSources:new Map()};
+  if(view.state==='available'){
+   Object.assign(baseline,{state:'available',ref:view.ref,revision:view.oid,baselineLayout:view.layout,version:view.currentVersion});
+   // Baseline text is read only for modified and removed files; each path appears once.
+   const wanted=[...[...view.status].filter(([,state])=>state==='modified').map(([path])=>path.slice(base.length)),...view.removed.map(path=>path.slice(view.knowledgePrefix.length))];
+   for(const rest of wanted){const from=view.knowledgePrefix+rest;try{const bytes=Buffer.from(await git(root,['show',`${view.oid}:${from}`],'bytes')),text=bytes.toString('utf8');const key=`${view.ref.replace('refs/heads/','')}:${from}`;const source={path:key,kind:'knowledge',side:'baseline',text,fingerprint:hash(bytes),totalCharacters:text.length};sources.set(key,source);inPlace.baselineSources.set(rest,source);}catch{report('unavailable-source',from,'Protected-ref source cannot be read.');}}
+  }else baseline.reason=view.reason;
+ }
  const unitsPath='docs/artifacts/units-of-work';for(const name of await readdir(resolve(root,unitsPath)).catch(()=>[]))if(safeFlowID(name))await load(unitsPath+'/'+name+'/README.md',unitsPath+'/'+name,'unit');
  const units=unitBriefs(files).filter(u=>u.members.some(m=>m.artifact===artifact&&m.change===change));
  if(units.length!==1)report(units.length?'ambiguous-unit':'missing-unit',selected,'No unique owning unit is available.');
  const unit=units.length===1?units[0]:null;if(unit){diagnostics.push(...unit.diagnostics);for(const e of unit.evidence)await load(e.source.split('#')[0],'docs/artifacts','evidence');}
- const currentPrefix=selectedArtifact.currentVersion?`docs/artifacts/${artifact}/versions/${selectedArtifact.currentVersion}/`:null;
+ const currentPrefix=inPlace?null:selectedArtifact.currentVersion?`docs/artifacts/${artifact}/versions/${selectedArtifact.currentVersion}/`:null;
  const claims=versionClaims(files,artifact,change);let provenanceUnavailable=false;if(claims.length===1){const claim=claims[0];for(const category of [...(claim.prefix!==currentPrefix?['requirements','specifications','decisions']:[]),...(claim.deliveryTasks===undefined?['tasks']:[])])await walk(claim.prefix+category,claim.prefix+category,'evidence','provenance');provenanceUnavailable=diagnostics.some(d=>d.path?.startsWith(claim.prefix)&&/unavailable|unsafe|ambiguous/.test(d.code));if(provenanceUnavailable)report('unavailable-provenance',claim.prefix,'Originating snapshot evidence is incomplete or unsafe.');}
  const projections=[];
  for(const side of ['baseline','change']){
   const projectionFiles=new Map([...files].filter(([p])=>(!p.includes('/changes/')||side==='change'&&p.startsWith(selected))));
-  const snapshot=buildSnapshot(projectionFiles,repository,[]);for(const a of snapshot.artifacts)a.activeChange=side==='change'&&a.id===artifact?change:null;
-  const graph=buildFlowGraph(snapshot,{context:root,knowledge:side==='change'?'planning':'established'});if(side==='change'){const explicitTargets=new Set(graph.edges.filter(e=>e.kind==='supports'&&e.resolved).map(e=>e.target));graph.flows=graph.flows.filter(f=>f.artifact!==artifact||f.source===`change:${change}`||explicitTargets.has(f.id));}diagnostics.push(...snapshot.diagnostics.filter(d=>!['invalid-active-change','multiple-changes'].includes(d.code)),...graph.diagnostics);
+  if(inPlace&&side==='baseline'){
+   // The baseline projection replaces proposed bytes with protected-ref bytes.
+   const view=inPlace.view;for(const [path,state] of view.status||[])if(state==='added')projectionFiles.delete(path);
+   for(const [rest,source] of inPlace.baselineSources)projectionFiles.set(inPlace.base+rest,source.text);
+  }
+  const snapshot=buildSnapshot(projectionFiles,repository,[],{layouts});for(const a of snapshot.artifacts)a.activeChange=side==='change'&&a.id===artifact?change:null;
+  const graph=buildFlowGraph(snapshot,{context:root,knowledge:side==='change'?'planning':'established'});if(side==='change'){const explicitTargets=new Set(graph.edges.filter(e=>e.kind==='supports'&&e.resolved).map(e=>e.target));graph.flows=graph.flows.filter(f=>f.artifact!==artifact||f.source===(inPlace?'working':`change:${change}`)||explicitTargets.has(f.id));}diagnostics.push(...snapshot.diagnostics.filter(d=>!['invalid-active-change','multiple-changes'].includes(d.code)),...graph.diagnostics);
   projections.push({side,graph});
  }
  const observedEvidence=new Set();
  for(const {graph}of projections){for(const flow of graph.flows)for(const support of flow.support)for(const path of support.evidence||[])observedEvidence.add(path);}
  for(const {graph}of projections)for(const source of [...graph.sources,...[...observedEvidence].map(path=>({path,kind:'evidence'}))]){if(!['implementation','test','evidence'].includes(source.kind))continue;let canonical;try{canonical=await realpath(resolve(root,source.path));}catch{}if(!tracked.has(source.path)||!canonical||!tracked.has(relative(root,canonical).split(sep).join('/'))){report('untracked-support',source.path,'Support must be tracked at both path identities.');omissions.push({path:source.path,reason:'Untracked or missing support.'});continue;}if(sources.has(source.path))continue;await load(source.path,'.',source.kind,'support');}
- const snapshot=buildSnapshot(files,repository,[]);const filtered={snapshot:{...snapshot,artifacts:snapshot.artifacts.filter(a=>a.id===artifact).map(a=>({...a,changes:a.changes.filter(c=>c.name===change)}))},files,unsafeTaskPaths:new Set()};
+ const snapshot=buildSnapshot(files,repository,[],{layouts,baselines:inPlace?{[artifact]:inPlace.view}:undefined});const filtered={snapshot:{...snapshot,artifacts:snapshot.artifacts.filter(a=>a.id===artifact).map(a=>({...a,changes:a.changes.filter(c=>c.name===change)}))},files,unsafeTaskPaths:new Set()};
  const workflow=(await evidenceFor(root,filtered,git,repository.head,diagnostics))[0]??null;
  if(workflow?.history)report('historical-current-comparison',selected,'Declared current is not a proven predecessor of this retained change.');
- const pub=provenanceUnavailable?{state:'unknown',reasons:['Originating snapshot evidence is unavailable.'],sources:[]}:claims.length===1?await publication(root,claims[0].prefix,files,git,'',null,claims[0].deliveryTasks==='change'?selected:null):{state:'unknown',reasons:[claims.length?'Multiple version provenance claims.':'No unique version provenance claim.'],sources:[]};
+ const pub=provenanceUnavailable?{state:'unknown',reasons:['Originating snapshot evidence is unavailable.'],sources:[]}:claims.length===1?await publication(root,claims[0].prefix,files,git,'',null,claims[0].deliveryTasks==='change'||inPlace?selected:null,selectedArtifact.layout):{state:'unknown',reasons:[claims.length?'Multiple version provenance claims.':'No unique version provenance claim.'],sources:[]};
  const registeredPaths=new Set(projections.flatMap(p=>p.graph.sources.map(s=>s.path)));
- for(const [path,source]of sources)if(!(path===artifactRoot||path.startsWith(selected)||currentPrefix&&path.startsWith(currentPrefix)||path===unit?.path||unit?.evidence.some(e=>e.source.split('#')[0]===path)||registeredPaths.has(path)||observedEvidence.has(path)||claims.some(claim=>path===claim.prefix+'README.md')))sources.delete(path);
+ const baselineKeys=new Set(inPlace?[...inPlace.baselineSources.values()].map(s=>s.path):[]);
+ const kept=path=>!!inPlace&&(baselineKeys.has(path)||path.startsWith(inPlace.base)&&KNOWLEDGE_KINDS.includes(path.slice(inPlace.base.length).split('/')[0]));
+ for(const [path,source]of sources)if(!(kept(path)||path===artifactRoot||path.startsWith(selected)||currentPrefix&&path.startsWith(currentPrefix)||path===unit?.path||unit?.evidence.some(e=>e.source.split('#')[0]===path)||registeredPaths.has(path)||observedEvidence.has(path)||claims.some(claim=>path===claim.prefix+'README.md')))sources.delete(path);
  
  const revision=hash([repository,refs,registered,[...tracked].sort(),baseline,[...files].map(([p,text])=>[p,hash(text)]),diagnostics,unit&&[unit.affectedFlows,unit.flowAssessment],workflow,pub]);
  for(const source of sources.values())source.id=hash([revision,root,artifact,change,source.side,source.path]);
- return {repository,baseline,selected,currentPrefix,files,sources,diagnostics,omissions,projections,unit,workflow,pub,revision,artifactRoot};
+ return {repository,baseline,selected,currentPrefix,files,sources,diagnostics,omissions,projections,unit,workflow,pub,revision,artifactRoot,inPlace};
 }
 const pointer=s=>s?{id:s.id,path:s.path,fingerprint:s.fingerprint,characterCount:s.totalCharacters,availability:'available'}:null;
-function recordsFor(c){if(c.baseline.state==='unavailable')return [];const paths=new Set();for(const p of c.files.keys()){for(const prefix of [c.selected,c.currentPrefix].filter(Boolean))if(p.startsWith(prefix)&&/^(requirements|specifications|decisions)\/.+\.md$/.test(p.slice(prefix.length)))paths.add(p.slice(prefix.length));}
+const ORDER=['requirements','specifications','decisions'];
+const recordOrder=(a,b)=>ORDER.indexOf(a.category)-ORDER.indexOf(b.category)||(a.status==='unchanged')-(b.status==='unchanged')||(a.path.endsWith('/README.md')?0:1)-(b.path.endsWith('/README.md')?0:1)||a.path.localeCompare(b.path,undefined,{numeric:true});
+// In-place records come from the Git comparison; each file is listed once.
+function inPlaceRecords(c){const {view,base,baselineSources}=c.inPlace;if(view.state!=='available')return [];
+ const records=[...view.status].filter(([path])=>c.sources.has(path)).map(([path,status])=>{const rest=path.slice(base.length);return {id:hash(rest),path:rest,category:rest.split('/')[0],status,baseline:status==='modified'?pointer(baselineSources.get(rest)):null,change:pointer(c.sources.get(path))};});
+ for(const path of view.removed){const rest=path.slice(view.knowledgePrefix.length);records.push({id:hash(rest),path:rest,category:rest.split('/')[0],status:'removed',baseline:pointer(baselineSources.get(rest)),change:null});}
+ return records.sort(recordOrder);}
+function recordsFor(c){if(c.inPlace)return inPlaceRecords(c);if(c.baseline.state==='unavailable')return [];const paths=new Set();for(const p of c.files.keys()){for(const prefix of [c.selected,c.currentPrefix].filter(Boolean))if(p.startsWith(prefix)&&/^(requirements|specifications|decisions)\/.+\.md$/.test(p.slice(prefix.length)))paths.add(p.slice(prefix.length));}
  return [...paths].filter(path=>!c.diagnostics.some(d=>d.code==='unavailable-source'&&[c.selected+path,c.currentPrefix&&c.currentPrefix+path].includes(d.path)||['unsafe-directory','unavailable-directory','ambiguous-directory'].includes(d.code)&&[c.selected+path,c.currentPrefix&&c.currentPrefix+path].some(p=>p&&(p===d.path||p.startsWith(d.path+'/'))))).map(path=>{const before=c.currentPrefix?c.sources.get(c.currentPrefix+path):null,after=c.sources.get(c.selected+path);return {id:hash(path),path,category:path.split('/')[0],status:before?after?before.fingerprint===after.fingerprint?'unchanged':'modified':'removed':'added',baseline:pointer(before),change:pointer(after)};}).sort((a,b)=>['requirements','specifications','decisions'].indexOf(a.category)-['requirements','specifications','decisions'].indexOf(b.category)||(a.status==='unchanged')-(b.status==='unchanged')||(a.path.endsWith('/README.md')?0:1)-(b.path.endsWith('/README.md')?0:1)||a.path.localeCompare(b.path,undefined,{numeric:true}));
 }
 function cursorToken(value){return Buffer.from(JSON.stringify(value)).toString('base64url');}

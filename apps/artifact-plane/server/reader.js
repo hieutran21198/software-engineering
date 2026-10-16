@@ -248,6 +248,12 @@ export async function scanRepository(path, options = {}) {
     }
     for (const evidence of unit.evidence) if (safeKnowledgePath(evidence.source.split('#')[0])) await load(evidence.source.split('#')[0]);
   }
+  // Structured publication review sources in identity records and unit briefs.
+  for (const [path, body] of [...files]) {
+    if (!/^docs\/artifacts\/[^/]+(?:\/[^/]+)?\/README\.md$/.test(path)) continue;
+    const reviews = frontMatter(body).value?.publication_reviews;
+    if (Array.isArray(reviews)) for (const review of reviews) {const source = typeof review?.source === 'string' ? review.source.split('#')[0] : null;if (safeKnowledgePath(source)) await load(source);}
+  }
   let branch, head, status;
   try {
     branch = await runGit(root, ["symbolic-ref", "--short", "HEAD"]).catch(

@@ -1,5 +1,5 @@
 import {parseDocument} from 'yaml';
-import {safeElementPath} from '../src/model.js';
+import {safeElementPath, currentSource} from '../src/model.js';
 
 export const safeFlowID = value => typeof value === 'string' && /^[a-z0-9][a-z0-9-]*$/.test(value);
 const text = value => typeof value === 'string' && value.trim().length > 0;
@@ -79,7 +79,7 @@ export function buildFlowGraph(snapshot, {context = '', knowledge = 'planning'} 
   }
   const selected = new Map();
   for (const artifact of snapshot.artifacts) {
-    const candidates = records.filter(f => f.artifact === artifact.id && f.source === `version:${artifact.currentVersion}`);
+    const candidates = records.filter(f => f.artifact === artifact.id && f.source === currentSource(artifact));
     for (const f of candidates) selected.set(f.logicalId,f);
     if (knowledge === 'planning' && artifact.activeChange) for (const f of records.filter(f => f.artifact === artifact.id && f.source === `change:${artifact.activeChange}`)) selected.set(f.logicalId,f);
   }
@@ -88,7 +88,7 @@ export function buildFlowGraph(snapshot, {context = '', knowledge = 'planning'} 
   const nodes = new Map(), edges = [], sources = new Map(), elements = new Map(snapshot.artifacts.flatMap(a => a.elements.map(e => [JSON.stringify([a.id,e.source,e.path]),e])));
   const add = node => {if (!nodes.has(node.id)) nodes.set(node.id,node);return node.id;};
   const link = (source,target,kind,extra = {}) => edges.push({id:JSON.stringify([source,target,kind,edges.length]),source,target,kind,...extra});
-  function knowledgeSource(s, flow) {const owner=byArtifact.get(s.artifact);return s.status === 'proposed' ? `change:${s.change}` : s.artifact === flow.artifact && !s.status ? flow.source : owner?.currentVersion ? `version:${owner.currentVersion}` : null;}
+  function knowledgeSource(s, flow) {const owner=byArtifact.get(s.artifact);if(owner?.layout==='in-place')return 'working';return s.status === 'proposed' ? `change:${s.change}` : s.artifact === flow.artifact && !s.status ? flow.source : owner?.currentVersion ? `version:${owner.currentVersion}` : null;}
   for (const flow of flows) {
     add({id:flow.id,kind:'flow',title:flow.title,artifact:flow.artifact,source:flow.source,logicalId:flow.logicalId,file:flow.file});
     const owner=add({id:flowKey(context,flow.artifact,flow.source,'artifact',flow.artifact),kind:'artifact',title:flow.artifact,artifact:flow.artifact,source:flow.source});
@@ -117,6 +117,9 @@ export function buildFlowGraph(snapshot, {context = '', knowledge = 'planning'} 
         if(resolved&&!flows.some(f=>f.id===targetFlow.id))flows.push(targetFlow);
       }
       support.targetId=target;support.resolved=resolved;support.file=file;
+      // In-place targets are labeled by their bytes against the protected baseline.
+      const targetState=support.kind==='element'?elements.get(JSON.stringify([support.artifact,'working',support.element]))?.state:null;
+      if(targetState)support.targetLabel=['added','modified'].includes(targetState)?'proposed':targetState==='unchanged'?'established':'unknown';
       if (!resolved) {const d={code:'unresolved-flow-support',path:flow.file,message:`Support ${support.id} has no unambiguous readable target.`};flow.diagnostics.push(d);diagnostics.push(d);}
       for (const step of flow.steps.filter(step => step.supports.includes(support.id))) link(step.nodeId,target,'supports',{reason:support.requires,basis:support.basis,support:support.id,flow:flow.id,resolved});
     }

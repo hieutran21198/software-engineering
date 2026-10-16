@@ -400,3 +400,33 @@ test('actual HTTP and MCP agree on complete named filtering and artifact partici
   assert.equal((await http({...request,path:fixture.root,match:'unknown'})).status,422);
   const invalid=await client.callTool({name:'get_flow',arguments:{flow:'tenant:login',artifact:'tenant'}});assert.equal(invalid.isError,true);
 });
+
+// In-place layout: established flows come from the protected tree, planning
+// flows from the working tree, with the same facts over HTTP and MCP.
+import {inPlaceFixture} from "./fixtures.js";
+test("L2/L7: in-place established and planning flows have HTTP and MCP parity", async (t) => {
+  const input = inPlaceFixture();
+  input.set("src/check.js", "export const membership = true;\n");
+  const flow = (title) => "---\n" + JSON.stringify({flow: {id: "login", artifact: "tenant", title, trigger: "Begin.", outcome: "Done.", entry_steps: ["check"], steps: [{id: "check", title: "Check", supports: ["identity"]}], transitions: [], support: [{id: "identity", kind: "element", artifact: "tenant", element: "specifications/identity.md", requires: "Identity rules.", basis: "documented"}]}}) + "\n---\n# Flow\n";
+  input.set("docs/artifacts/tenant/specifications/flows/login.md", flow("Established login"));
+  const { fixture, client, http } = await setup(t, input);
+  git(fixture.root, "checkout", "-q", "-b", "change-next");
+  await writeFile(join(fixture.root, "docs/artifacts/tenant/specifications/flows/login.md"), flow("Proposed login"));
+  await writeFile(join(fixture.root, "docs/artifacts/tenant/specifications/identity.md"), "# Identity\n\nChanged rules.\n");
+  const before = await fingerprint(fixture.root);
+  const titles = {};
+  for (const knowledge of ["established", "planning"]) {
+    const request = { path: fixture.root, knowledge, operation: "search", match: "title", artifact: "tenant", limit: 20 };
+    const response = await http(request), { operation, ...args } = request;
+    const mcp = await client.callTool({ name: "search_flows", arguments: args });
+    assert.equal(response.status, 200, JSON.stringify(response.body));
+    assert.deepEqual(stable(response.body), stable(mcp.structuredContent));
+    titles[knowledge] = response.body.data.flows.map((f) => f.title);
+    const detail = await http({ path: fixture.root, knowledge, operation: "detail", flow: response.body.data.flows[0].id });
+    const support = detail.body.data.flow.support[0];
+    assert.equal(support.resolved, true);
+    if (knowledge === "planning") assert.equal(support.targetLabel, "proposed");
+  }
+  assert.deepEqual(titles, { established: ["Established login"], planning: ["Proposed login"] });
+  assert.deepEqual(await fingerprint(fixture.root), before);
+});
