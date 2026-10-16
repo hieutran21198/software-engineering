@@ -131,3 +131,38 @@ test('B17: retained lifecycle and recency come from declarations, snapshots and 
  await put(f.root,`${base}changes/change-uncommitted/requirements/main.md`,'# New');
  assert.equal((await exploreRepository(f.root)).workflow.worktrees[0].changes.find(c=>c.name==='change-uncommitted').lastCommitAt,null);
 });
+
+// In-place layout: phases come from declared fields only; no history replay.
+import { scanRepository, git as readerGit } from '../server/reader.js';
+import { evidenceFor } from '../server/workflow.js';
+import { inPlaceFixture } from './fixtures.js';
+test('L3: in-place phases derive from declarations without git log; undeclared steps are not declared', async t => {
+  const f = await fixtureRepository(inPlaceFixture()); t.after(f.cleanup);
+  const auth = 'docs/artifacts/authentication/', plan = `${auth}changes/change-login/tasks/`;
+  git(f.root, 'checkout', '-q', '-b', 'change-login');
+  await put(f.root, `${auth}requirements/login.md`, `---\nself_check:\n  result: passed\n  source: ${auth}requirements/login.md#self-check\n---\n# Login need\n\n## Self-check\n\nCoverage checked.\n`);
+  await put(f.root, `${plan}README.md`, `---\ntasks: [01-login.md]\nself_check: {result: incomplete, source: "${plan}README.md#plan-self-check"}\n---\n# Plan\n\n## Plan self-check\n\nDependencies open.\n`);
+  await put(f.root, `${plan}01-login.md`, `---\nid: login\ndepends_on: []\nevidence_records:\n  - {id: tests, method: npm test, result: passed, source: "${plan}01-login.md#evidence"}\n---\n# Task\n\n- [x] Done.\n\n## Evidence\n\nTests passed.\n`);
+  const data = await scanRepository(f.root), calls = [], diagnostics = [];
+  const spy = (root, args, raw) => { calls.push(args[0]); return readerGit(root, args, raw); };
+  const changes = await evidenceFor(f.root, data, spy, null, diagnostics);
+  const login = changes.find(c => c.artifact === 'authentication' && c.name === 'change-login');
+  assert.deepEqual(Object.fromEntries(login.steps.map(s => [s.name, s.state])), {Requirement: 'documented-complete', Specification: 'not-declared', Plan: 'declared-incomplete', Implementation: 'documented-complete', Validation: 'documented-complete', 'Version preparation': 'not-declared'});
+  assert.equal(login.currentStep, 'Specification');
+  assert.equal(login.history, false);
+  const initial = changes.find(c => c.artifact === 'authentication' && c.name === 'change-initial');
+  assert.equal(initial.history, true);assert.equal(initial.steps.at(-1).state, 'documented-complete');assert.match(initial.historyReason, /protected ref/);
+  assert.ok(!calls.includes('log'), calls.join(','));
+  assert.deepEqual(diagnostics, []);
+});
+test('L3: malformed or unresolvable declarations are diagnostics, not positive evidence', async t => {
+  const files = inPlaceFixture(), plan = 'docs/artifacts/authentication/changes/change-login/tasks/';
+  files.set(`${plan}README.md`, `---\ntasks: [01-login.md]\nself_check: {result: successful, source: "${plan}README.md"}\n---\n# Plan\n`);
+  files.set(`${plan}01-login.md`, `---\nid: login\ndepends_on: []\nevidence_records:\n  - {id: tests, method: npm test, result: passed, source: "${plan}01-login.md#missing"}\n---\n# Task\n\n- [x] Done.\n`);
+  const f = await fixtureRepository(files); t.after(f.cleanup);
+  const diagnostics = [], changes = await evidenceFor(f.root, await scanRepository(f.root), readerGit, null, diagnostics);
+  const login = changes.find(c => c.name === 'change-login' && c.artifact === 'authentication');
+  assert.equal(login.steps.find(s => s.name === 'Plan').state, 'not-declared');
+  assert.equal(login.steps.find(s => s.name === 'Validation').state, 'not-declared');
+  assert.deepEqual(diagnostics.map(d => d.code).sort(), ['invalid-evidence-record', 'missing-evidence']);
+});

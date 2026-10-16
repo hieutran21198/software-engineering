@@ -200,7 +200,7 @@ export async function publication(root, prefix, files, git, reviewText = '', rev
   } catch {return {state:'unknown',reasons:['Protected-ref snapshot evidence could not be read.'],sources:[]};}
 }
 function anchor(text) {return text.toLowerCase().replace(/[^\p{L}\p{N}_\s-]/gu,'').trim().replace(/\s/g,'-');}
-function evidenceDetail(markdown, fragment) {
+export function evidenceDetail(markdown, fragment) {
   const body = markdown.replace(/^---\r?\n[\s\S]*?\r?\n---(?:\r?\n|$)/,'');
   const tokens = marked.lexer(body);
   if (!fragment) return tokens.some(t=>t.type!=='heading' && t.type!=='space') ? body : null;

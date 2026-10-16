@@ -77,14 +77,17 @@ async function readQuery(body){
    if(body.unit&&!unit)throw new ExploreError(404,'Unit of work no longer exists.');
    const members=unit?.members||[{artifact:body.artifact,change:body.change}];
    if(!unit&&!overview.snapshot.artifacts.some(a=>a.id===body.artifact&&a.changes.some(c=>c.name===body.change)||!body.change&&['artifacts','markdown'].includes(body.section)))throw new ExploreError(404,'Change no longer exists.');
-   const prefixes=members.flatMap(m=>[`docs/artifacts/${m.artifact}/changes/${m.change}/`,...versionClaims(overview.files,m.artifact,m.change).map(c=>c.prefix),...(overview.snapshot.artifacts.find(a=>a.id===m.artifact)?.currentVersion?[`docs/artifacts/${m.artifact}/versions/${overview.snapshot.artifacts.find(a=>a.id===m.artifact).currentVersion}/`]:[])]);
+   const prefixes=members.flatMap(m=>[`docs/artifacts/${m.artifact}/changes/${m.change}/`,...versionClaims(overview.files,m.artifact,m.change).map(c=>c.prefix),...(overview.snapshot.artifacts.find(a=>a.id===m.artifact)?.layout==='in-place'?[]:overview.snapshot.artifacts.find(a=>a.id===m.artifact)?.currentVersion?[`docs/artifacts/${m.artifact}/versions/${overview.snapshot.artifacts.find(a=>a.id===m.artifact).currentVersion}/`]:[])]);
+   // In-place members read root knowledge, never legacy version directories.
+   const inPlaceRoots=[...new Set(members.filter(m=>overview.snapshot.artifacts.find(a=>a.id===m.artifact)?.layout==='in-place').map(m=>`docs/artifacts/${m.artifact}/`))];
+   const inPlaceKnowledge=path=>inPlaceRoots.some(root=>path.startsWith(root)&&/^(requirements|specifications|decisions)\/.+/.test(path.slice(root.length)));
    const unitPath=unit?.path;
-   const full=path=>prefixes.some(prefix=>path.startsWith(prefix))||path===unitPath||unit?.evidence.some(e=>e.source.split('#')[0]===path);
+   const full=path=>prefixes.some(prefix=>path.startsWith(prefix))||inPlaceKnowledge(path)||path===unitPath||unit?.evidence.some(e=>e.source.split('#')[0]===path);
    if(body.section==='markdown'){
     // Metadata indexes establish scope; no arbitrary repository file endpoint.
     const artifacts=unit?unitSummary(unit,overview.snapshot,target,overview.files).artifactGraph.planning.nodes.map(n=>n.id):[body.artifact];
     if(overview.unsafeTaskPaths.has(body.source))throw new ExploreError(422,'Unsafe task source.');
-    const declaredSource=body.source===unitPath||unit?.evidence.some(e=>e.source.split('#')[0]===body.source)||prefixes.some(prefix=>body.source===prefix+'README.md'||body.source.startsWith(prefix)&&/^(requirements|specifications|decisions|tasks)\/.+\.md$/.test(body.source.slice(prefix.length)));
+    const declaredSource=body.source===unitPath||inPlaceKnowledge(body.source)&&body.source.endsWith('.md')||unit?.evidence.some(e=>e.source.split('#')[0]===body.source)||prefixes.some(prefix=>body.source===prefix+'README.md'||body.source.startsWith(prefix)&&/^(requirements|specifications|decisions|tasks)\/.+\.md$/.test(body.source.slice(prefix.length)));
     if(!declaredSource&&!artifacts.some(a=>body.source===`docs/artifacts/${a}/README.md`))throw new ExploreError(404,'Source is outside the selected knowledge context.');
     const path=await realpath(resolve(target,body.source)).catch(()=>{throw new ExploreError(404,'Knowledge source no longer exists.');});const rel=relative(target,path);
     if(rel==='..'||rel.startsWith('..'+sep)||isAbsolute(rel)||rel.split(sep).includes('.git'))throw new ExploreError(422,'Unsafe knowledge source.');
