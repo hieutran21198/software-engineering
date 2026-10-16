@@ -3,7 +3,7 @@ import { readFile, realpath } from "node:fs/promises";
 import { resolve, relative, isAbsolute, sep, extname } from "node:path";
 import { fileURLToPath } from "node:url";
 import { exploreRepository } from "./reader.js";
-import {repositoryService, repositoryFingerprint, registeredSourceFingerprint} from './repository-events.js';
+import {repositoryService, registeredSourceFingerprint} from './repository-events.js';
 import {createFlowService} from './flow-index.js';
 import {createReviewService} from './change-review.js';
 import {queryRepository} from './repository-query.js';
@@ -37,7 +37,7 @@ export function createAppServer(options = {}) {
   let reviews=options.reviewService;
   const getReviews=()=>reviews??=createReviewService({roots:options.reviewRoots||options.flowRoots||[]});
   const observation=options.repositoryObservation||{};
-  const repositories=repositoryService({...observation,sample:async(root,settings)=>{const base=await (observation.sample||repositoryFingerprint)(root,settings);return registeredSourceFingerprint(root,base,[...(flows?.observedSources(root)||[]),...(reviews?.observedSources(root)||[])],settings);}});
+  const repositories=repositoryService({...observation,sample:async(root,settings)=>{const base=observation.sample?await observation.sample(root,settings):await settings.base(settings);return registeredSourceFingerprint(root,base,[...(flows?.observedSources(root)||[]),...(reviews?.observedSources(root)||[])],settings);}});
   const server = createServer(async (req, res) => {
     try {
       const host = `127.0.0.1:${req.socket.localPort}`;
