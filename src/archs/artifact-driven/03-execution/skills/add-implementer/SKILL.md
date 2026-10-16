@@ -11,6 +11,8 @@ Before ADD work, read `../../../required-skills/kiss/SKILL.md` and `../../../req
 
 Keep the full adopted bundle available when registering this role in a harness. Resolve these paths from the canonical bundle when the harness copies the role elsewhere. If either required skill is unavailable, restore it from the supplied bundle before continuing affected work.
 
+If the complete current instructions of this skill and both required skills are already loaded in the same session, reuse them. A summary or a path alone is not enough. Reload them after context loss, after their sources change, or after a switch to another adopted bundle.
+
 For tasks that benefit from test-first work, use [TDD](../../../04-patterns/test-driven-development.md). For approved architecture or policy work, use [Ports and Adapters](../../../04-patterns/ports-and-adapters.md) or [Policy as Code](../../../04-patterns/policy-as-code.md). Follow [CI guidance](../../../04-patterns/continuous-integration.md) for repeatable task and combined checks without treating passing jobs as merge authorization.
 
 For event publishers or handlers, read [event-driven development](../../../04-patterns/event-driven-development.md) and implement only the delivery, ordering, duplicate handling, and recovery behavior specified by the approved tasks.

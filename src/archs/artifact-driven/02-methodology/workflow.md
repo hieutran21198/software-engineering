@@ -10,15 +10,25 @@ A unit of work groups artifact changes around one deliverable outcome. Each arti
 | Specification | Technical Lead (TL) | Behavior and all applicable interface contracts are defined. Necessary ADRs are recorded, dependency impact analysis is complete, and no blockers prevent Plan. |
 | Plan | Technical Lead | Tasks cover the required work, reference governing knowledge, identify dependencies and parallel implementation opportunities, and contain concrete DoD checks. No blockers prevent Implementation planning. |
 | Implementation | Assigned implementers, coordinated by one implementation coordinator | Required tasks satisfy their DoD and combined implementation passes integration and dependency validation. |
-| Version | Implementation coordinator prepares; team reviews and merges | Checks pass, the version is selected, and the snapshot, root README, and DAG agree. Establishment requires all required changes to land on `main` or `master`. |
+| Version | Implementation coordinator prepares; team reviews and merges | Checks pass, the version is selected, and the version record and identity record agree. Establishment requires all required changes to land on `main` or `master`. |
 
 The coordinator can be the TL or a designated implementer. This is an assigned responsibility; it does not require another agent session.
+
+## Change Lifecycle
+
+1. Start the change on a dedicated branch. Add `changes/<change>/README.md`. Copy nothing. Edit working knowledge in place: retain, amend, remove and add.
+2. Complete Requirement, Specification and Plan with their self-checks and commits. Record `self_check` where readers need it.
+3. Present the plan and wait for explicit approval. Implementation records evidence in tasks.
+4. Prepare the version: add `versions/<version>/README.md` with `source_change`, set `current_version` and any changed `depends_on` in the identity record, and open the PR.
+5. The version is established when the PR lands on the protected branch. The change directory remains as the retained delivery record.
+
+The [artifact model](../01-foundation/artifact-model.md#records) defines the records. For an artifact in the legacy layout, the change starts from a copy of the current version knowledge and the version is a complete copy of the resulting knowledge.
 
 ## Requirement
 
 The PO authors and validates the requirements, then performs a self-check before handing them to the TL. No separate reviewer or approval step is required.
 
-Record the reason for the change in its README. Retain applicable requirements from the copied baseline and add, amend, or remove requirements as needed. Identify potentially affected artifacts for dependency impact analysis.
+Record the reason and scope of the change in its change record. Edit requirements in place: retain applicable requirements and add, amend, or remove requirements as needed. Identify potentially affected artifacts for dependency impact analysis.
 
 ## Specification and Plan
 
@@ -40,7 +50,7 @@ The coordinator validates the combined implementation and handles failures acros
 
 Validate each member's task DoD and the combined outcome. Completion requires all participating changes to produce established versions, evidence supporting every shared acceptance criterion, and passing required integration checks. Record combined checks in the unit brief; reference delivered task evidence where sufficient. Checked tasks and phase inference alone do not prove establishment or approval.
 
-Dependent implementation still waits for required upstream establishment, even when both artifacts belong to the same unit. Preparing a unit does not bypass the plan approval or team merge gates. Historical completion uses delivered versions and their linked originating delivery records rather than later current versions. New versions exclude tasks and declare source_change plus delivery_tasks: change; retain the originating change and verify publication before using its evidence. Missing knowledge or merge evidence remains unresolved.
+Dependent implementation still waits for required upstream establishment, even when both artifacts belong to the same unit. Preparing a unit does not bypass the plan approval or team merge gates. Historical completion uses delivered versions and their linked originating delivery records rather than later current versions. New version records name `source_change` and contain no tasks; retain the originating change and verify publication before using its evidence. Missing knowledge or merge evidence remains unresolved.
 
 Use [evidence records and reconciliation](../06-guidelines/evidence-records.md) within these existing checks. Reconcile a stale declaration from required merge and protected-ref evidence; keep failed validation distinct from merged publication.
 

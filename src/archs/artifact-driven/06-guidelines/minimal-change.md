@@ -2,9 +2,9 @@
 
 Use this scaffold for one outcome in an existing artifact. Replace `sample`, `small-update`, and every `REPLACE` instruction with verified project facts. The placeholders make the structure readable; they are not completed requirements or check results.
 
-Start from the artifact's complete established knowledge. Keep applicable requirements, specifications, and decisions. Exclude historical tasks and delivered provenance from the new change. Preserve the originating plans and evidence in their existing directories. Check that this is the artifact's single active change and that the new change belongs to exactly one unit.
+Work on a dedicated branch. Edit the artifact's working knowledge in place: keep applicable requirements, specifications and decisions, and amend, remove or add files as the outcome needs. Copy nothing into the change or a version. The change directory holds only its record and its plan. Preserve earlier plans and evidence in their existing change directories. Check that this is the artifact's single active change and that the new change belongs to exactly one unit.
 
-For a first artifact, establish its identity, ownership, root README and no-established-version boundary before using the change layout. Use `change-initial` and follow the [artifact writing rules](writing-artifacts.md). This scaffold does not create those facts for you.
+For a first artifact, write its README with the identity record (`current_version: null`, `depends_on`), ownership and scope before you use this scaffold. Follow the [artifact writing rules](writing-artifacts.md). This scaffold does not create those facts for you.
 
 ## Use the existing phase checks
 
@@ -12,9 +12,9 @@ For a first artifact, establish its identity, ownership, root README and no-esta
 2. Complete Specification from the requirements. Add an ADR only for a necessary architectural choice with alternatives. Self-check and commit.
 3. Write a fresh plan and concrete task DoD. Check membership, references, prerequisites and cycles. Self-check, commit, and present the concrete plan for explicit user approval.
 4. After approval and required upstream establishment, implement and run the task checks. Record the actual method, result, source and limitations once in the owning task. Reference those details from the unit's evidence.
-5. Validate the combined outcome. Prepare the confirmed version with `source_change` and `delivery_tasks: change`, excluding tasks from the snapshot. Follow team review and merge before claiming establishment.
+5. Validate the combined outcome. Add the version record `versions/<version>/README.md` with `source_change` and set `current_version` in the artifact README. Follow team review and merge before claiming establishment.
 
-The six files below form the minimum example. Existing baseline knowledge can require more files or tasks. An empty affected-flow list requires a reasoned assessment; replace it with discovered affected flows when applicable. Do not treat an uninvestigated flow map as proof of no impact.
+The six files below form the minimum example. The two knowledge files are edits to the artifact's working knowledge, not copies. Existing knowledge can require more files or tasks. An empty affected-flow list requires a reasoned assessment; replace it with discovered affected flows when applicable. Do not treat an uninvestigated flow map as proof of no impact.
 
 ## Copyable files
 
@@ -58,14 +58,14 @@ REPLACE with the user need, included behavior and exclusions.
 
 ## Baseline and ownership
 
-REPLACE with the verified established baseline and affected owners. Keep complete applicable knowledge and create fresh tasks. This change belongs to the small-update unit.
+REPLACE with the affected owners and upstream artifacts. Knowledge is edited in place on this branch; the protected branch holds the established baseline. Create fresh tasks. This change belongs to the small-update unit.
 
-- [Requirements](requirements/outcome.md)
-- [Specification](specifications/outcome.md)
+- [Requirements](../../requirements/outcome.md)
+- [Specification](../../specifications/outcome.md)
 - [Plan](tasks/README.md)
 ~~~
 
-### docs/artifacts/sample/changes/change-small-update/requirements/outcome.md
+### docs/artifacts/sample/requirements/outcome.md
 
 ~~~markdown
 # REPLACE with the required outcome
@@ -83,7 +83,7 @@ REPLACE with confirmed facts, affected artifacts and constraints.
 Not performed. Resolve requirement blockers, then record the check and commit before Specification.
 ~~~
 
-### docs/artifacts/sample/changes/change-small-update/specifications/outcome.md
+### docs/artifacts/sample/specifications/outcome.md
 
 ~~~markdown
 # REPLACE with the behavior contract
@@ -136,7 +136,7 @@ REPLACE with responsible implementation location and file/module boundaries.
 
 ## Governing knowledge
 
-R1 in requirements/outcome.md; specifications/outcome.md. REPLACE with any additional applicable contracts.
+R1 in the artifact's requirements/outcome.md; its specifications/outcome.md. REPLACE with any additional applicable contracts.
 
 ## Prerequisites
 

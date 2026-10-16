@@ -11,6 +11,8 @@ Before ADD work, read `../../../required-skills/kiss/SKILL.md` and `../../../req
 
 Keep the full adopted bundle available when registering this role in a harness. Resolve these paths from the canonical bundle when the harness copies the role elsewhere. If either required skill is unavailable, restore it from the supplied bundle before continuing affected work.
 
+If the complete current instructions of this skill and both required skills are already loaded in the same session, reuse them. A summary or a path alone is not enough. Reload them after context loss, after their sources change, or after a switch to another adopted bundle.
+
 Perform Specification, self-check and commit it, then perform Plan, self-check and commit it. Use one frontier-model session for both phases where available; no separate cheap planner or review session is required. Role instructions do not change the actual model; report a capability limitation if it affects the task.
 
 ## Specification
@@ -21,13 +23,13 @@ For asynchronous interactions, read [event-driven development](../../../04-patte
 
 Read [contract-driven development](../../../04-patterns/contract-driven-development.md) for interface work. For business boundaries use [strategic DDD](../../../04-patterns/strategic-domain-driven-design.md); for consistency or model design use [tactical DDD](../../../04-patterns/tactical-domain-driven-design.md). Load only relevant guidance from the full ADD bundle.
 
-Consume completed requirements and the copied established baseline in the active change. If requirements block design, return to the PO for correction; do not invent a business rule to proceed.
+Consume completed requirements and the artifact's working knowledge on the change branch. If requirements block design, return to the PO for correction; do not invent a business rule to proceed.
 
 Define precise behavior, domain language/models owned by this artifact, and all applicable interface contracts. Cover APIs, events, data formats, error behavior, and operational interactions as needed. Keep requirements focused on what/why, specifications on behavior/contracts, and ADRs on necessary architectural choices with evaluated alternatives.
 
-Store specifications in `specifications/` and applicable ADRs in `decisions/`. Retain valid content, amend affected content, remove obsolete content, and add missing knowledge. Analyze dependency impact throughout Specification, including ADR work.
+Store specifications in `specifications/` and applicable ADRs in `decisions/` directly under the artifact directory. Edit them in place. Retain valid content, amend affected content, remove obsolete content, and add missing knowledge. Analyze dependency impact throughout Specification, including ADR work.
 
-Element references identify the owning artifact, element path, and dependency reason. Resolve established references through the owner's current version. Mark proposed upstream contracts and their supplying active change explicitly. Propose artifact edge updates in the active change's `dependencies.yaml`; do not update established root dependencies early.
+Declare element references in front matter with the owning artifact, element path, and dependency reason. They resolve in the checked-out tree: a target that matches the protected branch is established, otherwise it is proposed. A supplier proposal on another branch stays unresolved until it merges; name the proposed contract and its supplying change in the prose. Propose an artifact edge by editing `depends_on` in the identity record on the change branch. The edge stays proposed until the branch merges.
 
 Self-check behavior, contracts, ADR sufficiency, impact analysis, and blockers for Plan. Commit Specification output on the dedicated branch before planning.
 
@@ -47,7 +49,7 @@ For corrections, return to the phase that owns the missing information and repea
 
 ## Shared Outcome Contracts and Plan
 
-Consume the [unit brief](../../../06-guidelines/units-of-work.md) when the change participates in an outcome. Specify applicable cross-artifact contracts and plan combined validation without creating membership-derived edges. Keep artifact establishment gates separate from internal task prerequisites. Historical outcome evidence resolves through source_change provenance and delivery_tasks: change to the retained originating change. Legacy versions retain their version-owned task evidence. The coordinator owns membership and shared evidence updates.
+Consume the [unit brief](../../../06-guidelines/units-of-work.md) when the change participates in an outcome. Specify applicable cross-artifact contracts and plan combined validation without creating membership-derived edges. Keep artifact establishment gates separate from internal task prerequisites. Historical outcome evidence resolves through the version record's source_change to the retained originating change. Legacy versions with delivery_tasks: change resolve the same way; older legacy versions retain their version-owned task evidence. The coordinator owns membership and shared evidence updates.
 
 ## System-flow checks
 
@@ -55,4 +57,4 @@ Read the [system-flow format](../../../06-guidelines/system-flows.md) when the c
 
 ## Small-change authoring
 
-Use the [minimal change scaffold](../../../06-guidelines/minimal-change.md) when one artifact and a small task plan cover the outcome. Retain complete baseline knowledge and replace all placeholders with verified facts. During the existing self-check, validate unit/task fields, evidence sources and dependency declarations; use the [evidence record rules](../../../06-guidelines/evidence-records.md) for optional explicit check and publication facts. Keep phase commits, plan approval and upstream establishment. Do not add another review step or copy old task evidence as current proof.
+Use the [minimal change scaffold](../../../06-guidelines/minimal-change.md) when one artifact and a small task plan cover the outcome. Edit the knowledge in place without baseline copies and replace all placeholders with verified facts. During the existing self-check, validate unit/task fields, evidence sources and dependency declarations; use the [evidence record rules](../../../06-guidelines/evidence-records.md) for optional explicit check and publication facts. Keep phase commits, plan approval and upstream establishment. Do not add another review step or copy old task evidence as current proof.

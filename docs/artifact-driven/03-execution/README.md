@@ -5,10 +5,10 @@ Execution uses one coordinator and role-specific agent skills. The coordinator i
 ## Operating Flow
 
 1. Gather the user's intent and enough information to define the change. Reuse existing knowledge and ask focused questions about material gaps.
-2. Complete Requirement, Specification, and Plan sequentially. Self-check and commit each phase's output on a dedicated branch.
+2. Start the change on a dedicated branch. Complete Requirement, Specification, and Plan sequentially. Edit the artifact's knowledge in place, then self-check and commit each phase's output.
 3. Present the implementation plan and wait for explicit user approval.
 4. Implement approved tasks, validate them, and validate the integrated change. Respect upstream version gates.
-5. Prepare the proposed version and publication changes. Push branches and open PRs when remotes exist.
+5. Prepare the proposed version record and identity record update. Push branches and open PRs when remotes exist.
 6. Stop for the team to review and merge. A version becomes established only when all required knowledge and implementation changes land on `main` or `master`.
 
 A new plan or material change requires renewed plan approval before affected implementation continues. Ordinary fixes within the approved scope do not require another review.
@@ -31,6 +31,16 @@ Apply both during existing phase and task self-checks. They do not add a workflo
 | [ADD implementer](skills/add-implementer/SKILL.md) | Implement assigned tasks, run DoD checks, and record validation evidence. |
 
 Skills can run within one session. Separate agents are used automatically for independent implementation tasks when useful; roles do not require separate sessions or redundant reviews.
+
+Before a role acts, read its skill and the required skills, unless their complete current instructions are already loaded in the same session. A summary or a path alone does not meet this condition. Reload the affected instructions after context loss, after their sources change, or after a switch to another adopted bundle.
+
+## Knowledge Layout
+
+Each artifact keeps one working set of its requirements, specifications, and decisions directly under the artifact directory. A change branch edits this knowledge in place. Start a change by adding `changes/<change>/README.md` with its reason and scope; copy nothing into the change or into a version. The change keeps its plan, tasks, and evidence in `changes/<change>/tasks/`.
+
+Structural facts are in YAML front matter only: the identity record in the artifact README (`current_version`, `depends_on`), version records, plan task lists, task declarations, unit briefs, references, and flow documents. Prose and headings carry no structural facts. The protected branch holds established knowledge. The difference between the change branch and the protected branch is the proposed knowledge. Git history holds each version snapshot.
+
+Existing artifacts in the legacy snapshot-copy layout remain readable. The [artifact model](../01-foundation/artifact-model.md) describes both layouts and the migration to the in-place layout.
 
 ## Built-In Patterns
 
@@ -57,7 +67,7 @@ Derive progress from artifacts, implementation, validation results, Git history,
 
 ## Publication and Establishment
 
-Never commit directly to protected branches, including `main` and `master`. Prepare a complete proposed snapshot, root README updates, and regenerated DAG on the change branch. These updates describe the proposed post-merge state and must not make consumers treat an unmerged version as established.
+Never commit directly to protected branches, including `main` and `master`. On the change branch, add the version record `versions/<version>/README.md` with `source_change`, and set `current_version` and any changed `depends_on` in the identity record. The version record contains no knowledge directories and no tasks. These updates describe the proposed post-merge state and must not make consumers treat an unmerged version as established.
 
 When a remote exists, push the change branch and open a PR. For multiple repositories, describe the required companion PRs and their merge dependencies. Stop after handing off to the team; do not merge, enable automatic merging, or deploy.
 
