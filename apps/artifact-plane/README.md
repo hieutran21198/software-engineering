@@ -50,6 +50,27 @@ Storage errors leave current-session exploration available with a warning. Retai
 
 ## Supported repository structure
 
+The reader detects the layout per artifact. An artifact with `requirements/`, `specifications/` or `decisions/` directly under its directory uses the in-place layout:
+
+```text
+docs/artifacts/
+  tenant/
+    README.md                   # identity record: current_version, depends_on
+    requirements/*.md           # working knowledge
+    specifications/*.md
+    decisions/*.md
+    changes/change-next/
+      README.md                 # change record
+      tasks/README.md           # plan
+      tasks/*.md
+    versions/1.0.0/
+      README.md                 # version record: source_change
+```
+
+Established knowledge is the artifact tree on local `main` or `master`. Working files that differ from it are proposed; the review lists each file once as added, modified, removed or unchanged. An open change is a change record that no version record names and that holds no knowledge directories. Phases come from `self_check`, `evidence_records`, checklists and version records, without history replay. A version snapshot is the first-parent protected commit that introduced its version record. A missing protected ref, disagreeing refs or shallow history are diagnostics.
+
+Artifacts without root knowledge directories use the legacy snapshot layout:
+
 ```text
 docs/artifacts/
   dag.yaml
@@ -60,10 +81,6 @@ docs/artifacts/
       requirements/*.md
       specifications/*.md
       decisions/*.md
-    changes/change-initial/
-      README.md
-      tasks/README.md           # retained originating plan
-      tasks/*.md
     changes/change-next/
       README.md
       dependencies.yaml
@@ -73,9 +90,9 @@ docs/artifacts/
       tasks/*.md
 ```
 
-Legacy versions without delivery_tasks may retain their task directories; those records remain readable. New versions link their originating change tasks instead of copying them.
+Legacy versions without delivery_tasks may retain their task directories; those records remain readable. For in-place artifacts, `dag.yaml`, `dependencies.yaml`, Markdown declaration sections and fenced reference blocks are legacy-only and are ignored with an informational diagnostic.
 
-Knowledge directories can contain nested Markdown files. An artifact is an immediate child directory with a root README. Zero change directories means no active change; one is active; multiple are shown as ambiguous candidates. The application does not guess from timestamps or directory version order.
+Knowledge directories can contain nested Markdown files. An artifact is an immediate child directory with a root README. In the legacy layout, zero change directories means no active change; one is active; multiple are shown as ambiguous candidates. The application does not guess from timestamps or directory version order.
 
 ## Root README conventions
 
@@ -171,6 +188,18 @@ Primary type groups contain the current version. Open **Change histories**, a ch
 Use **Dependencies** for the artifact DAG and **Units of work** for grouped outcomes. The standalone Workflow tab has been removed; unit Workflow remains available. The shared sidebar lists registered worktrees with branch, path, HEAD, and unavailable/detached/locked/prunable details. **Open worktree** explicitly opens a readable source. Selecting a worktree alone does not switch Git branches.
 
 Select an artifact to inspect its **Delivery work**. Current changes are visible; delivery histories start closed and sort by bounded Git recency, newest first and unknown last. Select a change to inspect Requirement, Specification, Plan, Implementation, Validation, and Version preparation evidence. Select a phase for evidence and associated commits; expand a commit for its full ID. The inspector preserves evidence through history collapse and view switching. Steps can be unknown; commits, checklists, and retained sources do not prove approval, running agents, or independently verified completion. Squash and limited/shallow history retain uncertainty. At most 200 relevant commits per worktree are inspected. History details load when opened. Automatic updates refresh the requested context; **Refresh** provides manual recovery.
+
+## Knowledge scripts
+
+Two optional scripts reuse the readers without the server or browser. ADD remains usable without them.
+
+```sh
+node scripts/validate-knowledge.mjs /path/to/repository
+node scripts/migrate-layout.mjs /path/to/repository [--artifact <id>] [--version <v>] [--write]
+node scripts/layout-benchmark.mjs /path/to/repository <legacy-rev> <migrated-rev> [--worktrees <n>]
+```
+
+`validate-knowledge` prints scanner, snapshot, task, unit and flow diagnostics as JSON and exits 1 when any diagnostic is an error. `migrate-layout` applies the ADD migration procedure to legacy artifacts. It is a dry run unless `--write` is given, refuses ambiguous or outdated version declarations (confirm with `--version`), writes only inside `docs/artifacts`, never overwrites, and reports the files it creates, changes and deletes with byte equivalence. Review the remaining README prose by hand. `layout-benchmark` compares packet bytes and explore git commands for two revisions.
 
 ## Units of work
 
