@@ -12,7 +12,7 @@ This is the single active change for this artifact. Retain all older changes, ta
 
 ## In-place layout reading
 
-The 16 October 2026 investigation selected an in-place knowledge layout for ADD. This change now also owns reading that layout: layout detection, Git-based baseline comparison, declared-evidence derivation, version-record resolution, navigation labels and the validate and migrate scripts. See [layout requirements](requirements/knowledge-layout.md). The publication-evidence, comparison-service, comparison-interface and compact-context tasks are superseded; model explanations, incremental refresh and responsive repair remain.
+The 16 October 2026 investigation selected an in-place knowledge layout for ADD. This change now also owns reading that layout: layout detection, Git-based baseline comparison, declared-evidence derivation, version-record resolution, navigation labels and the validate and migrate scripts. See [layout requirements](../../requirements/knowledge-layout.md). The publication-evidence, comparison-service, comparison-interface and compact-context tasks are superseded; model explanations, incremental refresh and responsive repair remain.
 
 ## Scope and gates
 

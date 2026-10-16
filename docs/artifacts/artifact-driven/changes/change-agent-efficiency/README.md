@@ -12,13 +12,13 @@ Start from the complete ADD 2.3.0 requirements, specifications and applicable de
 
 This change does not add a workflow database, a stored index, a new role, an approval field, automatic publication or a mandatory tool. It does not rewrite established snapshots, prune legacy directories, rename existing changes or units, or simplify the flow schema. Artifact Plane owns reading the new layout in its existing active change; that work waits for this contract to establish.
 
-- [Knowledge layout requirements](requirements/knowledge-layout.md)
-- [Agent efficiency requirements](requirements/agent-efficiency.md)
-- [Baseline requirements](requirements/baseline.md)
-- [In-place layout contract](specifications/knowledge-layout.md)
-- [Knowledge contract](specifications/knowledge.md)
-- [Efficiency contract](specifications/agent-efficiency.md)
-- [Layout decision](decisions/011-in-place-knowledge-layout.md)
+- [Knowledge layout requirements](../../requirements/knowledge-layout.md)
+- [Agent efficiency requirements](../../requirements/agent-efficiency.md)
+- [Baseline requirements](../../requirements/baseline.md)
+- [In-place layout contract](../../specifications/knowledge-layout.md)
+- [Knowledge contract](../../specifications/knowledge.md)
+- [Efficiency contract](../../specifications/agent-efficiency.md)
+- [Layout decision](../../decisions/011-in-place-knowledge-layout.md)
 - [Implementation plan awaiting approval](tasks/README.md)
 
 ## Preparation limits

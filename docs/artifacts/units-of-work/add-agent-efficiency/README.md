@@ -72,7 +72,7 @@ A workflow database or stored index, a new role or approval field, automatic mer
 
 ## Investigation evidence
 
-The [repository audit](audit.md) of the earlier session covers context loading, adoption preflight and retention. The [knowledge layout requirements](../../artifact-driven/changes/change-agent-efficiency/requirements/knowledge-layout.md) record the layout measurements: 72 percent byte-identical copies under docs/artifacts, 145 flow files for 15 flows, 19 of 21 changes with unknown phase, 11 of 15 units with unknown completion, 14.1 s and 800 git commands per explore, and 116,052-character zero-excerpt packets. Methods: a Python census over docs/artifacts (file hashes, front matter keys, per-change identity to version files), git diff-tree over merged PRs, and the Plane's own exploreRepository and review service run against this worktree.
+The [repository audit](audit.md) of the earlier session covers context loading, adoption preflight and retention. The [knowledge layout requirements](../../artifact-driven/requirements/knowledge-layout.md) record the layout measurements: 72 percent byte-identical copies under docs/artifacts, 145 flow files for 15 flows, 19 of 21 changes with unknown phase, 11 of 15 units with unknown completion, 14.1 s and 800 git commands per explore, and 116,052-character zero-excerpt packets. Methods: a Python census over docs/artifacts (file hashes, front matter keys, per-change identity to version files), git diff-tree over merged PRs, and the Plane's own exploreRepository and review service run against this worktree.
 
 ## Preparation and approval
 
