@@ -26,6 +26,7 @@ All browser assets are bundled locally. Knowledge exploration needs no account, 
 - Arrows point from upstream knowledge to its consumer. Purple dotted lines show element references. Green dashed lines show proposed additions; red dashed lines mark proposed removals in the established view.
 - Switch to Planning to see the graph after active dependency proposals are applied. Proposals do not change the established graph.
 - Select a resolved reference in the inspector to open its target artifact and type. Missing targets appear as unresolved markers and diagnostics.
+- Drag the divider at the right edge of the navigation panel to resize it. Arrow Right widens it, Arrow Left narrows it, and Home/End select the current minimum/maximum. Each project keeps its own width during the session. Both panels leave room for the central workspace; resize handles are hidden on narrow layouts.
 - Drag the divider at the left edge of the inspector to resize it. When the divider has keyboard focus, Arrow Left widens the panel, Arrow Right narrows it, and Home/End select its minimum/maximum width. On narrow screens, the inspector sits below the canvas.
 - Repository edits update open views automatically. Use Refresh to retry or reconcile the current view. Selection, type expansion, panel width, and canvas state remain in browser memory only; nothing is saved across page reloads.
 
@@ -259,3 +260,9 @@ Read freshness, completeness, diagnostics, omissions and limits before using a p
 ## Read a change review
 
 Select a delivery change and choose Review change. Purpose and changed records appear first. Complete sources show added and removed lines with text markers and three context lines; unchanged passages can expand. Partial sources require Load full comparison before alignment. Oversized comparisons retain raw source access and explain the limit. Source excerpts and technical evidence remain available in disclosures. Export context · Loaded records page contains copy and download actions with freshness and omission information. These controls preserve the captured context and do not approve or execute the change.
+
+## Reading documents and code
+
+Document headings are larger than body text, and long source titles wrap. Source files and fenced Markdown examples use labeled code panels with locally bundled syntax colors for JavaScript, TypeScript, JSON, YAML, Bash, Go, Python, CSS, HTML/XML and SQL. Language comes from the file extension or fence label. Code scrolls inside its panel; inline code stays distinct from ordinary prose.
+
+Unknown languages, failed highlighting and blocks longer than 20,000 UTF-16 characters use complete escaped plain text. No code is executed or reformatted. Source text, partial-excerpt information and paging remain intact. Panel widths and navigation stay in project-local session memory; they are not added to stored restoration preferences.

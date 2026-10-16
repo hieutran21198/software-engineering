@@ -75,3 +75,7 @@ Follow-up Plan self-check: eleven unique task IDs form one acyclic chain with te
 ## Reading-control approval
 
 The user explicitly approved the concrete UX12–UX14 amendment in the conversation. Tasks 08–11 are authorized on the current dedicated branch. PR #26 remains open; ADD 2.1.0 is the unchanged supplier. Prior checks remain historical evidence for their original scope.
+
+## Reading-control validation
+
+The approved four-task extension has fresh evidence in tasks 08–11. Integrated checks pass 269 Node tests and 73 Chromium cases plus app/website builds and root Go tests/vet. Earlier task evidence is retained unchanged for its original scope. The complete proposed version and PR #26 are reconciled for review; neither checked tasks nor an open PR establish a version.

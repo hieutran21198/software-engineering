@@ -38,3 +38,7 @@ The user requested larger titles, a resizable left panel and highlighted code pa
 - [Requested reading controls](specifications/reading-controls.md)
 
 Follow-up Specification self-check: UX12–UX14 have precise responsive, keyboard, source-preservation and sanitization contracts. No new artifact gate or ADR is needed. The existing proposed version is retained until validated reconciliation.
+
+## Validated reading controls
+
+The user approved the concrete follow-up plan. Tasks 08–11 implement larger headings, bounded accessible left navigation resizing and highlighted source/fenced code. Fresh integrated evidence is retained in task 11. The complete 1.13.0 proposal includes this extension; earlier phase gates and earlier delivered checks above remain historical records for their original scope.

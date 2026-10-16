@@ -49,7 +49,7 @@ test('fenced examples highlight safely while inline code and ordinary prose stay
  try{
   await openProject(page,f.root);const reader=await readOverview(page),panels=reader.locator('.code-panel');await expect(panels).toHaveCount(3);await expect(panels.nth(0).locator('code')).toHaveText(source);await expect(panels.nth(0).locator('.hljs-keyword').first()).toBeVisible();await expect(panels.nth(1).locator('.code-panel-label')).toHaveText('YAML');await expect(panels.nth(2).locator('code')).toHaveText('<unsafe>&exact text');
   await expect(reader.locator('.markdown p').filter({hasText:'Ordinary prose'})).toBeVisible();await expect(reader.locator('p>code')).toHaveText('source_change');await expect(reader.locator('script,img,button.knowledge-link')).toHaveCount(0);expect(await page.evaluate(()=>window.codeInjected)).toBeUndefined();expect(tracking).toEqual([]);
-  for(const width of [390,700,851,1440]){await page.setViewportSize({width,height:1000});expect(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth)).toBe(true);await page.screenshot({path:`test-results/reading-code-${width}.png`,fullPage:true});}
+  for(const width of [390,700,851,1440]){await page.setViewportSize({width,height:1000});await expect(page.locator('[aria-label="Repository update status"]')).toHaveText('Current');await expect(panels).toHaveCount(3);await expect(panels.first().locator('code')).toHaveText(source);expect(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth)).toBe(true);await page.screenshot({path:`test-results/reading-code-${width}.png`,fullPage:true});}
   expect(await fingerprint(f.root)).toEqual(before);
  }finally{await f.cleanup();}
 });

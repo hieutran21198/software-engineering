@@ -78,6 +78,14 @@ evidence:
     method: Run integrated browser, source-safety and knowledge checks for this criterion.
     result: passed
     source: docs/artifacts/artifact-plane/changes/change-ux-simplification/tasks/07-integration-publication.md#evidence
+  - criterion: reading-controls
+    method: Run integrated typography, dual-panel resize and inert syntax-highlight checks.
+    result: passed
+    source: docs/artifacts/artifact-plane/changes/change-ux-simplification/tasks/11-reading-controls-validation.md#evidence
+  - criterion: integration
+    method: Run the complete browser and Node regressions with reconciled proposal knowledge.
+    result: passed
+    source: docs/artifacts/artifact-plane/changes/change-ux-simplification/tasks/11-reading-controls-validation.md#evidence
 ---
 
 # Simpler Artifact Plane exploration
@@ -102,4 +110,8 @@ Knowledge validation checks seven tasks/six acyclic edges, eight valid affected 
 
 ## Reading-control extension
 
-The user's follow-up adds heading hierarchy, left navigation resizing and highlighted source/example code to this same deliverable. The new reading-controls criterion has no passing check evidence yet. Earlier recorded checks cover the original implementation; they do not validate the added behavior. Membership and affected flow identities remain unchanged. Repository exploration and source retrieval require documented presentation amendments; no new artifact dependency or runtime journey is introduced.
+The user's follow-up adds heading hierarchy, left navigation resizing and highlighted source/example code to this same deliverable. The user approved the concrete amendment. Fresh task 11 evidence supports reading-controls and integrated regression; earlier recorded checks still describe their original scope. Membership and affected flow identities remain unchanged. Repository exploration and source retrieval require documented presentation amendments; no new artifact dependency or runtime journey is introduced.
+
+## Reading-control combined checks
+
+The final extension passes 269 Node checks, all 73 Chromium cases, the app production build, root Go tests/vet and the website build. Loaded screenshots and geometry cover 390/700/851/1440 with heading hierarchy, keyboard/pointer resize, per-project widths, source-code color and exact inert text. Fresh evidence stays in task 11. Membership and artifact dependency edges are unchanged. Proposed knowledge and an open PR still do not support an established-outcome claim.

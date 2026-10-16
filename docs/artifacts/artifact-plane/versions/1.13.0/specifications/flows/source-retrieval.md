@@ -12,6 +12,8 @@ flow:
     - id: context
       title: Select the repository, worktree and knowledge context
       supports:
+        - reading-controls-browser
+        - reading-controls-contract
         - ux-simplification-contract
         - ux-browser-checks
         - query
@@ -78,6 +80,19 @@ flow:
     - from: freshness
       to: return
   support:
+    - id: reading-controls-browser
+      kind: test
+      path: apps/artifact-plane/test/browser/reading-controls.spec.js
+      requires: Check visible heading hierarchy, bounded navigation geometry and inert highlighted code.
+      basis: observed
+      evidence:
+        - docs/artifacts/artifact-plane/changes/change-ux-simplification/tasks/11-reading-controls-validation.md
+    - id: reading-controls-contract
+      kind: element
+      artifact: artifact-plane
+      element: specifications/reading-controls.md
+      requires: Show larger headings, adjustable navigation and inert highlighted source code.
+      basis: documented
     - id: ux-browser-checks
       kind: test
       path: apps/artifact-plane/test/browser/ux-simplification.spec.js
@@ -232,3 +247,7 @@ The approved search/readability change has tracked implementation and browser su
 ## Simpler exploration
 
 Open exact allowed sources directly with contained local links and a scoped return path. The detailed contract owns behavior and recovery limits. Executed browser checks are recorded in the originating integration task. Observed fixture support does not establish a version or prove exhaustive usability coverage.
+
+## Requested reading controls
+
+The reading-controls contract adds heading hierarchy, a bounded accessible sidebar divider and local syntax colors. Executed reading-control browser checks and their source-preservation limits are recorded in the originating validation task. Observed fixture support does not prove exhaustive usability or establish the proposal.

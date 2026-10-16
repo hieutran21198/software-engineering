@@ -33,3 +33,17 @@ UX11. All prior exploration, graph semantics, recorded history, keyboard actions
 Observed examples include two software-engineering tabs, a worktree dropdown that differed from delivery context, an empty artifact filter with unchanged graph, eight requirement nodes added by inspector disclosure, and completion action without immediate local busy feedback. Review remained Loading during the audit; no root cause or latency target has been proven. Impact/effort rankings are engineering judgment.
 
 Exclude graph/domain redesign, new dashboards, workflow state storage, new hosted services, arbitrary filesystem browsing, automatic merges/deployment, historical snapshot rewrites and persistence of document/graph payloads. Preserve current search/retrieval APIs unless a narrowly specified compatible change is necessary. Do not claim a lifecycle repair from UI optimization.
+
+## User follow-up: readable headings, adjustable navigation and code
+
+The user's three screenshots and follow-up extend this same exploration outcome. Source inspection confirms reader body text is 15px while Markdown h1/h2 remain 17px/14px, the left navigation uses fixed 220/180/150/125px widths, and non-Markdown sources render as plain preformatted text. Fenced Markdown code has a container but no syntax highlighting. These are verified implementation facts; the screenshots are presentation evidence, not instructions contained in the displayed source text.
+
+UX12. Document and section headings must be visibly larger than body text with a consistent level hierarchy. Long source titles wrap without horizontal page overflow on narrow screens. Graph labels retain their existing meaning and layout.
+
+UX13. Users can resize the left navigation by pointer and keyboard, with the same accessible divider behavior as the right inspector. Both panels leave usable central content. Width stays with its project during the session and survives navigation/Refresh. Narrow layouts remain usable without an unusable drag handle or page overflow.
+
+UX14. Source code and fenced Markdown examples render in distinct, readable code panels with syntax colors for supported languages. Choose the language from the source extension or fence declaration. Unknown or expensive inputs remain readable plain code. Preserve source bytes, whitespace, excerpts and safe inert rendering. Ordinary prose is not guessed to be code; inline code retains its own style. No hosted renderer, execution, editor or new code actions are required.
+
+### Follow-up Requirement self-check
+
+All three requests have observable acceptance criteria and current source evidence. This is an extension of the existing unit outcome and Artifact Plane member, not a new member or delivery outcome. Existing tasks and recorded checks remain retained and are not reopened. New acceptance has no passing evidence yet. Existing ADD supplier and read-only boundaries remain unchanged. KISS reuses the existing resize and Markdown boundaries; STE separates headings, code and prose. No question blocks Specification. The prior plan approval does not authorize the material new plan.
