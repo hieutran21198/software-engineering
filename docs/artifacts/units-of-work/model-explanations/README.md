@@ -64,3 +64,7 @@ Preparation validation passed: seven task records, five internal prerequisite ed
 The upstream ADD member passes root Go tests/vet, complete bundle/adoption checks and the website production build. Authored model/flow checks validate three models and six interactions while preserving legacy step/transition behavior. The complete proposed 2.2.0 snapshot retains delivery provenance and contains no tasks. Detailed executed evidence remains in its originating tasks. These are upstream results only.
 
 The user approved the concrete seven-task plan and proposed compatible versions. Plane code and its pilot remain unimplemented until required ADD publication is verified. PR #26 is still open at handoff preparation; this upstream review is stacked on its branch and must be retargeted to main after that predecessor merges. No shared acceptance criterion is claimed complete and no historical delivery evidence is changed.
+
+## Upstream review
+
+[PR #27](https://github.com/hieutran21198/software-engineering/pull/27) contains the validated ADD delivery and approved downstream preparation, stacked on [PR #26](https://github.com/hieutran21198/software-engineering/pull/26). The next execution gate is team review and merge of those prerequisites, followed by protected-ref contract recheck. No extra implementation-plan approval is required for the unchanged approved Plane tasks.
