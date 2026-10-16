@@ -7,6 +7,10 @@ tasks:
   - 05-browsing-shell.md
   - 06-focused-review.md
   - 07-integration-publication.md
+  - 08-heading-hierarchy.md
+  - 09-navigation-resize.md
+  - 10-highlighted-code.md
+  - 11-reading-controls-validation.md
 ---
 
 # Simpler exploration implementation plan
@@ -51,6 +55,19 @@ Use the existing Node and browser suites, build and read-only fixture convention
 
 Seven unique task IDs and six prerequisite edges form one acyclic chain ending at integration/publication. Every UX requirement has executable task DoD; all eight affected flow records have contract support and will receive actual evidence. Required upstream establishment and user approval are separate from the task chain. KISS uses existing services and removes duplicate actions/state coupling; STE keeps labels and partial-evidence limits precise. No preparation blocker remains.
 
-## Implementation approval
+## Original implementation approval
 
 The user explicitly approved this concrete plan and proposed 1.13.0 in the conversation. Implementation is authorized on the dedicated branch. Rechecked origin/main: ADD declares 2.1.0 with publication review; no new artifact prerequisite is introduced. Preserve pending presentation work and stop for team review/merge after PR preparation.
+
+## Reading-control amendment awaiting approval
+
+The three user screenshots request UX12–UX14 after the original implementation. The original approval and seven completed tasks remain valid for their delivered scope. This material amendment requires renewed approval. Application code, dependencies and the prepared version snapshot remain unchanged during preparation.
+
+8. [Larger headings](08-heading-hierarchy.md): consistent sizes above body text and wrapping source titles.
+9. [Resizable navigation](09-navigation-resize.md): a left divider matching pointer/keyboard behavior with bounded shared layout.
+10. [Highlighted code](10-highlighted-code.md): one local bounded renderer for source files and fenced examples, with safe plain fallback.
+11. [Validate and reconcile](11-reading-controls-validation.md): responsive/source-safety regression, fresh evidence, complete 1.13.0 proposal update and PR #26 handoff.
+
+Execute these four fresh tasks in order in the current dedicated worktree because they share CSS and rendering. Add no concurrent agents or new worktrees for this sequential extension. It remains the same unit outcome/member; the added reading-controls criterion has no passing evidence yet. No older task is reopened or copied. Same-artifact proposal reconciliation does not introduce an upstream artifact gate or infer 1.13.0 establishment. Recheck protected supplier/PR context before execution.
+
+Follow-up Plan self-check: eleven unique task IDs form one acyclic chain with ten edges, including the four fresh tasks after retained integration-publication. Scope, governing contracts, ownership, concrete DoD and integration checks cover UX12–UX14. KISS reuses existing controls and source boundaries; STE states limits and plain fallback precisely. The same capable TL session completed Specification and Plan sequentially. No preparation blocker remains. Wait for explicit user approval before implementation.
