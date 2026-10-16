@@ -40,4 +40,4 @@ Implemented on 16 October 2026 in a separate worktree by an implementer session 
   - `npm run build` and `npm test` pass.
   - The focused reading-controls, resize, runtime, ux-simplification and presentation suites pass 44 of 44, twice.
   - The full suite passed 73 of 74, then 72 of 74. ux-simplification.spec.js:113 and visualization-clarity.spec.js:5 fail intermittently under full-suite load and also fail with the base CSS, so they are not caused by this change.
-  - CI uses Ubuntu with the headless shell, so the CI result is not confirmed until the PR runs.
+  - CI uses Ubuntu with the headless shell, so the CI result is not confirmed until the PR runs; it is now confirmed. PR #29 CI run 38910192888 passed on Ubuntu: go (55 s), docs (1 min 45 s) and artifact-plane (5 min 6 s, unit and browser checks).
