@@ -34,20 +34,20 @@ Do not establish a version while applicable DoD criteria or integration and depe
 
 The coordinator suggests a semantic version and explains the compatibility impact. The user confirms or overrides the suggestion. The initial established version is `1.0.0`.
 
-Preserve the complete resulting requirements, specifications, and applicable decisions in the new version, excluding tasks/. Declare source_change and delivery_tasks: change in its README and link to the originating change’s retained implementation plan and evidence. Remove or amend obsolete knowledge and repeat checks whose coverage is affected.
+Working knowledge on the change branch is the complete resulting knowledge. Remove or amend obsolete knowledge and repeat checks whose coverage is affected. Add the version record `versions/<version>/README.md` with `source_change`, a compatibility summary and a link to the originating change's retained plan. Add no knowledge or tasks to the version directory. Set `current_version` and any changed `depends_on` in the identity record on the same branch. Until merge, these describe proposed state. Push and open linked PRs for repositories with remotes, then stop for team review and merge. Ask the user how to finish when a remote is absent.
 
-Prepare root README updates and refresh the DAG consistently on the change branch. Until merge, these describe proposed state. Push and open linked PRs for repositories with remotes, then stop for team review and merge. Ask the user how to finish when a remote is absent.
+The version becomes established only when all required knowledge and implementation changes land on their repositories' `main` or `master` branches. A version record, local commit, or open PR alone does not establish it. Verify the required merges before releasing dependent Implementation. Git then holds the version snapshot as the tree of the first-parent commit that introduced the version record.
 
-The version becomes established only when all required knowledge and implementation changes land on their repositories' `main` or `master` branches. A snapshot, local commit, or open PR alone does not establish it. Verify the required merges before releasing dependent Implementation.
+For an artifact in the [legacy layout](../01-foundation/artifact-model.md#legacy-layout-and-migration), the version directory holds a complete copy of the resulting knowledge, excluding tasks/, and declares `source_change` and `delivery_tasks: change`. Update the root README and regenerate `docs/artifacts/dag.yaml` together.
 
 ## Findings After Establishment
 
-Address defects, missing tests, or missing required evidence through a new change. Keep established snapshots unchanged.
+Address defects, missing tests, or missing required evidence through a new change. Keep established version records and legacy snapshots unchanged.
 
 Preserve delivered versions and their referenced originating changes and evidence for historical outcomes. New changes create fresh plans without copying historical tasks. Retained criteria support later validation; historical results alone do not prove the current implementation still passes them.
 
 ## Flow validation
 
-Apply the [system-flow checks](../06-guidelines/system-flows.md) during existing phase, task, integration, and Version checks. Check IDs, ownership, entry steps, transition and support endpoints, safe source references, evidence basis, and final snapshot resolution. Report missing targets, evidence gaps, and ambiguous selectors. Keep inferred connections explicit; a structurally valid record is not independently verified behavior.
+Apply the [system-flow checks](../06-guidelines/system-flows.md) during existing phase, task, integration, and Version checks. Check IDs, ownership, entry steps, transition and support endpoints, safe source references, evidence basis, and final knowledge resolution. Report missing targets, evidence gaps, and ambiguous selectors. Keep inferred connections explicit; a structurally valid record is not independently verified behavior.
 
 Inspect relevant contracts and behavior when supporting sources change. Record coverage, important branches, exclusions, and gaps; a map cannot prove complete system coverage merely because its indexed records validate. Derived indexes retain source fingerprints without creating a second authoritative knowledge ledger.

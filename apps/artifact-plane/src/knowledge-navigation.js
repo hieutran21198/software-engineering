@@ -6,6 +6,7 @@ export function knowledgeTargets(snapshot,unit){
   const add=(source,extra={})=>targets.set(source,{source,scope:{...scope,...extra},title:source.split('/').at(-1),parent:'artifact'});
   add(`docs/artifacts/${artifact.id}/README.md`);
   if(artifact.currentVersion)add(`docs/artifacts/${artifact.id}/versions/${artifact.currentVersion}/README.md`);
+  if(artifact.proposedVersion)add(`docs/artifacts/${artifact.id}/versions/${artifact.proposedVersion}/README.md`);
   for(const change of artifact.changes||[])add(`docs/artifacts/${artifact.id}/changes/${change.name}/README.md`,{change:change.name});
   for(const element of artifact.elements||[])add(element.file,element.source.startsWith('change:')?{change:element.source.slice(7)}:{});
  }

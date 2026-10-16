@@ -26,6 +26,38 @@ function Evidence({result,diagnostics=false}){
  const omissions=result.omissions||[];
  return <div className="flow-evidence">{(result.freshness!=='fresh'||result.completeness!=='complete')&&<p role="status">Evidence is {result.freshness}; coverage is {result.completeness}.</p>}<details><summary>Evidence details</summary><div className="flow-status"><span>Freshness: {typeof result.freshness==='string'?result.freshness:JSON.stringify(result.freshness)}</span><span>Coverage: {typeof result.completeness==='string'?result.completeness:JSON.stringify(result.completeness)}</span><details><summary>Index details</summary><p>Generation {result.generation}</p></details></div>{diagnostics&&<Diagnostics items={result.diagnostics}/>} {!!omissions.length&&<details className="flow-omissions"><summary>{omissions.length} shortened source{omissions.length===1?'':'s'}</summary><p>Some source text was shortened to fit the response budget. Inspect a source to read further excerpts.</p><ul>{omissions.map((item,i)=><li key={i}><code>{sourceName(item.source,result.data?.sources)}</code><span>{item.characters.toLocaleString()} characters omitted</span>{sourceName(item.source,result.data?.sources)==='Source identity unavailable'&&<details><summary>Source identity</summary><code>{item.source}</code></details>}</li>)}</ul></details>}</details></div>;
 }
+// Model-aware journey: named model cards grouped by owner; the selected step
+// shows only its declared interactions. Steps keep branch and loop navigation.
+function FlowModels({flow, models=[], sources=[], onRead, onFlow}){
+ const entry=flow.entry_steps?.[0]||flow.steps[0]?.id;
+ const [step,setStep]=useState(entry),[model,setModel]=useState(null);
+ useEffect(()=>{setStep(entry);setModel(null);},[flow.id]);
+ const current=flow.steps.find(s=>s.id===step)||flow.steps[0];
+ const participants=new Map((flow.participants||[]).map(p=>[p.id,p]));
+ const card=id=>models.find(m=>m.id===participants.get(id)?.nodeId);
+ const owners=[...new Set(models.map(m=>m.artifact))];
+ const next=(flow.transitions||[]).filter(t=>t.from===current?.id),previous=(flow.transitions||[]).filter(t=>t.to===current?.id);
+ const selectedModel=models.find(m=>m.id===model);
+ const read=path=>{const record=sources.find(item=>item.path===path);if(record)onRead(record);};
+ if(!(flow.participants||[]).length)return <section className="flow-models" aria-label="Flow models"><h3>Models</h3><p className="muted">Model information not documented for this flow.</p></section>;
+ return <section className="flow-models" aria-label="Flow models">
+  <h3>Models</h3>
+  <div className="flow-model-owners">{owners.map(owner=><div className="flow-model-owner" key={owner}><h4>{owner}</h4>{models.filter(m=>m.artifact===owner).map(m=>{const active=(current?.interactions||[]).some(i=>[participants.get(i.from)?.nodeId,participants.get(i.to)?.nodeId].includes(m.id));return <button key={m.id} className={'flow-model-card'+(active?' active':'')+(m.resolved?'':' missing')} aria-pressed={model===m.id} onClick={()=>setModel(model===m.id?null:m.id)}><strong>{m.resolved?m.title:`Missing model ${m.logicalId}`}</strong><small>{m.participants.map(p=>p.id).join(', ')}{m.resolved?'':` · selector ${m.selector?.status||'established'}${m.selector?.change?` ${m.selector.change}`:''}`}</small></button>;})}</div>)}</div>
+  {selectedModel&&<div className="flow-model-detail" aria-label="Selected model"><h4>{selectedModel.resolved?selectedModel.title:`Missing model ${selectedModel.logicalId}`}</h4>
+   {selectedModel.resolved?<><p>{selectedModel.description}</p><p className="tiny">{selectedModel.logicalId} · {selectedModel.artifact} · {selectedModel.source}</p>
+    <p className="tiny">Declared in {selectedModel.file}</p>{sources.some(item=>item.path===selectedModel.file)&&<button onClick={()=>read(selectedModel.file)}>Read model declaration</button>}
+    {selectedModel.sources.map(path=><button key={path} onClick={()=>read(path)}>Read {path.split('/').slice(-2).join('/')}</button>)}
+    {!!selectedModel.missingSources?.length&&<p className="tiny">Missing sources: {selectedModel.missingSources.join(', ')}</p>}</>:<p className="muted">No unambiguous model matches this participant selector.</p>}
+   <p className="tiny">{selectedModel.coverage}</p>
+   {selectedModel.knownFlows.length?<div className="chips">{selectedModel.knownFlows.map(f=><button key={f.id} onClick={()=>onFlow(f.id)}>{f.title}</button>)}</div>:<p className="muted">No other known flow uses this model.</p>}
+  </div>}
+  <label>Journey step<select value={current?.id||''} onChange={e=>setStep(e.target.value)}>{flow.steps.map(s=><option key={s.id} value={s.id}>{s.title}</option>)}</select></label>
+  {current&&<div className="flow-step-interactions" aria-label="Step interactions"><h4>{current.title}</h4>
+   {(current.interactions||[]).length?<ul>{current.interactions.map((i,n)=>{const from=card(i.from),to=card(i.to);return <li key={n}><strong>{from?.title||i.from} → {to?.title||i.to}: {i.action}</strong><p>{i.outcome}</p><p className="tiny">Evidence: {i.supports.join(', ')}{i.bases?.length?` · ${i.bases.join(', ')}`:''} · {i.resolved?'resolved':'unresolved'}</p></li>;})}</ul>:<p className="muted">No declared interactions for this step.</p>}
+   <div className="chips" aria-label="Step navigation">{previous.map((t,n)=><button key={'p'+n} onClick={()=>setStep(t.from)}>Back to {flow.steps.find(s=>s.id===t.from)?.title||t.from}</button>)}{next.map((t,n)=><button key={'n'+n} onClick={()=>setStep(t.to)}>{flow.steps.findIndex(x=>x.id===t.to)<=flow.steps.findIndex(x=>x.id===t.from)?'Loop to':'Next'}: {flow.steps.find(s=>s.id===t.to)?.title||t.to}{t.condition?` (${t.condition})`:''}</button>)}</div>
+  </div>}
+ </section>;
+}
 export default function Flows({path,worktree,epoch,isActive,entry,knowledge,sidebar,inspector,onSelection,onRead,artifacts=[]}){
  const artifactControl=useId();
  const [text,setText]=useState(''),[search,setSearch]=useState(''),[match,setMatch]=useState('title'),[artifact,setArtifact]=useState('');
@@ -123,6 +155,6 @@ export default function Flows({path,worktree,epoch,isActive,entry,knowledge,side
  </>}</section>;
  return <>{sidebar&&createPortal(left,sidebar)}{inspector&&createPortal(right,inspector)}<section className="flows-view" aria-label="Flow exploration">
  {impact&&<p>Related flow candidates from explicit known relationships. Review contracts to determine change impact.</p>}<Diagnostics items={[...(list?.diagnostics||[]),...(detail?.diagnostics||[])]}/>
- {!flow?<p role="status">{selected?'Loading flow…':'Select a flow from the sidebar.'}</p>:flow.state==='invalid'?<p role="alert">Invalid flow record. No execution order is inferred.</p>:<><h2>{flow.title}</h2><label className="flow-support-toggle"><input type="checkbox" checked={expanded} onChange={e=>setExpanded(e.target.checked)}/>Show supporting nodes</label><div className="flow-surface"><ReactFlowProvider key={flow.id}><ReactFlow nodes={graph.nodes} edges={graph.edges} nodeTypes={nodeTypes} edgeTypes={labelledEdgeTypes} minZoom={0.1} onNodeClick={(_,n)=>setNode(n.id)} fitView nodesDraggable={false} nodesConnectable={false} deleteKeyCode={null} colorMode="dark"><GraphLabelLayout/><Background/></ReactFlow></ReactFlowProvider></div><p className="tiny">Arrows show behavior transitions and support. Participation does not create prerequisites or unit membership.</p></>}
+ {!flow?<p role="status">{selected?'Loading flow…':'Select a flow from the sidebar.'}</p>:flow.state==='invalid'?<p role="alert">Invalid flow record. No execution order is inferred.</p>:<><h2>{flow.title}</h2><label className="flow-support-toggle"><input type="checkbox" checked={expanded} onChange={e=>setExpanded(e.target.checked)}/>Show supporting nodes</label><div className="flow-surface"><ReactFlowProvider key={flow.id}><ReactFlow nodes={graph.nodes} edges={graph.edges} nodeTypes={nodeTypes} edgeTypes={labelledEdgeTypes} minZoom={0.1} onNodeClick={(_,n)=>setNode(n.id)} fitView nodesDraggable={false} nodesConnectable={false} deleteKeyCode={null} colorMode="dark"><GraphLabelLayout/><Background/></ReactFlow></ReactFlowProvider></div><p className="tiny">Arrows show behavior transitions and support. Participation does not create prerequisites or unit membership.</p><FlowModels flow={flow} models={detail.data.models||[]} sources={detail.data.sources||[]} onRead={readSource} onFlow={id=>{setError('');setSelected(id);}}/></>}
  </section></>;
 }

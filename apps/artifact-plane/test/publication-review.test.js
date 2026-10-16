@@ -114,3 +114,52 @@ test('a separate flow-format explanation does not contradict the affirmative mer
  const body='# Version\n\n## Publication review\n\n'+assertion+'\n\nIts flow-format dependency on established ADD 2.1.0 is knowledge-only.';
  assert.equal((await inspect(body)).state,'established');
 });
+
+// In-place members: version record and retained tasks on the protected ref,
+// the introducing commit as snapshot, and structured publication_reviews.
+import {inPlaceFixture} from './fixtures.js';
+import {execFileSync} from 'node:child_process';
+import {mkdtemp,rm} from 'node:fs/promises';
+import {join} from 'node:path';
+import {tmpdir} from 'node:os';
+const inPlaceUnit=(reviews='')=>{
+ const files=inPlaceFixture();
+ if(reviews)files.set('docs/artifacts/tenant/README.md',`---\ncurrent_version: 1.0.0\ndepends_on: []\npublication_reviews:\n${reviews}---\n# Tenant\n`);
+ files.set('docs/artifacts/units-of-work/initial/README.md','---\nunit_of_work: initial\nchanges:\n  - artifact: tenant\n    change: change-initial\nacceptance:\n  - id: works\n    criterion: Works\nevidence: []\n---\n# Initial\n\n## Publication review\n\nThe tenant 1.0.0 knowledge, retained tasks and implementation landed on main through PR #1.\n\n'+assertion+'\n');
+ return files;
+};
+const review=(source='docs/artifacts/units-of-work/initial/README.md#publication-review',version='1.0.0')=>`  - artifact: tenant\n    version: ${version}\n    source: ${source}\n    required_changes:\n      - repository: https://example.invalid/org/repo\n        scope: Knowledge, implementation and retained tasks\n        pull_request: https://example.invalid/org/repo/pull/1\n`;
+const member=async files=>{const f=await fixtureRepository(files);try{const view=await exploreRepository(f.root);return view.unitsOfWork.find(u=>u.id==='initial').members[0];}finally{await f.cleanup();}};
+test('L4: in-place members without publication_reviews are published but unverified; prose is legacy-only',async()=>{
+ const m=await member(inPlaceUnit());
+ assert.equal(m.deliveryPath,'docs/artifacts/tenant/changes/change-initial/');
+ assert.equal(m.establishmentEvidence.state,'unverified');
+ assert.ok(m.establishmentEvidence.reasons[0].includes('publication_reviews'));
+});
+test('L4: structured publication_reviews establish an in-place member with its snapshot commit',async()=>{
+ const m=await member(inPlaceUnit(review()));
+ assert.equal(m.establishmentEvidence.state,'established',JSON.stringify(m.establishmentEvidence));
+ const snapshot=m.establishmentEvidence.sources.find(s=>s.kind==='version-snapshot');
+ assert.match(snapshot.commit,/^[a-f0-9]{40}$/);assert.equal(snapshot.path,'docs/artifacts/tenant/versions/1.0.0/README.md');
+ assert.ok(m.establishmentEvidence.sources.some(s=>s.kind==='publication-review'&&s.requiredChanges[0].pullRequest.endsWith('/pull/1')));
+});
+test('L4: invalid or unresolvable publication_reviews never fall back to prose',async()=>{
+ for(const reviews of [review().replace('https://example.invalid/org/repo/pull/1','https://other.invalid/org/repo/pull/1'),review('docs/artifacts/units-of-work/initial/README.md#missing'),'  artifact: tenant\n'])
+  assert.equal((await member(inPlaceUnit(reviews))).establishmentEvidence.state,'unknown',reviews);
+});
+test('L4: a shallow clone cannot resolve an in-place version snapshot',async t=>{
+ const f=await fixtureRepository(inPlaceUnit(review()));t.after(f.cleanup);
+ const clone=await mkdtemp(join(tmpdir(),'plane-shallow-'));t.after(()=>rm(clone,{recursive:true,force:true}));
+ execFileSync('git',['clone','-q','--depth','1','file://'+f.root,clone]);
+ const m=(await exploreRepository(clone)).unitsOfWork.find(u=>u.id==='initial').members[0];
+ assert.equal(m.establishmentEvidence.state,'unknown');assert.ok(m.establishmentEvidence.reasons[0].includes('Shallow'));
+});
+test('L7: legacy snapshots inside a migrated artifact keep prose publication review',async()=>{
+ const files=inPlaceUnit();
+ const v='docs/artifacts/tenant/versions/0.9.0/',c='docs/artifacts/tenant/changes/change-old/';
+ files.set(v+'README.md','---\nsource_change: change-old\ndelivery_tasks: change\n---\n# Old\n\n## Publication review\n\n'+assertion+'\n');
+ files.set(v+'specifications/identity.md','# Old identity\n');
+ files.set(c+'README.md','# Old');files.set(c+'specifications/identity.md','# Old identity\n');files.set(c+'tasks/README.md','---\ntasks: []\n---\n# Plan\n');
+ files.set('docs/artifacts/units-of-work/old/README.md','---\nunit_of_work: old\nchanges:\n  - artifact: tenant\n    change: change-old\nacceptance:\n  - id: works\n    criterion: Works\nevidence: []\n---\n# Old\n');
+ const f=await fixtureRepository(files);try{const m=(await exploreRepository(f.root)).unitsOfWork.find(u=>u.id==='old').members[0];assert.equal(m.establishmentEvidence.state,'established',JSON.stringify(m.establishmentEvidence));assert.ok(m.establishmentEvidence.sources.some(s=>s.kind==='documented-merge-review'));}finally{await f.cleanup();}
+});

@@ -10,9 +10,9 @@ Adopt the ADD bundle there with `se-adopt --arch artifact-driven --project /path
 
 Choose a cohesive business or technical capability, such as tenant management or deployment infrastructure. Identify its purpose, boundaries, owner, and known dependencies. For business capabilities, use strategic DDD to investigate the boundary rather than splitting by table or endpoint.
 
-Create a dedicated branch for the work. Do not commit directly to `main` or `master`. For a new artifact, create `docs/artifacts/<artifact>/README.md` as a proposed identity and start `changes/change-initial/`. State that no established version exists yet; do not claim `1.0.0` before implementation, validation, and merge.
+Create a dedicated branch for the work. Do not commit directly to `main` or `master`. For a new artifact, create `docs/artifacts/<artifact>/README.md` with the identity record `current_version: null` and `depends_on`, and add `changes/change-initial/README.md`. Do not claim `1.0.0` before implementation, validation, and merge.
 
-For an existing artifact, resolve its current version from the root README and copy its complete knowledge into the single active change, excluding legacy tasks and delivered provenance metadata. Retain valid knowledge, amend affected items, remove obsolete items, and create a fresh plan in Plan. Previous tasks stay with their originating changes.
+For an existing artifact, add `changes/change-<name>/README.md` with the reason and scope. Copy nothing. Edit the artifact's `requirements/`, `specifications/`, and `decisions/` in place: retain valid knowledge, amend affected items, remove obsolete items, and add new items. Create a fresh plan in Plan. Previous tasks stay with their originating changes. An artifact keeps one active change; a second branch that edits the same knowledge conflicts at merge.
 
 ## Group the Outcome
 
@@ -25,7 +25,7 @@ For work that spans artifact changes, write a [unit-of-work brief](units-of-work
 3. The TL writes the implementation plan in the same working session. Declare current task paths in `tasks/README.md` and stable `id` and `depends_on` fields in each listed task. Check membership, prerequisite resolution, and acyclicity, then commit the completed Plan.
 4. The user reviews and explicitly approves the plan before implementation.
 5. Implementers complete tasks and record DoD evidence. The coordinator integrates results and validates the combined change.
-6. Record shared integration evidence where applicable. Prepare complete version knowledge without tasks. Declare source_change and delivery_tasks: change, link to the retained originating plan, and prepare root README and DAG updates. Open the required PRs and stop for team review and merge.
+6. Record shared integration evidence where applicable. Add the version record `versions/<version>/README.md` with `source_change`, link to the retained originating plan, and set `current_version` and any changed `depends_on` in the identity record. Open the required PRs and stop for team review and merge.
 
 The first version is `1.0.0`. Later versions use semantic versioning with a suggested compatibility level confirmed by the user. A version establishes only when all required knowledge and implementation changes land on `main` or `master`.
 

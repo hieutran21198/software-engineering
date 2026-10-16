@@ -5,7 +5,8 @@ import {scanRepository,git,ExploreError} from './reader.js';
 import {parseWorktrees} from './workflow.js';
 import {unitBriefs} from './units-of-work.js';
 import {buildFlowGraph,safeFlowSource} from './flow-model.js';
-import {parseArtifact,buildSnapshot} from '../src/model.js';
+import {parseArtifact,buildSnapshot,KNOWLEDGE_KINDS} from '../src/model.js';
+import {gitReads} from './git-reads.js';
 
 export const sourceDigest = bytes => createHash('sha256').update(bytes).digest('hex');
 const contained = (root,path) => {const r=relative(root,path);return r!== '..'&&!r.startsWith('..'+sep)&&!isAbsolute(r);};
@@ -57,7 +58,18 @@ export async function readFlowRepository(path, {worktree,knowledge='planning',ro
     // Root declarations and reference resolution use the same protected context.
     // A branch's proposed DAG index cannot override protected root declarations.
     files.delete('docs/artifacts/dag.yaml');
+    // In-place artifacts read established knowledge from the protected tree.
+    const layouts={},reads=gitReads(git);
+    try{for(const artifact of snapshot.artifacts.filter(a=>a.layout==='in-place')){
+      const base=`docs/artifacts/${artifact.id}/`,baseline=scan.baselines?.[artifact.id];
+      for(const path of [...files.keys()])if(path.startsWith(base)&&KNOWLEDGE_KINDS.includes(path.slice(base.length).split('/')[0]))files.delete(path);
+      if(baseline?.state!=='available'){files.set(`${base}README.md`,`---\ncurrent_version: null\ndepends_on: []\n---\n# ${artifact.id}\n`);layouts[artifact.id]='in-place';diagnostics.push({code:'unavailable-flow-baseline',path:`${base}README.md`,message:baseline?.reason||'No unambiguous protected-ref flow baseline is available.'});continue;}
+      files.set(`${base}README.md`,baseline.layout?await reads(target,['show',`${baseline.oid}:${base}README.md`],true):`---\ncurrent_version: null\ndepends_on: []\n---\n# ${artifact.id}\n`);
+      layouts[artifact.id]=baseline.layout||'in-place';
+      for(const rest of baseline.entries.keys())files.set(baseline.knowledgePrefix+rest,await reads(target,['show',`${baseline.oid}:${baseline.knowledgePrefix}${rest}`],true));
+    }}finally{reads.close();}
     for(const artifact of snapshot.artifacts){
+      if(artifact.layout==='in-place')continue;
       const declarations=[];
       for(const [i,ref] of ['main','master'].entries())if(refs[i]){
         const body=await git(target,['show',`${ref}:docs/artifacts/${artifact.id}/README.md`]).catch(()=>null);
@@ -68,7 +80,7 @@ export async function readFlowRepository(path, {worktree,knowledge='planning',ro
       if(declarations.length&&new Set(signatures).size===1&&!declarations.some(d=>d.errors.length))files.set(path,declarations[0].body);
       else{files.set(path,`---\ncurrent_version: null\ndepends_on: []\n---\n# ${artifact.id}\n`);diagnostics.push({code:'unavailable-flow-baseline',path,message:'No unambiguous protected-ref flow baseline is available.'});}
     }
-    snapshot=buildSnapshot(files,snapshot.repository,diagnostics);
+    snapshot=buildSnapshot(files,snapshot.repository,diagnostics,{layouts});
   }
   // Keep historical knowledge available without confusing it with current roots.
   const known=new Set(snapshot.artifacts.flatMap(a=>a.elements.map(e=>e.id)));

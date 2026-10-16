@@ -1,4 +1,4 @@
-import {readUnitsOfWork, deliverySource, publication, frontMatter} from './units-of-work.js';
+import {readUnitsOfWork, deliverySource, publication, frontMatter, safeKnowledgePath, evidenceDetail} from './units-of-work.js';
 import { buildTaskGraph } from './task-graph.js';
 import { parseArtifact } from "../src/model.js";
 import { marked } from "marked";
@@ -69,9 +69,66 @@ function parseHistory(raw) {
   }
   return records;
 }
+// Declared evidence for in-place changes: self_check, evidence_records,
+// checklists and version records. No history is replayed; approval is not a file fact.
+const RESULTS = ['passed', 'failed', 'incomplete'];
+function declaredRecord(value, path, files, diagnostics, label) {
+  const report = message => diagnostics.push({code: 'invalid-evidence-record', path, message});
+  const [source, fragment, extra] = typeof value?.source === 'string' ? value.source.split('#') : [];
+  if (!value || typeof value !== 'object' || Array.isArray(value) || !RESULTS.includes(value.result) || !safeKnowledgePath(source) || extra !== undefined || fragment === '') {report(`${label} needs a result (passed, failed or incomplete) and a safe Markdown source.`);return null;}
+  const body = files.get(source), detail = body === undefined ? null : evidenceDetail(body, fragment);
+  if (!detail) {diagnostics.push({code: 'missing-evidence', path: value.source, message: `${label} source or nonempty details cannot be resolved.`});return null;}
+  return {result: value.result, source: value.source};
+}
+function declaredChange(artifact, name, files, data, diagnostics) {
+  const prefix = `docs/artifacts/${artifact.id}/changes/${name}/`;
+  const steps = phases.map(step => ({name: step, state: 'not-declared', evidence: [], commits: [], completionCommit: null}));
+  const step = label => steps.find(s => s.name === label);
+  const record = (label, value, path) => {
+    const s = step(label), checked = declaredRecord(value, path, files, diagnostics, 'self_check');
+    if (!checked) return;
+    s.evidence.push(note('declared', path, `self_check ${checked.result}; source ${checked.source}.`));
+    s.state = checked.result === 'passed' && s.state !== 'declared-incomplete' ? 'documented-complete' : 'declared-incomplete';
+  };
+  const meta = change => artifact.changes.find(c => c.name === change);
+  const version = meta(name)?.version ?? null, open = artifact.activeChange === name;
+  // Requirement and Specification evidence lives in the documents this change edits.
+  if (open) for (const element of artifact.elements.filter(e => e.source === 'working' && ['added', 'modified'].includes(e.state))) {
+    const value = frontMatter(element.markdown).value?.self_check;
+    if (value !== undefined) record(element.path.startsWith('requirements/') ? 'Requirement' : 'Specification', value, element.file);
+  }
+  const plan = frontMatter(files.get(`${prefix}tasks/README.md`)).value?.self_check;
+  if (plan !== undefined) record('Plan', plan, `${prefix}tasks/README.md`);
+  const taskGraph = buildTaskGraph(files, prefix, checklist, data.unsafeTaskPaths);
+  const tasks = taskGraph.tasks.map(task => ({path: task.path, ...checklist(task.body)}));
+  if (taskGraph.state === 'available' && tasks.length) {
+    const complete = tasks.every(t => t.state === 'observed' && t.checked > 0 && t.unchecked === 0);
+    step('Implementation').state = complete ? 'documented-complete' : tasks.some(t => t.checked) ? 'declared-incomplete' : 'not-declared';
+    for (const t of tasks) step('Implementation').evidence.push(note('declared', t.path, `${t.checked} of ${t.checked + t.unchecked} DoD items checked.`));
+    const records = [];
+    for (const t of tasks) {
+      const list = frontMatter(files.get(t.path)).value?.evidence_records;
+      if (list === undefined) continue;
+      if (!Array.isArray(list)) {diagnostics.push({code: 'invalid-evidence-record', path: t.path, message: 'evidence_records must be a list.'});continue;}
+      for (const value of list) {const checked = declaredRecord(value, t.path, files, diagnostics, 'evidence_records entry');if (checked) {records.push(checked);step('Validation').evidence.push(note('declared', t.path, `Check ${checked.result}; source ${checked.source}.`));}}
+    }
+    if (records.length) step('Validation').state = records.every(r => r.result === 'passed') && complete ? 'documented-complete' : 'declared-incomplete';
+  }
+  if (version) {const s = step('Version preparation');s.state = 'documented-complete';s.evidence.push(note('declared', `docs/artifacts/${artifact.id}/versions/${version}/README.md`, 'Version record names this change.'));}
+  const delivered = !!version && !!artifact.baseline && data.baselines?.[artifact.id]?.versionRecords?.includes(version);
+  const current = steps.find(s => s.state !== 'documented-complete');
+  return {artifact: artifact.id, name, layout: 'in-place', version, declaredActive: open, currentStep: open ? current?.name ?? null : null,
+    inferenceReason: open ? 'Derived from declared evidence; undeclared steps are not declared.' : 'Retained change record.',
+    steps, tasks, taskGraph, history: !open, lastCommitAt: null,
+    historyReason: delivered ? 'Its version record is on the protected ref.' : version ? 'Its version record is proposed on this branch.' : open ? '' : meta(name)?.layout === 'legacy' ? 'Retained legacy change record with copied knowledge.' : 'Another open change record exists.'};
+}
 export async function evidenceFor(root, data, git, head, diagnostics) {
   const { files, snapshot } = data;
   let history = [], dirty = [];
+  const changes = [];
+  for (const artifact of snapshot.artifacts.filter(a => a.layout === 'in-place')) for (const {name} of artifact.changes) changes.push(declaredChange(artifact, name, files, data, diagnostics));
+  // History is replayed only for legacy artifacts.
+  if (changes.length && !snapshot.artifacts.some(a => a.layout !== 'in-place' && a.changes.length)) return changes;
   try {
     history = parseHistory(await git(root, ['log', '-201', '--format=%H%x00%s%x00%ct', '-z', '--name-only', '--', 'docs/artifacts'], true));
     if (history.length > 200) { history.length = 200; diagnostics.push(diagnostic('history-limited', 'Only the latest 200 commits touching docs/artifacts are inspected.')); }
@@ -86,17 +143,16 @@ export async function evidenceFor(root, data, git, head, diagnostics) {
   }
   const completionCache = new Map();
   const complete = text => {if(!completionCache.has(text))completionCache.set(text,explicitCompletion(text));return completionCache.get(text);};
-  const changes = [];
-  for (const artifact of snapshot.artifacts) for (const { name } of artifact.changes) {
+  for (const artifact of snapshot.artifacts.filter(a => a.layout !== 'in-place')) for (const { name } of artifact.changes) {
     const prefix = `docs/artifacts/${artifact.id}/changes/${name}/`;
     const versionPrefix = `docs/artifacts/${artifact.id}/versions/${artifact.currentVersion}/`;
     const owned = [...files].filter(([path]) => path.startsWith(prefix) && category(path));
-    const delivery = deliverySource(files, artifact.id, name, prefix);
+    const delivery = deliverySource(files, artifact.id, name, prefix, artifact.layout);
     const claim = delivery.claims.length===1 ? delivery.claims[0] : null;
-    const changeOwned = claim?.deliveryTasks === 'change';
+    const changeOwned = claim?.deliveryTasks === 'change' || artifact.layout === 'in-place' && !!claim;
     let delivered = false;
     if (changeOwned && !delivery.diagnostic) {
-      const evidence = await publication(root, claim.prefix, files, git, '', null, prefix);
+      const evidence = await publication(root, claim.prefix, files, git, '', null, prefix, artifact.layout);
       delivered = evidence.state === 'established' && buildTaskGraph(files,prefix,checklist,data.unsafeTaskPaths).state==='available';
       if (!delivered) diagnostics.push(diagnostic('delivery-publication-unverified', `${artifact.id}/${name}: ${evidence.reasons.join(' ')}`));
     }

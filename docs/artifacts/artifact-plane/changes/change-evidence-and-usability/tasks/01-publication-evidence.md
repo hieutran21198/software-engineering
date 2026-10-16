@@ -3,6 +3,8 @@ id: publication-evidence
 depends_on: []
 ---
 
+Superseded on 16 October 2026 by the in-place layout reading tasks 09 to 13. This file is unlisted historical context and is not executable.
+
 # Interpret evidence and reconcile publication context
 
 ## Scope and ownership

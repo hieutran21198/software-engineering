@@ -4,7 +4,7 @@ Use flow knowledge to describe named system behavior and find its supporting art
 
 ## Ownership and identity
 
-A system flow describes a named behavior journey, not a unit of work or implementation schedule. Its authoritative document is specifications/flows/<id>.md in one owning artifact's change or version knowledge. It remains a specification element; a flow graph additionally projects its steps. Each snapshot has at most one flow with the same owner/id. Logical identity is <artifact>:<id>; step identity adds :<step>. IDs match [a-z0-9][a-z0-9-]* and remain stable across file renames. A reader includes repository, worktree and snapshot in concrete node identity to prevent mixing revisions. Flow ownership follows knowledge responsibility, not the number of participants.
+A system flow describes a named behavior journey, not a unit of work or implementation schedule. Its authoritative document is specifications/flows/<id>.md in one owning artifact's knowledge: the working tree of an in-place artifact, or a change or version snapshot of a legacy artifact. It remains a specification element; a flow graph additionally projects its steps. Each snapshot (one revision of the owner's knowledge) has at most one flow with the same owner/id. Logical identity is <artifact>:<id>; step identity adds :<step>. IDs match [a-z0-9][a-z0-9-]* and remain stable across file renames. A reader includes repository, worktree and snapshot in concrete node identity to prevent mixing revisions. Flow ownership follows knowledge responsibility, not the number of participants.
 
 ## Document contract
 
@@ -12,7 +12,7 @@ Use Markdown with YAML front matter. The flow key is an object with id, artifact
 
 A support record has unique id, kind, nonempty requires and basis. basis is documented, static, observed or inferred. It describes the evidence basis, not an approval or verified-execution state. observed requires nonempty evidence paths to recorded check/trace details. A test file's existence alone is static evidence. Inferred support remains visible as a candidate; it cannot prove compatibility or establishment.
 
-- kind: element uses artifact and element (the existing safe knowledge element path); optional status and change follow the established/proposed reference contract. Same-owner references with no explicit selector resolve in the flow's own snapshot; cross-artifact references default to the current established snapshot. Explicit proposed references identify status: proposed and their supplying change. Do not pin an old version in an element path.
+- kind: element uses artifact and element (the existing safe knowledge element path). For an in-place target, the element resolves in the same checked-out tree. Readers label it proposed when its bytes differ from the protected branch, and established otherwise. A target proposed only on another branch is unresolved until it merges. For a legacy target, optional status and change follow the established/proposed reference contract: same-owner references with no explicit selector resolve in the flow's own snapshot, cross-artifact references default to the current established snapshot, and explicit proposed references identify status: proposed and their supplying change. Status and change selectors are legacy-only; readers tolerate them on in-place targets without effect. Do not pin an old version in an element path.
 - kind: flow uses artifact and flow (the target's local flow ID), with the same source-selection rules. It links a named subjourney; it does not turn step transitions into execution prerequisites.
 - kind: implementation or test uses a safe repository-relative path and optional symbol (a nonempty advisory location). Sources must be readable tracked files within the selected worktree; never follow escaping symlinks or permit .git, credential files or arbitrary file access. Renames preserve flow IDs but require source references to be updated. A symbol match alone does not prove runtime behavior.
 
@@ -68,7 +68,7 @@ Duplicate model identities, invalid fields and unsafe or missing sources produce
 
 ## Model participation and interactions
 
-A flow may add a `participants` list. Each record has a unique flow-local `id`, an owning `artifact`, a `model` ID and nonempty `requires` text explaining its role in this journey. IDs use the existing safe-ID syntax. Optional `status` and `change` follow the same established/proposed rules as knowledge support. An implicit same-owner selector uses the flow snapshot. An implicit cross-artifact selector uses the owner's current established version. An explicit proposed selector identifies its supplying change. Never merge models from different concrete snapshots merely because their logical IDs match.
+A flow may add a `participants` list. Each record has a unique flow-local `id`, an owning `artifact`, a `model` ID and nonempty `requires` text explaining its role in this journey. IDs use the existing safe-ID syntax. Participants resolve like element support. For an in-place owner, the model resolves in the checked-out tree and readers label it proposed or established by comparison with the protected branch. For a legacy owner, optional `status` and `change` apply: an implicit same-owner selector uses the flow snapshot, an implicit cross-artifact selector uses the owner's current established version, and an explicit proposed selector identifies its supplying change. Never merge models from different concrete snapshots merely because their logical IDs match.
 
 A step may add an `interactions` list. Each record has `from`, `to`, `action`, `outcome` and `supports`. Endpoints identify declared participants. Action and outcome are nonempty text; supports is a nonempty list of unique declared flow-support IDs. Self-interactions are allowed. Evidence basis and observed evidence come from those support records. An action label alone does not prove runtime execution.
 
@@ -94,7 +94,7 @@ models:
 ---
 ~~~
 
-Both a sign-in flow and a membership-review flow can refer to `tenant:membership`. Each flow declares its own participant role; neither copies the model definition. For example, a proposed authentication flow can contain these additions alongside its existing required fields and support records:
+Both a sign-in flow and a membership-review flow can refer to `tenant:membership`. Each flow declares its own participant role; neither copies the model definition. For example, a proposed authentication flow can contain these additions alongside its existing required fields and support records. The owners use the in-place layout, so the records have no selectors; for legacy owners, add `status: proposed` and `change: change-membership` to each record that targets the proposal:
 
 ~~~yaml
 participants:
@@ -102,14 +102,10 @@ participants:
     artifact: tenant
     model: tenant
     requires: Supply the customer workspace whose membership is checked.
-    status: proposed
-    change: change-membership
   - id: membership
     artifact: tenant
     model: membership
     requires: Determine whether the person can access that workspace.
-    status: proposed
-    change: change-membership
 steps:
   - id: check
     title: Check workspace membership
@@ -131,8 +127,6 @@ support:
     element: specifications/membership.md
     requires: Define active membership and the access decision.
     basis: documented
-    status: proposed
-    change: change-membership
 ~~~
 
 These are partial examples, not observed execution or a new dependency declaration. If a selected snapshot lacks the model or its sources, show that gap rather than substituting the specification file as the model node. Runtime loops remain valid even though artifact prerequisites must be acyclic.
@@ -147,7 +141,7 @@ Allow step branches, joins, loops and disconnected records. Do not apply DAG val
 
 New unit briefs declare affected_flows, a list of unique {artifact, flow, effect} records, and flow_assessment, a nonempty explanation of discovery scope and gaps. effect is create, modify or remove. An explicit empty affected_flows list requires a reason in flow_assessment. Legacy briefs without these fields remain readable; do not infer their membership retroactively.
 
-A created flow can be preparatory, so its absence before Specification is an unresolved discovery/authoring item, not an invalid unit-creation blocker. Modified flows resolve from member changes when supplied there, otherwise established knowledge; removed flows resolve from the delivered predecessor and remain in historical snapshots. Unknown owners, duplicate declarations and unsafe IDs are diagnostic failures. The assessment does not establish a version or prove every consumer was discovered.
+A created flow can be preparatory, so its absence before Specification is an unresolved discovery/authoring item, not an invalid unit-creation blocker. Modified flows resolve from the member change's proposed knowledge when supplied there, otherwise established knowledge; removed flows resolve from the delivered predecessor and remain in historical snapshots. Unknown owners, duplicate declarations and unsafe IDs are diagnostic failures. The assessment does not establish a version or prove every consumer was discovered.
 
 The coordinator owns the assessment and links; detailed behavior stays in artifact specifications. Shared flow participation does not make every participant a member or add dependencies. Existing membership, approval, task DAG and upstream establishment gates remain unchanged.
 

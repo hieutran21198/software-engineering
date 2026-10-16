@@ -85,11 +85,22 @@ func TestMinimalChangeScaffold(t *testing.T) {
 		}
 		criteria[criterion.ID] = true
 	}
+	// In-place layout: knowledge is edited under the artifact and the change
+	// holds only its record and plan, so a new change copies no baseline.
 	member := unit.Changes[0]
-	base := path.Join("docs/artifacts", member.Artifact, "changes", member.Change)
-	for _, file := range []string{"README.md", "requirements/outcome.md", "specifications/outcome.md"} {
-		if files[path.Join(base, file)] == nil {
+	artifact := path.Join("docs/artifacts", member.Artifact)
+	base := path.Join(artifact, "changes", member.Change)
+	for _, file := range []string{base + "/README.md", artifact + "/requirements/outcome.md", artifact + "/specifications/outcome.md"} {
+		if files[file] == nil {
 			t.Fatalf("unit member lacks %s", file)
+		}
+	}
+	for name := range files {
+		if strings.HasPrefix(name, base+"/") && !strings.HasPrefix(name, base+"/tasks/") && name != base+"/README.md" {
+			t.Errorf("change copies knowledge instead of editing in place: %s", name)
+		}
+		if strings.Contains(name, "/versions/") {
+			t.Errorf("fresh scaffold creates a version: %s", name)
 		}
 	}
 	var plan struct{ Tasks []string }

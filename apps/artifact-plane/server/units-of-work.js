@@ -2,6 +2,7 @@ import {buildUnitGraphs} from './unit-graphs.js';
 import {parseDocument} from 'yaml';
 import {marked} from 'marked';
 import {buildTaskGraph} from './task-graph.js';
+import {protectedRefs, protectedTree, blobId} from './knowledge-baseline.js';
 
 const name = value => typeof value === 'string' && /^[a-z0-9][a-z0-9-]*$/.test(value);
 const changeName = value => typeof value === 'string' && /^change-[a-z0-9][a-z0-9-]*$/.test(value);
@@ -69,10 +70,18 @@ export function versionClaims(files, artifact, change) {
     return match && match[1]===artifact && frontMatter(body).value?.source_change===change;
   }).map(([path, body])=>({version:path.split('/')[4], prefix:path.slice(0,-'README.md'.length), deliveryTasks:frontMatter(body).value.delivery_tasks}));
 }
-export function deliverySource(files, artifact, change, retainedChangePath) {
+// A version record follows the in-place rules only when its artifact is in-place,
+// it has no legacy marker and its change is an in-place change record. Legacy
+// snapshots inside migrated artifacts keep the legacy rules.
+export function recordLayout(artifact, change, claim) {
+  return artifact?.layout === 'in-place' && claim && claim.deliveryTasks === undefined && artifact.changes?.find(c => c.name === change)?.layout === 'in-place' ? 'in-place' : 'legacy';
+}
+export function deliverySource(files, artifact, change, retainedChangePath, layout = 'legacy') {
   const claims = versionClaims(files, artifact, change);
   if (claims.length !== 1) return {claims, deliveryPath:retainedChangePath, diagnostic:null};
   const claim = claims[0];
+  // An in-place version record never holds tasks; delivery is the retained change.
+  if (layout === 'in-place') return !retainedChangePath || !files.has(`${retainedChangePath}tasks/README.md`) ? {claims, deliveryPath:null, diagnostic:'missing-delivery-source'} : {claims, deliveryPath:retainedChangePath, diagnostic:null};
   if (claim.deliveryTasks === undefined) return {claims, deliveryPath:claim.prefix, diagnostic:null};
   if (claim.deliveryTasks !== 'change') return {claims, deliveryPath:null, diagnostic:'invalid-delivery-marker'};
   if (!retainedChangePath || !files.has(`${retainedChangePath}tasks/README.md`)) return {claims, deliveryPath:null, diagnostic:'missing-delivery-source'};
@@ -124,9 +133,98 @@ export function publicationReview(files, prefix, reviewSource = null) {
   }
   return contradictory ? [] : evidence;
 }
+const httpsURL = value => {try {const url = new URL(value);return url.protocol === 'https:' && !url.username && !url.password && !url.search && !url.hash ? url : null;} catch {return null;}};
+// Structured publication_reviews from the identity record or the owning unit
+// brief. An invalid explicit list never falls back to prose assertions.
+export function publicationReviews(files, artifact, version, reviewSource = null) {
+  const result = {declared: false, evidence: [], diagnostics: []};
+  const seen = new Set();
+  for (const path of [`docs/artifacts/${artifact}/README.md`, reviewSource].filter(Boolean)) {
+    const metadata = frontMatter(files.get(path));
+    const report = message => result.diagnostics.push({code: 'invalid-publication-review', path, message});
+    if (metadata.error || metadata.value?.publication_reviews === undefined) continue;
+    result.declared = true;
+    const list = metadata.value.publication_reviews;
+    if (!Array.isArray(list)) {report('publication_reviews must be a list.');continue;}
+    for (const review of list) {
+      const [source, fragment, extra] = typeof review?.source === 'string' ? review.source.split('#') : [];
+      const changes = Array.isArray(review?.required_changes) ? review.required_changes : null;
+      const valid = mapping(review) && name(review.artifact) && /^\d+\.\d+\.\d+$/.test(review.version ?? '') && safeKnowledgePath(source) && extra === undefined && (fragment === undefined || nonempty(fragment)) && changes?.length &&
+        changes.every(c => {const repository = httpsURL(c?.repository), pr = httpsURL(c?.pull_request);return mapping(c) && nonempty(c.scope) && repository && pr && pr.host === repository.host && pr.pathname.startsWith(repository.pathname.replace(/\.git$/, '').replace(/\/$/, '') + '/');});
+      if (!valid) {report('Each review needs artifact, version, a safe source and required_changes with HTTPS repository, scope and pull_request in that repository.');continue;}
+      for (const c of changes) {const key = JSON.stringify([review.artifact, review.version, c.repository, c.pull_request]);if (seen.has(key)) report('Duplicate repository and pull request pair.');seen.add(key);}
+      if (review.artifact !== artifact || review.version !== version) continue;
+      const body = files.get(source), detail = body === undefined ? null : evidenceDetail(body, fragment);
+      if (!detail) {result.diagnostics.push({code: 'missing-publication-review-source', path: review.source, message: 'Publication review source or nonempty details cannot be resolved.'});continue;}
+      result.evidence.push({kind: 'publication-review', path: review.source, artifact, version, requiredChanges: changes.map(c => ({repository: c.repository, scope: c.scope, pullRequest: c.pull_request}))});
+    }
+  }
+  return result;
+}
+// Version snapshot of an in-place record: the first-parent protected-branch
+// commit that introduced it. Shallow or missing history is a diagnostic.
+export async function versionSnapshot(root, git, ref, record) {
+  try {
+    if (await git(root, ['rev-parse', '--is-shallow-repository']) === 'true') return {state: 'unknown', reason: 'Shallow history cannot resolve the version snapshot.'};
+    const commits = (await git(root, ['log', '--first-parent', '--diff-filter=A', '--format=%H', ref, '--', record])).split('\n').filter(Boolean);
+    if (commits.length !== 1) return {state: 'unknown', reason: commits.length ? 'The version record was introduced more than once.' : 'No introducing commit was found on the protected ref.'};
+    return {state: 'available', ref, commit: commits[0], path: record};
+  } catch {return {state: 'unknown', reason: 'Protected-ref history cannot be read.'};}
+}
+// Protected facts shared by all members of one read: refs, trees with blob IDs,
+// and the introducing commits of version records. Read once, used many times.
+export function protectedContext(root, git) {
+  let refs, trees = new Map(), introductions = new Map(), shallow;
+  return {
+    refs: () => refs ??= protectedRefs(root, git),
+    tree: ref => {if (!trees.has(ref.oid)) trees.set(ref.oid, protectedTree(root, git, ref.oid, ['docs/artifacts']));return trees.get(ref.oid);},
+    shallow: () => shallow ??= git(root, ['rev-parse', '--is-shallow-repository']).then(v => v === 'true'),
+    introduced: ref => {
+      if (!introductions.has(ref.oid)) introductions.set(ref.oid, git(root, ['log', '--first-parent', '--diff-filter=A', '--format=%x00%H', '--name-only', ref.oid, '--', ':(glob)docs/artifacts/*/versions/*/README.md'], true).then(raw => {
+        const map = new Map();let commit = null;
+        for (const token of raw.split(/\0|\n/)) {if (/^[a-f0-9]{40,64}$/.test(token)) commit = token;else if (token && commit) map.set(token, [...(map.get(token) || []), commit]);}
+        return map;
+      }));
+      return introductions.get(ref.oid);
+    },
+  };
+}
+async function contextPublication(root, prefix, files, reviewSource, deliveryPath, layout, context) {
+  const prefixes = [prefix, ...(deliveryPath ? [`${deliveryPath}tasks/`] : [])];
+  const refs = await context.refs();
+  if (!refs.length) return {state:'unknown', reasons:['No readable local main or master ref.'], sources:[]};
+  const selected = [...files].filter(([p]) => prefixes.some(x => p.startsWith(x)));
+  const observed = [], sources = [];
+  for (const ref of refs) {
+    const tree = await context.tree(ref), entries = [...tree].filter(([p]) => prefixes.some(x => p.startsWith(x)));
+    observed.push(JSON.stringify(entries.sort()));
+    if (entries.length && entries.length === selected.length && selected.every(([p, body]) => tree.get(p) === blobId(Buffer.from(body), ref.oid.length))) sources.push({ref: ref.ref, path: `${prefix}README.md`}, ...(deliveryPath ? [{ref: ref.ref, path: `${deliveryPath}tasks/README.md`}] : []));
+  }
+  if (new Set(observed).size > 1) return {state:'unknown',reasons:['Protected refs disagree about delivered knowledge.'],sources:[]};
+  if (!sources.length) return {state:'proposed',reasons:['Delivered knowledge or task records do not match local main or master.'],sources:[]};
+  return {sources, ref: refs.find(r => r.ref === sources[0].ref)};
+}
 // Only local protected refs establish knowledge. Branch files are never proof.
 // Keep reviewText for call compatibility; raw excerpts no longer supply evidence.
-export async function publication(root, prefix, files, git, reviewText = '', reviewSource = null, deliveryPath = null) {
+export async function publication(root, prefix, files, git, reviewText = '', reviewSource = null, deliveryPath = null, layout = 'legacy', context = null) {
+  if (context) {
+    try {
+      const matched = await contextPublication(root, prefix, files, reviewSource, deliveryPath, layout, context);
+      if (!matched.ref) return matched;
+      const sources = matched.sources, [, artifact, version] = prefix.match(/^docs\/artifacts\/([^/]+)\/versions\/([^/]+)\/$/) || [];
+      const structured = publicationReviews(files, artifact, version, reviewSource);
+      if (structured.diagnostics.length) return {state:'unknown',reasons:structured.diagnostics.map(d=>d.message),sources:[],diagnostics:structured.diagnostics};
+      if (layout === 'in-place') {
+        if (await context.shallow()) return {state:'unknown',reasons:['Shallow history cannot resolve the version snapshot.'],sources:[]};
+        const commits = (await context.introduced(matched.ref)).get(`${prefix}README.md`) || [];
+        if (commits.length !== 1) return {state:'unknown',reasons:[commits.length ? 'The version record was introduced more than once.' : 'No introducing commit was found on the protected ref.'],sources:[]};
+        sources.push({kind:'version-snapshot', state:'available', ref: matched.ref.ref, commit: commits[0], path: `${prefix}README.md`});
+      }
+      const reviews = structured.declared ? structured.evidence : layout === 'in-place' ? [] : publicationReview(files, prefix, reviewSource);
+      sources.push(...reviews);
+      return {state: reviews.length ? 'established' : 'unverified', reasons: reviews.length ? [] : [layout === 'in-place' ? 'Knowledge is published; no publication_reviews record covers this version.' : 'Knowledge is published; all required implementation merges lack explicit scoped Publication review evidence.'], sources};
+    } catch {return {state:'unknown',reasons:['Protected-ref snapshot evidence could not be read.'],sources:[]};}
+  }
   const prefixes = [prefix, ...(deliveryPath ? [`${deliveryPath}tasks/`] : [])];
   const refs = [];
   for (const ref of ['refs/heads/main','refs/heads/master']) {
@@ -145,13 +243,22 @@ export async function publication(root, prefix, files, git, reviewText = '', rev
     }
     if (observed.length > 1 && [...observed[0]].some(([p,body])=>observed[1].get(p)!==body) || observed.length > 1 && observed[0].size!==observed[1].size) return {state:'unknown',reasons:['Protected refs disagree about delivered knowledge.'],sources:[]};
     if (!sources.length) return {state:'proposed',reasons:['Delivered knowledge or task records do not match local main or master.'],sources:[]};
-    const reviews = publicationReview(files, prefix, reviewSource);
+    const [, artifact, version] = prefix.match(/^docs\/artifacts\/([^/]+)\/versions\/([^/]+)\/$/) || [];
+    const structured = publicationReviews(files, artifact, version, reviewSource);
+    if (structured.diagnostics.length) return {state:'unknown',reasons:structured.diagnostics.map(d=>d.message),sources:[],diagnostics:structured.diagnostics};
+    if (layout === 'in-place') {
+      const snapshot = await versionSnapshot(root, git, sources[0].ref, `${prefix}README.md`);
+      if (snapshot.state !== 'available') return {state:'unknown',reasons:[snapshot.reason],sources:[]};
+      sources.push({kind:'version-snapshot', ...snapshot});
+    }
+    // Prose publication review is legacy-only; publication_reviews works for both.
+    const reviews = structured.declared ? structured.evidence : layout === 'in-place' ? [] : publicationReview(files, prefix, reviewSource);
     sources.push(...reviews);
-    return {state: reviews.length ? 'established' : 'unverified', reasons: reviews.length ? [] : ['Knowledge is published; all required implementation merges lack explicit scoped Publication review evidence.'], sources};
+    return {state: reviews.length ? 'established' : 'unverified', reasons: reviews.length ? [] : [layout === 'in-place' ? 'Knowledge is published; no publication_reviews record covers this version.' : 'Knowledge is published; all required implementation merges lack explicit scoped Publication review evidence.'], sources};
   } catch {return {state:'unknown',reasons:['Protected-ref snapshot evidence could not be read.'],sources:[]};}
 }
 function anchor(text) {return text.toLowerCase().replace(/[^\p{L}\p{N}_\s-]/gu,'').trim().replace(/\s/g,'-');}
-function evidenceDetail(markdown, fragment) {
+export function evidenceDetail(markdown, fragment) {
   const body = markdown.replace(/^---\r?\n[\s\S]*?\r?\n---(?:\r?\n|$)/,'');
   const tokens = marked.lexer(body);
   if (!fragment) return tokens.some(t=>t.type!=='heading' && t.type!=='space') ? body : null;
@@ -163,7 +270,7 @@ function evidenceDetail(markdown, fragment) {
   return section.some(t=>t.type!=='space') ? section.map(t=>t.raw).join('') : null;
 }
 export async function readUnitsOfWork(root, data, changes, git, checklist, options = {}) {
-  const {files,snapshot,unsafeTaskPaths} = data, units=unitBriefs(files), owners=new Map(), publicationCache=new Map();
+  const {files,snapshot,unsafeTaskPaths} = data, units=unitBriefs(files), owners=new Map(), publicationCache=new Map(), context=protectedContext(root,git);
   for(const unit of units)for(const m of unit.members){const key=JSON.stringify([m.artifact,m.change]);const list=owners.get(key)||[];list.push(unit);owners.set(key,list);}
   for(const list of owners.values())if(new Set(list).size>1)for(const unit of new Set(list))unit.diagnostics.push({code:'duplicate-membership',path:unit.path,message:'This change is claimed by multiple units of work.'});
   for(const unit of units.filter(u=>!options.unit || u.id===options.unit)){
@@ -171,7 +278,9 @@ export async function readUnitsOfWork(root, data, changes, git, checklist, optio
       const base=`docs/artifacts/${member.artifact}/`,changePath=`${base}changes/${member.change}/`,claims=versionClaims(files,member.artifact,member.change);
       const artifact=snapshot.artifacts.find(a=>a.id===member.artifact);
       member.retainedChangePath=artifact?.changes.some(c=>c.name===member.change)?changePath:null;
-      const delivery=deliverySource(files,member.artifact,member.change,member.retainedChangePath);
+      const layout=recordLayout(artifact,member.change,claims.length===1?claims[0]:null);
+      const delivery=deliverySource(files,member.artifact,member.change,member.retainedChangePath,layout);
+      const changeOwned=claims[0]?.deliveryTasks==='change'||layout==='in-place';
       member.deliveryPath=delivery.deliveryPath;
       if(delivery.diagnostic)unit.diagnostics.push({code:delivery.diagnostic,path:claims[0]?.prefix || changePath,message:'Delivered tasks require a valid marker and the exact retained originating plan.'});
       member.deliveredVersion=claims.length===1?claims[0].version:null;
@@ -187,12 +296,12 @@ export async function readUnitsOfWork(root, data, changes, git, checklist, optio
       if(member.deliveredVersion && !options.deferPublication){
         const key=JSON.stringify([member.sourcePath,member.deliveryPath,unit.path]);
         if(delivery.diagnostic)member.establishmentEvidence={state:'unknown',reasons:['Delivered task source cannot be resolved.'],sources:[]};
-        else {if(!publicationCache.has(key))publicationCache.set(key,await publication(root,member.sourcePath,files,git,unit.markdown,unit.path,claims[0].deliveryTasks==='change'?member.deliveryPath:null));member.establishmentEvidence=publicationCache.get(key);}
+        else {if(!publicationCache.has(key))publicationCache.set(key,await publication(root,member.sourcePath,files,git,unit.markdown,unit.path,changeOwned?member.deliveryPath:null,layout,context));member.establishmentEvidence=publicationCache.get(key);}
       }
       member.knowledge=[...files].filter(([p])=>member.sourcePath && p.startsWith(member.sourcePath) || member.retainedChangePath && p.startsWith(member.retainedChangePath)).map(([path,markdown])=>({path,markdown}));
       member.markdown=files.get(`${member.sourcePath}README.md`)||'';
       member.taskGraph=member.deliveryPath?buildTaskGraph(files,member.deliveryPath,checklist,unsafeTaskPaths):{state:'unavailable',tasks:[],edges:[],diagnostics:[]};
-      if(claims[0]?.deliveryTasks==='change' && member.taskGraph.state!=='available'){
+      if(claims.length===1 && changeOwned && member.taskGraph.state!=='available'){
         unit.diagnostics.push({code:'invalid-delivery-plan',path:member.deliveryPath || changePath,message:'The retained delivery plan cannot supply a valid task graph.'});
         if(member.establishmentEvidence.state==='established')member.establishmentEvidence={state:'unknown',reasons:['Retained delivery plan is missing, unsafe, or invalid.'],sources:[]};
       }

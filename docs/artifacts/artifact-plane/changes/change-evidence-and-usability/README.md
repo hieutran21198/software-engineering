@@ -10,6 +10,10 @@ The declared baseline is complete 1.11.0 knowledge. Overlay the complete 1.13.0 
 
 This is the single active change for this artifact. Retain all older changes, task evidence and snapshots. Fresh tasks will own this delivery. The prior Plane model-explanations plan is superseded for future execution by the new combined plan only after its approval; no earlier completion or unit membership is reassigned. The older model-explanations unit remains incomplete unless its own exact member-delivery rules are separately satisfied.
 
+## In-place layout reading
+
+The 16 October 2026 investigation selected an in-place knowledge layout for ADD. This change now also owns reading that layout: layout detection, Git-based baseline comparison, declared-evidence derivation, version-record resolution, navigation labels and the validate and migrate scripts. See [layout requirements](../../requirements/knowledge-layout.md). The publication-evidence, comparison-service, comparison-interface and compact-context tasks are superseded; model explanations, incremental refresh and responsive repair remain.
+
 ## Scope and gates
 
 This member belongs only to the evidence-and-usability unit. Requirements, Specification and Plan are separate commits. The completed new plan requires explicit approval. Plane consumption of new ADD evidence contracts waits for their establishment and contract recheck. No implementation, version declaration repair or passing delivery evidence is authorized by preparation alone.

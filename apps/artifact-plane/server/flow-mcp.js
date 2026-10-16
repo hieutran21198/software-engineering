@@ -26,7 +26,7 @@ export function createFlowMcpServer({service,reviewService,roots=[],stateDir}={}
  });
  const reviewCommon={path:common.path,worktree:common.worktree,artifact:z.string().min(1).max(10000),change:z.string().min(1).max(10000),limit:common.limit,budget:common.budget,cursor:common.cursor};
  for(const [name,description,operation,selectors]of [
-  ['get_change_review','Compare a retained change with declared-current knowledge and recorded flow impact.','review',{}],
+  ['get_change_review','Compare a change with established knowledge (the protected-ref tree for in-place artifacts, the declared-current snapshot for legacy artifacts) and recorded flow impact.','review',{}],
   ['get_change_context','Capture source-backed change context with evidence limits and explicit omissions.','packet',{}],
   ['read_change_context_source','Read bounded source pages registered to a captured change context.','source',{source:z.string().min(1).max(10000)}],
  ])server.registerTool(name,{description,inputSchema:z.strictObject({...reviewCommon,...selectors}),annotations:{readOnlyHint:true,destructiveHint:false,idempotentHint:true,openWorldHint:false}},async args=>{

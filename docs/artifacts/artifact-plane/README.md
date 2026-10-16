@@ -1,3 +1,8 @@
+---
+current_version: 1.14.0
+depends_on: [artifact-driven]
+---
+
 # Artifact Plane
 
 Artifact Plane provides read-only knowledge exploration of local ADD repositories and optional local Codex execution observation.
@@ -10,71 +15,12 @@ Discover artifact knowledge and visualize artifact dependencies, knowledge refer
 
 This artifact owns the repository explorer and its input interpretation rules.
 
-Version 1.10.0, its originating delivery tasks, and implementation landed on main through the merged project-tabs delivery. Historical snapshot preparation text is retained.
+## Knowledge
 
-## Current established version
+This artifact uses the in-place layout. Working knowledge is in requirements, specifications and decisions; system flows are in specifications/flows. Start with:
 
-1.11.0
+- [Explorer requirements](requirements/explorer.md) and [explorer contract](specifications/explorer.md)
+- [In-place layout reading](specifications/knowledge-layout-reading.md)
+- [Local server decision](decisions/001-local-server.md) and [derived workflow decision](decisions/002-derived-workflow.md)
 
-## Established dependencies
-
-- artifact-driven
-
-## Active change
-
-- [Evidence and usability](changes/change-evidence-and-usability/README.md)
-
-
-## Knowledge snapshot
-
-- [Requirements](versions/1.11.0/requirements/explorer.md)
-- [Specification](versions/1.11.0/specifications/explorer.md)
-- [Local server decision](versions/1.11.0/decisions/001-local-server.md)
-- [Derived workflow decision](versions/1.11.0/decisions/002-derived-workflow.md)
-- [Task graph requirements](versions/1.11.0/requirements/task-dag.md)
-- [Task graph specification](versions/1.11.0/specifications/task-dag.md)
-- [Unit-of-work requirements](versions/1.11.0/requirements/units-of-work.md)
-- [Unit-of-work contract](versions/1.11.0/specifications/units-of-work.md)
-- [Implementation evidence](changes/change-flow-discovery/tasks/README.md)
-
-- [Codex execution requirements](versions/1.11.0/requirements/codex-execution.md)
-- [Codex execution contract](versions/1.11.0/specifications/codex-execution.md)
-- [Codex observer decision](versions/1.11.0/decisions/006-codex-observer.md)
-
-- [Task retention and navigation requirements](versions/1.11.0/requirements/task-retention.md)
-- [Retained delivery and navigation contract](versions/1.11.0/specifications/task-retention.md)
-
-- [Automatic update requirements](versions/1.11.0/requirements/live-reload.md)
-- [Automatic update contract](versions/1.11.0/specifications/live-reload.md)
-- [Lazy loading contract](versions/1.11.0/specifications/lazy-loading.md)
-- [Repository update decision](versions/1.11.0/decisions/007-repository-updates.md)
-
-- [Project tab requirements](versions/1.11.0/requirements/project-tabs.md)
-- [Project tab contract](versions/1.11.0/specifications/project-tabs.md)
-
-## Publication review
-
-Version 1.11.0 is established through merged PR #21. The complete knowledge snapshot, originating delivery tasks and required implementation match protected main. Artifact Plane, Go and documentation CI checks passed on the reviewed feature revision. This compatible minor version adds flow discovery without removing prior contracts.
-
-- [Flow requirements](versions/1.11.0/requirements/flows.md)
-- [Flow contract](versions/1.11.0/specifications/flows.md)
-
-## Retained patch record
-
-[Version 1.11.1](versions/1.11.1/README.md) improves flow status, shortened-source details, shared controls and synchronized panels with lazy newest-first pagination. Its approved [delivery plan](changes/change-flow-readability/tasks/README.md) contains validation evidence. PR #23 merged its knowledge and implementation. Its historical preparation text is retained; this change does not infer a lifecycle repair. The root continues to declare 1.11.0.
-
-## Proposed minor version
-
-[Version 1.12.0](versions/1.12.0/README.md) contains the approved evidence corrections, selected-change review and source-backed context handoff. Its [originating plan](changes/change-evidence-review-context/tasks/README.md) retains task evidence. It awaits team review and merge.
-
-## Proposed search and readability patch
-
-[Version 1.12.1](versions/1.12.1/README.md) adds live named filtering, explicit Artifact participation and measured graph labels. Its [delivery plan](changes/change-search-label-usability/tasks/README.md) retains implementation evidence. PR #24 merged the 1.12.0 knowledge and implementation; its historical preparation text above remains unchanged. Patch 1.12.1 awaits team review and merge.
-
-## Proposed presentation patch
-
-[Version 1.12.2](versions/1.12.2/README.md) improves inspector spacing and native dropdown consistency. Its [originating plan](changes/change-spacing-control-consistency/tasks/README.md) retains delivery evidence. PR #25 merged search/readability knowledge and implementation; historical preparation text remains unchanged. Patch 1.12.2 awaits team review and merge.
-
-## Proposed simpler exploration version
-
-[Version 1.13.0](versions/1.13.0/README.md) makes reading primary, switches sources in one step and reduces navigation and review noise. The approved extension adds larger headings, resizable left navigation and highlighted source/code examples. Its [originating plan](changes/change-ux-simplification/tasks/README.md) retains fresh delivery tasks and executed checks. The review includes inherited pending 1.12.2 presentation work; its provenance and evidence remain unchanged. This complete compatible proposal awaits team review and merge. The declared current version remains 1.11.0.
+Version records are in versions; 1.5.0 to 1.13.0 are complete legacy snapshots and stay unchanged. Change records and retained delivery plans are in changes.

@@ -7,7 +7,7 @@ import {parseWorktrees,evidenceFor,checklist} from './workflow.js';
 import {unitBriefs,versionClaims,readUnitsOfWork,safeKnowledgePath} from './units-of-work.js';
 import {buildUnitGraphs} from './unit-graphs.js';
 const sections=['overview','artifacts','workflow','implementation','markdown','history','completion'];
-const keys=['path','section','worktree','unit','artifact','change','source','dependencyMode'];
+const keys=['path','section','worktree','unit','artifact','change','source','dependencyMode','revision'];
 const safeID=value=>typeof value==='string'&&/^[a-z0-9][a-z0-9-]*$/.test(value);
 const deferred={state:'not-loaded',reasons:['Evidence not loaded.'],sources:[]};
 const pending=()=>({state:'not-loaded',tasks:[],edges:[],diagnostics:[]});
@@ -16,6 +16,7 @@ export function validateQuery(body){
  if(!body||typeof body!=='object'||Array.isArray(body)||Object.keys(body).some(k=>!keys.includes(k))||!sections.includes(body.section)||typeof body.path!=='string'||!isAbsolute(body.path)||body.path.includes('\0'))throw new ExploreError(400,'Supply a repository path and supported section.');
  if(body.worktree!==undefined&&(typeof body.worktree!=='string'||!isAbsolute(body.worktree)||body.worktree.includes('\0'))||body.dependencyMode!==undefined&&!['established','planning'].includes(body.dependencyMode)||body.dependencyMode!==undefined&&body.section!=='artifacts')throw new ExploreError(400,'Invalid worktree or dependency mode.');
  for(const key of ['unit','artifact','change'])if(body[key]!==undefined&&!safeID(body[key]))throw new ExploreError(400,'Invalid knowledge selector.');
+ if(body.revision!==undefined&&(body.revision!=='established'||body.section!=='markdown'))throw new ExploreError(400,'Only Markdown sources accept the established revision.');
  if(body.change!==undefined&&!body.change.startsWith('change-'))throw new ExploreError(400,'Invalid change selector.');
  const unit=body.unit!==undefined,change=body.artifact!==undefined||body.change!==undefined,artifactOnly=!!body.artifact&&!body.change&&['artifacts','markdown'].includes(body.section);
  if(unit&&change||change&&(!body.artifact||!body.change)&&!artifactOnly||body.section==='overview'&&(unit||change||body.source!==undefined)||body.section==='completion'&&!unit||body.section==='history'&&(!change||unit)||body.section!=='overview'&&!unit&&!change)throw new ExploreError(400,'Supply one appropriate unit or artifact/change context.');
@@ -50,7 +51,7 @@ async function worktreeList(root,run){
  }
  return list;
 }
-function changeSummaries(snapshot){return snapshot.artifacts.flatMap(a=>a.changes.map(c=>({artifact:a.id,name:c.name,declaredActive:a.activeChange===c.name,history:a.activeChange!==c.name,currentStep:null,lastCommitAt:null,inferenceReason:'Phase evidence not loaded.',historyReason:'Retained change; evidence not loaded.',steps:[],tasks:[],taskGraph:pending(),loadState:'not-loaded'})));}
+function changeSummaries(snapshot){return snapshot.artifacts.flatMap(a=>a.changes.map(c=>({artifact:a.id,name:c.name,layout:a.layout,version:c.version??null,declaredActive:a.activeChange===c.name,history:a.activeChange!==c.name,currentStep:null,lastCommitAt:null,inferenceReason:'Phase evidence not loaded.',historyReason:'Retained change; evidence not loaded.',steps:[],tasks:[],taskGraph:pending(),loadState:'not-loaded'})));}
 const flights=new Map();
 export async function queryRepository(input){
  const validated=validateQuery(input);const root=await realpath(validated.path).catch(()=>validated.path);const body=Object.fromEntries(keys.filter(k=>validated[k]!==undefined).map(k=>[k,validated[k]]));body.path=root;if(body.worktree)body.worktree=await realpath(body.worktree).catch(()=>body.worktree);const key=JSON.stringify(keys.map(k=>[k,body[k]??(k==='worktree'?root:k==='dependencyMode'&&body.section==='artifacts'?'established':null)]));
@@ -77,19 +78,33 @@ async function readQuery(body){
    if(body.unit&&!unit)throw new ExploreError(404,'Unit of work no longer exists.');
    const members=unit?.members||[{artifact:body.artifact,change:body.change}];
    if(!unit&&!overview.snapshot.artifacts.some(a=>a.id===body.artifact&&a.changes.some(c=>c.name===body.change)||!body.change&&['artifacts','markdown'].includes(body.section)))throw new ExploreError(404,'Change no longer exists.');
-   const prefixes=members.flatMap(m=>[`docs/artifacts/${m.artifact}/changes/${m.change}/`,...versionClaims(overview.files,m.artifact,m.change).map(c=>c.prefix),...(overview.snapshot.artifacts.find(a=>a.id===m.artifact)?.currentVersion?[`docs/artifacts/${m.artifact}/versions/${overview.snapshot.artifacts.find(a=>a.id===m.artifact).currentVersion}/`]:[])]);
+   const prefixes=members.flatMap(m=>[`docs/artifacts/${m.artifact}/changes/${m.change}/`,...versionClaims(overview.files,m.artifact,m.change).map(c=>c.prefix),...(overview.snapshot.artifacts.find(a=>a.id===m.artifact)?.layout==='in-place'?[]:overview.snapshot.artifacts.find(a=>a.id===m.artifact)?.currentVersion?[`docs/artifacts/${m.artifact}/versions/${overview.snapshot.artifacts.find(a=>a.id===m.artifact).currentVersion}/`]:[])]);
+   // In-place members read root knowledge, never legacy version directories.
+   const inPlaceRoots=[...new Set(members.filter(m=>overview.snapshot.artifacts.find(a=>a.id===m.artifact)?.layout==='in-place').map(m=>`docs/artifacts/${m.artifact}/`))];
+   const inPlaceKnowledge=path=>inPlaceRoots.some(root=>path.startsWith(root)&&/^(requirements|specifications|decisions)\//.test(path.slice(root.length)));
    const unitPath=unit?.path;
-   const full=path=>prefixes.some(prefix=>path.startsWith(prefix))||path===unitPath||unit?.evidence.some(e=>e.source.split('#')[0]===path);
+   const full=path=>prefixes.some(prefix=>path.startsWith(prefix))||inPlaceKnowledge(path)||path===unitPath||unit?.evidence.some(e=>e.source.split('#')[0]===path);
    if(body.section==='markdown'){
     // Metadata indexes establish scope; no arbitrary repository file endpoint.
     const artifacts=unit?unitSummary(unit,overview.snapshot,target,overview.files).artifactGraph.planning.nodes.map(n=>n.id):[body.artifact];
     if(overview.unsafeTaskPaths.has(body.source))throw new ExploreError(422,'Unsafe task source.');
-    const declaredSource=body.source===unitPath||unit?.evidence.some(e=>e.source.split('#')[0]===body.source)||prefixes.some(prefix=>body.source===prefix+'README.md'||body.source.startsWith(prefix)&&/^(requirements|specifications|decisions|tasks)\/.+\.md$/.test(body.source.slice(prefix.length)));
+    // Established on main: the protected-ref bytes of an in-place working source.
+    if(body.revision==='established'){
+     const owner=body.source.split('/')[2],baseline=overview.baselines?.[owner],rest=body.source.slice(`docs/artifacts/${owner}/`.length);
+     if(!inPlaceKnowledge(body.source)||!body.source.endsWith('.md'))throw new ExploreError(404,'Only in-place working knowledge has an established view.');
+     if(baseline?.state!=='available')throw new ExploreError(404,baseline?.reason||'No established baseline is available.');
+     if(!baseline.entries.has(rest))throw new ExploreError(404,'This source is not established on the protected branch.');
+     const from=baseline.knowledgePrefix+rest,bytes=Buffer.from(await run(target,['show',`${baseline.oid}:${from}`],'bytes')),markdown=bytes.toString('utf8');
+     if(!bytes.equals(Buffer.from(markdown)))throw new ExploreError(422,'Knowledge is not valid UTF-8.');
+     data={source:body.source,markdown,revision:{ref:baseline.ref,commit:baseline.oid,path:from}};documentBytes=digest([baseline.oid,markdown]);
+    }else{
+    const declaredSource=body.source===unitPath||inPlaceKnowledge(body.source)&&body.source.endsWith('.md')||inPlaceRoots.some(root=>body.source.startsWith(root)&&/^versions\/\d+\.\d+\.\d+\/README\.md$/.test(body.source.slice(root.length)))||unit?.evidence.some(e=>e.source.split('#')[0]===body.source)||prefixes.some(prefix=>body.source===prefix+'README.md'||body.source.startsWith(prefix)&&/^(requirements|specifications|decisions|tasks)\/.+\.md$/.test(body.source.slice(prefix.length)));
     if(!declaredSource&&!artifacts.some(a=>body.source===`docs/artifacts/${a}/README.md`))throw new ExploreError(404,'Source is outside the selected knowledge context.');
     const path=await realpath(resolve(target,body.source)).catch(()=>{throw new ExploreError(404,'Knowledge source no longer exists.');});const rel=relative(target,path);
     if(rel==='..'||rel.startsWith('..'+sep)||isAbsolute(rel)||rel.split(sep).includes('.git'))throw new ExploreError(422,'Unsafe knowledge source.');
     const taskBase=body.source.match(/^(.*\/(?:changes\/change-[^/]+|versions\/\d+\.\d+\.\d+)\/tasks)\//)?.[1];if(taskBase){const directory=resolve(target,taskBase);const taskRel=relative(directory,path);if(taskRel==='..'||taskRel.startsWith('..'+sep)||isAbsolute(taskRel))throw new ExploreError(422,'Unsafe task source.');}
     const bytes=await readFile(path),markdown=bytes.toString('utf8');if(!bytes.equals(Buffer.from(markdown)))throw new ExploreError(422,'Knowledge is not valid UTF-8.');data={source:body.source,markdown};documentBytes=digest(markdown);
+    }
    }else{
     const detailed=body.section==='artifacts'?overview:await scanRepository(target,{metadata:true,indexOnly:true,full,git:run});
     readState=detailed;readFull=body.section==='artifacts'?null:full;
@@ -112,7 +127,7 @@ async function readQuery(body){
   }
   // Resolve protected refs fresh per request, never from immutable-byte cache.
   if(body.section!=='overview'){const current=await scanRepository(target,{metadata:true,indexOnly:true,full:readFull,git});if(current.revision!==readState.revision||current.snapshot.repository.head!==overview.snapshot.repository.head||current.snapshot.repository.status!==overview.snapshot.repository.status)entry.diagnostics.push({code:'stale-response',path:'',message:'Repository changed while loading; reload this section.'});}
-  if(documentBytes!==null){try{const freshPath=await realpath(resolve(target,body.source)),freshRelative=relative(target,freshPath);if(freshRelative==='..'||freshRelative.startsWith('..'+sep)||isAbsolute(freshRelative)||freshRelative.split(sep).includes('.git'))throw new ExploreError(422,'Unsafe changed source.');const current=await readFile(freshPath,'utf8');if(digest(current)!==documentBytes)entry.diagnostics.push({code:'stale-response',path:body.source,message:'Knowledge changed while loading; reload this section.'});}catch{entry.diagnostics.push({code:'stale-response',path:body.source,message:'Knowledge disappeared while loading; reload this section.'});}}
+  if(documentBytes!==null&&body.revision!=='established'){try{const freshPath=await realpath(resolve(target,body.source)),freshRelative=relative(target,freshPath);if(freshRelative==='..'||freshRelative.startsWith('..'+sep)||isAbsolute(freshRelative)||freshRelative.split(sep).includes('.git'))throw new ExploreError(422,'Unsafe changed source.');const current=await readFile(freshPath,'utf8');if(digest(current)!==documentBytes)entry.diagnostics.push({code:'stale-response',path:body.source,message:'Knowledge changed while loading; reload this section.'});}catch{entry.diagnostics.push({code:'stale-response',path:body.source,message:'Knowledge disappeared while loading; reload this section.'});}}
   const refs=await Promise.all(['main','master'].map(ref=>git(target,['rev-parse','--verify','refs/heads/'+ref]).catch(()=>null)));
   const currentTrees=await git(root,['worktree','list','--porcelain','-z'],true);
   const originalTrees=await run(root,['worktree','list','--porcelain','-z'],true);

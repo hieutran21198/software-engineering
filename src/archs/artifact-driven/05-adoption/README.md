@@ -112,7 +112,13 @@ For AI-assisted adoption, the consumer agent handles project-local skill/team se
 
 ## Existing Files
 
-Repeated adoption retains identical files and adds missing bundle files. If a bundled path already contains different content or conflicts with a directory, the command fails before copying. It does not overwrite consumer edits or remove unrelated files.
+Repeated adoption retains identical files and adds missing bundle files. If bundled paths already contain different content or conflict with a file, directory or symlink, the command checks every destination, lists all conflicts with a code, path and action, and fails before copying. A blocked parent directory is listed once. When a fatal read error stops the check early, the output says that the inventory is incomplete. The command does not overwrite consumer edits or remove unrelated files.
+
+Add `--json` to any command to write one `se-adopt.result.v1` JSON object to standard output instead of text, for scripts and agents. It contains `operation`, `ok`, `created`, `unchanged`, `diagnostics`, `complete` and `error`; a failed run always reports `created: 0`. `--help` stays text:
+
+```sh
+./se-adopt --project /path/to/consumer --dry-run --json
+```
 
 For updates that conflict with local changes, compare and reconcile manually or adopt into a separate directory. There is no automatic upgrade, forced overwrite, Git commit, push, or PR creation. The normal ADD workflow applies when you begin a project change.
 

@@ -117,7 +117,8 @@ export default function ChangeReview({root,contextKey,epoch,session,active,updat
 </div>
 <div role="status" aria-label="Review status">{displayStatus}</div>
 {packet&&<>
-<p>Baseline: declared-current {packet.context.baseline.version||(packet.data.baseline.state==='initial'?'None (initial)':'Unavailable')} · {packet.data.baseline.state}</p>
+{packet.data.baseline.kind==='protected-ref'?<p>Baseline: established on {String(packet.data.baseline.ref||'main').replace('refs/heads/','')} · {packet.data.baseline.baselineLayout==='legacy'?`legacy snapshot ${packet.data.baseline.version||''}`:`version ${packet.data.baseline.version||'none'}`} · {packet.data.baseline.state}{packet.data.baseline.reason?` · ${packet.data.baseline.reason}`:''}</p>:<p>Baseline: declared-current {packet.context.baseline.version||(packet.data.baseline.state==='initial'?'None (initial)':'Unavailable')} · {packet.data.baseline.state}</p>}
+{packet.data.evidence.workflow?.layout==='in-place'&&<section aria-label="Declared evidence"><h3>Declared evidence</h3><ul>{packet.data.evidence.workflow.steps.map(s=><li key={s.name}>{s.name}: {s.state.replaceAll('-',' ')}</li>)}</ul><p>Remaining gate: {packet.data.evidence.workflow.currentStep||(packet.data.evidence.workflow.history?'None in this change record':'Team review and merge')}. {packet.data.evidence.approval}</p></section>}
 <section aria-label="Proposed scope and purpose"><h3>Purpose and scope</h3><Markdown text={packet.data.sources.find(s=>s.id===packet.data.scope.source?.id)?.text||'No scope excerpt available.'}/></section>
 <details className="review-context"><summary>Captured source details</summary><p className="review-path">Worktree: {worktree}</p><p>HEAD: {packet.context.head}</p><p>Captured revision: {packet.revision}</p></details>
 </>}<details className="review-export"><summary>Export context · Loaded records page</summary><div className="review-actions">
@@ -148,7 +149,7 @@ export default function ChangeReview({root,contextKey,epoch,session,active,updat
 <div className="review-actions">{pageRef.current?.cursor&&<button disabled={!ready} onClick={()=>setRequest({cursor:null,retry:request.retry+1})}>First records page</button>}{packet.pagination.nextCursor&&<button disabled={!ready} onClick={()=>setRequest({cursor:packet.pagination.nextCursor,retry:request.retry+1})}>Next records page</button>}</div>{record&&<section aria-label="Knowledge comparison">
 <h3>{record.path} · {record.status}</h3>
 <p role="status" aria-label="Comparison status">{sourceStatus}</p>
-<ReviewDiff before={full?.baseline??(sources.baseline?.id===record.baseline?.id?sources.baseline?.text||'':'')} after={full?.change??(sources.change?.id===record.change?.id?sources.change?.text||'':'')} complete={complete} canLoad={ready&&sourceStatus==='Loaded'} onLoad={loadFullComparison} loading={comparisonLoading} error={comparisonError}/>
+<ReviewDiff before={record.status==='unchanged'&&!record.baseline?full?.change??(sources.change?.id===record.change?.id?sources.change?.text||'':''):full?.baseline??(sources.baseline?.id===record.baseline?.id?sources.baseline?.text||'':'')} after={full?.change??(sources.change?.id===record.change?.id?sources.change?.text||'':'')} complete={complete} canLoad={ready&&sourceStatus==='Loaded'} onLoad={loadFullComparison} loading={comparisonLoading} error={comparisonError}/>
 <details className="raw-source-excerpts"><summary>Raw source excerpts</summary><div className="review-comparison">{['baseline','change'].map(side=>
 <section key={side} aria-label={side==='baseline'?'Before':'After'}>
 <h4>{side==='baseline'?'Before':'After'}</h4>{!record[side]?<p>No {side==='baseline'?'baseline':'change'} source ({record.status}).</p>:<>

@@ -136,3 +136,68 @@ export function orderingFixture() {
   );
   return files;
 }
+
+// In-place layout fixtures: one working knowledge tree per artifact, change
+// records with tasks, and version records without knowledge directories.
+export const identity = (name, version, dependencies = [], body = "") =>
+  `---\ncurrent_version: ${version || "null"}\ndepends_on: ${JSON.stringify(dependencies)}\n---\n# ${name}\n\n${name} knowledge.\n${body}`;
+export const versionRecord = (change) => `---\nsource_change: ${change}\n---\n# Version\n\nCompatible summary.\n`;
+export const referring = (artifact, path, extra = "") =>
+  `---\nreferences:\n  - artifact: ${artifact}\n    element: ${path}\n    requires: identity format\n${extra}---\n# Login rules\n`;
+const plan = (id) => [["tasks/README.md", `---\ntasks: [01-${id}.md]\n---\n# Plan\n`], [`tasks/01-${id}.md`, `---\nid: ${id}\ndepends_on: []\n---\n# Task\n\n## Definition of Done\n\n- [ ] Done.\n\n## Evidence\n\nImplementation has not started.\n`]];
+const change = (artifact, name, readme = "# Change\n\nReason and scope.\n") => [
+  [`docs/artifacts/${artifact}/changes/${name}/README.md`, readme],
+  ...plan(name.slice(7)).map(([path, body]) => [`docs/artifacts/${artifact}/changes/${name}/${path}`, body]),
+];
+export function inPlaceFixture() {
+  return new Map([
+    ["docs/artifacts/tenant/README.md", identity("Tenant", "1.0.0", [], "\n## Current version\n\n9.9.9\n\n## Established dependencies\n\n- authentication\n")],
+    ["docs/artifacts/tenant/specifications/identity.md", "# Identity\n\nStable identity rules.\n"],
+    ["docs/artifacts/tenant/versions/1.0.0/README.md", versionRecord("change-initial")],
+    ...change("tenant", "change-initial"),
+    ["docs/artifacts/authentication/README.md", identity("Authentication", "1.0.0", ["tenant"])],
+    ["docs/artifacts/authentication/requirements/login.md", "# Login need\n"],
+    ["docs/artifacts/authentication/specifications/login.md", referring("tenant", "specifications/identity.md", "    status: proposed\n    change: change-other\n")],
+    ["docs/artifacts/authentication/versions/1.0.0/README.md", versionRecord("change-initial")],
+    ...change("authentication", "change-initial"),
+    ...change("authentication", "change-login"),
+  ]);
+}
+export function mixedFixture() {
+  const files = new Map([...sourceFixture()].filter(([path]) => path.startsWith("docs/artifacts/tenant/")));
+  files.set("docs/artifacts/authentication/README.md", identity("Authentication", null, ["tenant"]));
+  files.set("docs/artifacts/authentication/specifications/login.md", referring("tenant", "specifications/identity.md"));
+  for (const [path, body] of change("authentication", "change-initial")) files.set(path, body);
+  return files;
+}
+// main holds the legacy snapshot layout; the branch migrates and proposes 1.1.0.
+export function transitionFixture() {
+  const main = new Map([
+    ["docs/artifacts/tenant/README.md", "# Tenant\n\n## Current established version\n\n1.0.0\n\n## Established dependencies\n\nNone.\n"],
+    ["docs/artifacts/tenant/versions/1.0.0/README.md", "# Tenant 1.0.0\n"],
+    ["docs/artifacts/tenant/versions/1.0.0/specifications/identity.md", "# Identity\n\nStable identity rules.\n"],
+    ["docs/artifacts/tenant/versions/1.0.0/specifications/retired.md", "# Retired\n"],
+    ["docs/artifacts/dag.yaml", "artifacts:\n  tenant: {path: tenant, depends_on: []}\n"],
+  ]);
+  const branch = new Map([
+    ["docs/artifacts/tenant/README.md", identity("Tenant", "1.1.0")],
+    ["docs/artifacts/tenant/specifications/identity.md", "# Identity\n\nStable identity rules.\n"],
+    ["docs/artifacts/tenant/specifications/new.md", "# New contract\n"],
+    ["docs/artifacts/tenant/versions/1.1.0/README.md", versionRecord("change-next")],
+    ...change("tenant", "change-next"),
+  ]);
+  return {main, branch};
+}
+export async function transitionRepository() {
+  const {main, branch} = transitionFixture();
+  const fixture = await fixtureRepository(main);
+  for (const [path, contents] of branch) {
+    await mkdir(join(fixture.root, path, ".."), { recursive: true });
+    await writeFile(join(fixture.root, path), contents);
+  }
+  await rm(join(fixture.root, "docs/artifacts/dag.yaml"));
+  git(fixture.root, "checkout", "-q", "-b", "change-next");
+  git(fixture.root, "add", "docs");
+  git(fixture.root, "-c", "user.name=Fixture", "-c", "user.email=fixture@example.invalid", "commit", "-qm", "migrate");
+  return fixture;
+}

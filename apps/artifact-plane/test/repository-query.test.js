@@ -47,3 +47,21 @@ test('metadata overview preserves YAML dependency proposals and reference diagno
  const {sourceFixture}=await import('./fixtures.js');const f=await fixtureRepository(sourceFixture());
  try{const full=await exploreRepository(f.root),overview=await queryRepository({path:f.root,section:'overview'});assert.deepEqual(overview.data.edges,full.edges);assert.deepEqual(overview.data.references,full.references);assert(overview.data.edges.some(e=>e.status==='proposed-remove'));}finally{await f.cleanup();}
 });
+
+// In-place members: scoped sections read root knowledge, not version directories.
+import {inPlaceFixture} from './fixtures.js';
+test('L3/L4: scoped in-place sections match full evidence and read root knowledge sources',async t=>{
+ const files=inPlaceFixture();
+ files.set('docs/artifacts/units-of-work/login/README.md','---\nunit_of_work: login\nchanges:\n  - artifact: authentication\n    change: change-login\nacceptance:\n  - id: login\n    criterion: Works\nevidence: []\n---\n# Login\n');
+ const f=await fixtureRepository(files);t.after(f.cleanup);const before=await fingerprint(f.root);
+ const full=await exploreRepository(f.root),unit=full.unitsOfWork.find(u=>u.id==='login');
+ const workflow=await queryRepository({path:f.root,section:'workflow',unit:'login'});
+ assert.deepEqual(workflow.data.members.map(m=>m.workflow.steps),unit.members.map(m=>m.workflow.steps));
+ assert.equal(workflow.data.members[0].workflow.layout,'in-place');
+ const change=await queryRepository({path:f.root,section:'history',artifact:'authentication',change:'change-login'});
+ assert.equal(change.data.currentStep,unit.members[0].workflow.currentStep);
+ const markdown=await queryRepository({path:f.root,section:'markdown',unit:'login',source:'docs/artifacts/authentication/specifications/login.md'});assert.match(markdown.data.markdown,/Login rules/);
+ await assert.rejects(queryRepository({path:f.root,section:'markdown',unit:'login',source:'docs/artifacts/authentication/changes/change-initial/tasks/README.md'}),e=>e.status===404);
+ assert.match((await queryRepository({path:f.root,section:'markdown',unit:'login',source:'docs/artifacts/authentication/versions/1.0.0/README.md'})).data.markdown,/source_change/);
+ assert.deepEqual(await fingerprint(f.root),before);
+});

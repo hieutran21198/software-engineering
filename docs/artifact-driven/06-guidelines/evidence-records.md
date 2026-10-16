@@ -54,12 +54,12 @@ Changing the illustrative result to `failed` or `incomplete` retains that outcom
 
 ## Publication reviews
 
-An artifact root or its owning unit brief may declare `publication_reviews`. Each record contains:
+An artifact identity record (the root README front matter) or its owning unit brief may declare `publication_reviews`. Each record contains:
 
 | Field | Rule |
 | --- | --- |
 | `artifact` | Safe artifact ID whose delivered version is reviewed. |
-| `version` | Existing snapshot directory ID for that artifact. |
+| `version` | Existing version directory name for that artifact. |
 | `source` | Safe Markdown source and optional heading with nonempty, scoped publication review details. |
 | `required_changes` | Nonempty list of required repository changes. Each has `repository`, `scope`, and `pull_request`. |
 
@@ -67,17 +67,17 @@ An artifact root or its owning unit brief may declare `publication_reviews`. Eac
 
 The source states that the listed required knowledge, implementation, and retained-delivery changes landed on `main` or `master`. Explain the reviewed scope and exclusions. This is a human-reviewed inventory, not an automatically complete dependency map.
 
-Readers must also compare the exact snapshot and originating delivery path sets and bytes against local protected refs. Missing or conflicting refs, modified delivery evidence, missing source details, or conflicting reviews prevent verified establishment. An offline reader does not fetch PRs or treat a URL as proof. The coordinator verifies remote merge states and required repository refs, then records the method and remaining limitations in the review source.
+Readers must also compare the version record or legacy snapshot, the identity record, and the originating delivery path sets and bytes against local protected refs. Missing or conflicting refs, modified delivery evidence, missing source details, or conflicting reviews prevent verified establishment. An offline reader does not fetch PRs or treat a URL as proof. The coordinator verifies remote merge states and required repository refs, then records the method and remaining limitations in the review source.
 
 Keep the existing scoped prose publication review readable when `publication_reviews` is absent. An empty explicit list provides no publication review. An invalid explicit list cannot fall back to a favorable legacy assertion.
 
 ## Reconcile a version declaration
 
-1. Inspect the declared root version, candidate complete snapshots, `source_change`, `delivery_tasks`, current implementation, and required repository changes.
+1. Inspect the declared `current_version`, the version records or candidate legacy snapshots, `source_change`, legacy `delivery_tasks`, current implementation, and required repository changes.
 2. Verify the exact knowledge and retained-delivery path sets and contents against protected refs. Verify required implementation scopes and remote PR merges in their owning repositories.
 3. Inspect validation separately. A failed or incomplete check stays visible after merge; publication does not make the check pass.
 4. If evidence is missing, name the missing proof and the smallest action needed to obtain it. Do not choose the largest version number or use the package version as proof.
-5. Prepare supported root and dependency-index corrections on a dedicated branch. Keep established snapshots and originating delivery evidence unchanged.
+5. Prepare supported identity record corrections on a dedicated branch. Keep established versions, legacy snapshots, and originating delivery evidence unchanged.
 6. Follow the normal team review and merge gate. Recheck publication before releasing dependent implementation.
 
 Apply these checks within existing phase self-checks and integration validation. No extra review phase, approval database, or workflow service is required.
