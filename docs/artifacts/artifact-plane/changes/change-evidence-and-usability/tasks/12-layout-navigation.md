@@ -1,7 +1,11 @@
 ---
 id: layout-navigation
 depends_on: [declared-evidence]
-evidence_records: []
+evidence_records:
+  - id: dod
+    method: npm test, build and browser checks recorded in Evidence.
+    result: passed
+    source: docs/artifacts/artifact-plane/changes/change-evidence-and-usability/tasks/12-layout-navigation.md#evidence
 ---
 
 # Present working and established knowledge

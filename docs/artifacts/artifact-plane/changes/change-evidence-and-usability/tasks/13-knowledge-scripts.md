@@ -1,7 +1,11 @@
 ---
 id: knowledge-scripts
 depends_on: [layout-reader]
-evidence_records: []
+evidence_records:
+  - id: dod
+    method: Script tests and the scripted migration cross-check recorded in Evidence.
+    result: passed
+    source: docs/artifacts/artifact-plane/changes/change-evidence-and-usability/tasks/13-knowledge-scripts.md#evidence
 ---
 
 # Add validate and migrate scripts

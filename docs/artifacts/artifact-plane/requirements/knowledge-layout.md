@@ -1,3 +1,9 @@
+---
+self_check:
+  result: passed
+  source: docs/artifacts/artifact-plane/requirements/knowledge-layout.md#impact-and-self-check
+---
+
 # Read the in-place knowledge layout
 
 ## Need and observed behavior

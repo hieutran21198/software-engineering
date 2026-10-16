@@ -1,6 +1,11 @@
 ---
 id: incremental-refresh
 depends_on: [model-explanations]
+evidence_records:
+  - id: dod
+    method: Observer tests and the 60-second benchmark recorded in Evidence; the byte target is not met.
+    result: incomplete
+    source: docs/artifacts/artifact-plane/changes/change-evidence-and-usability/tasks/05-incremental-refresh.md#evidence
 ---
 
 # Reduce idle full reads with bounded recovery

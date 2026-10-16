@@ -1,4 +1,7 @@
 ---
+self_check:
+  result: passed
+  source: docs/artifacts/artifact-plane/changes/change-evidence-and-usability/tasks/README.md#plan-self-check
 tasks:
   - 09-layout-records.md
   - 10-git-baseline.md

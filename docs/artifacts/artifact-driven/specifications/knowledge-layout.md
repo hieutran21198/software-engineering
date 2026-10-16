@@ -1,3 +1,9 @@
+---
+self_check:
+  result: passed
+  source: docs/artifacts/artifact-driven/specifications/knowledge-layout.md#specification-self-check
+---
+
 # In-place knowledge layout contract
 
 Governs N1 to N10 and K1 to K8 in requirements/knowledge-layout.md. ADD owns this contract, its guidance and the migration procedure. Readers that consume it belong to Artifact Plane. The snapshot-copy layout defined in knowledge.md and task-retention.md remains valid for existing artifacts and is called the legacy layout below.

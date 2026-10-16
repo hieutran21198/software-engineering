@@ -1,7 +1,11 @@
 ---
 id: adoption-preflight
 depends_on: []
-evidence_records: []
+evidence_records:
+  - id: dod
+    method: Go tests, vet, gofmt and conflict benchmarks recorded in Evidence.
+    result: passed
+    source: docs/artifacts/artifact-driven/changes/change-agent-efficiency/tasks/02-adoption-preflight.md#evidence
 ---
 
 # Collect adoption conflicts in one safe preflight

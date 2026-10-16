@@ -1,4 +1,7 @@
 ---
+self_check:
+  result: passed
+  source: docs/artifacts/artifact-driven/changes/change-agent-efficiency/tasks/README.md#coverage-and-self-check
 tasks:
   - 01-layout-guidance.md
   - 02-adoption-preflight.md

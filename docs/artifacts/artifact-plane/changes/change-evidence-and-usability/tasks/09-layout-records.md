@@ -1,7 +1,11 @@
 ---
 id: layout-reader
 depends_on: []
-evidence_records: []
+evidence_records:
+  - id: dod
+    method: npm test with in-place, mixed and transition fixtures recorded in Evidence.
+    result: passed
+    source: docs/artifacts/artifact-plane/changes/change-evidence-and-usability/tasks/09-layout-records.md#evidence
 ---
 
 # Detect the layout and read records

@@ -1,3 +1,9 @@
+---
+self_check:
+  result: passed
+  source: docs/artifacts/artifact-driven/requirements/knowledge-layout.md#impact-and-self-check
+---
+
 # Simpler knowledge layout for humans and agents
 
 ## Need and observed behavior

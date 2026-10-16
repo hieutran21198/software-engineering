@@ -1,7 +1,11 @@
 ---
 id: git-baseline
 depends_on: [layout-reader]
-evidence_records: []
+evidence_records:
+  - id: dod
+    method: npm test with review, publication and flow adapter cases recorded in Evidence.
+    result: passed
+    source: docs/artifacts/artifact-plane/changes/change-evidence-and-usability/tasks/10-git-baseline.md#evidence
 ---
 
 # Resolve the baseline and compare through Git

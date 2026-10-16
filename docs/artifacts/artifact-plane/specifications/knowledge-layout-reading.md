@@ -1,4 +1,7 @@
 ---
+self_check:
+  result: passed
+  source: docs/artifacts/artifact-plane/specifications/knowledge-layout-reading.md#self-check
 references:
   - artifact: artifact-driven
     element: specifications/knowledge-layout.md

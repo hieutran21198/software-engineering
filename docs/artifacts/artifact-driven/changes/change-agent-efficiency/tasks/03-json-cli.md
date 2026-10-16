@@ -1,7 +1,11 @@
 ---
 id: json-cli
 depends_on: [adoption-preflight]
-evidence_records: []
+evidence_records:
+  - id: dod
+    method: CLI tests and built-binary smoke test recorded in Evidence.
+    result: passed
+    source: docs/artifacts/artifact-driven/changes/change-agent-efficiency/tasks/03-json-cli.md#evidence
 ---
 
 # Add optional structured adoption results

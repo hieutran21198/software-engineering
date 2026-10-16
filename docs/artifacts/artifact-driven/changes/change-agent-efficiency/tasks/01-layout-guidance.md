@@ -1,7 +1,11 @@
 ---
 id: layout-guidance
 depends_on: []
-evidence_records: []
+evidence_records:
+  - id: dod
+    method: Bundle tests, mirror diff, link script, word counts and walkthrough recorded in Evidence.
+    result: passed
+    source: docs/artifacts/artifact-driven/changes/change-agent-efficiency/tasks/01-layout-guidance.md#evidence
 ---
 
 # Rewrite method and role guidance for the in-place layout

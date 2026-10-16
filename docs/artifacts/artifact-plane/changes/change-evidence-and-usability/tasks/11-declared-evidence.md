@@ -1,7 +1,11 @@
 ---
 id: declared-evidence
 depends_on: [git-baseline]
-evidence_records: []
+evidence_records:
+  - id: dod
+    method: npm test with workflow and scoped query cases recorded in Evidence.
+    result: passed
+    source: docs/artifacts/artifact-plane/changes/change-evidence-and-usability/tasks/11-declared-evidence.md#evidence
 ---
 
 # Derive declared evidence and version snapshots

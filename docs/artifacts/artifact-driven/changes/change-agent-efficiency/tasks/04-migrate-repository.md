@@ -1,7 +1,11 @@
 ---
 id: migrate-repository
 depends_on: [layout-guidance]
-evidence_records: []
+evidence_records:
+  - id: dod
+    method: Reconciliation, byte equality, graph and census checks recorded in Evidence.
+    result: passed
+    source: docs/artifacts/artifact-driven/changes/change-agent-efficiency/tasks/04-migrate-repository.md#evidence
 ---
 
 # Migrate this repository's artifacts to the in-place layout
