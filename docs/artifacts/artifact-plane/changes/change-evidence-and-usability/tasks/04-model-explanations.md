@@ -1,6 +1,6 @@
 ---
 id: model-explanations
-depends_on: [comparison-interface]
+depends_on: [layout-navigation]
 ---
 
 # Explain dependencies and model interactions

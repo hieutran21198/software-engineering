@@ -3,6 +3,8 @@ id: comparison-service
 depends_on: [publication-evidence]
 ---
 
+Superseded on 16 October 2026 by the in-place layout reading tasks 09 to 13. This file is unlisted historical context and is not executable.
+
 # Add explicit comparison targets to HTTP and MCP
 
 ## Scope and ownership

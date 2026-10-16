@@ -4,6 +4,8 @@ depends_on: [comparison-service]
 evidence_records: []
 ---
 
+Superseded on 16 October 2026 by the in-place layout reading tasks 09 to 13. This file is unlisted historical context and is not executable.
+
 # Bound complete agent context responses
 
 ## Scope and ownership

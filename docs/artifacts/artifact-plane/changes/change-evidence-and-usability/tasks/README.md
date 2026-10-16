@@ -1,52 +1,38 @@
 ---
 tasks:
-  - 01-publication-evidence.md
-  - 02-comparison-service.md
-  - 03-comparison-interface.md
+  - 09-layout-records.md
+  - 10-git-baseline.md
+  - 13-knowledge-scripts.md
+  - 11-declared-evidence.md
+  - 12-layout-navigation.md
   - 04-model-explanations.md
   - 05-incremental-refresh.md
   - 06-responsive-repair.md
-  - 08-compact-context.md
   - 07-integration-publication.md
 ---
 
-# artifact-plane evidence and usability plan
+# artifact-plane evidence, usability and in-place reading plan
 
-## Proposed agent-efficiency extension
+## Revision awaiting approval
 
-The seven existing tasks and their earlier authorization are retained. Add
-[compact agent context](08-compact-context.md) after comparison-service and before
-integration-publication. This material extension and the revised integration join
-await explicit approval under the current request. Do not begin this extension
-from the earlier approval. Keep one active Plane change and existing membership.
-No new ADD 2.4.0 establishment gate is needed; verify existing ADD 2.3.0 first.
-
-There is one changed repository. The revised handoff prepares one combined PR
-for proposed ADD 2.4.0 and Plane 1.14.0 after both integrated checks, preserving the
-two units and linking merged upstream PR #28. This replaces the pending separate
-downstream PR organization only; existing upstream delivery history stays intact.
+The 16 October 2026 investigation selected the ADD in-place knowledge layout. This plan replaces the publication-evidence, comparison-service, comparison-interface and compact-context tasks with in-place reading tasks, and retains model explanations, incremental refresh and responsive repair unchanged. The revised plan and join require explicit approval. Suggested Plane version remains 1.14.0, prepared as an in-place version record after the ADD migration.
 
 ## Gates and sequence
 
-Explicit approval of this new combined plan and establishment of the new ADD evidence contract are required before implementation. Recheck ADD 2.2.0 model metadata and the new evidence version on protected refs. These external gates are not cross-artifact task IDs.
+Explicit approval of this plan and establishment of the ADD in-place layout contract (proposed ADD 2.4.0) are required before the reader tasks start; recheck the contract on protected refs first. These external gates are not cross-artifact task IDs. The ADD plan offers one coordinated repository PR or strict two-PR gating; the choice is made at approval.
 
-1. [Interpret evidence and reconcile publication context](01-publication-evidence.md)
-2. [Add explicit comparison targets to HTTP and MCP](02-comparison-service.md)
-3. [Show comparison context and actionable evidence](03-comparison-interface.md)
-4. [Explain dependencies and model interactions](04-model-explanations.md)
-5. [Reduce idle full reads with bounded recovery](05-incremental-refresh.md)
-6. [Resolve the merged browser regressions](06-responsive-repair.md)
-7. [Bound complete agent context responses](08-compact-context.md)
-8. [Validate the combined outcome and prepare Plane review](07-integration-publication.md)
+1. [Detect the layout and read records](09-layout-records.md)
+2. [Resolve the baseline and compare through Git](10-git-baseline.md)
+3. [Add validate and migrate scripts](13-knowledge-scripts.md), after records
+4. [Derive declared evidence and version snapshots](11-declared-evidence.md)
+5. [Present working and established knowledge](12-layout-navigation.md)
+6. [Explain dependencies and model interactions](04-model-explanations.md)
+7. [Reduce idle full reads with bounded recovery](05-incremental-refresh.md)
+8. [Resolve the merged browser regressions](06-responsive-repair.md)
+9. [Validate the combined outcome and prepare Plane review](07-integration-publication.md)
 
-## Execution
-
-Execute sequentially on dedicated branches. Parsing, presentation and validation share sources; sequence keeps integration review simple. If later parallel work is useful, use separate worktrees with nonconflicting ownership and coordinator-owned knowledge. Do not copy prior tasks or claim prior checks validate this delivery.
+Tasks 05 and 06 have no internal prerequisite and can run in separate worktrees; task 04 follows navigation because it shares the inspector. Reader tasks run sequentially because they share server modules.
 
 ## Plan self-check
 
-All requirements map to tasks with explicit ownership, governing contracts, prerequisites and observable DoD. Membership and acyclicity are checked before handoff. KISS reuses existing files/services and limits the scaffold to guidance. STE preserves verification and uncertainty boundaries. The user approved this concrete plan and proposed versions in the conversation. Delivery results remain task-owned.
-
-## Plan approval
-
-The user explicitly approved the ten-task plan and suggested ADD 2.3.0 and Plane 1.14.0 versions. The unchanged approved tasks retain that authorization. Required upstream establishment remains a separate execution gate; material scope or contract changes require renewed approval.
+L1 to L7 map to tasks 09 to 13; earlier requirements keep their retained tasks. Membership, unique IDs, prerequisite resolution and acyclicity are checked before handoff. KISS extends existing modules and adds two scripts. STE keeps legacy and in-place paths distinct. Results remain task-owned.
