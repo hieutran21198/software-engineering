@@ -75,3 +75,19 @@ PR #26 and #27 are merged. Preserve prior snapshots, delivery tasks and model-ex
 ## Validation evidence
 
 No delivery checks have run for this new outcome. GitHub reports successful Go/docs checks and failed Artifact Plane checks on PRs #26/#27. PR #26 failure identifies horizontal overflow at width 851. Preparation checks will be recorded separately from implementation evidence.
+
+## Reviewable plan
+
+1. Deliver ADD evidence rules, publication reconciliation guidance and the minimal authoring scaffold. Validate bundle/adoption and documentation. Prepare suggested ADD 2.3.0 and an upstream PR.
+2. Stop for team review and merge. Verify required protected-ref publication and recheck the consumer plan.
+3. Implement Plane evidence interpretation and explicit comparison, model explanations, incremental observation and responsive repair. Run the full integrated checks and performance comparison. Prepare suggested Plane 1.14.0 and a linked downstream PR.
+4. Stop for team review and merge. Verify both exact member deliveries before claiming shared completion.
+
+- [ADD plan](../../artifact-driven/changes/change-evidence-and-usability/tasks/README.md)
+- [Artifact Plane plan](../../artifact-plane/changes/change-evidence-and-usability/tasks/README.md)
+
+Approval requested for these ten tasks and the suggested compatible minor versions. This is a new plan; the earlier model-explanations approval does not authorize its expanded scope. The user may override version choices. No implementation or canonical bundle edits have been made during preparation.
+
+## Preparation validation
+
+Preparation checks passed: 10 fresh tasks, 14 internal dependency edges, two unique unit members, 13 valid flow records, eight affected journeys and 21 resolving Markdown links without ancestor-page links. Existing task/unit parsers validate both plans. All current task DoD boxes remain unchecked. Only project knowledge changed; application code, canonical/embedded bundles, prior changes and established snapshots remain untouched. These checks validate the plan, not the fixes. PR #27 additionally reports a retry-button detachment timeout in execution-history recovery; task 06 covers diagnosis and focused validation.
