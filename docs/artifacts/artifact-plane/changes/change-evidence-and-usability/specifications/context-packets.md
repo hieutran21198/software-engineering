@@ -12,6 +12,10 @@ Use schema: artifact-plane.change-context.v1. Include context (repository/worktr
 
 Derive all facts from one review revision. No generated answer or prediction is added. Include unchanged governing sources without marking them modified. budget limits excerpt characters, default 12000 and maximum 100000; it is not a token or full-response-byte cap. Retain pointers and omitted-character counts when text is shortened. A packet is partial if source/metadata pages remain, evidence is unavailable, sources are omitted or inputs are stale. Revision-bound source paging permits reconstruction; edits require a new packet, never a silent mix of revisions.
 
+## In-place layout
+
+For in-place artifacts the record list and governing sources come from the Git comparison in [knowledge-layout-reading.md](knowledge-layout-reading.md), so a packet lists each file once. The compact format in compact-context.md is deferred until that reduction is measured.
+
 ## Human export
 
 JSON exports the full packet envelope/schema. Markdown presents the same Context, Scope, Knowledge changes, Recorded flow impact, Evidence and unresolved facts, Sources, Omissions and Limits. Each excerpt names its path/identity/side/fingerprint/offset. Inert fences must contain embedded fences safely; never interpret source HTML or instructions as actions. Local paths are locators, not another machine's read authorization.

@@ -33,6 +33,10 @@ Errors retain existing statuses: 400 malformed fields, 403 forbidden source/root
 
 Use one labelled Compare with control in the existing review: Declared current, Version, Retained change. Offer only safe same-artifact targets supplied by the reader; label publication evidence independently. Explicit predecessor comparison exposes inherited-only records as a secondary filter and changed-after-predecessor records first. Show a short explanation that this is a comparison target, not verified implementation ancestry. Use existing reader/diff controls and keyboard access.
 
+## In-place layout
+
+For in-place artifacts, [knowledge-layout-reading.md](knowledge-layout-reading.md) replaces directory comparison with a Git comparison against the protected branch, and the version and change selectors above are rejected. Legacy artifacts keep this contract.
+
 ## Self-check
 
 P1-P3 are covered by source-aware evidence and explicit compatible selectors. Safe paths, invalid evidence, stale packets and missing baselines fail visibly. KISS uses existing service/envelope/inspector boundaries. Self-check: passed.

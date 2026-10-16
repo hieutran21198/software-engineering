@@ -22,6 +22,7 @@ flow:
         - retention-contract
         - evidence-usability-contract
         - explicit-evidence-guide
+        - layout-contract
     - id: criteria
       title: Check shared acceptance and combined integration evidence
       supports:
@@ -34,6 +35,7 @@ flow:
         - retention-contract
         - evidence-usability-contract
         - explicit-evidence-guide
+        - layout-contract
     - id: report
       title: Report supported completion or explicit missing evidence
       supports:
@@ -94,6 +96,12 @@ flow:
       path: docs/artifact-driven/06-guidelines/evidence-records.md
       requires: Record explicit evidence and reconcile version declarations using
         source and merge checks.
+      basis: documented
+    - id: layout-contract
+      kind: element
+      artifact: artifact-driven
+      element: specifications/knowledge-layout.md
+      requires: Resolve in-place version records and their introducing commits for member delivery and publication checks.
       basis: documented
   gaps:
     - Documented evidence is not independently verified test success; this

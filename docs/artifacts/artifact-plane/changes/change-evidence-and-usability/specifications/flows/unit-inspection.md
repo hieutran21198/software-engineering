@@ -23,6 +23,7 @@ flow:
       supports:
         - units
         - evidence-usability-contract
+        - layout-reading
     - id: graph
       title: Project existing artifact/task prerequisites
       supports:
@@ -167,6 +168,12 @@ flow:
       element: specifications/evidence-and-comparison.md
       requires: Select comparison context and interpret evidence without inferring
         approval or publication.
+      basis: documented
+    - id: layout-reading
+      kind: element
+      artifact: artifact-plane
+      element: specifications/knowledge-layout-reading.md
+      requires: Resolve in-place version records and their introducing commits for member delivery.
       basis: documented
   gaps:
     - Recorded passing assertions are not independently executed tests; missing

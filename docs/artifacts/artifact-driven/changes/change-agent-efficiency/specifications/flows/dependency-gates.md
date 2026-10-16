@@ -13,6 +13,7 @@ flow:
       supports:
         - dependency-guidance
         - model-contract
+        - layout-contract
       interactions:
         - from: supplier
           to: contract
@@ -46,6 +47,7 @@ flow:
       title: Compare established contracts with prepared knowledge
       supports:
         - dependency-guidance
+        - layout-contract
       interactions:
         - from: contract
           to: consumer
@@ -123,6 +125,12 @@ flow:
       element: specifications/model-explanations.md
       requires: Keep reusable models and evidence-linked interactions separate from prerequisite
         graphs.
+      basis: documented
+    - id: layout-contract
+      kind: element
+      artifact: artifact-driven
+      element: specifications/knowledge-layout.md
+      requires: Resolve established knowledge from the protected branch and proposed knowledge from the branch difference for in-place artifacts.
       basis: documented
   gaps:
     - The flow describes gating policy; it is not an observation that a task is currently

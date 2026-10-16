@@ -15,6 +15,7 @@ flow:
         - knowledge
         - evidence-usability-contract
         - explicit-evidence-guide
+        - layout-contract
     - id: specification
       title: Define contracts and assess affected flow support
       supports:
@@ -29,6 +30,7 @@ flow:
         - evidence-usability-contract
         - explicit-evidence-guide
         - minimal-scaffold-check
+        - layout-contract
     - id: approval
       title: Obtain explicit approval for the concrete plan
       supports:
@@ -53,6 +55,7 @@ flow:
         - publication-flow
         - evidence-usability-contract
         - explicit-evidence-guide
+        - layout-contract
   transitions:
     - from: requirement
       to: specification
@@ -134,6 +137,12 @@ flow:
       artifact: artifact-driven
       element: specifications/agent-efficiency.md
       requires: Reuse current context and recover with explicit approval and dependency gates.
+      basis: documented
+    - id: layout-contract
+      kind: element
+      artifact: artifact-driven
+      element: specifications/knowledge-layout.md
+      requires: Edit working knowledge in place, record versions and changes without copies, and derive established and proposed knowledge from the protected branch.
       basis: documented
   gaps:
     - Approval is available conversation/Git evidence, not a field in this map.

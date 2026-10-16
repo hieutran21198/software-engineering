@@ -21,9 +21,9 @@ These are internal implementation relationships, not artifact DAG edges. Artifac
 
 ## Knowledge layout
 
-Project identity is docs/artifacts/artifact-driven/README.md. Published 2.2.0 knowledge supplies the baseline. Proposed knowledge and fresh delivery work are in changes/change-evidence-and-usability/{requirements,specifications,decisions,tasks}. The reusable model and interaction extension is defined in specifications/model-explanations.md; specifications/domain-model.md declares the owned concepts used by the dependency-gates flow. The new evidence contract remains proposed until required review and merge. Root README links to one current snapshot and one active change. Later changes copy complete knowledge excluding legacy tasks and delivered provenance, and create fresh plans. Historical delivery stays in its originating change. Specifications/task-retention.md defines source_change, delivery_tasks: change and retained protected-ref evidence.
+Project identity is docs/artifacts/artifact-driven/README.md. Published 2.2.0 knowledge supplies the baseline. Proposed knowledge and fresh delivery work are in changes/change-evidence-and-usability/{requirements,specifications,decisions,tasks}. The reusable model and interaction extension is defined in specifications/model-explanations.md; specifications/domain-model.md declares the owned concepts used by the dependency-gates flow. The new evidence contract remains proposed until required review and merge. Root README links to one current snapshot and one active change. Later changes copy complete knowledge excluding legacy tasks and delivered provenance, and create fresh plans. Historical delivery stays in its originating change. Specifications/task-retention.md defines source_change, delivery_tasks: change and retained protected-ref evidence. These rules describe the legacy layout. [knowledge-layout.md](knowledge-layout.md) defines the in-place layout for new and migrated artifacts: working knowledge once per artifact, one-file version records, change records with retained tasks, and derivation of established and proposed knowledge from the protected branch.
 
-The root owns purpose, scope, owner, established version and dependency names. docs/artifacts/dag.yaml indexes roots as artifacts: <id>: {path: <relative artifact path>, depends_on: [<ids>]}. It is derived, not independently authoritative. A new unestablished artifact has no current version and is not inserted into the established graph during phase preparation. Publication prepares consistent root and index changes as proposed state until merge.
+The root owns purpose, scope, owner, established version and dependency names in its identity record. docs/artifacts/dag.yaml indexes legacy roots as artifacts: <id>: {path: <relative artifact path>, depends_on: [<ids>]}. It is derived, not independently authoritative, and in-place artifacts do not use it. A new unestablished artifact has no current version and is not inserted into the established graph during phase preparation. Publication prepares consistent root and index changes as proposed state until merge.
 
 Within a consumer element, references entries contain artifact, element and requires. Element paths are relative to the owning artifact snapshot; established references resolve through its root's current version, not a pinned historical directory. Proposed references explicitly identify their supplying active change. dependencies.yaml inside a change uses artifact, add and remove lists for proposed edges. Planning combines roots with proposals, preserving their distinction and checking cycles/missing artifacts. Dependent Implementation waits for required upstream establishment and then rechecks contracts.
 
@@ -58,6 +58,10 @@ All R1–R4, R6, R8–R9 behavior is recovered from the inventory. One cohesive 
 ## System flow extension
 
 Specifications/system-flows.md defines owned runtime/method journeys and unit flow assessment. Flow documents are specification elements; their runtime transitions do not become artifact or task prerequisites. Readers derive views and indexes from these records.
+
+## In-place layout extension
+
+[knowledge-layout.md](knowledge-layout.md) defines the in-place layout, its records, identities, derived facts, lifecycle and migration. It replaces the copy instructions above for in-place artifacts and leaves legacy artifacts unchanged.
 
 ## Explicit evidence and authoring
 

@@ -1,5 +1,7 @@
 # Bounded compact change context
 
+Deferred: the in-place layout reading in knowledge-layout-reading.md removes the copied sources that made packets large. Measure packet size after that work before implementing this format. The contract below is retained unchanged for that later decision.
+
 Governs R1-R6 and A1-A5 in requirements/agent-efficiency.md. Extend the existing
 review service, HTTP route and MCP tools; do not add another context service.
 

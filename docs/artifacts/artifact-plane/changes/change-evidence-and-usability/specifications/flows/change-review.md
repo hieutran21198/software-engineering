@@ -29,6 +29,7 @@ flow:
         - review-checks
         - browser-checks
         - evidence-usability-contract
+        - layout-reading
     - id: impact
       title: Trace recorded relationships on both comparison sides
       supports:
@@ -47,6 +48,7 @@ flow:
         - review-checks
         - browser-checks
         - evidence-usability-contract
+        - layout-reading
     - id: return
       title: Return to delivery or capture the reviewed context
       supports:
@@ -138,6 +140,12 @@ flow:
       element: specifications/evidence-and-comparison.md
       requires: Select comparison context and interpret evidence without inferring
         approval or publication.
+      basis: documented
+    - id: layout-reading
+      kind: element
+      artifact: artifact-plane
+      element: specifications/knowledge-layout-reading.md
+      requires: Compare in-place working knowledge with the protected-branch baseline through Git and derive declared evidence.
       basis: documented
   gaps:
     - Declared current is not a historical code predecessor; recorded

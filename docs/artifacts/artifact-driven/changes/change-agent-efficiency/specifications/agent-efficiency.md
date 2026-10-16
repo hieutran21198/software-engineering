@@ -76,8 +76,9 @@ handoff message and existing files; create no recovery ledger or approval regist
 ## Retained evidence and consistency
 
 Correct current foundation principles to match writing-artifacts and validation:
-new snapshots contain complete requirements/specifications/decisions, exclude tasks,
-and declare change-owned provenance. Preserve delivered versions, originating plans
+new legacy snapshots contain complete requirements/specifications/decisions, exclude
+tasks, and declare change-owned provenance; in-place versions are records as defined
+in knowledge-layout.md. Preserve delivered versions, originating plans
 and evidence while referenced; legacy snapshots retain version-owned tasks.
 Keep the current canonical and packaged bundles identical. Amend this new change's
 knowledge only where affected. Do not rewrite established snapshots to fix wording.

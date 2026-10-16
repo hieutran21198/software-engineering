@@ -29,6 +29,7 @@ flow:
         - reader
         - evidence-usability-contract
         - model-presentation
+        - layout-reading
       interactions:
         - from: snapshot
           to: artifact
@@ -74,6 +75,7 @@ flow:
         - presentation-checks
         - evidence-usability-contract
         - model-presentation
+        - layout-reading
       interactions:
         - from: snapshot
           to: change
@@ -219,6 +221,12 @@ flow:
       artifact: artifact-plane
       element: specifications/model-explanations.md
       requires: Explain owned models and evidence-linked interactions in this journey.
+      basis: documented
+    - id: layout-reading
+      kind: element
+      artifact: artifact-plane
+      element: specifications/knowledge-layout-reading.md
+      requires: Detect each artifact layout and read in-place identity, change and version records from front matter only.
       basis: documented
   gaps:
     - The flow documents discovery behavior, not complete knowledge coverage or

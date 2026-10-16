@@ -27,6 +27,7 @@ flow:
         - retention-contract
         - evidence-usability-contract
         - explicit-evidence-guide
+        - layout-contract
     - id: review
       title: Push feature branch and open linked PRs
       supports:
@@ -39,6 +40,7 @@ flow:
         - knowledge
         - evidence-usability-contract
         - explicit-evidence-guide
+        - layout-contract
     - id: shared
       title: Reassess shared outcome and release eligible downstream work
       supports:
@@ -105,6 +107,12 @@ flow:
       artifact: artifact-driven
       element: specifications/agent-efficiency.md
       requires: Preserve change-owned delivery evidence and complete task-free knowledge snapshots.
+      basis: documented
+    - id: layout-contract
+      kind: element
+      artifact: artifact-driven
+      element: specifications/knowledge-layout.md
+      requires: Edit working knowledge in place, record versions and changes without copies, and derive established and proposed knowledge from the protected branch.
       basis: documented
   gaps:
     - A proposed snapshot or PR alone does not establish the version.

@@ -38,6 +38,7 @@ flow:
         - mcp-adapter
         - adapter-checks
         - evidence-usability-contract
+        - layout-reading
     - id: deliver
       title: Copy or download locally, or return through configured MCP
       supports:
@@ -165,6 +166,12 @@ flow:
       artifact: artifact-plane
       element: specifications/compact-context.md
       requires: Offer bounded compact context with explicit omissions and revision-bound continuation.
+      basis: documented
+    - id: layout-reading
+      kind: element
+      artifact: artifact-plane
+      element: specifications/knowledge-layout-reading.md
+      requires: List each in-place knowledge file once from the Git comparison.
       basis: documented
   gaps:
     - A captured packet cannot prove continuing freshness or authorize

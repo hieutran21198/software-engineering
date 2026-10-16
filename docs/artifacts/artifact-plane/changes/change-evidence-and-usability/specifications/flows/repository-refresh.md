@@ -31,6 +31,7 @@ flow:
       supports:
         - flow-contract
         - evidence-usability-contract
+        - layout-reading
     - id: apply
       title: Apply only the current project generation
       supports:
@@ -101,6 +102,12 @@ flow:
       element: specifications/incremental-observation.md
       requires: Invalidate safe changed sources and periodically reconcile missed
         filesystem events.
+      basis: documented
+    - id: layout-reading
+      kind: element
+      artifact: artifact-plane
+      element: specifications/knowledge-layout-reading.md
+      requires: Invalidate in-place baselines and comparisons when the protected ref or working knowledge changes.
       basis: documented
   gaps:
     - Referenced implementation/test observation must be registered by a flow
