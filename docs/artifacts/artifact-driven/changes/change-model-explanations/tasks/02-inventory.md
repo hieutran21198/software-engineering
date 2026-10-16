@@ -23,4 +23,4 @@ All declared models resolve to owned current-change knowledge. Each interaction 
 
 ## Evidence
 
-Not executed during preparation. Record actual commands, results and limitations after implementation.
+Passed: node /tmp/check-plane-domain.mjs checked three model declarations, three participant roles and six supported interactions. All model evidence paths resolve to nonempty owning knowledge; five ADD flows still parse as valid under the existing legacy flow reader, with 19 readable support targets. The dependency-gates flow retains its original step IDs, entries and all transitions, including the revise/recheck loop. Each action was reviewed against dependency guidance, the flow contract or the task contract; evidence remains documented rather than observed execution. Models identify Artifact, Change and Version concepts, not live instances or publication claims. Six negative authoring cases detect duplicate identities, missing model sources, undeclared endpoints/supports and incomplete proposed selectors. KISS and STE self-check passed.
