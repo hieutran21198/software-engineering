@@ -68,6 +68,7 @@ function ArtifactNode({ data, selected }) {
       <div className="node-meta">
         <span>
           {a.currentVersion ? `v${a.currentVersion}` : "No established version"}
+          {a.proposedVersion ? ` → v${a.proposedVersion} proposed` : ""}
         </span>
         <span>{a.elements.length} elements</span>
       </div>
@@ -106,15 +107,18 @@ function ArtifactNode({ data, selected }) {
     </div>
   );
 }
+// In-place elements are labeled by their bytes against the protected branch.
+const workingLabel = (e) =>
+  ({ added: "Working · proposed (new)", modified: "Working · proposed (changed)", unchanged: "Working · established" })[e.state] || "Working · baseline unknown";
 function ElementNode({ data, selected }) {
   const e = data.element;
   return (
     <div className={`element-node ${selected ? "selected" : ""}`}>
       <Handles />
       <span
-        className={`source-tag ${e.source.startsWith("change:") ? "proposed" : ""}`}
+        className={`source-tag ${e.source.startsWith("change:") || ["added", "modified"].includes(e.state) ? "proposed" : ""}`}
       >
-        {e.source.replace(":", " · ")}
+        {e.source === "working" ? workingLabel(e) : e.source.replace(":", " · ")}
       </span>
       <strong title={e.path}>{e.path}</strong>
     </div>
@@ -408,6 +412,13 @@ export function ProjectExplorer({active: isActive = true, initialPath = "", onOp
     setSelection({artifact:e.artifact,element:e.id});setReviewKey(null);setDeliveryChange(null);setTaskChange(null);
     openReader({returnFocus:e.id,source:e.file,title:e.path,parent:'artifact',scope:{artifact:e.artifact,...(e.source.startsWith('change:')?{change:e.source.slice(7)}:{})}});
   }
+  // The established view reads protected-ref bytes through the contained query route.
+  function readEstablished(e){
+    const ref=String(artifact?.baseline?.ref||'main').replace('refs/heads/','');
+    setSelection({artifact:e.artifact,element:e.id});setReviewKey(null);setDeliveryChange(null);setTaskChange(null);
+    openReader({returnFocus:e.id,source:e.file,title:`${e.path} · established on ${ref}`,parent:'artifact',scope:{artifact:e.artifact},
+      load:signal=>repositoryQuery({path:projectRoot,worktree:unitWorktree,section:'markdown',artifact:e.artifact,source:e.file,revision:'established'},signal).then(r=>({markdown:r.data.markdown,source:r.data.source,partial:r.completeness==='partial'}))});
+  }
   function selectTarget(ref) {
     revealElement(ref.artifact, ref.targetId);
   }
@@ -675,6 +686,7 @@ export function ProjectExplorer({active: isActive = true, initialPath = "", onOp
                 {snapshot.diagnostics.map((d, i) => (
                   <p key={i}>
                     <strong>{d.code}</strong>
+                    {d.layout && <span>{d.layout === "in-place" ? "In-place layout" : "Legacy layout"}</span>}
                     <span>{d.path}</span>
                     {d.message}
                   </p>
@@ -743,11 +755,13 @@ export function ProjectExplorer({active: isActive = true, initialPath = "", onOp
               <div className="details-meta">
                 <span>
                   {element
-                    ? element.source
+                    ? element.source === "working" ? workingLabel(element) : element.source
                     : artifact.currentVersion
                       ? `Established v${artifact.currentVersion}`
                       : "No established version"}
                 </span>
+                {!element && artifact.proposedVersion && <span>Proposed v{artifact.proposedVersion}</span>}
+                {!element && <span>{artifact.layout === "in-place" ? "In-place layout" : "Legacy snapshot layout"}</span>}
                 {!element && (
                   <span>
                     Active change:{" "}
@@ -840,6 +854,7 @@ export function ProjectExplorer({active: isActive = true, initialPath = "", onOp
               <section>
                 <button onClick={()=>{if(element?.source?.startsWith('change:'))chooseKnowledge('planning');openFlows({artifact:artifact.id,worktree:selectedWorktree?.path||snapshot.repository.path,...(element?{ids:[element.id]}:{})});}}>Find participating flows</button>
                 {element&&<button onClick={()=>readElement(element)}>Read document</button>}
+                {element?.state==='modified'&&<button onClick={()=>readEstablished(element)}>Read established on {String(artifact.baseline?.ref||'main').replace('refs/heads/','')}</button>}
               </section>
             </>
           ) : (

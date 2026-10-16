@@ -117,7 +117,7 @@ function declaredChange(artifact, name, files, data, diagnostics) {
   if (version) {const s = step('Version preparation');s.state = 'documented-complete';s.evidence.push(note('declared', `docs/artifacts/${artifact.id}/versions/${version}/README.md`, 'Version record names this change.'));}
   const delivered = !!version && !!artifact.baseline && data.baselines?.[artifact.id]?.versionRecords?.includes(version);
   const current = steps.find(s => s.state !== 'documented-complete');
-  return {artifact: artifact.id, name, layout: 'in-place', declaredActive: open, currentStep: open ? current?.name ?? null : null,
+  return {artifact: artifact.id, name, layout: 'in-place', version, declaredActive: open, currentStep: open ? current?.name ?? null : null,
     inferenceReason: open ? 'Derived from declared evidence; undeclared steps are not declared.' : 'Retained change record.',
     steps, tasks, taskGraph, history: !open, lastCommitAt: null,
     historyReason: delivered ? 'Its version record is on the protected ref.' : version ? 'Its version record is proposed on this branch.' : open ? '' : meta(name)?.layout === 'legacy' ? 'Retained legacy change record with copied knowledge.' : 'Another open change record exists.'};

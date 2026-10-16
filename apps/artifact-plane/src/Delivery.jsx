@@ -1,6 +1,6 @@
 import React,{useId} from 'react';
 
-const stateLabel = state => state === 'documented-complete' ? 'Documented complete' : state;
+const stateLabel = state => ({'documented-complete':'Documented complete','declared-incomplete':'Declared incomplete','not-declared':'Not declared'})[state] || state;
 const natural = new Intl.Collator('en', {numeric:true});
 export const changeKey = (worktree, change) => JSON.stringify([worktree.path, change.artifact, change.name]);
 
@@ -27,7 +27,7 @@ export function ChangeList({worktree, artifact, selected, onSelect, historiesOpe
  const changes = (worktree?.changes || []).filter(c => c.artifact === artifact);
  const histories = changes.filter(c => c.history).sort((a,b) => (b.lastCommitAt ?? -1) - (a.lastCommitAt ?? -1) || natural.compare(a.name,b.name));
  const button = c => <button className={'delivery-change' + (selected === changeKey(worktree,c) ? ' active' : '')} key={c.name} onClick={() => onSelect(changeKey(worktree,c))}>
-  <span>{c.name}</span><small>{c.history ? 'History' : c.currentStep || (c.loadState==='not-loaded'?'':'Unknown')}</small>
+  <span>{c.name}</span><small>{c.version ? `Version ${c.version}` : c.history ? 'History' : c.currentStep || (c.loadState==='not-loaded'?'':'Unknown')}</small>
  </button>;
  return <section className="change-delivery" aria-label="Change delivery">
   <h3>Delivery work</h3>
@@ -52,7 +52,7 @@ export function ChangeDetails({context, phase, onPhase, onBack, onTaskGraph, onR
   <h2>{step?.name || `${change.artifact} / ${change.name}`}</h2>
   <div className="details-meta"><span>{worktree.branch || 'Detached HEAD'}</span><span>{worktree.path}</span><span>{change.artifact} / {change.name}</span></div>
   {change.history && <p className="muted">{change.historyReason}</p>}
-  <p className="tiny" hidden={pending}>Latest inspected change commit: {change.lastCommitAt === null ? 'Unknown' : new Date(change.lastCommitAt*1000).toISOString()} · bounded local history</p>
+  <p className="tiny" hidden={pending||change.layout==='in-place'}>Latest inspected change commit: {change.lastCommitAt === null ? 'Unknown' : new Date(change.lastCommitAt*1000).toISOString()} · bounded local history</p>
   <p className="muted" role="status">{pending?'Loading evidence…':change.inferenceReason}</p>
   {change.declaredActive && <p className="tiny">Declared change; this does not prove ongoing execution.</p>}
   {worktree.diagnostics.filter(d=>d.message.includes(`${change.artifact}/${change.name}`)).map((d,i) => <p className="workflow-diagnostic" key={i}>{d.message}</p>)}
@@ -60,8 +60,8 @@ export function ChangeDetails({context, phase, onPhase, onBack, onTaskGraph, onR
   <nav hidden={pending} className="delivery-phases" aria-label="Change phases">{change.steps.map(s => <button key={s.name} aria-pressed={s.name === phase} onClick={() => onPhase(s.name)}><span>{s.name}</span><small>{stateLabel(s.state)}</small></button>)}</nav>
   {pending?null:step ? <section><h3>{stateLabel(step.state)}</h3>
    {step.evidence.length ? <ul>{step.evidence.map((e,i) => <li key={i}>{e.explanation}{e.file && <small>{e.file}</small>}</li>)}</ul> : <p className="muted">No completion evidence available.</p>}
-   {step.completionCommit ? <><p className="tiny">Commit introducing completion evidence</p><Commit commit={step.completionCommit}/></> : <p className="tiny">Exact completion commit unknown.</p>}
-   <h3>Associated commits</h3>{step.commits.length ? step.commits.map(c => <Commit key={c.id} commit={c}/>) : <p className="muted">None.</p>}
+   {change.layout==='in-place' ? <p className="tiny">Declared evidence; Git history is not replayed.</p> : <>{step.completionCommit ? <><p className="tiny">Commit introducing completion evidence</p><Commit commit={step.completionCommit}/></> : <p className="tiny">Exact completion commit unknown.</p>}
+   <h3>Associated commits</h3>{step.commits.length ? step.commits.map(c => <Commit key={c.id} commit={c}/>) : <p className="muted">None.</p>}</>}
   </section> : <section><h3>Task evidence ({change.tasks.length})</h3>{change.tasks.map(t => <div className="workflow-task" key={t.path}><p>{t.path}</p><small>{t.checked} checked · {t.unchecked} unchecked · {t.state}{t.inherited ? ' · Inherited / historical' : ''}</small></div>)}</section>}
  </div>;
 }

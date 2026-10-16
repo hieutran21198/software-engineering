@@ -61,6 +61,7 @@ test('L3/L4: scoped in-place sections match full evidence and read root knowledg
  const change=await queryRepository({path:f.root,section:'history',artifact:'authentication',change:'change-login'});
  assert.equal(change.data.currentStep,unit.members[0].workflow.currentStep);
  const markdown=await queryRepository({path:f.root,section:'markdown',unit:'login',source:'docs/artifacts/authentication/specifications/login.md'});assert.match(markdown.data.markdown,/Login rules/);
- await assert.rejects(queryRepository({path:f.root,section:'markdown',unit:'login',source:'docs/artifacts/authentication/versions/1.0.0/README.md'}),e=>e.status===404);
+ await assert.rejects(queryRepository({path:f.root,section:'markdown',unit:'login',source:'docs/artifacts/authentication/changes/change-initial/tasks/README.md'}),e=>e.status===404);
+ assert.match((await queryRepository({path:f.root,section:'markdown',unit:'login',source:'docs/artifacts/authentication/versions/1.0.0/README.md'})).data.markdown,/source_change/);
  assert.deepEqual(await fingerprint(f.root),before);
 });

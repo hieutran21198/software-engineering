@@ -590,5 +590,10 @@ export function buildSnapshot(files, repository = {}, inputDiagnostics = [], opt
     }
   checkCycles(effectiveEdges(edges), "established", diagnostics);
   checkCycles(effectiveEdges(edges, true), "planning", diagnostics);
+  // Diagnostics name the layout of the artifact they apply to.
+  for (const d of diagnostics) {
+    const owner = typeof d.path === "string" ? byId.get(d.path.slice(BASE.length).split("/")[0]) : null;
+    if (owner && d.path.startsWith(BASE)) d.layout ??= owner.layout;
+  }
   return { repository, artifacts, edges, references, diagnostics };
 }
