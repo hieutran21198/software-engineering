@@ -45,18 +45,35 @@ test('identical task plans show only the selected source worktree activity',asyn
  }finally{s.close();git(f.root,'worktree','remove','--force',other);await f.cleanup();}
 });
 
-test('execution navigation recovers a failed read, hides an empty result and returns when recording begins',async({page})=>{
- const f=await runtimeFixture(),store=new RuntimeStore({stateDir:stateDir()});let fail=true;
+// Manual retry and automatic recovery are separate paths. The event stream is
+// held in a network error during the manual case, so no background refresh can
+// recover the history (and detach the button) before the click.
+const failingHistory=async(page,state)=>page.route('**/api/runtime/query',async route=>{if(state.fail)await route.fulfill({status:500,contentType:'application/json',body:JSON.stringify({error:'History temporarily unavailable'})});else await route.continue();});
+test('execution navigation retries a failed read manually, hides an empty result and returns when recording begins',async({page})=>{
+ const f=await runtimeFixture(),store=new RuntimeStore({stateDir:stateDir()}),state={fail:true};
  try{
-  await page.route('**/api/runtime/query',async route=>{if(fail)await route.fulfill({status:500,contentType:'application/json',body:JSON.stringify({error:'History temporarily unavailable'})});else await route.continue();});
+  await failingHistory(page,state);await page.route('**/api/runtime/events',route=>route.abort());
   await open(page,f.root);
   await expect(page.getByRole('status').filter({hasText:'History temporarily unavailable'})).toBeVisible();
-  fail=false;await page.getByRole('button',{name:'Retry execution history',exact:true}).click();
+  state.fail=false;await page.getByRole('button',{name:'Retry execution history',exact:true}).click();
   await expect(page.locator('.recorded-picker')).toHaveCount(0);
+  await page.unroute('**/api/runtime/events');
   const attempt=await bind(store,f.root);hook(f.root,'session','UserPromptSubmit');
-  await expect(page.getByLabel('Recorded executions',{exact:true})).toBeVisible();
+  await expect(page.getByLabel('Recorded executions',{exact:true})).toBeVisible({timeout:15000});
   await expect(page.getByLabel('Recorded executions',{exact:true}).locator('option').filter({hasText:/^live ·/})).toHaveCount(1);
   await page.getByLabel('Recorded executions',{exact:true}).selectOption(attempt.context);
   await expect(page.getByLabel('Unit of work exploration').locator('.unit-node.task').filter({hasText:'Task A'})).toContainText('Processing');
+ }finally{store.close();await f.cleanup();}
+});
+test('execution navigation recovers a failed read automatically when the observer reports activity',async({page})=>{
+ const f=await runtimeFixture(),store=new RuntimeStore({stateDir:stateDir()}),state={fail:true};
+ try{
+  await failingHistory(page,state);
+  await open(page,f.root);
+  await expect(page.getByRole('status').filter({hasText:'History temporarily unavailable'})).toBeVisible();
+  state.fail=false;await bind(store,f.root);hook(f.root,'session','UserPromptSubmit');
+  await expect(page.getByLabel('Recorded executions',{exact:true})).toBeVisible();
+  await expect(page.getByRole('button',{name:'Retry execution history',exact:true})).toHaveCount(0);
+  await expect(page.getByLabel('Recorded executions',{exact:true}).locator('option').filter({hasText:/^live ·/})).toHaveCount(1);
  }finally{store.close();await f.cleanup();}
 });
