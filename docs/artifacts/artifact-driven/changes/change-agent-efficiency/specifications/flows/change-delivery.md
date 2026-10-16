@@ -11,6 +11,7 @@ flow:
     - id: requirement
       title: Discover the outcome, scope and candidate flows
       supports:
+        - efficiency-contract
         - knowledge
         - evidence-usability-contract
         - explicit-evidence-guide
@@ -128,6 +129,12 @@ flow:
       basis: observed
       evidence:
         - docs/artifacts/artifact-driven/changes/change-evidence-and-usability/tasks/02-minimal-scaffold.md
+    - id: efficiency-contract
+      kind: element
+      artifact: artifact-driven
+      element: specifications/agent-efficiency.md
+      requires: Reuse current context and recover with explicit approval and dependency gates.
+      basis: documented
   gaps:
     - Approval is available conversation/Git evidence, not a field in this map.
     - Guidance and scaffold checks do not independently verify consumer

@@ -1,5 +1,10 @@
 # Adoption and publishing contract
 
+The [agent efficiency contract](agent-efficiency.md) extends this baseline with
+aggregate preflight diagnostics and optional JSON output. Its explicit rules
+replace the first-error-only and no-machine-readable-schema statements below;
+unaffected default copying, adoption and publishing behavior remains applicable.
+
 Governs R4–R5, R7–R9 and A2–A6 in [baseline requirements](../requirements/baseline.md). Primary files are listed in [the evidence inventory](../requirements/evidence.md).
 
 ## Bundle interface

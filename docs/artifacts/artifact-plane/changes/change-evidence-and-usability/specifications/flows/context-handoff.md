@@ -12,6 +12,7 @@ flow:
     - id: request
       title: Select a permitted context and excerpt budget
       supports:
+        - compact-contract
         - ux-simplification-contract
         - ux-browser-checks
         - contract
@@ -158,6 +159,12 @@ flow:
       element: specifications/evidence-and-comparison.md
       requires: Select comparison context and interpret evidence without inferring
         approval or publication.
+      basis: documented
+    - id: compact-contract
+      kind: element
+      artifact: artifact-plane
+      element: specifications/compact-context.md
+      requires: Offer bounded compact context with explicit omissions and revision-bound continuation.
       basis: documented
   gaps:
     - A captured packet cannot prove continuing freshness or authorize

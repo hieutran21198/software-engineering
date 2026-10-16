@@ -1,5 +1,8 @@
 # Knowledge and execution contract
 
+The [agent efficiency contract](agent-efficiency.md) refines same-session context
+reuse, recovery and retained-evidence guidance without changing phase ownership.
+
 Governs R1–R4, R6, R8–R9 and A1–A4, A7 in [baseline requirements](../requirements/baseline.md). Evidence is identified in [the inventory](../requirements/evidence.md). This retains the baseline. The implementation task DAG extension is defined in specifications/task-dag.md.
 
 ## Owned concepts and responsibilities

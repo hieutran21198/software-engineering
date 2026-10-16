@@ -11,6 +11,7 @@ flow:
     - id: validate
       title: Verify applicable DoD and dependency evidence
       supports:
+        - efficiency-contract
         - validation-guidance
         - evidence-usability-contract
         - explicit-evidence-guide
@@ -98,6 +99,12 @@ flow:
       path: docs/artifact-driven/06-guidelines/evidence-records.md
       requires: Record explicit evidence and reconcile version declarations using
         source and merge checks.
+      basis: documented
+    - id: efficiency-contract
+      kind: element
+      artifact: artifact-driven
+      element: specifications/agent-efficiency.md
+      requires: Preserve change-owned delivery evidence and complete task-free knowledge snapshots.
       basis: documented
   gaps:
     - A proposed snapshot or PR alone does not establish the version.

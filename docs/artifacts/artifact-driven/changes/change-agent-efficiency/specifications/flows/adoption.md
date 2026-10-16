@@ -11,6 +11,7 @@ flow:
     - id: select
       title: Select architecture, workspace and destination
       supports:
+        - efficiency-contract
         - cli
     - id: preflight
       title: Validate paths and preflight all destination assets
@@ -62,6 +63,12 @@ flow:
       path: internal/adopt/adopt_test.go
       requires: Exercise repeat, dry-run and consumer-conflict preservation.
       basis: static
+    - id: efficiency-contract
+      kind: element
+      artifact: artifact-driven
+      element: specifications/agent-efficiency.md
+      requires: Report safe conflicts together and preserve JSON and copy safety.
+      basis: documented
   gaps:
     - Write-time failures attempt file rollback; this map does not prove
       transactionality or observe an actual consumer run.

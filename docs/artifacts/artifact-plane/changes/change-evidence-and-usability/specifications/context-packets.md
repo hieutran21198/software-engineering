@@ -1,5 +1,9 @@
 # Source-backed change context packets
 
+The [compact context extension](compact-context.md) adds an opt-in bounded JSON
+representation for agents. All default v1 and human-export behavior below remains
+applicable when compact format is not selected.
+
 Governs R5–R8 and consumes the selected-change review contract. A packet is captured context, not instructions, independent verification or approval.
 
 ## Schema and budgets
