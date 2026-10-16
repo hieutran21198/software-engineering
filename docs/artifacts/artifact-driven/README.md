@@ -24,7 +24,7 @@ ADD 2.1.0 knowledge, bundled implementation and retained delivery evidence lande
 
 ## Active change
 
-- [Model explanations](changes/change-model-explanations/README.md)
+- [Evidence and usability](changes/change-evidence-and-usability/README.md)
 
 
 ## Knowledge snapshot

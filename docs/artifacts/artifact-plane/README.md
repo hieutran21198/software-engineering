@@ -22,7 +22,7 @@ Version 1.10.0, its originating delivery tasks, and implementation landed on mai
 
 ## Active change
 
-- [Model explanations](changes/change-model-explanations/README.md)
+- [Evidence and usability](changes/change-evidence-and-usability/README.md)
 
 
 ## Knowledge snapshot
