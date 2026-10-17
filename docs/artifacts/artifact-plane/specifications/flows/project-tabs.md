@@ -65,7 +65,7 @@ flow:
       requires: Exercise the scoped user journey and its preserved evidence boundaries.
       basis: observed
       evidence:
-        - docs/artifacts/artifact-plane/changes/change-ux-simplification/tasks/07-integration-publication.md
+        - docs/artifacts/artifact-plane/changes/change-workbench-redesign/tasks/07-browser-suites.md
     - id: ux-simplification-contract
       kind: element
       artifact: artifact-plane
@@ -90,16 +90,16 @@ flow:
       basis: static
     - id: source-bar
       kind: implementation
-      path: apps/artifact-plane/src/SourceBar.jsx
-      requires: Show the worktree control, the edit state and the protected-branch banner.
+      path: apps/artifact-plane/src/TopBar.jsx
+      requires: Show the branch and worktree menu, the uncommitted count, Refresh and More.
       basis: static
     - id: workbench-shell-tests
       kind: test
-      path: apps/artifact-plane/test/browser/workbench-shell.spec.js
+      path: apps/artifact-plane/test/browser/shell.spec.js
       requires: Prove the branch control and page state per project.
       basis: observed
       evidence:
-        - apps/artifact-plane/test/browser/workbench-shell.spec.js
+        - docs/artifacts/artifact-plane/changes/change-workbench-redesign/tasks/07-browser-suites.md
   gaps:
     - Browser persistence is a preference store, not repository evidence or a
       workflow registry.

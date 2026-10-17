@@ -93,11 +93,11 @@ flow:
   support:
     - id: ux-browser-checks
       kind: test
-      path: apps/artifact-plane/test/browser/change-review.spec.js
+      path: apps/artifact-plane/test/browser/change-page.spec.js
       requires: Exercise the scoped user journey and its preserved evidence boundaries.
       basis: observed
       evidence:
-        - docs/artifacts/artifact-plane/changes/change-ux-simplification/tasks/07-integration-publication.md
+        - docs/artifacts/artifact-plane/changes/change-workbench-redesign/tasks/07-browser-suites.md
     - id: ux-simplification-contract
       kind: element
       artifact: artifact-plane
@@ -120,7 +120,7 @@ flow:
       basis: static
     - id: review-interface
       kind: implementation
-      path: apps/artifact-plane/src/ChangeReview.jsx
+      path: apps/artifact-plane/src/pages/ChangePageReview.jsx
       requires: Present captured context, source comparisons, recovery and local exports.
       basis: static
     - id: review-checks
@@ -130,7 +130,7 @@ flow:
       basis: static
     - id: browser-checks
       kind: test
-      path: apps/artifact-plane/test/browser/change-review.spec.js
+      path: apps/artifact-plane/test/browser/change-page.spec.js
       requires: Exercise review navigation, exports, refresh and delayed replies.
       basis: static
     - id: packet-format

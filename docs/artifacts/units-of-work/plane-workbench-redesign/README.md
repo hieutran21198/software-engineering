@@ -55,6 +55,14 @@ evidence:
     method: Owner review of the seven mockups on the design canvas.
     result: passed
     source: docs/artifacts/units-of-work/plane-workbench-redesign/README.md#validation-evidence
+  - criterion: authoring
+    method: Run the S1 to S8 scenario suite twice with the 1.16.0 action limits.
+    result: passed
+    source: docs/artifacts/artifact-plane/changes/change-workbench-redesign/tasks/07-browser-suites.md#scenario-counts
+  - criterion: integration
+    method: Run the Node, browser, build, Go and website checks on the combined branch.
+    result: passed
+    source: docs/artifacts/units-of-work/plane-workbench-redesign/README.md#validation-evidence
 ---
 
 # Redesign the authoring workbench
@@ -74,3 +82,13 @@ Server operations, the knowledge writer, Git actions, HTTP and MCP interfaces, t
 ## Validation evidence
 
 Mockup review: on 17 October 2026 the owner reviewed the design canvas "Artifact Plane redesign mockups" with seven artboards (work, artifact, document, change with plan, unit, flow, and work at 390 pixels) and approved them before Specification.
+
+Combined checks on branch claude/plane-workbench-redesign, after the merge of all task branches:
+- In apps/artifact-plane, `npm test`: 337 tests, 336 passed, 1 skipped, 0 failed.
+- `npm run build` succeeded.
+- `npx playwright test` with the Nix Chromium: 93 of 93 passed in two runs.
+- `go test ./...` and `go vet ./...` passed.
+- The website build (`npm run build` in website) succeeded.
+- `node apps/artifact-plane/scripts/validate-knowledge.mjs .` reports 0 errors.
+
+The HTTP and MCP interfaces are unchanged except for the optional element and change `title` fields, and their Node tests pass without edits.

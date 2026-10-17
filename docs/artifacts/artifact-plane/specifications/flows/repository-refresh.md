@@ -68,7 +68,7 @@ flow:
       requires: Exercise the scoped user journey and its preserved evidence boundaries.
       basis: observed
       evidence:
-        - docs/artifacts/artifact-plane/changes/change-ux-simplification/tasks/07-integration-publication.md
+        - docs/artifacts/artifact-plane/changes/change-workbench-redesign/tasks/07-browser-suites.md
     - id: ux-simplification-contract
       kind: element
       artifact: artifact-plane
@@ -126,11 +126,11 @@ flow:
       basis: static
     - id: document-tests
       kind: test
-      path: apps/artifact-plane/test/browser/document-editing.spec.js
+      path: apps/artifact-plane/test/browser/artifact-document.spec.js
       requires: Prove that a refresh keeps editor text.
       basis: observed
       evidence:
-        - apps/artifact-plane/test/browser/document-editing.spec.js
+        - docs/artifacts/artifact-plane/changes/change-workbench-redesign/tasks/07-browser-suites.md
   gaps:
     - Referenced implementation/test observation must be registered by a flow
       retrieval context; unreferenced code changes are outside the map.
