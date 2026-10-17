@@ -32,6 +32,8 @@ button.flow-box:hover { border-color: var(--control); background: var(--soft); }
 .support-group li .mono { color: var(--text); }
 .support-group .basis { margin-left: auto; font-size: 12px; color: var(--muted); white-space: nowrap; }
 .support-group .basis.unresolved { color: var(--warn-text); }
+.support-group .support-remove { width: 24px; height: 24px; flex: none; color: var(--muted); }
+.support-group .support-remove:hover { color: var(--danger); }
 .step-actions { display: flex; flex-wrap: wrap; gap: 4px; margin: 10px 0 0 -8px; }
 .step-detail .inline-form { margin-top: 10px; background: var(--bg); }
 .step-detail .operation-error { margin-top: 8px; }
