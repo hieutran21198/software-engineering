@@ -552,6 +552,7 @@ export function createFlowService({
       data = {
         flow: {
           ...summary(flow),
+          file: flow.file,
           entry_steps:flow.entry_steps||[],
           steps: flow.steps,
           participants: flow.participants || [],

@@ -6,9 +6,10 @@ import {resolve} from 'node:path';
 import {git as runGit} from './reader.js';
 import {parseWorktrees} from './workflow.js';
 import {EditError, PROTECTED_BRANCHES, checkPath, requireEditableBranch, serialize} from './knowledge-writer.js';
+import {safeFlowSource} from './flow-model.js';
 
 const BRANCH = /^[A-Za-z0-9][A-Za-z0-9._/-]*$/;
-export const GIT_OPERATIONS = ['status', 'branch.create', 'commit', 'discard'];
+export const GIT_OPERATIONS = ['status', 'files', 'branch.create', 'commit', 'discard'];
 // Resolve a registered worktree of the repository at path.
 export async function resolveWorktree(path, worktree, git = runGit) {
   if (typeof path !== 'string' || !path.startsWith('/') || path.includes('\0')) throw new EditError(400, 'Supply an absolute repository path.');
@@ -81,6 +82,11 @@ export async function knowledgeGit(request, {git = runGit} = {}) {
   if (!GIT_OPERATIONS.includes(request.operation)) throw new EditError(400, `Unknown Git operation. Use ${GIT_OPERATIONS.join(', ')}.`);
   const {target} = await resolveWorktree(request.path, request.worktree, git);
   if (request.operation === 'status') return {worktree: target, operation: 'status', status: await gitStatus(target, git)};
+  // Tracked text sources that flow support can name; a read for the target picker.
+  if (request.operation === 'files') {
+    const files = (await git(target, ['ls-files', '-z'], true)).split('\0').filter(path => path && safeFlowSource(path) && !path.startsWith('docs/artifacts/'));
+    return {worktree: target, operation: 'files', files: files.slice(0, 5000), truncated: files.length > 5000};
+  }
   return serialize(target, async () => {
     const result = request.operation === 'branch.create' ? await createBranch(target, request.input, git) : request.operation === 'commit' ? await commit(target, request.input, git) : await discard(target, request.input, git);
     return {worktree: target, operation: request.operation, result, status: await gitStatus(target, git)};

@@ -79,7 +79,7 @@ export function ActionForm({label, submitLabel, fields, onSubmit, open: initiall
         <label htmlFor={fieldId}>{f.label}</label>
         {f.type === 'select' ? <select ref={ref} id={fieldId} value={value} required={f.required} onChange={e => {set(f.name, e.target.value);f.onChange?.(e.target.value, set);}}>{options.map(o => <option key={o.value} value={o.value} disabled={o.disabled}>{o.label}</option>)}</select>
           : f.type === 'textarea' || f.type === 'lines' ? <textarea ref={ref} id={fieldId} value={value} rows={f.rows || 4} required={f.required} placeholder={f.placeholder} onChange={e => set(f.name, e.target.value)}/>
-          : <input ref={ref} id={fieldId} value={value} required={f.required} placeholder={f.placeholder} autoComplete="off" spellCheck={f.spellCheck ?? true} onChange={e => set(f.name, e.target.value)}/>}
+          : <><input ref={ref} id={fieldId} value={value} required={f.required} placeholder={f.placeholder} autoComplete="off" spellCheck={f.spellCheck ?? true} list={f.suggestions?.length ? `${fieldId}-options` : undefined} onChange={e => set(f.name, e.target.value)}/>{f.suggestions?.length ? <datalist id={`${fieldId}-options`}>{f.suggestions.map(s => <option key={s} value={s}/>)}</datalist> : null}</>}
         {f.help && <small>{f.help}</small>}
       </div>;
     })}

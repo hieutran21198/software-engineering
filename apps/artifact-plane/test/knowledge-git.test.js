@@ -72,3 +72,10 @@ test('W6: the Git module runs no remote, history-rewriting or cleanup command', 
   const code = source.split('\n').filter(line => !line.trim().startsWith('//')).join('\n');
   for (const command of ['push', 'fetch', 'pull', 'merge', 'rebase', 'reset', 'tag', 'stash', 'clean', 'config']) assert.doesNotMatch(code, new RegExp(`['"]${command}['"]`), command);
 });
+
+test('W6: files lists tracked source files outside docs/artifacts for the support picker', async t => {
+  const files = inPlaceFixture();files.set('src/names.js', 'export const a = 1;\n');files.set('.env', 'SECRET=1\n');
+  const f = await fixtureRepository(files);t.after(f.cleanup);
+  const result = await knowledgeGit({path: f.root, operation: 'files'});
+  assert.deepEqual(result.files, ['src/names.js']);
+});

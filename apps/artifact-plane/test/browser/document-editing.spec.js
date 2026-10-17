@@ -25,8 +25,8 @@ test('edit, save with Ctrl+S, preview, discard and undo keep front matter and ot
   await editor(page).press('Control+s');
   await expect(doc.locator('.document-reader')).toContainText('Proposed identity rules.');
   await expect(page.locator('.operation-status')).toContainText('Saved specifications/identity.md.');
-  // The writer keeps the front matter bytes and separates the body with one blank line.
-  expect(await read(f.root,spec)).toBe('---\n# Kept comment\nowner_note: keep me\n---\n\n# Identity\n\nProposed identity rules.\n\n## Details\n\nUnchanged details.\n');
+  // The writer keeps the front matter bytes and the file's separator before the body.
+  expect(await read(f.root,spec)).toBe('---\n# Kept comment\nowner_note: keep me\n---\n# Identity\n\nProposed identity rules.\n\n## Details\n\nUnchanged details.\n');
   expect(changedPaths(before,await fingerprint(f.root))).toEqual([spec]);
   await expect(page.getByRole('status',{name:'Edit state'})).toHaveText('1 uncommitted knowledge file');
   await page.locator('.operation-status').getByRole('button',{name:'Undo',exact:true}).click();
@@ -55,7 +55,7 @@ test('a concurrent edit shows both versions with Reload and Overwrite; refresh k
   await expect(dialog.getByRole('button',{name:'Reload',exact:true})).toBeFocused();
   await dialog.getByRole('button',{name:'Overwrite',exact:true}).click();
   await expect(doc.locator('.document-reader')).toContainText('My text.');
-  expect(await read(f.root,spec)).toBe('---\nowner_note: other\n---\n\n# Identity\n\nMy text.\n');
+  expect(await read(f.root,spec)).toBe('---\nowner_note: other\n---\n# Identity\n\nMy text.\n');
   // Reload takes the text on disk into the editor.
   await doc.getByRole('button',{name:'Edit',exact:true}).click();await editor(page).fill('# Identity\n\nSecond draft.\n');
   await writeFile(join(f.root,spec),'---\nowner_note: other\n---\n# Identity\n\nDisk wins.\n');

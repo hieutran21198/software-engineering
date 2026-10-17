@@ -214,7 +214,8 @@ export function replaceBody(text, body) {
   const {block, eol} = splitDocument(text);
   let next = toLF(String(body));
   if (next && !next.endsWith('\n')) next += '\n';
-  if (block && next && !next.startsWith('\n')) next = '\n' + next;
+  // Keep the file's own separator between the front matter and the body.
+  if (block && next) next = toLF(splitDocument(text).body).match(/^\n*/)[0] + next.replace(/^\n+/, '');
   return block + fromLF(next, eol);
 }
 function headings(body) {

@@ -1,6 +1,6 @@
 import React, {useEffect, useState} from 'react';
 import {repositoryQuery} from '../reload.js';
-import {sha256} from '../knowledge-api.js';
+import {sha256, gitAction} from '../knowledge-api.js';
 import {ActionForm, useEdit, frontValue, splitFront, lines} from '../editing.jsx';
 import {RemoveButton, FrontMatterEditor, documentOptions} from './DocumentPage.jsx';
 import {artifactDocuments} from '../work-model.js';
@@ -9,7 +9,7 @@ const KINDS = [{value: 'element', label: 'Knowledge document'}, {value: 'flow', 
 const BASES = [{value: 'documented', label: 'Documented'}, {value: 'static', label: 'Static (code reading)'}, {value: 'observed', label: 'Observed (recorded run)'}, {value: 'inferred', label: 'Inferred'}];
 const targetLabel = s => s.kind === 'element' ? `${s.artifact}/${s.element}` : s.kind === 'flow' ? `${s.artifact}:${s.flow}` : `${s.path}${s.symbol ? ` · ${s.symbol}` : ''}`;
 // Support target pickers: documents of any artifact, flows, or a tracked file path.
-function targetFields(snapshot, flowOwner) {
+function targetFields(snapshot, flowOwner, tracked = []) {
   const artifacts = snapshot.artifacts.map(a => ({value: a.id, label: `${a.title} · ${a.id}`}));
   const flowOptions = id => artifactDocuments(snapshot.artifacts.find(a => a.id === id) || {elements: [], id}).flows.map(f => ({value: f.flow.split(':')[1], label: f.flow}));
   const isKnowledge = v => ['element', 'flow'].includes(v.kind);
@@ -18,7 +18,7 @@ function targetFields(snapshot, flowOwner) {
     {name: 'artifact', label: 'Target artifact', type: 'select', options: artifacts, value: flowOwner, hidden: v => !isKnowledge(v), onChange: (value, set) => {set('element', documentOptions(snapshot, value)[0]?.value || '');set('flow', flowOptions(value)[0]?.value || '');}},
     {name: 'element', label: 'Target document', type: 'select', options: v => documentOptions(snapshot, v.artifact || flowOwner), value: documentOptions(snapshot, flowOwner)[0]?.value || '', hidden: v => v.kind !== 'element'},
     {name: 'flow', label: 'Target flow', type: 'select', options: v => flowOptions(v.artifact || flowOwner), value: flowOptions(flowOwner)[0]?.value || '', hidden: v => v.kind !== 'flow'},
-    {name: 'path', label: 'Tracked file path', placeholder: 'src/module.js', spellCheck: false, hidden: v => isKnowledge(v)},
+    {name: 'path', label: 'Tracked file path', placeholder: 'src/module.js', spellCheck: false, suggestions: tracked, hidden: v => isKnowledge(v)},
   ];
 }
 const targetInput = v => v.kind === 'element' ? {artifact: v.artifact, element: v.element} : v.kind === 'flow' ? {artifact: v.artifact, flow: v.flow} : {path: v.path.trim()};
@@ -28,9 +28,16 @@ const targetInput = v => v.kind === 'element' ? {artifact: v.artifact, element: 
 export default function FlowEditor({selected, snapshot, root, worktree, epoch}) {
   const edit = useEdit(), [loaded, setLoaded] = useState(null), [error, setError] = useState('');
   const artifact = snapshot.artifacts.find(a => a.id === selected?.artifact);
-  // Flow records are named by their ID; the detail does not carry the file path.
   const file = selected?.file || artifact?.elements.find(e => e.source === 'working' && e.path === `specifications/flows/${selected?.localId}.md`)?.file;
   const editable = edit.editable && artifact?.layout === 'in-place' && selected?.source === 'working' && file;
+  // Tracked source files fill the target picker; typing filters them.
+  const [tracked, setTracked] = useState([]);
+  useEffect(() => {
+    if (!editable) return;
+    const controller = new AbortController();
+    gitAction({path: root, worktree, operation: 'files'}, controller.signal).then(r => setTracked(r.files || [])).catch(() => setTracked([]));
+    return () => controller.abort();
+  }, [editable, root, worktree]);
   useEffect(() => {
     if (!editable) {setLoaded(null);return;}
     const controller = new AbortController();
@@ -93,7 +100,7 @@ export default function FlowEditor({selected, snapshot, root, worktree, epoch}) 
         </div>
       </li>)}</ul>
       <ActionForm label="Add support" submitLabel="Add support" fields={[
-        ...targetFields(snapshot, artifact.id),
+        ...targetFields(snapshot, artifact.id, tracked),
         {name: 'requires', label: 'Reason', required: true, placeholder: 'What the step needs from the target'},
         {name: 'basis', label: 'Basis', type: 'select', options: BASES, value: 'documented'},
         {name: 'evidence', label: 'Evidence files, one per line', type: 'lines', rows: 2, hidden: v => v.basis !== 'observed'},
