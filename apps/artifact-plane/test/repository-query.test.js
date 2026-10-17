@@ -65,3 +65,16 @@ test('L3/L4: scoped in-place sections match full evidence and read root knowledg
  assert.match((await queryRepository({path:f.root,section:'markdown',unit:'login',source:'docs/artifacts/authentication/versions/1.0.0/README.md'})).data.markdown,/source_change/);
  assert.deepEqual(await fingerprint(f.root),before);
 });
+test('scoped workflow reads keep a retained legacy change with copied knowledge out of the open changes', async t => {
+  const files = inPlaceFixture();
+  files.delete('docs/artifacts/authentication/changes/change-login/README.md');
+  for (const [path] of [...files]) if (path.startsWith('docs/artifacts/authentication/changes/change-login/')) files.delete(path);
+  files.set('docs/artifacts/authentication/changes/change-old/README.md', '# Old\n');
+  files.set('docs/artifacts/authentication/changes/change-old/requirements/login.md', '# Copied login need\n');
+  files.set('docs/artifacts/authentication/changes/change-next/README.md', '# Next\n');
+  files.set('docs/artifacts/authentication/changes/change-next/tasks/README.md', '---\ntasks: []\n---\n# Plan\n');
+  const fixture = await fixtureRepository(files);t.after(fixture.cleanup);
+  const result = await queryRepository({path: fixture.root, section: 'workflow', artifact: 'authentication', change: 'change-next'});
+  assert.equal(result.data.declaredActive, true);
+  assert.equal(result.data.history, false);
+});

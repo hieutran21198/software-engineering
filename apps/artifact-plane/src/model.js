@@ -186,9 +186,9 @@ export function parseArtifact(id, markdown, ds = [], layout = "legacy") {
 }
 const VERSION_RECORD = /^versions\/(\d+\.\d+\.\d+)\/README\.md$/;
 const COPIED = /^changes\/(change-[^/]+)\/(?:requirements|specifications|decisions)\//;
-function inPlaceArtifact(a, files, baseline, diagnostics) {
+function inPlaceArtifact(a, files, baseline, diagnostics, known = []) {
   const prefix = `${BASE}${a.id}/`,
-    copied = new Set(),
+    copied = new Set(known),
     versions = [];
   for (const [path, markdown] of files) {
     if (!path.startsWith(prefix)) continue;
@@ -287,6 +287,7 @@ function checkCycles(edges, label, ds) {
 }
 // options.layouts overrides layout detection per artifact. options.baselines
 // supplies protected-ref facts for in-place artifacts, read by the server.
+// options.copied names changes with copied knowledge that a scan did not load.
 export function buildSnapshot(files, repository = {}, inputDiagnostics = [], options = {}) {
   const diagnostics = [...inputDiagnostics];
   const artifacts = [...files]
@@ -314,7 +315,7 @@ export function buildSnapshot(files, repository = {}, inputDiagnostics = [], opt
       readme: files.get(`${prefix}changes/${name}/README.md`) || "",
     }));
     if (a.layout === "in-place") {
-      inPlaceArtifact(a, files, options.baselines?.[a.id], diagnostics);
+      inPlaceArtifact(a, files, options.baselines?.[a.id], diagnostics, options.copied?.[a.id]);
       for (const source of a.dependsOn) {
         edges.push({ source, target: a.id, status: "established" });
         if (!a.proposedDependsOn.includes(source)) edges.push({ source, target: a.id, status: "proposed-remove" });
