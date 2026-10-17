@@ -89,7 +89,6 @@
 .task-table fieldset.checks { display: grid; grid-template-columns: repeat(auto-fill, minmax(260px, 1fr)); gap: 8px 16px; }
 @media (min-width: 801px) { .change-page .row button.quiet { height: 30px; } }
 /* The legend sits at the bottom left, so the zoom controls move to the right. */
-.change-page .graph-panel .react-flow__controls { left: auto; right: 10px; }
 .task-node { padding: 8px 12px; gap: 2px; }
 .task-node strong { font-size: 13px; }
 .task-node .task-dot { width: 10px; height: 10px; border-width: 1px; }
