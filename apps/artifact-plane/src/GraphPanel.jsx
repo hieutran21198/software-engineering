@@ -7,7 +7,15 @@ import {labelledEdgeTypes, GraphLabelLayout} from './GraphLabels.jsx';
 import {canvasGraph} from './canvas.js';
 
 export function GraphPanel({label, nodes, edges, nodeTypes, edgeTypes, legend, onNodeClick, onEdgeClick, labelled = false, message, flowKey}) {
-  return <div className="graph-panel" role="group" aria-label={label}>
+  // Enter or Space on a focused node or edge acts like a click, so graphs work by keyboard.
+  const keys = event => {
+    if (!['Enter', ' '].includes(event.key)) return;
+    const edgeId = event.target.closest?.('.react-flow__edge')?.dataset.id, nodeId = event.target.closest?.('.react-flow__node')?.dataset.id;
+    const edge = edgeId && edges?.find(e => e.id === edgeId), node = !edge && nodeId && nodes?.find(n => n.id === nodeId);
+    if (edge && onEdgeClick) {event.preventDefault();onEdgeClick(event, edge);}
+    else if (node && onNodeClick) {event.preventDefault();onNodeClick(event, node);}
+  };
+  return <div className="graph-panel" role="group" aria-label={label} onKeyDown={keys}>
     {message ? <p className="graph-message">{message}</p> : <ReactFlowProvider key={flowKey}>
       <ReactFlow nodes={nodes} edges={edges} nodeTypes={nodeTypes} edgeTypes={edgeTypes || (labelled ? labelledEdgeTypes : undefined)}
         onNodeClick={onNodeClick} onEdgeClick={onEdgeClick} fitView fitViewOptions={{padding: 0.18}} minZoom={0.1} maxZoom={2}

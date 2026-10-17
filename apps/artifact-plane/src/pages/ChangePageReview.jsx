@@ -10,6 +10,7 @@ import {compareLines, comparisonBlocks} from '../line-comparison.js';
 import {formatContextMarkdown} from '../context-packet.js';
 import {changedKnowledge, readiness} from './ChangePageModel.js';
 import {detailField} from './ChangePagePlan.jsx';
+import {isError} from '../work-model.js';
 
 // The review packet (first records page) of one change. It loads only when
 // enabled and reloads when the repository updates.
@@ -140,7 +141,7 @@ export function ReadySection({change, artifact, writable, onFix}) {
   const {snapshot, go, editable} = useShell();
   const [acknowledged, setAcknowledged] = useState(false), [preparing, setPreparing] = useState(false);
   const prefix = `docs/artifacts/${change.artifact}/`;
-  const diagnostics = [...snapshot.diagnostics.filter(d => d.severity !== 'info' && String(d.path).startsWith(prefix)), ...(change.taskGraph?.diagnostics || [])];
+  const diagnostics = [...snapshot.diagnostics.filter(d => isError(d) && String(d.path).startsWith(prefix)), ...(change.taskGraph?.diagnostics || [])];
   const items = readiness(change, diagnostics, editable), unmet = items.filter(i => !i.met);
   const onlyDod = unmet.length > 0 && unmet.every(i => i.key === 'dod');
   const enabled = writable && (!unmet.length || onlyDod && acknowledged);

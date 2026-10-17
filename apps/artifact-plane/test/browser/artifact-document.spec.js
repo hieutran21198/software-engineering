@@ -451,10 +451,8 @@ test('document reading: heading levels, safe code highlighting and sanitized Mar
   } finally {await f.cleanup();}
 });
 
-// Known product gaps (see the task report). Each test states the contract
-// behavior and is expected to fail until the product implements it.
-test('KNOWN GAP: document headings exceed the body size at each level and shrink by level', async ({page}) => {
-  test.fail(true, 'styles.css gives .prose h3-h6 15px, below the 17px body; 1.16.0 kept every level above the body.');
+// Heading sizes, keyboard dependency explanations and the artifact error notice.
+test('document headings exceed the body size at each level and shrink by level', async ({page}) => {
   const files = editingFiles();files.set(tenant + 'README.md', identity('Tenant', '1.0.0', [], headings));
   const f = await editingRepository(files);
   try {
@@ -467,8 +465,7 @@ test('KNOWN GAP: document headings exceed the body size at each level and shrink
   } finally {await f.cleanup();}
 });
 
-test('KNOWN GAP: Enter on a focused dependency edge opens its explanation', async ({page}) => {
-  test.fail(true, 'DependencyGraph passes onEdgeClick only; React Flow edges are focusable (tabindex 0) but Enter does not call it.');
+test('Enter on a focused dependency edge opens its explanation', async ({page}) => {
   const f = await fixtureRepository(inPlaceFixture());
   try {
     await openRepository(page, f.root);
@@ -480,8 +477,7 @@ test('KNOWN GAP: Enter on a focused dependency edge opens its explanation', asyn
   } finally {await f.cleanup();}
 });
 
-test('KNOWN GAP: an error diagnostic of the artifact shows one notice with Fix', async ({page}) => {
-  test.fail(true, 'ArtifactPage keeps diagnostics with severity "error", but read diagnostics carry no severity, so the notice never appears.');
+test('an error diagnostic of the artifact shows one notice with Fix', async ({page}) => {
   const files = editingFiles();
   files.set(spec, '---\nreferences:\n  - artifact: billing\n    element: requirements/missing.md\n    requires: Old invoice rules\n---\n# Identity\n\nRules.\n');
   const f = await editingRepository(files);

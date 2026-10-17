@@ -5,7 +5,7 @@ import {Notice, PageHeader, Section, StateBadge} from '../ui.jsx';
 import {DependencyGraph} from '../GraphPanel.jsx';
 import {ActionForm, OperationError, useEdit} from '../editing.jsx';
 import {edit as previewEdit} from '../knowledge-api.js';
-import {artifactDocuments, artifactTitle, changeTitle, currentChanges, currentUnits, phaseLabel} from '../work-model.js';
+import {artifactDocuments, artifactTitle, changeTitle, currentChanges, currentUnits, phaseLabel, isError} from '../work-model.js';
 import {knowledgeTargets} from '../knowledge-navigation.js';
 import {linkPage, purposeParts} from './DocumentPageParts.jsx';
 import {DependencyExplanation} from './ArtifactPageParts.jsx';
@@ -41,7 +41,7 @@ function ArtifactView({artifact, page, snapshot, worktree, go, edit}) {
   const open = openChanges(artifact), current = open[0];
   const working = current && currentChanges(worktree).find(c => c.artifact === artifact.id && c.name === current.name);
   const declared = inPlace ? artifact.proposedDependsOn || artifact.dependsOn : artifact.dependsOn;
-  const errors = snapshot.diagnostics.filter(d => d.severity === 'error' && String(d.path || '').startsWith(`docs/artifacts/${artifact.id}/`));
+  const errors = snapshot.diagnostics.filter(d => isError(d) && String(d.path || '').startsWith(`docs/artifacts/${artifact.id}/`));
 
   // The sidebar's "Show all N" opens a section: expand it and bring it into view.
   useEffect(() => {

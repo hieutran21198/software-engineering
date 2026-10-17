@@ -11,6 +11,9 @@ export const memberUnit = (worktree, artifact, change) => (worktree?.unitsOfWork
 export const currentUnits = worktree => (worktree?.unitsOfWork || []).filter(u => u.members.some(m => currentChanges(worktree).some(c => c.artifact === m.artifact && c.name === m.change)));
 export const completionLabel = completion => !completion || completion.derivation === 'not-loaded' ? 'Completion not loaded' : completion.derivation === 'documented-complete' ? 'Complete' : completion.derivation === 'incomplete' ? 'Incomplete' : 'Unknown';
 export const unitStatus = unit => unit.completion?.derivation && unit.completion.derivation !== 'not-loaded' ? completionLabel(unit.completion) : null;
+// Read diagnostics carry no severity; as validate-knowledge does, every one is
+// an error except declared info and warnings and flow evidence gaps.
+export const isError = d => d.severity ? d.severity === 'error' : d.code !== 'flow-evidence-gap';
 export const changeTitle = change => change?.title || change?.name || '';
 export const artifactTitle = (snapshot, id) => snapshot?.artifacts.find(a => a.id === id)?.title || id;
 

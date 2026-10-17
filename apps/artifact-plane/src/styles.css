@@ -250,9 +250,14 @@ fieldset.checks legend { font-size: 13px; font-weight: 500; margin-bottom: 6px; 
 
 /* Document text. */
 .prose { font-family: var(--serif); font-size: 17px; line-height: 1.65; color: var(--prose); overflow-wrap: anywhere; }
-.prose h1 { font-family: var(--sans); font-size: 22px; font-weight: 600; margin: 32px 0 10px; color: var(--text); }
-.prose h2 { font-family: var(--sans); font-size: 18px; font-weight: 600; margin: 32px 0 8px; color: var(--text); }
-.prose h3, .prose h4, .prose h5, .prose h6 { font-family: var(--sans); font-size: 15px; font-weight: 600; margin: 24px 0 6px; color: var(--text); }
+.prose h1 { font-family: var(--sans); font-size: 26px; font-weight: 600; margin: 32px 0 10px; color: var(--text); }
+.prose h2 { font-family: var(--sans); font-size: 22px; font-weight: 600; margin: 32px 0 8px; color: var(--text); }
+/* Every heading level is larger than the 17-pixel body text and than the next level. */
+.prose h3, .prose h4, .prose h5, .prose h6 { font-family: var(--sans); font-weight: 600; margin: 24px 0 6px; color: var(--text); }
+.prose h3 { font-size: 20px; }
+.prose h4 { font-size: 19px; }
+.prose h5 { font-size: 18px; }
+.prose h6 { font-size: 17.5px; }
 .prose > :first-child { margin-top: 0; }
 .prose p { margin: 0 0 14px; }
 .prose ul, .prose ol { margin: 0 0 14px; padding-left: 24px; }
