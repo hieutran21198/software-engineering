@@ -1,0 +1,77 @@
+/* Document page: a text column of at most 720 pixels and a properties column
+   of 240 to 280 pixels; at 1100 pixels and below the properties are a disclosure. */
+.document-page > .column.document-columns { max-width: 1048px; display: flex; gap: 48px; align-items: flex-start; }
+.document-main { flex: 1 1 520px; min-width: 0; max-width: 720px; }
+.document-side { flex: 0 1 280px; min-width: 240px; padding-top: 52px; }
+.document-page.narrow > .column.document-columns { display: block; max-width: 720px; }
+.document-page .page-header { margin-bottom: 24px; }
+.document-reader .markdown > :first-child { margin-top: 0; }
+.document-page > .column > .document-main > .notice { display: block; }
+
+.properties-title { font-size: 12px; font-weight: 600; color: var(--muted); letter-spacing: .04em; text-transform: uppercase; margin-bottom: 12px; }
+.prop { padding: 12px 0; border-top: 1px solid var(--divider); }
+.prop-key { font-size: 12px; color: var(--muted); margin-bottom: 4px; }
+.prop-value { font-size: 14px; display: flex; flex-direction: column; align-items: flex-start; gap: 4px; min-width: 0; }
+.prop-value > .badge + .muted { margin-top: -2px; }
+.prop .inline-form { padding: 14px; gap: 10px; width: 100%; margin-top: 4px; }
+.prop button.link { font-weight: 400; text-align: left; white-space: normal; }
+.file-path { overflow-wrap: anywhere; }
+.reference-list, .used-by { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 10px; width: 100%; }
+.used-by { gap: 4px; }
+.reference-list li { display: flex; flex-direction: column; align-items: flex-start; gap: 2px; }
+.reference-reason { font-size: 13px; color: var(--muted); }
+.reference-actions { display: flex; gap: 12px; }
+.danger-link, button.link.danger-link { color: var(--danger); }
+.delete-document { padding: 0; height: 32px; }
+.delete-confirm p { font-size: 13px; }
+button.primary.danger-primary { background: var(--danger); border-color: var(--danger); }
+button.primary.danger-primary:hover:not(:disabled) { background: #8f1c13; border-color: #8f1c13; }
+.front-matter > summary { cursor: pointer; color: var(--accent); font-size: 14px; }
+.front-matter[open] > summary { margin-bottom: 8px; }
+.front-editor { display: flex; flex-direction: column; gap: 8px; }
+
+.properties-disclosure { border: 1px solid var(--border); border-radius: var(--r-card); padding: 0 16px; margin: -8px 0 24px; }
+.properties-disclosure > summary { cursor: pointer; padding: 10px 0; font-weight: 500; }
+.properties-disclosure[open] > summary { border-bottom: 1px solid var(--divider); }
+.properties-disclosure .prop:first-of-type { border-top: 0; }
+
+/* Edit mode. */
+.editor-toolbar { display: flex; align-items: center; gap: 12px; flex-wrap: wrap; margin-bottom: 12px; }
+.editor-toolbar .editor-state { flex: 1; min-width: 120px; }
+.editor-toolbar .segmented button[aria-selected="true"] { background: var(--soft); color: var(--text); }
+.code-editor { font: 13px/1.6 var(--mono); padding: 12px 14px; }
+.document-text { min-height: 480px; height: 60vh; }
+.editor-preview { min-height: 480px; padding: 16px 20px; border: 1px dashed var(--control); border-radius: var(--r-card); }
+.document-editor .notice { margin-bottom: 12px; }
+.document-editor .operation-error { margin-bottom: 12px; }
+
+/* Line comparisons. */
+.comparison { margin-bottom: 32px; padding-bottom: 24px; border-bottom: 1px solid var(--divider); }
+.comparison .section-title { margin-bottom: 8px; }
+
+.document-page .line-diff { margin: 0; padding: 8px 0; background: var(--subtle); border: 1px solid var(--border); border-radius: 8px; font: 12px/1.55 var(--mono); overflow-x: auto; }
+.document-page .diff-line { display: block; padding: 0 12px; white-space: pre-wrap; overflow-wrap: anywhere; }
+.document-page .diff-line.add { background: var(--ok-bg); }
+.document-page .diff-line.remove { background: var(--danger-bg); }
+.document-page .diff-number { display: inline-block; min-width: 32px; color: var(--muted); user-select: none; }
+.document-page .comparison details summary { cursor: pointer; font-size: 12px; color: var(--muted); padding: 4px 0; }
+
+.conflict-backdrop { position: fixed; inset: 0; z-index: 100; display: flex; align-items: center; justify-content: center; padding: 16px; background: rgba(20, 20, 19, .25); }
+.conflict-dialog { width: min(960px, 100%); max-height: calc(100vh - 32px); overflow-y: auto; display: flex; flex-direction: column; gap: 12px; padding: 24px; border-radius: var(--r-card); background: var(--bg); box-shadow: 0 12px 40px rgba(20, 20, 19, .18); }
+.conflict-dialog h2 { font-size: 18px; font-weight: 600; }
+.conflict-columns { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); gap: 12px; }
+.conflict-label { font-size: 12px; font-weight: 600; color: var(--muted); margin-bottom: 4px; }
+.conflict-column .line-diff { max-height: 50vh; overflow-y: auto; }
+
+@media (max-width: 800px) {
+  .conflict-columns { grid-template-columns: minmax(0, 1fr); }
+  .document-text, .editor-preview { min-height: 480px; }
+  .editor-toolbar .form-actions { width: 100%; }
+  .editor-toolbar .form-actions button { flex: 1; }
+}
+.used-by li { display: flex; flex-direction: column; align-items: flex-start; }
+.used-kind { font-size: 11px; color: var(--muted); }
+button.danger.delete-document { padding: 0; }
+.document-reader table { overflow-wrap: normal; }
+.document-reader td, .document-reader th { overflow-wrap: break-word; }
+.comparison h4 { display: none; }
