@@ -63,14 +63,17 @@ test('tree search filters every group and roving keys move, expand, collapse and
   await search.fill('absent');await expect(tree(page).getByRole('treeitem')).toHaveCount(0);await expect(page.getByRole('status').filter({hasText:'No work, artifacts or units match'})).toBeVisible();
   await page.getByRole('button',{name:'Clear search',exact:true}).click();
   const first=tree(page).getByRole('treeitem').first();await first.focus();await expect(first).toHaveAttribute('tabindex','0');
-  await page.keyboard.press('ArrowDown');await expect(treeItem(page,/^tenant \/ change-next/)).toBeFocused();
+  // On an editable branch the group starts with its actions.
+  await page.keyboard.press('ArrowDown');await expect(treeItem(page,/^Start a change/)).toBeFocused();
+  await page.keyboard.press('ArrowDown');await page.keyboard.press('ArrowDown');await expect(treeItem(page,/^tenant \/ change-next/)).toBeFocused();
   await expect(tree(page).locator('[role=treeitem][tabindex="0"]')).toHaveCount(1);
   await page.keyboard.press('End');await expect(tree(page).getByRole('treeitem').last()).toBeFocused();
   await page.keyboard.press('Home');await expect(first).toBeFocused();
   await page.keyboard.press('ArrowLeft');await expect(first).toHaveAttribute('aria-expanded','false');await expect(treeItem(page,/^tenant \/ change-next/)).toHaveCount(0);
   await page.keyboard.press('ArrowRight');await expect(first).toHaveAttribute('aria-expanded','true');
-  await page.keyboard.press('ArrowRight');await expect(treeItem(page,/^tenant \/ change-next/)).toBeFocused();
-  await page.keyboard.press('Enter');await expect(page.getByRole('region',{name:'Change page'})).toBeVisible();
+  await page.keyboard.press('ArrowRight');await expect(treeItem(page,/^Start a change/)).toBeFocused();
+  await page.keyboard.press('Enter');await expect(work(page).getByRole('form',{name:'Start change'})).toBeVisible();
+  await treeItem(page,/^tenant \/ change-next/).focus();await page.keyboard.press('Enter');await expect(page.getByRole('region',{name:'Change page'})).toBeVisible();
   // Expansion belongs to the project for this session.
   const artifacts=treeItem(page,/^Artifacts/);await artifacts.click();await expect(artifacts).toHaveAttribute('aria-expanded','false');
   await page.reload();await expect(work(page)).toBeVisible();await expect(treeItem(page,/^Artifacts/)).toHaveAttribute('aria-expanded','false');

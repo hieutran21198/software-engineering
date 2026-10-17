@@ -105,15 +105,15 @@ export function ProjectExplorer({active: isActive = true, initialPath = '', onOp
   const completionController = useRef(null);
   function installOverview(base, refresh) {
     const current = active.current, previous = snapshotRef.current;
+    // Keep loaded evidence of current work, also in the base, until its reload settles.
+    if (refresh) for (const w of previous?.workflow?.worktrees || []) for (const c of w.changes) {
+      const key = changeKey(w.path, c.artifact, c.name);
+      if (c.loadState !== 'not-loaded' && !c.history && taskSelection(base.workflow, key)?.change.loadState === 'not-loaded') base = mergeChange(base, key, c);
+    }
     overviewRef.current = base;
     let next = base;
     if (refresh && current.unitSelected) {const old = unitContext(previous, current.unitSelected);if (old && unitContext(base, current.unitSelected)) next = mergeUnit(base, current.unitSelected, old.unit);else setUnitNodeSelected(null);}
     if (refresh && current.changeSelected) {const old = taskSelection(previous?.workflow, current.changeSelected);if (old && taskSelection(base.workflow, current.changeSelected)) next = mergeChange(next, current.changeSelected, old.change);else {setTaskSelected(null);setDeliveryPhase(null);}}
-    // Keep loaded evidence of current work visible until its reload settles.
-    if (refresh) for (const w of previous?.workflow?.worktrees || []) for (const c of w.changes) {
-      const key = changeKey(w.path, c.artifact, c.name);
-      if (c.loadState !== 'not-loaded' && !c.history && key !== current.changeSelected && taskSelection(next.workflow, key)?.change.loadState === 'not-loaded') next = mergeChange(next, key, c);
-    }
     if (refresh && current.selection && !base.artifacts.some(a => a.id === current.selection.artifact && (!current.selection.element || a.elements.some(e => e.id === current.selection.element)))) setSelection(null);
     setSnapshot(next);setOverviewEpoch(value => value + 1);
   }

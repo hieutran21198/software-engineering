@@ -7,9 +7,9 @@ const plan=names=>'---\ntasks:\n'+names.map(n=>'  - '+n+'.md\n').join('')+'---\n
 const task=(id,deps=[])=>'---\nid: '+id+'\ndepends_on: ['+deps.join(', ')+']\n---\n\n# '+id+' work\n\n## Scope\nScope for '+id+'.\n\n## Definition of Done\n- [x] Existing evidence\n- [ ] Remaining behavior\n\n## Evidence\nDocumented test result for '+id+'.\n<script>window.taskInjected=true</script><img src="/tracking" onerror="window.taskInjected=true"><a href="https://example.com">External reference</a>';
 async function put(root,path,text){await mkdir(join(root,path,'..'),{recursive:true});await writeFile(join(root,path),text);}
 async function fixture(){const files=orderingFixture();files.set('docs/artifacts/knowledge/README.md',files.get('docs/artifacts/knowledge/README.md')+'\n## Active change\n[Next](changes/change-next/README.md)\n');files.set(prefix+'tasks/README.md',plan(['api','interface','integration','validation']));for(const [id,deps] of [['api',[]],['interface',[]],['integration',['api','interface']],['validation',['integration']]])files.set(prefix+'tasks/'+id+'.md',task(id,deps));files.set('docs/artifacts/knowledge/changes/change-history/README.md','# History');files.set('docs/artifacts/knowledge/changes/change-history/tasks/README.md','# Legacy history');return fixtureRepository(files);}
-import {openRepository,openArtifact,openChange,openGraph,documentPage,noOverflow} from './workbench.js';
+import {openRepository,openArtifact,openPlanGraph,openGraph,documentPage,noOverflow} from './workbench.js';
 async function open(page,root){await openRepository(page,root);await openArtifact(page,'Knowledge');}
-async function select(page){await openChange(page,'change-next','Plan');}
+async function select(page){await openPlanGraph(page,'change-next');}
 const node=(root,id)=>'rf__node-'+JSON.stringify([root,'knowledge','change-next','task',prefix+'tasks/'+id+'.md']);
 test('P1-P5: fork/join, sanitized evidence, return context, refresh, desktop/narrow and read-only fingerprints',async({page})=>{
  const f=await fixture(),before=await fingerprint(f.root),errors=[];page.on('pageerror',e=>errors.push(e.message));

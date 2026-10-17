@@ -51,6 +51,13 @@ export async function openChange(page, name, tab) {
   if (tab) await change.getByRole('group', {name: 'Change sections'}).getByRole('button', {name: tab, exact: true}).click();
   return change;
 }
+// The plan shows the task table; the Graph toggle mounts the task canvas.
+export async function openPlanGraph(page, name) {
+  const change = await openChange(page, name, 'Plan');
+  const toggle = change.getByRole('button', {name: 'Graph', exact: true});
+  if ((await toggle.getAttribute('aria-pressed')) !== 'true') await toggle.click();
+  return change;
+}
 export async function openUnit(page, title) {
   await showTree(page);
   await tree(page).getByRole('treeitem', {name: new RegExp('^' + title)}).last().click();

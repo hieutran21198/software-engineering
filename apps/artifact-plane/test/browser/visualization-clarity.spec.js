@@ -2,7 +2,7 @@ import {test,expect} from '@playwright/test';
 import {writeFile} from 'node:fs/promises';import {join} from 'node:path';
 import {runtimeFixture} from '../runtime-fixtures.js';
 import {fingerprint} from '../fixtures.js';
-import {openRepository,openUnit,openChange} from './workbench.js';
+import {openRepository,openUnit,openPlanGraph} from './workbench.js';
 test('completed unobserved tasks are explicit; both graph views restore all declared edges',async({page})=>{
  const f=await runtimeFixture(),prefix='docs/artifacts/demo/changes/change-live/tasks/';
  try{
@@ -13,7 +13,7 @@ test('completed unobserved tasks are explicit; both graph views restore all decl
   await expect(task).toContainText('No recorded execution');await expect(task).toContainText('Documented checklist complete');await expect(task).not.toContainText('Waiting');
   await expect(view.locator('.react-flow__edge')).toHaveCount(3);await view.getByLabel('Show all prerequisites').check();await expect(view.locator('.react-flow__edge')).toHaveCount(4);await view.getByLabel('Show all prerequisites').uncheck();await expect(view.locator('.react-flow__edge')).toHaveCount(3);
   await view.locator('.unit-node.task').filter({hasText:'Join'}).click();await expect(page.getByRole('complementary',{name:'Selection details'})).toContainText('Prerequisites: a, b');
-  await openChange(page,'change-live','Plan');
+  await openPlanGraph(page,'change-live');
   const individual=page.getByLabel('Implementation task graph');await expect(individual.locator('.react-flow__edge')).toHaveCount(2);await individual.getByLabel('Show all prerequisites').check();await expect(individual.locator('.react-flow__edge')).toHaveCount(3);await expect(individual.locator('.task-node').filter({hasText:'Task A'})).toContainText('Documented checklist complete');
   expect(await fingerprint(f.root)).toEqual(before);await page.screenshot({path:'test-results/visualization-clarity.png',fullPage:true});
  }finally{await f.cleanup();}
