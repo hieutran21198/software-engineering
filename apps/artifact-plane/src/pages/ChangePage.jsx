@@ -27,16 +27,20 @@ function readiness(change, diagnostics, editable) {
   ];
 }
 function TaskEditor({context, document, run, onOpen}) {
-  const {change, task} = context, graph = change.taskGraph;
+  const {change, task} = context, graph = change.taskGraph, [failure, setFailure] = useState(null), [attempt, setAttempt] = useState(0);
   if (!task) return null;
-  const text = document?.source === task.path && document.status === 'Loaded' ? document.markdown : null;
+  // Checkboxes respond at once; a refused write restores the recorded state.
+  const toggle = async (index, checked) => {setFailure(null);try {await run('task.checklist.set', {path: task.path, index, checked});} catch (error) {setFailure(error);setAttempt(n => n + 1);}};
+  // A reload keeps the previous text, so forms opened meanwhile start complete.
+  const text = document?.source === task.path && document.markdown ? document.markdown : null;
   const items = text ? checklistItems(text) : [], dod = text ? checklistItems(sectionText(text, 'definition-of-done') || '') : [];
   const others = graph.tasks.filter(t => t.id && t.id !== task.id).map(t => ({value: t.id, label: `${t.id} · ${t.title}`}));
   const target = {artifact: change.artifact, change: change.name, id: task.id};
   return <section className="task-editor" aria-label="Task editing">
     <h3>Definition of Done</h3>
     {!text ? <p role="status" className="muted">Loading the task…</p> : items.length ? <ul className="dod-list">{items.map((item, index) => <li key={index}><label className="check-field">
-      <input type="checkbox" checked={item.checked} onChange={e => run('task.checklist.set', {path: task.path, index, checked: e.target.checked})}/>{item.text}</label></li>)}</ul> : <p className="muted">No checklist items.</p>}
+      <input key={`${attempt}-${item.checked}`} type="checkbox" defaultChecked={item.checked} onChange={e => toggle(index, e.target.checked)}/>{item.text}</label></li>)}</ul> : <p className="muted">No checklist items.</p>}
+    <OperationError error={failure}/>
     <div className="inspector-actions">
       <ActionForm label="Record evidence" submitLabel="Record evidence" fields={[{name: 'method', label: 'Method', required: true, value: 'Run the task checks.'}, resultField, detailField('', 'Detail')]}
         onSubmit={v => run('evidence.record', {path: task.path, ...v})}/>
@@ -83,7 +87,7 @@ export default function ChangePage({context, tab, onTab, phase, onPhase, taskSel
   const ready = readiness(change, diagnostics, edit.editable), graph = change.taskGraph, tasks = graph?.tasks || [];
   const evidenceCount = path => (change.steps?.find(s => s.name === 'Validation')?.evidence || []).filter(e => e.file === path).length;
   const changed = (artifact?.elements || []).filter(e => e.source === 'working' && ['added', 'modified'].includes(e.state));
-  const commitPaths = (edit.status?.knowledge || []).filter(e => e.path.startsWith(prefix) || unit && e.path === `docs/artifacts/units-of-work/${unit.id}/README.md`);
+  const commitPaths = (edit.status?.knowledge || []).map(e => ({code: e.status.trim() || '?', path: e.path})).filter(e => e.path.startsWith(prefix) || unit && e.path === `docs/artifacts/units-of-work/${unit.id}/README.md`);
   const goFix = fix => fix === 'work' ? onOpen({kind: 'work'}) : onTab(fix);
   const units = (worktree.unitsOfWork || []).filter(u => !u.members.some(m => m.artifact === change.artifact));
   return <section className={`page change-page ${tab === 'plan' ? 'canvas-page' : ''}`} aria-label="Change page">

@@ -54,7 +54,9 @@ export function OperationError({error}) {
 // promise; an error stays inline at the form.
 export function ActionForm({label, submitLabel, fields, onSubmit, open: initiallyOpen = false, disabled = false, onClose, className = '', note}) {
   const id = useId(), [open, setOpen] = useState(initiallyOpen), [values, setValues] = useState({}), [busy, setBusy] = useState(false), [error, setError] = useState(null), first = useRef(null), opener = useRef(null);
-  useEffect(() => {if (open) {setValues(Object.fromEntries(fields.map(f => [f.name, f.value ?? (f.type === 'checkbox' ? false : f.type === 'checks' ? [] : '')])));setError(null);requestAnimationFrame(() => first.current?.focus());}}, [open]);
+  useEffect(() => {if (open) {setValues(Object.fromEntries(fields.map(f => [f.name, f.value ?? (f.type === 'checkbox' ? false : f.type === 'checks' ? [] : '')])));setError(null);}}, [open]);
+  // Focus moves once, at once, so it never lands in a field the person already left.
+  useEffect(() => {if (open) first.current?.focus();}, [open]);
   useEffect(() => {if (initiallyOpen) setOpen(true);}, [initiallyOpen]);
   const close = () => {setOpen(false);onClose?.();requestAnimationFrame(() => opener.current?.focus());};
   if (!open) return label ? <button ref={opener} className={`action-open ${className}`} disabled={disabled} onClick={() => setOpen(true)}>{label}</button> : null;

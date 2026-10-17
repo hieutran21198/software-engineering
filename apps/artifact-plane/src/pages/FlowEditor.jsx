@@ -28,20 +28,22 @@ const targetInput = v => v.kind === 'element' ? {artifact: v.artifact, element: 
 export default function FlowEditor({selected, snapshot, root, worktree, epoch}) {
   const edit = useEdit(), [loaded, setLoaded] = useState(null), [error, setError] = useState('');
   const artifact = snapshot.artifacts.find(a => a.id === selected?.artifact);
-  const editable = edit.editable && artifact?.layout === 'in-place' && selected?.source === 'working' && selected?.file;
+  // Flow records are named by their ID; the detail does not carry the file path.
+  const file = selected?.file || artifact?.elements.find(e => e.source === 'working' && e.path === `specifications/flows/${selected?.localId}.md`)?.file;
+  const editable = edit.editable && artifact?.layout === 'in-place' && selected?.source === 'working' && file;
   useEffect(() => {
     if (!editable) {setLoaded(null);return;}
     const controller = new AbortController();
-    repositoryQuery({path: root, worktree, section: 'markdown', artifact: artifact.id, source: selected.file}, controller.signal)
+    repositoryQuery({path: root, worktree, section: 'markdown', artifact: artifact.id, source: file}, controller.signal)
       .then(async r => {setLoaded({markdown: r.data.markdown, digest: await sha256(r.data.markdown)});setError('');})
       .catch(failure => {if (failure.name !== 'AbortError') setError(failure.message);});
     return () => controller.abort();
-  }, [editable, selected?.file, epoch, root, worktree]);
+  }, [editable, file, epoch, root, worktree]);
   if (!editable) return null;
   if (error) return <p role="alert">{error}</p>;
   if (!loaded) return <p role="status" className="muted">Loading the flow for editing…</p>;
   const value = frontValue(loaded.markdown), flow = value.flow;
-  if (!flow || typeof flow !== 'object') return <section className="flow-editor" aria-label="Flow editing"><p className="notice">The flow front matter is not a flow object. Use the advanced front-matter editor.</p><FrontMatterEditor text={splitFront(loaded.markdown).front ?? ''} onSave={text => edit.run('document.properties.set', {path: selected.file, frontMatter: text}, {expected: {[selected.file]: loaded.digest}})}/></section>;
+  if (!flow || typeof flow !== 'object') return <section className="flow-editor" aria-label="Flow editing"><p className="notice">The flow front matter is not a flow object. Use the advanced front-matter editor.</p><FrontMatterEditor text={splitFront(loaded.markdown).front ?? ''} onSave={text => edit.run('document.properties.set', {path: file, frontMatter: text}, {expected: {[file]: loaded.digest}})}/></section>;
   const base = {artifact: artifact.id, flow: flow.id}, run = (operation, input, options) => edit.run(operation, {...base, ...input}, options);
   const steps = Array.isArray(flow.steps) ? flow.steps : [], support = Array.isArray(flow.support) ? flow.support : [], transitions = Array.isArray(flow.transitions) ? flow.transitions : [];
   const stepOptions = steps.map(s => ({value: s.id, label: s.title || s.id})), supportOptions = support.map(s => ({value: s.id, label: `${s.id} · ${targetLabel(s)}`}));
@@ -111,7 +113,7 @@ export default function FlowEditor({selected, snapshot, root, worktree, epoch}) 
       <p className="tiny">Change the model layer in the advanced front-matter editor.</p>
     </section>}
     <details className="advanced-front"><summary>Advanced front matter</summary>
-      <FrontMatterEditor key={loaded.digest} text={splitFront(loaded.markdown).front ?? ''} onSave={text => edit.run('document.properties.set', {path: selected.file, frontMatter: text}, {expected: {[selected.file]: loaded.digest}})}/>
+      <FrontMatterEditor key={loaded.digest} text={splitFront(loaded.markdown).front ?? ''} onSave={text => edit.run('document.properties.set', {path: file, frontMatter: text}, {expected: {[file]: loaded.digest}})}/>
     </details>
   </section>;
 }

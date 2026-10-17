@@ -18,7 +18,7 @@ export function CommitForm({entries, message}) {
 
 // Uncommitted knowledge is grouped by artifact or unit.
 const owner = path => {const parts = path.split('/');return parts[2] === 'units-of-work' ? `unit ${parts[3] || ''}`.trim() : parts[2] || 'docs/artifacts';};
-const statusWord = code => ({M: 'changed', A: 'added', D: 'deleted', R: 'renamed', '??': 'new', '?': 'new'})[code] || ({M: 'changed', A: 'added', D: 'deleted'})[code[0]] || code;
+const statusWord = (code = '?') => ({M: 'changed', A: 'added', D: 'deleted', R: 'renamed', '??': 'new', '?': 'new'})[code] || ({M: 'changed', A: 'added', D: 'deleted'})[code[0]] || code;
 
 export default function WorkPage({snapshot, worktree, project, onOpen, add}) {
   const edit = useEdit(), branch = snapshot.repository.branch, locked = protectedBranch(branch);
