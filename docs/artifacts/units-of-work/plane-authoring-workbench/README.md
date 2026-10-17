@@ -56,7 +56,28 @@ acceptance:
     criterion: Node, browser, build, Go and website checks pass for the combined
       change, and the existing HTTP and MCP read interfaces stay compatible.
     integration: true
-evidence: []
+evidence:
+  - criterion: authoring
+    method: Browser scenarios S1–S8 and editing suites
+    result: passed
+    source: docs/artifacts/units-of-work/plane-authoring-workbench/README.md#validation-evidence
+  - criterion: safety
+    method: node --test test/knowledge-writer.test.js and knowledge-operations.test.js
+    result: passed
+    source: docs/artifacts/artifact-plane/changes/change-authoring-workbench/tasks/01-knowledge-writer.md#writer-tests
+  - criterion: validity
+    method: validate-knowledge after each scenario and a reload through the readers
+    result: passed
+    source: docs/artifacts/artifact-plane/changes/change-authoring-workbench/tasks/11-scenario-benchmarks.md#scenario-measurements
+  - criterion: effort
+    method: Action counts of the scenario tests against the requirement targets
+    result: incomplete
+    source: docs/artifacts/units-of-work/plane-authoring-workbench/README.md#validation-evidence
+  - criterion: integration
+    method: npm test, build, test:browser, go test, go vet, website build,
+      validate-knowledge
+    result: passed
+    source: docs/artifacts/artifact-plane/changes/change-authoring-workbench/tasks/12-integration-publication.md#combined-checks
 ---
 
 # Author ADD knowledge in Artifact Plane
@@ -75,4 +96,19 @@ Changes to ADD contracts or guidance; AI inference inside the Plane; push, pull 
 
 ## Validation evidence
 
-No checks have run. Reference the originating task evidence after validation.
+Combined checks on branch claude/plane-authoring-workbench: npm test 333 of 334 passed with 1 skipped; npm run build succeeded; npm run test:browser 102 of 102 passed; go test ./... and go vet ./... passed; the website build succeeded; validate-knowledge reports 0 errors. Task evidence: [writer](../../artifact-plane/changes/change-authoring-workbench/tasks/01-knowledge-writer.md), [operations](../../artifact-plane/changes/change-authoring-workbench/tasks/02-artifact-change-operations.md), [scenarios](../../artifact-plane/changes/change-authoring-workbench/tasks/11-scenario-benchmarks.md), [integration](../../artifact-plane/changes/change-authoring-workbench/tasks/12-integration-publication.md).
+
+Measured with test/browser/authoring-scenarios.spec.js. Actions are Playwright clicks, fills, selections and key presses after the repository opens; text is the number of free-text fills. Every scenario used 0 raw front-matter edits and 0 typed identifiers or paths, left validate-knowledge at 0 errors and changed no file outside the files that its operations wrote.
+
+| Scenario | Baseline by hand | Target | Measured actions (text + other) | Files written | Result |
+| --- | --- | --- | --- | --- | --- |
+| S1 change, requirement, task, unit, commit | 6 files, about 24 YAML lines, 7 identifiers, 2 tools | at most 10 | 20 (6 + 14) | 5 | Not met |
+| S2 unit with two changes | about 30 YAML lines, 9 identifiers | at most 8 | 7 (3 + 4) | 1 | Met |
+| S3 dependency with reference, then removal | 2 front-matter edits, 1 path, a script for cycles | at most 6 | 13 (1 + 12) | 2 | Not met; cycle refused with its path |
+| S4 flow with 3 steps, 2 transitions, 2 supports | about 45 YAML lines, 7 ids, 2 paths | at most 14 | 29 (9 + 20) | 1 | Not met |
+| S5 two documents and self-checks | 2 body edits, 2 front-matter edits, 2 headings | at most 6 | 14 (2 + 12) | 2 | Not met |
+| S6 resume, 2 DoD items, evidence, commit | paths, checkbox characters, evidence YAML, Git | at most 7 | 10 (1 + 9) | 1 | Not met |
+| S7 fix a reference, concurrent save | YAML edit; silent overwrite | at most 3 and a conflict dialog | 3 (0 + 3) | 1 | Met |
+| S8 reload without loss | not applicable | 0 errors, unchanged bytes | 0 errors, unchanged snapshot | 3 | Met |
+
+The targets count journey steps, while the specified measurement counts every field and navigation action; S5 needs at least 10 actions for two documents with no navigation. The effort criterion stays incomplete until the targets or the interface change.
