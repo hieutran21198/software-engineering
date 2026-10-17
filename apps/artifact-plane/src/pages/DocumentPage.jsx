@@ -31,6 +31,6 @@ export default function DocumentPage({entry, snapshot, root, worktree, epoch, pr
         {element && <button onClick={() => onFlows({artifact: element.artifact, ids: [element.id]}, element.source.startsWith('change:'))}>Find participating flows</button>}
       </>}/>
     {refs.length > 0 && <section className="properties-strip" aria-label="References"><h2>References</h2><ReferenceList references={refs} onTarget={openTarget}/></section>}
-    <Reader entry={page} root={root} worktree={worktree} epoch={epoch} targets={targets} onNavigate={link => onOpen({kind: 'document', ...link, artifact: link.scope?.artifact || entry.artifact})}/>
+    <Reader entry={page} root={root} worktree={worktree} epoch={epoch} targets={targets} onNavigate={({kind, fragment, ...link}) => onOpen({...link, kind: 'document', artifact: link.scope?.artifact || entry.artifact})}/>
   </section>;
 }

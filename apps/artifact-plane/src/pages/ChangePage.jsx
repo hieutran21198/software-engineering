@@ -17,7 +17,7 @@ export default function ChangePage({context, tab, onTab, phase, onPhase, taskSel
   const {worktree, change, task} = context, unit = memberUnit(worktree, change.artifact, change.name), p = phaseOf(change);
   return <section className={`page change-page ${tab === 'plan' ? 'canvas-page' : ''}`} aria-label="Change page">
     <PageHeader project={project} artifact={change.artifact} crumb={change.name} title={`${change.artifact} / ${change.name}`} onNavigate={onOpen}
-      status={change.history ? change.historyReason || 'Retained change record.' : `Open change · current step: ${p.chip}${p.loading ? '' : ` · ${p.hint}`}`}
+      status={change.history ? change.historyReason || 'Retained change record.' : p.chip ? `Open change · current step: ${p.chip}${p.loading ? '' : ` · ${p.hint}`}` : 'Open change'}
       actions={<div className="view-toggle" role="group" aria-label="Change sections">{TABS.map(([value, label]) => <button key={value} aria-pressed={tab === value} className={tab === value ? 'active' : ''} onClick={() => onTab(value)}>{label}</button>)}</div>}/>
     {tab === 'overview' && <div className="page-body">
       <section className="page-section" aria-label="Reason and scope">

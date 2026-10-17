@@ -18,7 +18,8 @@ export const unitKeyFor = (worktreePath, unit) => JSON.stringify([worktreePath, 
 export const selectedWorktree = snapshot => snapshot?.workflow?.worktrees.find(w => w.path === snapshot.repository.path) || snapshot?.workflow?.worktrees.find(w => w.selected) || null;
 export const currentChanges = worktree => (worktree?.changes || []).filter(c => !c.history);
 export function phase(change) {
-  if (!change || change.loadState === 'not-loaded') return {chip: 'Loading', hint: 'Reading declared evidence…', loading: true};
+  if (!change) return {chip: null, hint: ''};
+  if (change.loadState === 'not-loaded') return change.layout === 'in-place' ? {chip: 'Loading', hint: 'Reading declared evidence…', loading: true} : {chip: null, hint: 'Open the change to read its phase evidence.', loading: true};
   // In-place: the first declared step that is not documented complete.
   const step = change.currentStep || (change.layout === 'in-place' ? change.steps?.find(s => s.state !== 'documented-complete')?.name : null);
   if (step) return {chip: step, hint: HINTS[step] || ''};
@@ -59,7 +60,7 @@ export function treeRows({snapshot, worktree, filter = '', expanded}) {
     ...changes.flatMap(c => {const p = phase(c);return leaf({key: `c:${c.artifact}/${c.name}`, level: 2, label: `${c.artifact} / ${c.name}`, chip: p.chip, hint: p.hint, page: {kind: 'change', artifact: c.artifact, change: c.name}}, c.artifact, c.name);}),
     ...units.flatMap(u => leaf({key: `w:${u.id}`, level: 2, label: u.title, detail: unitStatus(u) || `${u.members.length} changes`, page: {kind: 'unit', unit: u.id}}, u.id)),
   ]);
-  group('g:artifacts', 'Artifacts', snapshot.artifacts.length, () => snapshot.artifacts.flatMap(a => {
+  group('g:artifacts', 'Artifacts', snapshot.artifacts.length, () => [...leaf({key: 'graph', level: 2, label: 'Dependency graph', action: true, page: {kind: 'graph'}}), ...leaf({key: 'flows', level: 2, label: 'System flows', action: true, page: {kind: 'flow'}}), ...snapshot.artifacts.flatMap(a => {
     const docs = artifactDocuments(a), key = `a:${a.id}`, children = [];
     const kind = (k, label, items) => {
       const ck = `${key}:${k}`, inner = items();
@@ -78,7 +79,7 @@ export function treeRows({snapshot, worktree, filter = '', expanded}) {
     // A matching artifact keeps its overview row; its kinds stay filtered.
     const visible = active && self && !children.length ? [{key: `${key}:overview`, level: 3, label: 'Overview', page: {kind: 'artifact', artifact: a.id}}] : children;
     return [{key, level: 2, label: a.title, detail: a.id, expandable: true, open: open(key), page: {kind: 'artifact', artifact: a.id}}, ...(open(key) ? visible : [])];
-  }));
+  })]);
   group('g:units', 'Units of work', worktree?.unitsOfWork?.length || 0, () => (worktree?.unitsOfWork || []).flatMap(u => leaf({key: `u:${u.id}`, level: 2, label: u.title, detail: unitStatus(u) || `${u.members.length} ${u.members.length === 1 ? 'change' : 'changes'}`, page: {kind: 'unit', unit: u.id}}, u.id)));
   return rows;
 }

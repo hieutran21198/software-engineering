@@ -16,5 +16,7 @@ export async function sha256(text){
 }
 // Protected branches refuse every write; a detached HEAD has no branch to commit to.
 export const protectedBranch=branch=>!branch||['main','master','detached'].includes(branch);
-// Count uncommitted knowledge paths from porcelain v1 status text.
-export const knowledgeStatus=(status='')=>status.split('\n').filter(line=>line.length>3&&/(?:^|\s|")docs\/artifacts\//.test(line.slice(3))).length;
+// Uncommitted knowledge paths from porcelain v1 status text. The reader trims
+// the text, so the first line can lose its leading status space.
+export const knowledgeEntries=(status='')=>status.split('\n').map(line=>line.match(/^([ MADRCUT?!]{1,2}) (.+)$/)).filter(Boolean).map(([,code,path])=>({code:code.trim()||'?',path:path.replace(/^"|"$/g,'').split(' -> ').at(-1)})).filter(e=>e.path.startsWith('docs/artifacts/'));
+export const knowledgeStatus=status=>knowledgeEntries(status).length;

@@ -5,6 +5,7 @@ import {
   rootReadme,
   fingerprint,
 } from "../fixtures.js";
+import {openRepository, selectOnGraph} from "./workbench.js";
 
 test("B10: pointer/keyboard inspector resizing, bounds, Markdown reflow, selection, and stacked layout", async ({
   page,
@@ -23,13 +24,8 @@ test("B10: pointer/keyboard inspector resizing, bounds, Markdown reflow, selecti
   const fixture = await fixtureRepository(files),
     before = await fingerprint(fixture.root);
   try {
-    await page.goto("/");
-    await page.getByLabel("Repository path").fill(fixture.root);
-    await page.getByRole("button", { name: "Open repository" }).click();
-    await page
-      .getByRole("navigation", { name: "Artifacts" })
-      .getByRole("button", { name: /Knowledge/ })
-      .click();
+    await openRepository(page, fixture.root);
+    await selectOnGraph(page, "Knowledge");
     const panel = page.getByRole("complementary", {
       name: "Selection details",
     });
@@ -81,7 +77,7 @@ test("B10: pointer/keyboard inspector resizing, bounds, Markdown reflow, selecti
     ).toBeVisible();
     await page.getByRole("button", { name: "Fit View", exact: true }).click();
     expect(
-      await page.locator(".canvas-area").evaluate((el) => el.scrollTop),
+      await page.locator(".graph-page .canvas-area").evaluate((el) => el.scrollTop),
     ).toBe(0);
     await page.screenshot({
       path: "test-results/resized-inspector.png",
@@ -90,7 +86,7 @@ test("B10: pointer/keyboard inspector resizing, bounds, Markdown reflow, selecti
     await page.setViewportSize({ width: 900, height: 900 });
     await expect.poll(width).toBe(420);
     expect(
-      (await page.locator(".canvas-area").boundingBox()).width,
+      (await page.locator(".graph-page .canvas-area").boundingBox()).width,
     ).toBeGreaterThanOrEqual(300);
     await page.setViewportSize({ width: 700, height: 1000 });
     await expect(divider).toBeHidden();

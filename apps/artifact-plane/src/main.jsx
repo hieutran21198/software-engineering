@@ -10,7 +10,7 @@ import {RecordedView, RecordedDetails} from './RecordedExecutions.jsx';
 import {taskSelection} from './task-canvas.js';
 import {typeKey, historyKey} from './elements.js';
 import {gitAction, unavailable, knowledgeStatus} from './knowledge-api.js';
-import {changeKey, unitKeyFor, currentChanges, currentUnits, samePage} from './work-model.js';
+import {changeKey, unitKeyFor, currentChanges, samePage} from './work-model.js';
 import NavigationTree from './NavigationTree.jsx';
 import {SourceBar, ProtectedBanner} from './SourceBar.jsx';
 import WorkPage from './pages/WorkPage.jsx';
@@ -25,9 +25,9 @@ import './style.css';
 import './workbench.css';
 
 const HOME = {kind: 'work'};
-// The overview reads every change record, so its open-or-retained decision is
-// kept when scoped evidence for one change is merged.
-const withOverview = (snapshot, key, change) => {const known = taskSelection(snapshot?.workflow, key)?.change;return known ? {...change, history: known.history, declaredActive: known.declaredActive, historyReason: known.history ? change.historyReason || known.historyReason : ''} : change;};
+// The overview reads every in-place change record, so its open-or-retained
+// decision is kept when scoped evidence for one change is merged.
+const withOverview = (snapshot, key, change) => {const known = taskSelection(snapshot?.workflow, key)?.change;return known?.layout === 'in-place' ? {...change, history: known.history, declaredActive: known.declaredActive, historyReason: known.history ? change.historyReason || known.historyReason : ''} : change;};
 const KIND = /^docs\/artifacts\/([^/]+)\/(requirements|specifications|decisions)\/(flows\/)?/;
 const pageName = page => ({work: 'work', graph: 'graph', artifact: 'artifact', document: 'document', change: 'change', unit: 'unit', flow: 'flow', recorded: 'executions'})[page?.kind];
 const readTree = root => {try {return new Set(JSON.parse(sessionStorage.getItem('plane-tree:' + root)) || ['g:work', 'g:artifacts', 'g:units']);} catch {return new Set(['g:work', 'g:artifacts', 'g:units']);}};
@@ -78,7 +78,8 @@ export function ProjectExplorer({active: isActive = true, initialPath = '', onOp
     }));
   };
   const replacePage = next => {const value = {...routeRef.current, page: next};routeRef.current = value;setRoute(value);};
-  const resetRoute = () => {const value = {page: HOME, trail: []};routeRef.current = value;setRoute(value);returnFocus.current = [];};
+  const lastFlow = useRef(null);
+  const resetRoute = () => {lastFlow.current = null;const value = {page: HOME, trail: []};routeRef.current = value;setRoute(value);returnFocus.current = [];};
   const resizeSidebar = width => setSidebarPreference(Math.max(180, Math.min(sidebarMax, width)));
   function dragSidebar(event) {if (event.currentTarget.hasPointerCapture(event.pointerId)) resizeSidebar(event.clientX - workspaceRef.current.getBoundingClientRect().left);}
   function sidebarKeyboard(event) {const widths = {ArrowRight: sidebarWidth + 20, ArrowLeft: sidebarWidth - 20, Home: 180, End: sidebarMax};if (Object.hasOwn(widths, event.key)) {event.preventDefault();resizeSidebar(widths[event.key]);}}
@@ -169,27 +170,20 @@ export function ProjectExplorer({active: isActive = true, initialPath = '', onOp
     }).catch(error => {if (error.name !== 'AbortError' && session === generation.current) {setSectionState('Error');setFresh(false);setError(error.message);}});
     return () => controller.abort();
   }, [isActive, snapshot?.repository.path, overviewEpoch, unitSelected, unitView, unitPlanning, changeSelected, changeTab, sectionRetry]);
-  // Declared evidence and completion of current work feed the tree and work page.
+  // Declared evidence of open in-place changes feeds the phase chips of the tree
+  // and work page. Legacy evidence replays history, so it loads only on its page.
   useEffect(() => {
     const root = projectRoot, base = overviewRef.current, worktree = base?.workflow?.worktrees.find(w => w.path === base.repository.path);
     if (!isActive || !root || !worktree) return;
-    const controller = new AbortController(), session = generation.current, epoch = overviewEpoch;
+    const controller = new AbortController(), session = generation.current;
     const patch = update => {overviewRef.current = update(overviewRef.current);setSnapshot(current => current && update(current));};
     (async () => {
-      for (const c of currentChanges(worktree)) {
+      for (const c of currentChanges(worktree).filter(c => c.layout === 'in-place')) {
         if (controller.signal.aborted) return;
         try {
           const key = changeKey(worktree.path, c.artifact, c.name), result = await repositoryQuery({path: root, worktree: worktree.path, artifact: c.artifact, change: c.name, section: 'workflow'}, controller.signal);
           if (controller.signal.aborted || session !== generation.current) return;
           if (!result.diagnostics.some(d => d.code === 'stale-response')) patch(current => taskSelection(current.workflow, key) ? mergeChange(current, key, withOverview(current, key, result.data)) : current);
-        } catch (error) {if (error.name === 'AbortError') return;}
-      }
-      for (const u of currentUnits(worktree)) {
-        if (controller.signal.aborted) return;
-        try {
-          const key = unitKeyFor(worktree.path, u.id), result = await repositoryQuery({path: root, worktree: worktree.path, unit: u.id, section: 'completion'}, controller.signal);
-          if (controller.signal.aborted || session !== generation.current) return;
-          patch(current => {const existing = unitContext(current, key);return existing ? mergeUnit(current, key, {...existing.unit, completion: result.data.completion, completionEpoch: epoch}) : current;});
         } catch (error) {if (error.name === 'AbortError') return;}
       }
     })();
@@ -219,8 +213,10 @@ export function ProjectExplorer({active: isActive = true, initialPath = '', onOp
     if (isActive && unitSelected) loadCompletion();
     return () => completionController.current?.abort();
   }, [isActive, unitSelected, overviewEpoch, loadedSession]);
-  useEffect(() => {setUnitNodeSelected(null);setUnitView('artifacts');}, [unitSelected]);
-  useEffect(() => {setTaskSelected(null);setDeliveryPhase(null);}, [changeSelected]);
+  // Page state survives other pages; it resets when another unit or change opens.
+  const lastUnit = useRef(null), lastChange = useRef(null);
+  useEffect(() => {if (unitSelected && lastUnit.current !== unitSelected) {if (lastUnit.current) {setUnitNodeSelected(null);setUnitView('artifacts');}lastUnit.current = unitSelected;}}, [unitSelected]);
+  useEffect(() => {if (changeSelected && lastChange.current !== changeSelected) {if (lastChange.current) {setTaskSelected(null);setDeliveryPhase(null);}lastChange.current = changeSelected;}}, [changeSelected]);
   const toggle = useCallback(id => setExpanded(current => {const next = new Set(current);next.has(id) ? next.delete(id) : next.add(id);return next;}), []);
   const toggleType = useCallback((artifactId, type) => {
     setExpanded(current => new Set([...current, artifactId]));
@@ -234,7 +230,7 @@ export function ProjectExplorer({active: isActive = true, initialPath = '', onOp
     setSelection({artifact: artifactId, element: elementId});
   }
   const scopeOf = e => ({artifact: e.artifact, ...(e.source.startsWith('change:') ? {change: e.source.slice(7)} : {})});
-  const readElement = (e, dependency) => {if (!dependency) setSelection({artifact: e.artifact, element: e.id});go({kind: 'document', artifact: e.artifact, source: e.file, title: e.path, scope: scopeOf(e)});};
+  const readElement = e => {go({kind: 'document', artifact: e.artifact, source: e.file, title: e.path, scope: scopeOf(e)});};
   const readEstablished = e => go({kind: 'document', artifact: e.artifact, source: e.file, title: `${e.path} · established on ${String(snapshot.artifacts.find(a => a.id === e.artifact)?.baseline?.ref || 'main').replace('refs/heads/', '')}`, established: true});
   const openFlows = (entry, proposed) => {if (proposed) chooseKnowledge('planning');go({kind: 'flow', ...entry});};
   const showInGraph = (artifact, dependency) => {setSelection({artifact, ...(dependency ? {dependency} : {})});go({kind: 'graph'});};
@@ -282,6 +278,9 @@ export function ProjectExplorer({active: isActive = true, initialPath = '', onOp
   const editState = uncommitted ? `${uncommitted} uncommitted knowledge ${uncommitted === 1 ? 'file' : 'files'}` : 'Clean';
   const backLabel = route.trail.length ? pageName(route.trail.at(-1)) : null;
   const common = {project, onOpen: go};
+  // The last flow page stays mounted while its sources are read.
+  if (page.kind === 'flow') lastFlow.current = page;
+  const flowPage = lastFlow.current;
   return <RuntimeProvider snapshot={snapshot} active={isActive}><div className="app" onKeyDown={event => {if (event.key === 'Escape' && drawerOpen) {setDrawerOpen(false);}}}>
     <header className="topbar" hidden={Boolean(snapshot)}>
       <div className="brand"><span className="brand-icon">⌘</span><div><h1>Artifact Plane</h1><span>Local ADD workbench</span></div></div>
@@ -307,7 +306,7 @@ export function ProjectExplorer({active: isActive = true, initialPath = '', onOp
         onPointerCancel={event => {if (event.currentTarget.hasPointerCapture(event.pointerId)) event.currentTarget.releasePointerCapture(event.pointerId);}}/>}
       <main className="page-area">
         {!snapshot ? <div className="empty-canvas"><div className="empty-symbol">◇ → ◇</div><h2>Work with the knowledge behind your code</h2><p>Open an ADD repository to see current work, artifacts and units of work.</p></div> : <>
-          <GraphPage {...common} snapshot={snapshot} active={page.kind === 'graph'} planning={planning} onPlanning={setPlanning} expanded={expanded} expandedTypes={expandedTypes} listTypes={listTypes} selection={selection} onSelection={setSelection}
+          <GraphPage {...common} snapshot={snapshot} active={page.kind === 'graph'} planning={planning} onPlanning={value => chooseKnowledge(value ? 'planning' : 'established')} expanded={expanded} expandedTypes={expandedTypes} listTypes={listTypes} selection={selection} onSelection={setSelection}
             toggle={toggle} toggleType={toggleType} toggleList={toggleList} revealElement={revealElement} document={page.kind === 'graph' ? document_ : null} onRead={readElement} onReadEstablished={readEstablished} onFlows={openFlows} rail={rail} tabId={tabId}/>
           {page.kind === 'work' && <WorkPage {...common} snapshot={snapshot} worktree={worktree}/>}
           {page.kind === 'artifact' && <ArtifactPage {...common} snapshot={snapshot} artifactId={page.artifact} worktree={worktree} document={document_?.source === documentSource ? document_ : null} planning={planning}
@@ -320,7 +319,7 @@ export function ProjectExplorer({active: isActive = true, initialPath = '', onOp
             onDocument={source => go({kind: 'document', source, title: source.split('/').at(-1), scope: {unit: page.unit}})}
             onFlow={entry => {const owner = entry.flow?.split(':')[0], member = selectedUnit?.unit.members.find(m => m.artifact === owner);if (member?.sourcePath?.includes('/changes/') || member?.establishmentEvidence?.state === 'proposed') chooseKnowledge('planning');go({kind: 'flow', flow: entry.flow, artifact: owner});}}
             rail={rail} tabId={tabId}/>}
-          {page.kind === 'flow' && <FlowPage {...common} page={page} root={projectRoot} worktree={worktreePath} epoch={overviewEpoch} knowledge={flowKnowledge} onKnowledge={chooseKnowledge} artifacts={snapshot.artifacts.map(a => ({id: a.id, title: a.title}))}/>}
+          {flowPage && <FlowPage {...common} page={flowPage} active={isActive && page.kind === 'flow'} root={projectRoot} worktree={worktreePath} epoch={overviewEpoch} knowledge={flowKnowledge} onKnowledge={chooseKnowledge} artifacts={snapshot.artifacts.map(a => ({id: a.id, title: a.title}))}/>}
           {page.kind === 'recorded' && <section className="page canvas-page" aria-label="Recorded executions">
             <div className="page-body with-rail" style={{'--rail-width': panelWidth + 'px'}}>
               <div className="canvas-area"><RecordedView id={page.context} selection={recordedNode} onSelect={setRecordedNode}/></div>
