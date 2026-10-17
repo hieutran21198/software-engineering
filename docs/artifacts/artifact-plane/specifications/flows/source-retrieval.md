@@ -43,6 +43,7 @@ flow:
     - id: read
       title: Read contained UTF-8 knowledge or tracked code/test support
       supports:
+        - authoring-contract
         - flow-reader
         - reader-tests
     - id: freshness
@@ -54,6 +55,7 @@ flow:
     - id: return
       title: Return bounded excerpts and full source pointers
       supports:
+        - authoring-contract
         - flow-contract
         - index
         - adapters-tests
@@ -80,6 +82,12 @@ flow:
     - from: freshness
       to: return
   support:
+    - id: authoring-contract
+      kind: element
+      artifact: artifact-plane
+      element: specifications/authoring-workbench.md
+      requires: Define the work-centered shell, editable pages and journeys that this journey now serves.
+      basis: documented
     - id: reading-controls-browser
       kind: test
       path: apps/artifact-plane/test/browser/reading-controls.spec.js
@@ -222,6 +230,7 @@ flow:
         completion feedback.
       basis: static
   gaps:
+    - The authoring extension turns the reader into an editable document page with the same contained navigation; implementation and observed evidence are pending.
     - Retrieval ranks candidates; it does not prove compatibility or complete
       system discovery.
   exclusions:

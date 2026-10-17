@@ -35,6 +35,7 @@ flow:
     - id: apply
       title: Apply only the current project generation
       supports:
+        - authoring-contract
         - explorer
         - reload-tests
         - evidence-usability-contract
@@ -53,6 +54,12 @@ flow:
       to: observe
       condition: Continue observing until the last client leaves.
   support:
+    - id: authoring-contract
+      kind: element
+      artifact: artifact-plane
+      element: specifications/authoring-workbench.md
+      requires: Define the work-centered shell, editable pages and journeys that this journey now serves.
+      basis: documented
     - id: ux-browser-checks
       kind: test
       path: apps/artifact-plane/test/browser/lazy-reload.spec.js
@@ -110,6 +117,7 @@ flow:
       requires: Invalidate in-place baselines and comparisons when the protected ref or working knowledge changes.
       basis: documented
   gaps:
+    - The authoring extension requires refresh to keep unsaved editor text and to mark documents changed on disk; implementation and observed evidence are pending.
     - Referenced implementation/test observation must be registered by a flow
       retrieval context; unreferenced code changes are outside the map.
     - The evidence-and-usability extension is specified; implementation and

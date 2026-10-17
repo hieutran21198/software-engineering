@@ -12,6 +12,7 @@ flow:
     - id: select
       title: Select the registered worktree and artifact change
       supports:
+        - authoring-contract
         - ux-simplification-contract
         - ux-browser-checks
         - contract
@@ -42,6 +43,7 @@ flow:
     - id: evidence
       title: Read governing sources and missing review proof
       supports:
+        - authoring-contract
         - contract
         - review-service
         - review-interface
@@ -52,6 +54,7 @@ flow:
     - id: return
       title: Return to delivery or capture the reviewed context
       supports:
+        - authoring-contract
         - contract
         - review-service
         - review-interface
@@ -74,6 +77,12 @@ flow:
       to: select
       condition: The source selection changes or a stale/error reply requires a new read.
   support:
+    - id: authoring-contract
+      kind: element
+      artifact: artifact-plane
+      element: specifications/authoring-workbench.md
+      requires: Define the work-centered shell, editable pages and journeys that this journey now serves.
+      basis: documented
     - id: ux-browser-checks
       kind: test
       path: apps/artifact-plane/test/browser/change-review.spec.js
@@ -148,6 +157,7 @@ flow:
       requires: Compare in-place working knowledge with the protected-branch baseline through Git and derive declared evidence.
       basis: documented
   gaps:
+    - The authoring extension adds the change Review tab with commit, version preparation and publication review actions; implementation and observed evidence are pending.
     - Declared current is not a historical code predecessor; recorded
       relationships are not exhaustive impact.
     - The evidence-and-usability extension is specified; implementation and

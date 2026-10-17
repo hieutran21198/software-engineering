@@ -153,3 +153,7 @@ The lazy-loading.md contract in this directory defines on-demand views and detai
 ## Simplified exploration
 
 The ux-simplification.md contract in this directory defines one-step worktree activation, content-first reading, contained local links, independent disclosure and secondary evidence detail. It replaces conflicting inspector-only reading and two-step worktree navigation while preserving source identities and graph semantics.
+
+## Authoring extension
+
+The read-only guarantees above govern reading, refresh, review and retrieval. Writes exist only through the operation service and routes defined in [knowledge-editing.md](knowledge-editing.md), and the application shell, navigation and pages are defined in [authoring-workbench.md](authoring-workbench.md). The view switcher and sidebar rules of this contract are superseded by that shell; graph semantics, element ordering, containment, sanitizer and refresh rules remain valid.

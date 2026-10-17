@@ -17,6 +17,7 @@ flow:
     - id: open
       title: Create or select a canonical project tab
       supports:
+        - authoring-contract
         - workspace
     - id: select
       title: Activate one explorer and pause inactive work
@@ -25,6 +26,7 @@ flow:
     - id: navigate
       title: Maintain project-scoped graph and inspector state
       supports:
+        - authoring-contract
         - workspace
     - id: close
       title: Release the closed explorer and select a survivor
@@ -49,6 +51,12 @@ flow:
       to: open
       condition: No project remains or a new one is requested.
   support:
+    - id: authoring-contract
+      kind: element
+      artifact: artifact-plane
+      element: specifications/authoring-workbench.md
+      requires: Define the work-centered shell, editable pages and journeys that this journey now serves.
+      basis: documented
     - id: ux-browser-checks
       kind: test
       path: apps/artifact-plane/test/browser/project-tabs.spec.js
@@ -79,6 +87,7 @@ flow:
       requires: Exercise preference validation and close selection.
       basis: static
   gaps:
+    - The authoring extension moves the worktree selector into the source bar as the branch control and adds the edit state; implementation and observed evidence are pending.
     - Browser persistence is a preference store, not repository evidence or a
       workflow registry.
   exclusions:

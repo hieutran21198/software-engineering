@@ -11,6 +11,7 @@ flow:
     - id: brief
       title: Read the unit brief and unique membership
       supports:
+        - authoring-contract
         - ux-simplification-contract
         - ux-browser-checks
         - units
@@ -32,6 +33,7 @@ flow:
     - id: criteria
       title: Inspect shared criteria and evidence
       supports:
+        - authoring-contract
         - units
         - unit-tests
         - evidence-usability-contract
@@ -70,6 +72,12 @@ flow:
       to: criteria
       condition: Review returns to the unit evidence.
   support:
+    - id: authoring-contract
+      kind: element
+      artifact: artifact-plane
+      element: specifications/authoring-workbench.md
+      requires: Define the work-centered shell, editable pages and journeys that this journey now serves.
+      basis: documented
     - id: ux-browser-checks
       kind: test
       path: apps/artifact-plane/test/browser/units-of-work.spec.js
@@ -176,6 +184,7 @@ flow:
       requires: Resolve in-place version records and their introducing commits for member delivery.
       basis: documented
   gaps:
+    - The authoring extension adds member, criterion, evidence and affected-flow editing to the unit page; implementation and observed evidence are pending.
     - Recorded passing assertions are not independently executed tests; missing
       merge evidence stays unresolved.
     - The evidence-and-usability extension is specified; implementation and

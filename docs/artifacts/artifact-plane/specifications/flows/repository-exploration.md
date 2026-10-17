@@ -11,6 +11,7 @@ flow:
     - id: select
       title: Select the project and worktree
       supports:
+        - authoring-contract
         - reading-controls-browser
         - reading-controls-contract
         - ux-simplification-contract
@@ -65,6 +66,7 @@ flow:
     - id: inspect
       title: Inspect selected knowledge and diagnostics
       supports:
+        - authoring-contract
         - explorer
         - reader-tests
         - evidence-review-contract
@@ -102,6 +104,12 @@ flow:
       to: inspect
       condition: Relevant knowledge is selected.
   support:
+    - id: authoring-contract
+      kind: element
+      artifact: artifact-plane
+      element: specifications/authoring-workbench.md
+      requires: Define the work-centered shell, editable pages and journeys that this journey now serves.
+      basis: documented
     - id: reading-controls-browser
       kind: test
       path: apps/artifact-plane/test/browser/reading-controls.spec.js
@@ -229,6 +237,7 @@ flow:
       requires: Detect each artifact layout and read in-place identity, change and version records from front matter only.
       basis: documented
   gaps:
+    - The authoring extension replaces the view switchers and sidebars with one navigation tree and content pages; implementation and observed evidence are pending.
     - The flow documents discovery behavior, not complete knowledge coverage or
       artifact establishment.
     - New contextual review navigation is specified but not implemented or
