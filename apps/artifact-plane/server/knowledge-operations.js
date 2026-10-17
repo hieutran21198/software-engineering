@@ -382,7 +382,7 @@ export const OPERATIONS = {
     const existing = (records || []).map(r => r?.id);
     let id;
     if (input.id !== undefined && existing.includes(input.id)) id = input.id;
-    else id = identifier(input, 'id', method, [...existing, ...sectionAnchors(current).map(h => h.anchor)], {max: 40});
+    else id = identifier(input, 'id', slug(method).split('-').slice(0, 3).join(' '), [...existing, ...sectionAnchors(current).map(h => h.anchor)], {max: 40});
     const record = {id, method, result: value, source: `${path}#${id}`};
     const withSection = upsertSubsection(current, 'evidence', 'Evidence', id, detail);
     const index = existing.indexOf(id);
