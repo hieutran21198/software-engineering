@@ -29,6 +29,7 @@ export default function ArtifactPage({page}) {
 
 function ArtifactView({artifact, page, snapshot, worktree, go, edit}) {
   const [graph, setGraph] = useState(false), [dependency, setDependency] = useState(null), [editingDeps, setEditingDeps] = useState(false);
+  const [depError, setDepError] = useState(null);
   const [starting, setStarting] = useState(false), [adding, setAdding] = useState(null), [expanded, setExpanded] = useState(() => new Set(page.section ? [page.section] : []));
   const depsButton = useRef(null), startButton = useRef(null);
   const inPlace = artifact.layout === 'in-place', writable = edit.editable && inPlace;
@@ -51,10 +52,12 @@ function ArtifactView({artifact, page, snapshot, worktree, go, edit}) {
   const toggle = kind => setExpanded(value => {const next = new Set(value);next.has(kind) ? next.delete(kind) : next.add(kind);return next;});
   const refocus = ref => requestAnimationFrame(() => ref.current?.focus());
 
+  // One click removes a dependency; Edit chooses several at once.
+  const removeDependency = id => edit.run('artifact.dependencies.set', {artifact: artifact.id, dependsOn: declared.filter(d => d !== id)}).catch(failure => setDepError(failure));
   const subtitle = <>
     {artifact.currentVersion ? `Version ${artifact.currentVersion}` : 'No version yet'}
     {artifact.proposedVersion && ` · ${artifact.proposedVersion} prepared`}
-    {' · '}{declared.length ? <>depends on {declared.map((id, i) => <React.Fragment key={id}>{i > 0 && ', '}<button className="link" onClick={() => go({kind: 'artifact', artifact: id})}>{artifactTitle(snapshot, id)}</button></React.Fragment>)}</> : 'no dependencies'}
+    {' · '}{declared.length ? <>depends on {declared.map((id, i) => <React.Fragment key={id}>{i > 0 && ', '}<button className="link" onClick={() => go({kind: 'artifact', artifact: id})}>{artifactTitle(snapshot, id)}</button>{writable && !editingDeps && <button className="icon dependency-remove" aria-label={`Remove dependency on ${artifactTitle(snapshot, id)}`} title="Remove dependency" onClick={() => {setDepError(null);removeDependency(id);}}>×</button>}</React.Fragment>)}</> : 'no dependencies'}
     {writable && !editingDeps && <button ref={depsButton} className="quiet dependency-edit" aria-label="Edit dependencies" onClick={() => setEditingDeps(true)}>Edit</button>}
   </>;
 
@@ -65,6 +68,7 @@ function ArtifactView({artifact, page, snapshot, worktree, go, edit}) {
   return <section className="page artifact-page" aria-label="Artifact page"><div className="column">
     <PageHeader title={artifact.title} subtitle={subtitle}
       action={<button className="quiet" aria-expanded={graph} onClick={() => {setGraph(value => !value);setDependency(null);}}>{graph ? 'Hide dependencies' : 'Show dependencies'}</button>}/>
+    <OperationError error={depError}/>
     {editingDeps && <ActionForm open title="Dependencies" submitLabel="Save dependencies" note="This artifact uses the knowledge of the selected artifacts."
       onClose={() => {setEditingDeps(false);refocus(depsButton);}}
       fields={[{name: 'dependsOn', label: 'Depends on', type: 'checks', value: declared, empty: 'No other artifact exists.',

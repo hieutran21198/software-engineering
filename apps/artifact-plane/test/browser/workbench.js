@@ -20,14 +20,15 @@ export async function showSidebar(page) {
 }
 export const showTree = showSidebar;
 const exact = text => new RegExp('^' + text.replace(/[.*+?^${}()|[\]\\]/g, '\\$&'));
-async function openRow(page, title, regionName) {
+async function openRow(page, title, regionName, whole = false) {
   await showSidebar(page);
-  await treeItem(page, exact(title)).first().click();
+  await (whole ? tree(page).getByRole('treeitem', {name: title, exact: true}) : treeItem(page, exact(title))).first().click();
   await expect(region(page, regionName)).toBeVisible();
   return region(page, regionName);
 }
 export const openWork = page => openRow(page, 'Current work', 'Work page');
-export const openArtifact = (page, title) => openRow(page, title, 'Artifact page');
+// Artifact rows carry only the title, so the whole name must match.
+export const openArtifact = (page, title) => openRow(page, title, 'Artifact page', true);
 export const openChange = (page, title) => openRow(page, title, 'Change page');
 // A document opens from its kind in the sidebar: artifact, kind, then title.
 export async function openDocument(page, artifact, kind, title) {

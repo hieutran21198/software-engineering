@@ -61,7 +61,9 @@ const fileBadge = (code = '') => code.includes('?') || code[0] === 'A' ? ['new',
 // The commit message of 1.16.0: the change and its phase when one open change owns every file.
 function commitMessage(entries, changes) {
   const owners = [...new Set(entries.map(e => e.path.split('/')[2]))];
-  const single = owners.length === 1 ? changes.find(c => c.artifact === owners[0]) : null;
+  // A unit brief travels with its change, so it does not make the commit generic.
+  const artifacts = owners.filter(o => o !== 'units-of-work');
+  const single = artifacts.length === 1 ? changes.find(c => c.artifact === artifacts[0]) : null;
   if (single) return `${single.artifact} ${single.name}: ${phaseModel(single).state === 'loading' ? 'update' : phaseLabel(single)}`;
   return `Update knowledge of ${owners.filter(o => o !== 'units-of-work').join(', ') || 'units of work'}`;
 }

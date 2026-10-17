@@ -33,3 +33,4 @@
 .notice > .migration:has(.inline-form) { flex-basis: 100%; }
 .migration .inline-form { color: var(--text); max-width: none; }
 @media (max-width: 800px) { .artifact-page .page-header > button.quiet { margin-left: -8px; } .artifact-page .dependency-edit { height: 32px; } }
+.dependency-remove { width: 22px; height: 22px; margin-left: 2px; vertical-align: middle; }
