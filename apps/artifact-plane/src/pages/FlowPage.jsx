@@ -25,7 +25,8 @@ function StepDetail({step, index, steps, support, resolved, editable, run, snaps
   const [error, setError] = useState(null), quick = (operation, input) => {setError(null);run(operation, input).catch(setError);};
   const supports = list(step.supports).map(id => support.find(s => s.id === id) || {id, missing: true});
   const close = () => onAction(null);
-  const readable = path => path && flowId ? list(sources).find(s => s.path === path) : null;
+  // A support can name a symbol after its path; the source is the file.
+  const readable = path => path && flowId ? list(sources).find(s => s.path === String(path).split(' · ')[0]) : null;
   // A support that only this step uses is removed from the flow; a shared one only leaves this step.
   const removeSupport = id => steps.some(s => s.id !== step.id && list(s.supports).includes(id))
     ? quick('flow.step.update', {step: step.id, supports: list(step.supports).filter(x => x !== id)})
@@ -126,7 +127,8 @@ export default function FlowPage({page}) {
   });
   const box = (key, label, value) => editing === key
     ? <div className="flow-box editing"><TextEditor label={label} value={value || ''} onSave={text => run('flow.meta.set', {[key]: text})} onClose={() => setEditing(null)}/></div>
-    : editable ? <button className="unstyled flow-box" aria-label={`Edit ${label}`} onClick={() => setEditing(key)}><span className="flow-box-label">{label}</span>{value}</button>
+    // One editor at a time: a running save cannot close another editor and lose its text.
+    : editable && !editing ? <button className="unstyled flow-box" aria-label={`Edit ${label}`} onClick={() => setEditing(key)}><span className="flow-box-label">{label}</span>{value}</button>
       : <div className="flow-box"><span className="flow-box-label">{label}</span>{value}</div>;
   const listEditor = (key, label, items) => <TextEditor label={`${label}, one per line`} value={items.join('\n')} rows={4} onSave={text => run('flow.meta.set', {[key]: lines(text)})} onClose={() => setEditing(null)}/>;
   const participants = list(flow.participants), interactions = steps.flatMap(s => list(s.interactions).map((x, i) => ({step: s, x, i}))), models = list(detail.data?.models);
@@ -165,10 +167,10 @@ export default function FlowPage({page}) {
       ]} onSubmit={v => run('flow.step.add', {title: v.title, ...(v.after ? {after: v.after, position: position(v.after) + 1} : {})})}/></div>}
     </Section>}
 
-    <Section title="Gaps" summary={gaps.length} actions={editable && editing !== 'gaps' && <button className="quiet" aria-label="Edit gaps" onClick={() => setEditing('gaps')}>Edit</button>}>
+    <Section title="Gaps" summary={gaps.length} actions={editable && !editing && <button className="quiet" aria-label="Edit gaps" onClick={() => setEditing('gaps')}>Edit</button>}>
       {editing === 'gaps' ? listEditor('gaps', 'Gaps', gaps) : gaps.length ? gaps.map((g, i) => <p key={i} className="flow-gap">{g}</p>) : <p className="muted">No gaps are recorded.</p>}
     </Section>
-    <Section title="Exclusions" summary={exclusions.length} actions={editable && editing !== 'exclusions' && <button className="quiet" aria-label="Edit exclusions" onClick={() => setEditing('exclusions')}>Edit</button>}>
+    <Section title="Exclusions" summary={exclusions.length} actions={editable && !editing && <button className="quiet" aria-label="Edit exclusions" onClick={() => setEditing('exclusions')}>Edit</button>}>
       {editing === 'exclusions' ? listEditor('exclusions', 'Exclusions', exclusions) : exclusions.length ? <ul className="flow-exclusions">{exclusions.map((x, i) => <li key={i}>{x}</li>)}</ul> : <p className="muted">No exclusions are recorded.</p>}
     </Section>
 

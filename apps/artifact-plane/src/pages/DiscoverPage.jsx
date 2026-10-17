@@ -1,4 +1,4 @@
-import React, {useEffect, useId, useState} from 'react';
+import React, {useEffect, useId, useRef, useState} from 'react';
 import {useShell} from '../page-data.js';
 import {PageHeader, Notice} from '../ui.jsx';
 import {postJSON} from '../request.js';
@@ -13,13 +13,17 @@ export default function DiscoverPage({page}) {
   const {snapshot, root, worktreePath, epoch, go} = useShell(), fieldId = useId();
   const [text, setText] = useState(page.query || ''), [search, setSearch] = useState(page.query || ''), [attempt, setAttempt] = useState(0);
   const [result, setResult] = useState(null), [cursor, setCursor] = useState(null), [loading, setLoading] = useState(false), [error, setError] = useState('');
+  const shown = useRef(null);shown.current = result;
   useEffect(() => {
     if (!search || !root) return;
     const controller = new AbortController();
     setLoading(true);setError('');
     query({path: root, ...(worktreePath ? {worktree: worktreePath} : {}), knowledge: 'planning', operation: 'search', query: search, match: 'discovery', limit: 20, ...(cursor ? {cursor} : {})}, controller.signal).then(next => {
       if (controller.signal.aborted) return;
-      setResult(previous => cursor && previous ? {...next, data: {...next.data, flows: [...new Map([...previous.data.flows, ...next.data.flows].map(f => [f.id, f])).values()]}} : next);
+      const previous = shown.current;
+      // A later page of another ranking would mix two orders: start the search again instead.
+      if (cursor && previous && (next.generation !== previous.generation || next.revision !== previous.revision)) {setResult(null);setCursor(null);setAttempt(n => n + 1);return;}
+      setResult(cursor && previous ? {...next, data: {...next.data, flows: [...new Map([...previous.data.flows, ...next.data.flows].map(f => [f.id, f])).values()]}} : next);
     }).catch(failure => {if (!controller.signal.aborted && failure.name !== 'AbortError') {setError(failure.message);if (cursor) setCursor(null);}})
       .finally(() => {if (!controller.signal.aborted) setLoading(false);});
     return () => controller.abort();

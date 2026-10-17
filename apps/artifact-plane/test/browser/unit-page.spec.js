@@ -263,7 +263,7 @@ test('a new unit manages its changes, criteria, evidence, affected flows and gra
 
 // Product bug: the Source field lists only the brief, because the page reads
 // unit.members[].taskGraph from the overview, where it stays pending.
-test.fixme('the evidence source offers the Evidence sections of the exact retained member tasks', async ({page}) => {
+test('the evidence source offers the Evidence sections of the exact retained member tasks', async ({page}) => {
   const f = await editingRepository(changeDeliveryFixture()), source = 'docs/artifacts/authentication/changes/change-login/tasks/api.md';
   try {
     await openRepository(page, f.root);await openTenantLogin(page);

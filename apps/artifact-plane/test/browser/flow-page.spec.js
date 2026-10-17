@@ -255,7 +255,7 @@ test('a source excerpt is highlighted and refreshes after the repository changes
 
 // Product bug: the source page sets the highlighted HTML with innerHTML, and
 // HTML parsing turns CR LF into LF, so the excerpt is not the exact file text.
-test.fixme('a source excerpt keeps the exact line endings of the file', async ({page}) => {
+test('a source excerpt keeps the exact line endings of the file', async ({page}) => {
   const files = readingFiles();files.set('src/session.js', 'export const session = 1;\r\n');
   const f = await fixtureRepository(files);
   try {
@@ -268,7 +268,7 @@ test.fixme('a source excerpt keeps the exact line endings of the file', async ({
 
 // Product bug: SourcePage keeps the cursor of a later excerpt across a refresh.
 // When the source changed, the server rejects the stale cursor and Retry repeats it.
-test.fixme('the source page returns to the first excerpt when the repository changes', async ({page}) => {
+test('the source page returns to the first excerpt when the repository changes', async ({page}) => {
   const f = await fixtureRepository(readingFiles());
   try {
     await openRepository(page, f.root);await openFlow(page, 'Tenant', 'Member login');

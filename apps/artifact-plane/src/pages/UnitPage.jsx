@@ -86,6 +86,8 @@ export default function UnitPage({page}) {
   const [rowMode, setRowMode] = useState(null), [graph, setGraph] = useState(false), [flowsOpen, setFlowsOpen] = useState(false), [removeError, setRemoveError] = useState(null), [noJoin, setNoJoin] = useState(false);
   const flowsButton = useRef(null);
   const graphQuery = useQuery(graph && unit ? {section: 'artifacts', unit: unit.id} : null);
+  // The exact retained tasks of the members: their Evidence sections are evidence sources.
+  const tasksQuery = useQuery(unit && edit.editable && rowMode?.mode === 'evidence' ? {section: 'implementation', unit: unit.id} : null);
   const canvas = useMemo(() => {
     const data = graphQuery.data;
     if (!data?.artifactGraph?.planning || !worktree) return null;
@@ -110,7 +112,8 @@ export default function UnitPage({page}) {
   const purpose = sectionText(brief.markdown, 'purpose') || splitFront(brief.markdown).body.split(/^#{2,}\s/m)[0].replace(/^#\s.*$/m, '').trim().split(/\n\s*\n/)[0]?.trim();
   // Evidence sources: the Evidence sections of member tasks, or the combined checks of this brief.
   const several = unit.members.length > 1;
-  const sources = [{value: '', label: 'Combined checks of this brief'}, ...unit.members.flatMap(m => (m.taskGraph?.tasks || []).map(t => ({value: `${t.path}#evidence`, label: `${several ? `${changeTitle(changeOf(m)) || m.change}: ` : ''}${t.title || t.id} · Evidence`})))];
+  const memberTasks = (tasksQuery.data?.implementationGraph?.nodes || []).filter(n => n.kind === 'task' && n.task?.path);
+  const sources = [{value: '', label: 'Combined checks of this brief'}, ...memberTasks.map(n => ({value: `${n.task.path}#evidence`, label: `${several ? `${changeTitle(changeOf(n)) || n.change}: ` : ''}${n.task.title || n.task.id || n.title} · Evidence`}))];
   const withEvidence = unit.acceptance.filter(c => unit.evidence.some(e => e.criterion === c.id)).length;
   const flowTitle = f => artifactDocuments(snapshot.artifacts.find(a => a.id === f.artifact) || {elements: []}).flows.find(x => x.flow === `${f.artifact}:${f.flow}`)?.title || f.flow;
   const allFlows = snapshot.artifacts.flatMap(a => artifactDocuments(a).flows.map(f => ({value: f.flow, label: snapshot.artifacts.length > 1 ? `${f.title} · ${a.title}` : f.title})));
@@ -125,10 +128,13 @@ export default function UnitPage({page}) {
 
     <Section title="Changes" summary={unit.members.length} actions={<button className="quiet" aria-expanded={graph} onClick={() => setGraph(v => !v)}>{graph ? 'Hide graph' : 'Show graph'}</button>}>
       <div className="rows">
-        {unit.members.map(m => {const c = changeOf(m), title = changeTitle(c) || m.change;return <div className="row" key={`${m.artifact}/${m.change}`}>
-          <div className="grow"><button className="link" onClick={() => go({kind: 'change', artifact: m.artifact, change: m.change})}>{title}</button> <span className="muted">· {artifactTitle(snapshot, m.artifact)} · {m.change}</span></div>
+        {unit.members.map(m => {const c = changeOf(m), title = changeTitle(c) || m.change;
+          // Members of different artifacts can share a title; their controls still need distinct names.
+          const name = unit.members.filter(x => (changeTitle(changeOf(x)) || x.change) === title).length > 1 ? `${title} · ${artifactTitle(snapshot, m.artifact)}` : title;
+          return <div className="row" key={`${m.artifact}/${m.change}`}>
+          <div className="grow"><button className="link" aria-label={name} onClick={() => go({kind: 'change', artifact: m.artifact, change: m.change})}>{title}</button> <span className="muted">· {artifactTitle(snapshot, m.artifact)} · {m.change}</span></div>
           <span className="muted">{memberState(m)}</span>
-          {editable && several && <button className="danger" aria-label={`Remove ${title} from the unit`} onClick={() => {setRemoveError(null);edit.run('unit.member.remove', {unit: unit.id, artifact: m.artifact, change: m.change}).catch(setRemoveError);}}>Remove</button>}
+          {editable && several && <button className="danger" aria-label={`Remove ${name} from the unit`} onClick={() => {setRemoveError(null);edit.run('unit.member.remove', {unit: unit.id, artifact: m.artifact, change: m.change}).catch(setRemoveError);}}>Remove</button>}
         </div>;})}
         {editable && (joinable.length ? <ActionForm label="+ Add a change" opener="add-row" submitLabel="Add the change"
           fields={[{name: 'member', label: 'Open change', type: 'select', options: joinable, value: joinable[0].value}]}

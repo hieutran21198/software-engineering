@@ -125,7 +125,7 @@ test('a refresh with the same revision accepts a changed discovery generation an
 
 // Product bug: "Show more results" appends a page of a newer ranking generation
 // to the first page of the older one instead of restarting the search.
-test.fixme('a changed discovery generation between pages restarts without mixing rankings', async ({page}) => {
+test('a changed discovery generation between pages restarts without mixing rankings', async ({page}) => {
   const f = await fixtureRepository(flowFiles());let repaired = false;
   await page.route('**/api/flows/query', route => {
     const b = route.request().postDataJSON();if (b.operation !== 'search') return route.continue();
