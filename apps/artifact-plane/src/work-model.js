@@ -73,7 +73,8 @@ export function artifactDocuments(artifact) {
 }
 
 // Sidebar rows: a flat list with levels. Filtering keeps matches and their parents.
-// Row: {key, level, label, detail, badge, count, expandable, open, page, kind}
+// Row: {key, level, label, detail, badge, count, expandable, open, page, kind, matched}
+// matched marks rows that match the filter themselves, not only as parents.
 export function sidebarRows({snapshot, worktree, filter = '', expanded, history = false}) {
   if (!snapshot) return [];
   const rows = [], active = Boolean(filter.trim()), open = key => active || expanded.has(key);
@@ -81,7 +82,7 @@ export function sidebarRows({snapshot, worktree, filter = '', expanded, history 
   const changes = currentChanges(worktree);
   rows.push({key: 'work', level: 0, kind: 'home', label: 'Current work', page: {kind: 'work'}});
   for (const c of changes) if (match(changeTitle(c), c.name, c.artifact))
-    rows.push({key: `c:${c.artifact}/${c.name}`, level: 1, label: changeTitle(c), detail: `${artifactTitle(snapshot, c.artifact)} · ${phaseLabel(c)}`, page: {kind: 'change', artifact: c.artifact, change: c.name}});
+    rows.push({key: `c:${c.artifact}/${c.name}`, level: 1, matched: true, label: changeTitle(c), detail: `${artifactTitle(snapshot, c.artifact)} · ${phaseLabel(c)}`, page: {kind: 'change', artifact: c.artifact, change: c.name}});
   rows.push({key: 'h:artifacts', kind: 'heading', label: 'Artifacts'});
   for (const a of snapshot.artifacts) {
     const key = `a:${a.id}`, docs = artifactDocuments(a), children = [];
@@ -92,21 +93,21 @@ export function sidebarRows({snapshot, worktree, filter = '', expanded, history 
       children.push({key: kindKey, level: 1, label, count: documents.length, expandable: true, open: open(kindKey)});
       if (!open(kindKey)) continue;
       const shown = active ? matching : matching.slice(0, 5);
-      for (const d of shown) children.push({key: `${kindKey}:${d.path}`, level: 2, label: d.title || d.path, badge: badgeOf(d.state), page: kind === 'flows' ? {kind: 'flow', artifact: a.id, flow: d.flow} : d.removed ? null : {kind: 'document', artifact: a.id, source: d.file}});
+      for (const d of shown) children.push({key: `${kindKey}:${d.path}`, level: 2, matched: true, label: d.title || d.path, badge: badgeOf(d.state), page: kind === 'flows' ? {kind: 'flow', artifact: a.id, flow: d.flow} : d.removed ? null : {kind: 'document', artifact: a.id, source: d.file}});
       if (!active && documents.length > 5) children.push({key: `${kindKey}:all`, level: 2, kind: 'show-all', label: `Show all ${documents.length}`, page: {kind: 'artifact', artifact: a.id, section: kind}});
     }
     if (active && !children.length && !match(a.title, a.id)) continue;
-    rows.push({key, level: 0, label: a.title, expandable: true, open: open(key), page: {kind: 'artifact', artifact: a.id}});
+    rows.push({key, level: 0, matched: match(a.title, a.id), label: a.title, expandable: true, open: open(key), page: {kind: 'artifact', artifact: a.id}});
     if (open(key)) rows.push(...children);
   }
   if (history) {
     rows.push({key: 'h:history', kind: 'heading', label: 'History'});
     const delivered = (worktree?.changes || []).filter(c => c.history).sort((a, b) => String(b.lastCommitAt || '').localeCompare(String(a.lastCommitAt || '')) || natural.compare(b.name, a.name));
     for (const c of delivered) if (match(changeTitle(c), c.name, c.artifact))
-      rows.push({key: `hc:${c.artifact}/${c.name}`, level: 0, label: changeTitle(c), detail: `${artifactTitle(snapshot, c.artifact)}${c.version ? ` · ${c.version}` : ''}`, page: {kind: 'change', artifact: c.artifact, change: c.name}});
+      rows.push({key: `hc:${c.artifact}/${c.name}`, level: 0, matched: true, label: changeTitle(c), detail: `${artifactTitle(snapshot, c.artifact)}${c.version ? ` · ${c.version}` : ''}`, page: {kind: 'change', artifact: c.artifact, change: c.name}});
     const openUnits = new Set(currentUnits(worktree).map(u => u.id));
     for (const u of worktree?.unitsOfWork || []) if (!openUnits.has(u.id) && match(u.title, u.id))
-      rows.push({key: `hu:${u.id}`, level: 0, label: u.title, detail: `Unit of work · ${u.members.length} ${u.members.length === 1 ? 'change' : 'changes'}`, page: {kind: 'unit', unit: u.id}});
+      rows.push({key: `hu:${u.id}`, level: 0, matched: true, label: u.title, detail: `Unit of work · ${u.members.length} ${u.members.length === 1 ? 'change' : 'changes'}`, page: {kind: 'unit', unit: u.id}});
   }
   return rows;
 }

@@ -31,7 +31,7 @@ export default function Sidebar({snapshot, worktree, page, expanded, onToggle, o
     else if (event.key === 'ArrowLeft') {event.preventDefault();if (row.expandable && row.open && !filter) onToggle(row.key);else move(parent(index));}
     else if (event.key === 'Enter' || event.key === ' ') {event.preventDefault();activate(row);}
   }
-  const first = items.find(r => r.page && r.kind !== 'home');
+  const first = items.find(r => r.page && r.matched);
   return <nav className="sidebar" id={id} aria-label="Navigation">
     <div className="sidebar-scroll">
       <form role="search" className="sidebar-search" onSubmit={event => {event.preventDefault();if (filter && first) onOpen(first.page);}}>

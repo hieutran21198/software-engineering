@@ -57,6 +57,8 @@ export function ProjectExplorer({active: isActive = true, initialPath = '', onOp
   useEffect(() => {const measure = () => setNarrow(window.innerWidth <= 800);window.addEventListener('resize', measure);return () => window.removeEventListener('resize', measure);}, []);
   useEffect(() => {if (projectRoot) remember('plane-sidebar:' + projectRoot, [...expanded]);}, [expanded, projectRoot]);
   useEffect(() => {if (projectRoot) remember('plane-history:' + projectRoot, history);}, [history, projectRoot]);
+  // Escape closes the drawer wherever the focus is, also in the top bar.
+  useEffect(() => {if (!drawerOpen) return;const close = event => {if (event.key === 'Escape') setDrawerOpen(false);};document.addEventListener('keydown', close);return () => document.removeEventListener('keydown', close);}, [drawerOpen]);
   const toggle = useCallback(key => setExpanded(current => {const next = new Set(current);next.has(key) ? next.delete(key) : next.add(key);return next;}), []);
 
   // Unsaved editor text asks for confirmation before another page opens.
@@ -243,7 +245,7 @@ export function ProjectExplorer({active: isActive = true, initialPath = '', onOp
       stale={disconnected || Boolean(error)} uncommitted={uncommitted} onUncommitted={() => go({kind: 'work', focus: 'uncommitted'})} onRefresh={() => open(projectRoot, true)}
       onCreateBranch={createBranch} drawer={{open: drawerOpen, id: drawerId, toggle: () => setDrawerOpen(value => !value)}} recorded={recorded} onOpen={go}
       onChangeRepository={() => {if (leave()) setEditingRepo(true);}}/>}</RecordedAvailable>, slot)}
-    <div className="explorer" onKeyDown={event => {if (event.key === 'Escape' && drawerOpen) setDrawerOpen(false);}}>
+    <div className="explorer">
       {error && <div role="alert" className="alert-line">{error}</div>}
       <div className="workspace" ref={workspaceRef} style={{'--sidebar-width': sidebarWidth + 'px'}}>
         {snapshot && !showOpen && (!narrow || drawerOpen) && <>
