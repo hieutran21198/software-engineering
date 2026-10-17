@@ -1,0 +1,38 @@
+/* Work page: change cards, uncommitted files, the commit bar and page actions. */
+.work-page .page-header { margin-bottom: 28px; }
+.work-actions { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
+.work-form { margin-bottom: var(--s5); }
+.work-form .inline-form { max-width: none; }
+.work-change .eyebrow { margin-bottom: 0; font-size: 12px; overflow-wrap: anywhere; }
+.work-change .eyebrow button.link { font: inherit; display: inline; white-space: normal; text-align: left; }
+.work-change .next-line p { flex: 1 1 280px; }
+.work-branch { flex: 1 1 100%; }
+.work-page .notice .work-branch .menu-form { display: flex; flex-direction: row; flex-wrap: wrap; align-items: flex-end; gap: var(--s2); padding: 0; max-width: 520px; }
+.work-page .notice .work-branch .field { flex: 1 1 220px; }
+.work-page .notice .work-branch .field > label { font-size: 12px; }
+.work-page .notice .work-branch .operation-error { flex-basis: 100%; }
+.work-file .row-detail .mono { font-size: 12px; }
+.work-commit { display: flex; gap: var(--s3); align-items: center; flex-wrap: wrap; padding: var(--s3) var(--s4); background: var(--subtle); border-top: 1px solid var(--divider); }
+.work-commit input { flex: 1 1 240px; font: 13px var(--mono); }
+.work-error { margin-top: var(--s3); }
+.work-empty { display: flex; flex-direction: column; align-items: flex-start; gap: var(--s4); }
+.work-empty h2 { margin: 0; }
+.work-phone-actions { display: flex; flex-direction: column; gap: var(--s2); }
+.work-phone-actions .work-form { margin-bottom: var(--s2); }
+@media (max-width: 800px) {
+  .work-page .page-header { margin-bottom: 20px; }
+  .work-path { display: none; }
+  /* Checkbox, the title over its kind and badge, Discard at the right. */
+  .work-file { display: grid; grid-template-columns: auto auto minmax(0, 1fr) auto; grid-template-areas: "check title title discard" "check detail badge discard"; column-gap: 8px; row-gap: 4px; align-items: center; padding: 12px 8px 12px 14px; }
+  .work-file input[type="checkbox"] { grid-area: check; width: 20px; height: 20px; margin-right: 4px; }
+  .work-file .grow { display: contents; }
+  .work-file .row-title { grid-area: title; }
+  .work-file .row-detail { grid-area: detail; }
+  .work-file .badge { grid-area: badge; justify-self: start; }
+  .work-file button { grid-area: discard; }
+  .work-commit { flex-direction: column; align-items: stretch; }
+  .work-commit input { flex: none; width: 100%; }
+  .work-commit button { width: 100%; }
+  .work-empty button { width: 100%; }
+}
+.work-page #work-uncommitted { scroll-margin-top: 24px; }
