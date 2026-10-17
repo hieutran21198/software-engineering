@@ -63,7 +63,7 @@ The owner made these decisions on 17 October 2026:
 
 ## Superseded statements
 
-These earlier statements described the 1.15.0 and 1.16.0 layouts. This requirement replaces them; the Specification phase amends their files.
+These earlier statements described the 1.15.0 and 1.16.0 layouts. This requirement replaces them. The Specification phase amended their files.
 
 - authoring-workbench.md: W1, the per-scenario action targets, A1 for action counts, A7 for the page list.
 - explorer.md: 21 (worktree selection in the repository sidebar), 27 (the view switcher and its Established and Planning controls), B10 (the resizable inspector).

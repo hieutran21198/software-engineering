@@ -13,3 +13,5 @@ Excluded: the knowledge operation service, the knowledge writer, Git actions, HT
 Artifact Plane owns this change. The established baseline is Artifact Plane 1.16.0 on main. ADD 2.5.0 supplies the in-place layout, task, unit, flow and evidence contracts; none of them changes. Knowledge is edited in place on branch claude/plane-workbench-redesign. This change belongs to the plane-workbench-redesign unit.
 
 - [Requirements](../../requirements/workbench-redesign.md)
+- [Workbench contract](../../specifications/authoring-workbench.md)
+- [Rebuild decision](../../decisions/015-rebuild-workbench-pages.md)

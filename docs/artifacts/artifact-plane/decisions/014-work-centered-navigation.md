@@ -19,3 +19,7 @@ Adopt option B as specified in specifications/authoring-workbench.md. The tree r
 ## Consequences
 
 The home screen changes from the canvas to the work page, and the Dependencies, Units of work and Flows switchers disappear; the same capabilities remain reachable from the tree and pages. Existing browser tests for those controls are rewritten. State labels are corrected where they misled. The graph canvases, readers, comparison, search, tabs and runtime overlays are reused without semantic change.
+
+## Amendment
+
+Decision 015 keeps the work-centered choice and replaces the navigation tree, the graph details rail and the source bar with a sidebar, inline graph panels and a top bar.

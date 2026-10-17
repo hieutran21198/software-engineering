@@ -250,8 +250,8 @@ flow:
       evidence:
         - apps/artifact-plane/test/browser/flow-page.spec.js
   gaps:
-    - The S1 and S3–S6 scenarios need more user actions than the requirement
-      targets; the unit brief records the measurements.
+    - The scenario tests limit user actions to the 1.16.0 measurements; the
+      workbench redesign replaced the earlier action targets.
     - Approval and publication are decisions outside the files and are not steps
       of this journey.
   exclusions:

@@ -50,7 +50,11 @@ acceptance:
     criterion: Node, browser, build, Go and website checks pass for the combined
       change, and the HTTP and MCP interfaces stay compatible.
     integration: true
-evidence: []
+evidence:
+  - criterion: mockups
+    method: Owner review of the seven mockups on the design canvas.
+    result: passed
+    source: docs/artifacts/units-of-work/plane-workbench-redesign/README.md#validation-evidence
 ---
 
 # Redesign the authoring workbench
@@ -69,4 +73,4 @@ Server operations, the knowledge writer, Git actions, HTTP and MCP interfaces, t
 
 ## Validation evidence
 
-No checks are recorded yet.
+Mockup review: on 17 October 2026 the owner reviewed the design canvas "Artifact Plane redesign mockups" with seven artboards (work, artifact, document, change with plan, unit, flow, and work at 390 pixels) and approved them before Specification.

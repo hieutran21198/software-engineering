@@ -10,7 +10,7 @@ R1. Unit tabs appear in the order Artifacts, Workflow, Implementation. Opening a
 
 R2. While a repository is open, relevant knowledge edits, additions, deletions, renames, task evidence updates, Git commits/ref changes, and registered worktree changes automatically update repository views. Registered readable ADD worktrees are included. Ordinary source edits update dirty context, but do not create invented phase evidence.
 
-R3. Automatic and manual updates preserve the active view, valid selection, expansion, filters, inspector width, pan, and zoom. A deleted selection clears safely. The existing snapshot remains usable while loading or after an update error. Switching repositories prevents responses for the previous repository from replacing the current view.
+R3. Automatic and manual updates preserve the open page, valid selection, expansion, filters, sidebar width, and an open graph's pan and zoom. A deleted selection clears safely. The existing snapshot remains usable while loading or after an update error. Switching repositories prevents responses for the previous repository from replacing the current view.
 
 R4. Group bursts and avoid overlapping reloads for the same repository. Expose updating, connected, and stale/error information. Reconnect and browser focus reconcile current evidence after missed notifications. Retain manual Refresh for recovery.
 
