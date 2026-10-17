@@ -79,9 +79,9 @@ Given an artifact has elements from its current version and a change, including 
 
 Given an open type group on the canvas, show each record with its filename and source label and less bottom space than the initial release. Labels remain readable and connection handles remain attached to the correct record.
 
-### B10 — Resizable inspector
+### B10 — Resizable navigation
 
-Given the desktop layout with a selected element, when the reader drags the inspector divider or uses its keyboard resize control, change the panel width within bounds. Markdown reflows, canvas controls remain usable, and the selected element remains selected.
+Given the desktop layout, when the reader drags the sidebar divider or uses its keyboard resize control, change the sidebar width within bounds. Page content reflows and the current page and selection stay. The workbench redesign (workbench-redesign.md) removed the inspector panel.
 
 ### Ordering self-check
 
@@ -110,32 +110,32 @@ The scope stays within Artifact Plane. B11–B14 cover source separation, worktr
 
 ## Worktree and delivery navigation
 
-21. Present registered worktree selection and details in the repository sidebar. Show branch, path, HEAD, availability and detached/locked/prunable states. Selecting another readable worktree explicitly switches the displayed context in one action.
-22. In Dependencies, expose change delivery details and phase evidence through the inspector, with full commit IDs, messages, completion evidence, and uncertainty. A change can open its task graph with Back to dependencies. Preserve access in repositories without unit briefs.
+21. Present registered worktree selection and details from the branch control in the top bar. Show branch, path, HEAD, availability and detached/locked/prunable states. Selecting another readable worktree explicitly switches the displayed context in one action.
+22. Expose change delivery details and phase evidence on the change page, with full commit IDs, messages, completion evidence, and uncertainty. A change page can show its task graph. Preserve access in repositories without unit briefs.
 23. Remove the standalone Workflow tab and canvas. Preserve unit Workflow, dependency exploration, worktree/history access, and recorded executions. Automatic refresh follows requirements/live-reload.md. Add no execution controls, approval inference, or repository writes.
 
 ### B15 — Delivery evidence exploration
 
-Given local worktrees and changes, the sidebar shows registered sources. Selecting an artifact and change opens its phase evidence and task graph. Selecting a unit still offers Artifacts, Workflow, and Implementation.
+Given local worktrees and changes, the branch control lists registered sources. Opening a change shows its phase evidence and task plan. A unit page shows its changes, criteria and, on request, its graph.
 
 ### B16 — View and source safety
 
-Switching views or resizing preserves valid selection. Refresh preserves valid selection or clears it when its source disappears. Selecting another worktree is the explicit context-switch action. Canvas interactions leave files and Git state unchanged.
+Opening another page or resizing preserves valid selection. Refresh preserves valid selection or clears it when its source disappears. Selecting another worktree is the explicit context-switch action. Canvas interactions leave files and Git state unchanged.
 
 ## Workflow histories and navigation
 
 24. Remove Approval from the displayed workflow phase sequence. The explorer still does not infer user approval or run workflows.
 25. In each worktree, keep current changes separate from retained changes. Put retained changes in Change histories, closed by default. Readers can expand histories and individual changes to inspect their phases and evidence. A declared change already represented by the current snapshot belongs in histories. Ambiguous active metadata must remain visible as uncertain rather than proving completion.
 26. Order Change histories by the latest Git commit time for each change, descending. Unknown times sort last with deterministic ties. Do not use directory name or filesystem modification time as recency evidence.
-27. Label the top-level view switcher Dependencies / Units of work. Keep its horizontal position centered and unchanged when switching at a fixed viewport width. The Established / Planning controls remain specific to Dependencies. Maintain usable controls on narrow layouts.
+27. The workbench redesign (workbench-redesign.md) replaces the view switcher and the Established / Planning controls. Graphs show the working branch and mark differences from main with badges. Maintain usable controls on narrow layouts.
 
 ### B17 — Workflow history exploration
 
-Given a current declared change and two retained changes committed at different times, the dependency inspector exposes the current change and a closed delivery history group. Expanding histories shows the newer change first. Selecting a history shows its six phases without Approval. Phase evidence preserves full IDs and uncertainty.
+Given a current declared change and two retained changes committed at different times, the artifact page shows the current change and a closed version history. Expanding histories shows the newer change first. Selecting a history shows its six phases without Approval. Phase evidence preserves full IDs and uncertainty.
 
 ### B18 — Stable navigation
 
-At a fixed desktop width, switching Dependencies to Units of work and back leaves the switcher centered at the same position. Labels are Dependencies and Units of work. At narrow widths, controls remain readable and operable.
+At a fixed desktop width, opening another page leaves the top bar and the sidebar in the same position. At narrow widths, controls remain readable and operable.
 
 ### History requirement self-check
 

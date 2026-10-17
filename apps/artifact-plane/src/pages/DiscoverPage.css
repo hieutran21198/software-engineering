@@ -1,0 +1,9 @@
+/* Discover behavior: one search field and a list of flows. */
+.discover-form { display: flex; gap: 8px; margin-bottom: var(--s5); }
+.discover-form input { flex: 1; min-width: 0; }
+.discover-note { margin: -12px 0 var(--s4); }
+.discover-results .unstyled { padding: 12px 4px; }
+.discover-results .doc-title { display: flex; flex-direction: column; gap: 2px; }
+.discover-results .result-title { font-weight: 500; }
+.discover-results .result-detail { font-size: 13px; color: var(--muted); overflow-wrap: anywhere; }
+.discover-page .show-more { margin-top: 8px; }

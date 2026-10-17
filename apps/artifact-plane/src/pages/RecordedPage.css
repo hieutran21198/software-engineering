@@ -1,0 +1,4 @@
+/* Recorded executions: the selected task under the graph. */
+.recorded-task { margin-top: var(--s4); display: flex; flex-direction: column; gap: 6px; }
+.recorded-task ul { margin: 0; padding-left: 20px; }
+.task-node small { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }

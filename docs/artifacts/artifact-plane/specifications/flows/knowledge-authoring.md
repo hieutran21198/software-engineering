@@ -121,7 +121,7 @@ flow:
       kind: element
       artifact: artifact-plane
       element: specifications/authoring-workbench.md
-      requires: Define the navigation tree, pages, journeys, feedback and labels.
+      requires: Define the top bar, sidebar, pages, labels and visual style.
       basis: documented
     - id: editing-contract
       kind: element
@@ -218,7 +218,7 @@ flow:
       basis: static
     - id: flow-editor
       kind: implementation
-      path: apps/artifact-plane/src/pages/FlowEditor.jsx
+      path: apps/artifact-plane/src/pages/FlowPage.jsx
       requires: Edit flow steps, transitions and support with pickers.
       basis: static
     - id: scenario-tests
@@ -227,31 +227,31 @@ flow:
       requires: Run the S1–S8 scenarios with measurements, keyboard use and widths.
       basis: observed
       evidence:
-        - apps/artifact-plane/test/browser/authoring-scenarios.spec.js
+        - docs/artifacts/artifact-plane/changes/change-workbench-redesign/tasks/07-browser-suites.md
     - id: document-tests
       kind: test
-      path: apps/artifact-plane/test/browser/document-editing.spec.js
+      path: apps/artifact-plane/test/browser/artifact-document.spec.js
       requires: Prove editing, conflicts, references, self-checks and undo in the browser.
       basis: observed
       evidence:
-        - apps/artifact-plane/test/browser/document-editing.spec.js
+        - docs/artifacts/artifact-plane/changes/change-workbench-redesign/tasks/07-browser-suites.md
     - id: change-unit-tests
       kind: test
-      path: apps/artifact-plane/test/browser/change-unit-pages.spec.js
+      path: apps/artifact-plane/test/browser/change-page.spec.js
       requires: Prove change, plan, commit, version and unit actions in the browser.
       basis: observed
       evidence:
-        - apps/artifact-plane/test/browser/change-unit-pages.spec.js
+        - docs/artifacts/artifact-plane/changes/change-workbench-redesign/tasks/07-browser-suites.md
     - id: flow-page-tests
       kind: test
       path: apps/artifact-plane/test/browser/flow-page.spec.js
       requires: Prove flow editing in the browser.
       basis: observed
       evidence:
-        - apps/artifact-plane/test/browser/flow-page.spec.js
+        - docs/artifacts/artifact-plane/changes/change-workbench-redesign/tasks/07-browser-suites.md
   gaps:
-    - The S1 and S3–S6 scenarios need more user actions than the requirement
-      targets; the unit brief records the measurements.
+    - The scenario tests limit user actions to the 1.16.0 measurements; the
+      workbench redesign replaced the earlier action targets.
     - Approval and publication are decisions outside the files and are not steps
       of this journey.
   exclusions:

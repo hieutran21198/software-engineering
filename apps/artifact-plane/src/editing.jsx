@@ -52,14 +52,14 @@ export function OperationError({error}) {
 // One inline form for each action. Fields: {name, label, type, options, value,
 // required, placeholder}. Enter in a one-line field submits. onSubmit returns a
 // promise; an error stays inline at the form.
-export function ActionForm({label, submitLabel, fields, onSubmit, open: initiallyOpen = false, disabled = false, onClose, className = '', note}) {
+export function ActionForm({label, submitLabel, fields, onSubmit, open: initiallyOpen = false, disabled = false, onClose, className = '', opener: openerClass = '', note, title}) {
   const id = useId(), [open, setOpen] = useState(initiallyOpen), [values, setValues] = useState({}), [busy, setBusy] = useState(false), [error, setError] = useState(null), first = useRef(null), opener = useRef(null);
   useEffect(() => {if (open) {setValues(Object.fromEntries(fields.map(f => [f.name, f.value ?? (f.type === 'checkbox' ? false : f.type === 'checks' ? [] : '')])));setError(null);}}, [open]);
   // Focus moves once, at once, so it never lands in a field the person already left.
   useEffect(() => {if (open) first.current?.focus();}, [open]);
   useEffect(() => {if (initiallyOpen) setOpen(true);}, [initiallyOpen]);
   const close = () => {setOpen(false);onClose?.();requestAnimationFrame(() => opener.current?.focus());};
-  if (!open) return label ? <button ref={opener} className={`action-open ${className}`} disabled={disabled} onClick={() => setOpen(true)}>{label}</button> : null;
+  if (!open) return label ? <button ref={opener} className={openerClass} disabled={disabled} onClick={() => setOpen(true)}>{label}</button> : null;
   async function submit(event) {
     event.preventDefault();if (busy) return;
     setBusy(true);setError(null);
@@ -68,14 +68,15 @@ export function ActionForm({label, submitLabel, fields, onSubmit, open: initiall
     finally {setBusy(false);}
   }
   const set = (name, value) => setValues(current => ({...current, [name]: value}));
-  return <form className={`action-form ${className}`} aria-label={submitLabel} onSubmit={submit} onKeyDown={event => {if (event.key === 'Escape') {event.stopPropagation();close();}}}>
-    {note && <p className="tiny">{note}</p>}
+  return <form className={`inline-form ${className}`} aria-label={submitLabel} onSubmit={submit} onKeyDown={event => {if (event.key === 'Escape') {event.stopPropagation();close();}}}>
+    {title && <div className="form-title">{title}</div>}
+    {note && <p className="form-note">{note}</p>}
     {fields.filter(f => !f.hidden?.(values)).map((f, i) => {
       const fieldId = `${id}-${f.name}`, ref = i === 0 ? first : undefined, value = values[f.name] ?? '';
-      if (f.type === 'checkbox') return <label className="check-field" key={f.name}><input ref={ref} type="checkbox" checked={Boolean(values[f.name])} onChange={e => set(f.name, e.target.checked)}/>{f.label}</label>;
+      if (f.type === 'checkbox') return <label className="check" key={f.name}><input ref={ref} type="checkbox" checked={Boolean(values[f.name])} onChange={e => set(f.name, e.target.checked)}/>{f.label}</label>;
       const options = typeof f.options === 'function' ? f.options(values) : f.options || [];
-      if (f.type === 'checks') return <fieldset key={f.name} className="check-group"><legend>{f.label}</legend>{options.length ? options.map(o => <label className="check-field" key={o.value}><input type="checkbox" checked={(values[f.name] || []).includes(o.value)} onChange={e => set(f.name, e.target.checked ? [...(values[f.name] || []), o.value] : (values[f.name] || []).filter(v => v !== o.value))}/>{o.label}</label>) : <p className="tiny">{f.empty || 'None available.'}</p>}</fieldset>;
-      return <div className="form-field" key={f.name}>
+      if (f.type === 'checks') return <fieldset key={f.name} className="checks"><legend>{f.label}</legend>{options.length ? options.map(o => <label className="check" key={o.value}><input type="checkbox" checked={(values[f.name] || []).includes(o.value)} onChange={e => set(f.name, e.target.checked ? [...(values[f.name] || []), o.value] : (values[f.name] || []).filter(v => v !== o.value))}/>{o.label}</label>) : <p className="tiny">{f.empty || 'None available.'}</p>}</fieldset>;
+      return <div className="field" key={f.name}>
         <label htmlFor={fieldId}>{f.label}</label>
         {f.type === 'select' ? <select ref={ref} id={fieldId} value={value} required={f.required} onChange={e => {set(f.name, e.target.value);f.onChange?.(e.target.value, set);}}>{options.map(o => <option key={o.value} value={o.value} disabled={o.disabled}>{o.label}</option>)}</select>
           : f.type === 'textarea' || f.type === 'lines' ? <textarea ref={ref} id={fieldId} value={value} rows={f.rows || 4} required={f.required} placeholder={f.placeholder} onChange={e => set(f.name, e.target.value)}/>
@@ -90,7 +91,7 @@ export function ActionForm({label, submitLabel, fields, onSubmit, open: initiall
 export const lines = text => String(text || '').split('\n').map(s => s.trim()).filter(Boolean);
 // The status of the last applied operation, with Undo while the journal holds it.
 export function OperationStatus({status, onUndo, onDismiss}) {
-  return <div className="operation-status" role="status" aria-live="polite">
-    {status && <><span>{status.text}</span>{status.operationId && <button onClick={onUndo}>Undo</button>}{status.error && <span className="error-text">{status.error}</span>}<button aria-label="Dismiss status" onClick={onDismiss}>×</button></>}
+  return <div className={`status-line ${status?.error ? 'error' : ''}`} role="status" aria-live="polite" data-empty={status ? undefined : 'true'} style={status ? undefined : {display: 'none'}}>
+    {status && <><span>{status.text}</span>{status.error && <span>{status.error}</span>}<span className="spacer"/>{status.operationId && <button className="quiet" onClick={onUndo}>Undo</button>}<button className="icon" aria-label="Dismiss status" onClick={onDismiss}>×</button></>}
   </div>;
 }

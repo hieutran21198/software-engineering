@@ -55,6 +55,17 @@ test('W6: commit stages only the selected knowledge paths and refuses protected 
   assert.match(git(f.root, 'status', '--porcelain'), /^A  untracked\.txt$/m);
 });
 
+test('W6: commit includes a deletion that is already staged and one that is not', async t => {
+  const f = await fixtureRepository(inPlaceFixture());t.after(f.cleanup);
+  git(f.root, 'switch', '-q', '-c', 'work');
+  const staged = 'docs/artifacts/tenant/specifications/identity.md', unstaged = 'docs/artifacts/authentication/requirements/login.md';
+  git(f.root, 'rm', '-q', staged);
+  await import('node:fs/promises').then(fs => fs.unlink(join(f.root, unstaged)));
+  await knowledgeGit({path: f.root, operation: 'commit', input: {paths: [staged, unstaged], message: 'Remove two documents'}});
+  assert.deepEqual(git(f.root, 'show', '--name-status', '--format=', 'HEAD').split('\n').sort(), [`D\t${unstaged}`, `D\t${staged}`].sort());
+  assert.equal(git(f.root, 'status', '--porcelain', '--', 'docs'), '');
+});
+
 test('W6: discard restores tracked knowledge or deletes untracked knowledge only', async t => {
   const f = await fixtureRepository(inPlaceFixture());t.after(f.cleanup);
   git(f.root, 'switch', '-q', '-c', 'work');

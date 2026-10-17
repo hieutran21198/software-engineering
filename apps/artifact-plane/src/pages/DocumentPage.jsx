@@ -1,169 +1,300 @@
 import React, {useEffect, useMemo, useRef, useState} from 'react';
-import {repositoryQuery} from '../reload.js';
-import Reader from '../Reader.jsx';
 import Markdown from '../Markdown.jsx';
 import ReviewDiff from '../ReviewDiff.jsx';
-import PageHeader from './PageHeader.jsx';
+import {useDocument, useQuery, useShell} from '../page-data.js';
+import {Badge, PageHeader} from '../ui.jsx';
+import {ActionForm, OperationError, frontValue, splitFront, useEdit} from '../editing.jsx';
 import {sha256} from '../knowledge-api.js';
-import {ActionForm, OperationError, useEdit, splitFront, frontValue} from '../editing.jsx';
-import {currentSource} from '../model.js';
+import {headingTitle} from '../model.js';
+import {knowledgeTargets} from '../knowledge-navigation.js';
+import {artifactTitle, changeTitle, isFlow, memberUnit} from '../work-model.js';
+import {ConflictDialog, FrontMatterEditor, bodyWithoutTitle, linkPage, useMedia} from './DocumentPageParts.jsx';
+import './DocumentPage.css';
 
+const KINDS = {requirements: ['Requirement', 'Requirements'], specifications: ['Specification', 'Specifications'], decisions: ['Decision', 'Decisions']};
+const BRANCH = {added: ['new', 'New', 'not on main'], modified: ['changed', 'Changed', 'differs from main'], removed: ['removed', 'Removed', 'deleted on this branch']};
 const RESULTS = [{value: 'passed', label: 'Passed'}, {value: 'failed', label: 'Failed'}, {value: 'incomplete', label: 'Incomplete'}];
-export const resultField = {name: 'result', label: 'Result', type: 'select', options: RESULTS, value: 'passed'};
-// Documents an element reference can target: the current knowledge of an artifact.
-export function documentOptions(snapshot, artifactId) {
-  const artifact = snapshot.artifacts.find(a => a.id === artifactId), source = currentSource(artifact);
-  return (artifact?.elements || []).filter(e => e.source === source).map(e => ({value: e.path, label: e.path}));
+
+// What the source is: an artifact document, an overview, a change record, a
+// version record or a unit brief. Each has its own scope and labels.
+function describeSource(snapshot, worktree, page) {
+  const source = page.source;
+  const unitMatch = source.match(/^docs\/artifacts\/units-of-work\/([^/]+)\/README\.md$/);
+  if (unitMatch || page.scope?.unit) {
+    const id = page.scope?.unit || unitMatch[1], unit = (worktree?.unitsOfWork || []).find(u => u.id === id);
+    return {type: 'unit', scope: {unit: id}, unit, kind: 'Unit brief', fallback: unit?.title || id};
+  }
+  const artifactId = page.scope?.artifact || page.artifact || source.match(/^docs\/artifacts\/([^/]+)\//)?.[1];
+  const artifact = snapshot.artifacts.find(a => a.id === artifactId);
+  const rest = source.slice(`docs/artifacts/${artifactId}/`.length);
+  const changeMatch = rest.match(/^changes\/([^/]+)\/README\.md$/);
+  if (changeMatch || page.scope?.change && rest.startsWith('changes/')) {
+    const name = page.scope?.change || changeMatch[1], change = artifact?.changes.find(c => c.name === name);
+    return {type: 'change', scope: {artifact: artifactId, change: name}, artifact, change, kind: 'Change record', fallback: change ? changeTitle(change) : name};
+  }
+  if (rest === 'README.md') return {type: 'overview', scope: {artifact: artifactId}, artifact, kind: 'Overview', fallback: artifact?.title || artifactId};
+  const version = rest.match(/^versions\/([^/]+)\/README\.md$/);
+  if (version) return {type: 'version', scope: {artifact: artifactId}, artifact, kind: 'Version record', fallback: `Version ${version[1]}`};
+  const wanted = page.scope?.change ? `change:${page.scope.change}` : artifact?.layout === 'in-place' ? 'working' : null;
+  const matches = (artifact?.elements || []).filter(e => e.file === source);
+  const element = matches.find(e => e.source === wanted) || (page.scope?.change ? null : matches.find(e => !e.source.startsWith('change:'))) || null;
+  const removed = !element && (artifact?.removedKnowledge || []).includes(source);
+  const folder = rest.split('/')[0], flow = element && isFlow(element);
+  const [kind, plural] = flow ? ['Flow', 'Flows'] : KINDS[folder] || ['Document', null];
+  return {type: 'element', scope: page.scope?.change ? {artifact: artifactId, change: page.scope.change} : {artifact: artifactId}, artifact, element, removed, kind, plural, section: flow ? 'flows' : folder,
+    fallback: element?.title || source.split('/').at(-1).replace(/\.md$/, '')};
 }
-const artifactOptions = snapshot => snapshot.artifacts.map(a => ({value: a.id, label: `${a.title} · ${a.id}`}));
-function referenceFields(snapshot, {artifact, element, requires} = {}) {
+
+// The document page: the text in the document style, its properties beside
+// it, and an in-place editor. Every write is an operation of the knowledge service.
+export default function DocumentPage({page}) {
+  const {snapshot, worktree, go} = useShell(), edit = useEdit();
+  const info = useMemo(() => describeSource(snapshot, worktree, page), [snapshot, worktree, page]);
+  const {artifact, element} = info;
+  const established = Boolean(page.established || info.removed);
+  const working = useDocument(established ? null : page.source, info.scope);
+  const old = useQuery(established ? {section: 'markdown', source: page.source, artifact: info.scope.artifact, revision: 'established'} : null);
+  const doc = established ? {...old, markdown: old.data?.markdown ?? '', ready: old.status === 'loaded' || Boolean(old.data)} : working;
+  const narrow = useMedia('(max-width: 1100px)');
+  const targets = useMemo(() => knowledgeTargets(snapshot, info.unit ? {unit: info.unit} : null), [snapshot, info.unit]);
+  const writable = edit.editable && !established && !page.source.includes('/versions/') && (info.type === 'unit' || artifact?.layout === 'in-place');
+
+  // The loaded bytes and their digest are the base of a save.
+  const [loaded, setLoaded] = useState(null);
+  useEffect(() => {
+    if (!doc.ready || doc.partial || established) return;
+    let live = true;
+    sha256(doc.markdown).then(digest => {if (live) setLoaded(current => current?.digest === digest ? current : {markdown: doc.markdown, digest});});
+    return () => {live = false;};
+  }, [doc.markdown, doc.ready, doc.partial, established]);
+
+  const [mode, setMode] = useState(page.edit ? 'edit' : 'view'), [tab, setTab] = useState('write'), [base, setBase] = useState(null), [draft, setDraft] = useState('');
+  const [busy, setBusy] = useState(false), [error, setError] = useState(null), [conflict, setConflict] = useState(null), [compare, setCompare] = useState(false);
+  const editButton = useRef(null), editor = useRef(null);
+  // Entering edit mode takes the loaded bytes; a refresh later never replaces the editor text.
+  useEffect(() => {if (mode === 'edit' && !base && loaded) {setBase(loaded);setDraft(splitFront(loaded.markdown).body);}}, [mode, base, loaded]);
+  useEffect(() => {if (mode === 'edit' && base && tab === 'write') editor.current?.focus();}, [mode, Boolean(base), tab]);
+  const dirty = mode === 'edit' && Boolean(base) && draft !== splitFront(base.markdown).body;
+  const changedOnDisk = mode === 'edit' && base && loaded && loaded.digest !== base.digest;
+  useEffect(() => {edit.setUnsaved(page.source, dirty);}, [dirty, page.source]);
+  useEffect(() => () => edit.setUnsaved(page.source, false), [page.source]);
+
+  const leaveEditor = () => {setMode('view');setBase(null);setError(null);setConflict(null);setTab('write');requestAnimationFrame(() => editButton.current?.focus());};
+  async function save(digest = base?.digest) {
+    if (!base || busy) return;
+    setBusy(true);setError(null);
+    try {await edit.run('document.save', {path: page.source, body: draft}, {expected: {[page.source]: digest}});edit.setUnsaved(page.source, false);leaveEditor();}
+    catch (failure) {if (failure.code === 'digest-mismatch' && failure.current?.[page.source] !== undefined) setConflict({current: failure.current[page.source]});else setError(failure);}
+    finally {setBusy(false);}
+  }
+  const cancel = () => {if (dirty && !window.confirm('Discard unsaved changes?')) return;edit.setUnsaved(page.source, false);leaveEditor();};
+  async function reload(text) {setBase({markdown: text, digest: await sha256(text)});setDraft(splitFront(text).body);setConflict(null);}
+  const overwrite = async text => save(await sha256(text));
+
+  const title = info.element?.title || (doc.ready && headingTitle(doc.markdown)) || info.fallback;
+  const eyebrow = <Eyebrow info={info} snapshot={snapshot} go={go}/>;
+  const values = useMemo(() => frontValue(loaded?.markdown ?? doc.markdown), [loaded, doc.markdown]);
+  const body = useMemo(() => bodyWithoutTitle(doc.markdown), [doc.markdown]);
+  const navigate = link => go(linkPage(link, info.scope.artifact));
+  const properties = <DocumentProperties heading={!narrow} info={info} page={page} values={values} loaded={loaded} writable={writable} established={established}
+    snapshot={snapshot} worktree={worktree} go={go} edit={edit} compare={compare} onCompare={() => setCompare(value => !value)}/>;
+
+  return <section className={`page document-page ${narrow ? 'narrow' : ''}`} aria-label="Document page"><div className="column document-columns">
+    <article className="document-main">
+      <PageHeader eyebrow={eyebrow} title={title}
+        action={mode === 'view' && writable ? <button ref={editButton} disabled={!loaded} onClick={() => setMode('edit')}>Edit</button> : null}/>
+      {narrow && <details className="properties-disclosure"><summary>Properties</summary>{properties}</details>}
+      {established && <p className="notice" role="status">{info.removed ? 'This document is removed on this branch. The text below is the version on main.' : 'The text below is the version on main.'}</p>}
+      {compare && mode === 'view' && <Comparison info={info} source={page.source} after={doc.markdown}/>}
+      {mode === 'edit' ? <section className="document-editor" aria-label="Document editor"
+        onKeyDown={event => {if ((event.ctrlKey || event.metaKey) && event.key.toLowerCase() === 's') {event.preventDefault();save();}}}>
+        {!base ? <p className="muted" role="status">Reading the text…</p> : <>
+          {changedOnDisk && !conflict && <div className="notice warning" role="status">
+            <span>The file changed on disk.</span>
+            <span className="form-actions"><button onClick={() => reload(loaded.markdown)}>Reload</button><button onClick={() => save(loaded.digest)}>Overwrite</button></span>
+          </div>}
+          <div className="editor-toolbar">
+            <div className="segmented" role="tablist" aria-label="Editor view">
+              <button role="tab" aria-selected={tab === 'write'} aria-pressed={tab === 'write'} onClick={() => setTab('write')}>Write</button>
+              <button role="tab" aria-selected={tab === 'preview'} aria-pressed={tab === 'preview'} onClick={() => setTab('preview')}>Preview</button>
+            </div>
+            <span className="tiny editor-state" role="status" aria-label="Editor state">{dirty ? 'Unsaved changes · Ctrl+S saves' : 'No changes'}</span>
+            <span className="form-actions"><button className="primary" disabled={busy} aria-busy={busy} onClick={() => save()}>Save</button><button onClick={cancel}>Cancel</button></span>
+          </div>
+          <OperationError error={error}/>
+          {tab === 'preview' ? <div className="prose editor-preview"><Markdown text={draft} source={page.source} targets={targets} onNavigate={() => {}}/></div>
+            : <textarea ref={editor} className="code-editor document-text" aria-label="Document text" value={draft} spellCheck onChange={e => setDraft(e.target.value)}/>}
+          {conflict && <ConflictDialog current={conflict.current} draft={draft} busy={busy} onReload={() => reload(conflict.current)} onOverwrite={() => overwrite(conflict.current)} onClose={() => setConflict(null)}/>}
+        </>}
+      </section> : <div className="document-reader prose">
+        {doc.error && !doc.ready ? <p role="alert">{doc.error} <button className="link" onClick={doc.retry}>Retry</button></p>
+          : !doc.ready ? <p className="muted" role="status">Reading the text…</p>
+          : <>
+            {doc.partial && <p className="muted" role="status">This is a partial excerpt of the source.</p>}
+            {body.trim() ? <Markdown text={body} source={page.source} targets={targets} onNavigate={navigate}/> : <p className="muted">This document has no text yet.</p>}
+          </>}
+      </div>}
+    </article>
+    {!narrow && <aside className="document-side">{properties}</aside>}
+  </div></section>;
+}
+
+function Eyebrow({info, snapshot, go}) {
+  const artifactLink = info.artifact && <button className="link" onClick={() => go({kind: 'artifact', artifact: info.artifact.id})}>{info.artifact.title}</button>;
+  if (info.type === 'unit') return <>{info.unit ? <button className="link" onClick={() => go({kind: 'unit', unit: info.unit.id})}>Unit of work</button> : 'Unit of work'} / Brief</>;
+  if (info.type === 'change') return <>{artifactLink} / {info.change ? <button className="link" onClick={() => go({kind: 'change', artifact: info.artifact.id, change: info.change.name})}>{changeTitle(info.change)}</button> : info.scope.change}</>;
+  if (info.type === 'version') return <>{artifactLink} / Versions</>;
+  if (info.type === 'overview') return <>{artifactLink} / Overview</>;
+  return <>{artifactLink || artifactTitle(snapshot, info.scope.artifact)} / {info.plural || info.kind}</>;
+}
+
+function Comparison({info, source, after}) {
+  const added = info.element?.state === 'added';
+  const main = useQuery(added ? null : {section: 'markdown', source, artifact: info.scope.artifact, revision: 'established'});
+  return <section className="comparison" aria-label="Comparison with main">
+    <h2 className="section-title">Compared with main</h2>
+    {added ? <ReviewDiff before="" after={after} complete/> : main.error && !main.data ? <p role="alert">{main.error}</p>
+      : !main.data ? <p className="muted" role="status">Reading the text on main…</p> : <ReviewDiff before={main.data.markdown} after={after} complete/>}
+  </section>;
+}
+
+// Kind, branch state, self-check, references, use, file, front matter and delete.
+function DocumentProperties({heading, info, page, values, loaded, writable, established, snapshot, worktree, go, edit, compare, onCompare}) {
+  const {element, artifact} = info, isDocument = info.type === 'element' && Boolean(element) && !established;
+  const canReference = writable && isDocument && artifact?.layout === 'in-place' && element.source === 'working' && !isFlow(element);
+  const selfCheck = values.self_check && typeof values.self_check === 'object' ? values.self_check : null;
+  const refs = element ? snapshot.references.filter(r => r.consumer === element.id) : [];
+  const state = established ? 'removed' : element?.state;
+  const run = (operation, input) => edit.run(operation, input);
+  return <section className="document-properties" aria-label="Properties">
+    {heading && <h2 className="properties-title">Properties</h2>}
+    <Prop label="Kind">{info.kind}</Prop>
+    {info.type === 'element' && <Prop label="In this branch">
+      {BRANCH[state] ? <><Badge tone={BRANCH[state][0]}>{BRANCH[state][1]}</Badge> <span className="muted small">{BRANCH[state][2]}</span></>
+        : state === 'unchanged' ? 'Same as main' : <span className="muted small">Not compared: no main branch is readable.</span>}
+      {['added', 'modified'].includes(state) && <div><button className="link small" aria-expanded={compare} onClick={onCompare}>{compare ? 'Hide comparison' : 'Compare with main'}</button></div>}
+    </Prop>}
+    {(isDocument || selfCheck) && <SelfCheck selfCheck={selfCheck} source={page.source} writable={writable && !established} edit={edit} go={go} artifact={info.scope.artifact}/>}
+    {isDocument && (canReference || refs.length > 0) && <References refs={refs} canEdit={canReference} source={page.source} snapshot={snapshot} go={go} run={run}/>}
+    {isDocument && <UsedBy element={element} source={page.source} snapshot={snapshot} worktree={worktree} go={go}/>}
+    <Prop label="File"><span className="mono file-path">{page.source.split('/').map((part, i) => <React.Fragment key={i}>{i > 0 && <>/<wbr/></>}{part}</React.Fragment>)}</span></Prop>
+    {writable && loaded && <div className="prop">
+      <details className="front-matter"><summary>Edit front matter</summary>
+        <FrontMatterEditor key={loaded.digest} text={splitFront(loaded.markdown).front ?? ''}
+          onSave={text => edit.run('document.properties.set', {path: page.source, frontMatter: text}, {expected: {[page.source]: loaded.digest}})}/>
+      </details>
+    </div>}
+    {writable && isDocument && artifact?.layout === 'in-place' && <DeleteDocument element={element} source={page.source} edit={edit} go={go} artifact={artifact} section={info.section}/>}
+  </section>;
+}
+
+const Prop = ({label, children, group}) => <div className="prop" {...(group ? {role: 'group', 'aria-label': label} : {})}>
+  <div className="prop-key">{label}</div><div className="prop-value">{children}</div>
+</div>;
+
+function SelfCheck({selfCheck, source, writable, edit, go, artifact}) {
+  const [recording, setRecording] = useState(false), opener = useRef(null);
+  const result = selfCheck?.result, tone = result === 'passed' ? 'passed' : result === 'failed' ? 'failed' : 'incomplete';
+  const [path, fragment] = String(selfCheck?.source || '').split('#');
+  const openSection = () => {
+    if (path && path !== source) {go({kind: 'document', artifact: path.match(/^docs\/artifacts\/([^/]+)\//)?.[1] || artifact, source: path});return;}
+    document.getElementById(`knowledge-heading-${fragment}`)?.scrollIntoView({block: 'start', behavior: 'smooth'});
+  };
+  return <Prop label="Self-check">
+    {selfCheck ? <Badge tone={tone}>{result ? result[0].toUpperCase() + result.slice(1) : 'Invalid'}</Badge> : <span>Not recorded</span>}
+    {selfCheck?.source && <div><button className="link small" onClick={openSection}>Read the self-check</button></div>}
+    {writable && !recording && <div><button ref={opener} className="link small" onClick={() => setRecording(true)}>Record self-check</button></div>}
+    {recording && <ActionForm open submitLabel="Record" title="Record self-check" onClose={() => {setRecording(false);requestAnimationFrame(() => opener.current?.focus());}} fields={[
+      {name: 'result', label: 'Result', type: 'select', options: RESULTS, value: 'passed'},
+      {name: 'detail', label: 'Detail', type: 'textarea', rows: 3, required: true, value: 'The content is complete and agrees with its governing knowledge.'},
+    ]} onSubmit={v => edit.run('selfcheck.record', {path: source, result: v.result, detail: v.detail})}/>}
+  </Prop>;
+}
+
+// Target documents: the current knowledge of an artifact, by title.
+function documentOptions(snapshot, artifactId) {
+  const artifact = snapshot.artifacts.find(a => a.id === artifactId);
+  const source = artifact?.layout === 'in-place' ? 'working' : artifact?.currentVersion ? `version:${artifact.currentVersion}` : null;
+  return (artifact?.elements || []).filter(e => e.source === source).map(e => ({value: e.path, label: e.title || e.path})).sort((a, b) => a.label.localeCompare(b.label));
+}
+function referenceFields(snapshot, {artifact, requires} = {}) {
   const first = artifact || snapshot.artifacts[0]?.id || '';
   return [
-    {name: 'artifact', label: 'Target artifact', type: 'select', options: artifactOptions(snapshot), value: first, onChange: (value, set) => set('element', documentOptions(snapshot, value)[0]?.value || '')},
-    {name: 'element', label: 'Target document', type: 'select', options: values => documentOptions(snapshot, values.artifact), value: element || documentOptions(snapshot, first)[0]?.value || ''},
+    {name: 'artifact', label: 'Target artifact', type: 'select', options: snapshot.artifacts.map(a => ({value: a.id, label: a.title})), value: first,
+      onChange: (value, set) => set('element', documentOptions(snapshot, value)[0]?.value || '')},
+    {name: 'element', label: 'Target document', type: 'select', options: values => documentOptions(snapshot, values.artifact), value: documentOptions(snapshot, first)[0]?.value || ''},
     {name: 'requires', label: 'Reason', value: requires || '', required: true, placeholder: 'What this document needs from the target'},
   ];
 }
-// A save that meets newer bytes on disk: compare both and choose.
-function ConflictDialog({current, draft, onReload, onOverwrite, busy}) {
-  const dialog = useRef(null);
-  useEffect(() => {dialog.current?.querySelector('button')?.focus();}, []);
-  const trap = event => {
-    if (event.key !== 'Tab') return;
-    const buttons = [...dialog.current.querySelectorAll('button')], first = buttons[0], last = buttons.at(-1);
-    if (event.shiftKey && document.activeElement === first) {event.preventDefault();last.focus();}
-    else if (!event.shiftKey && document.activeElement === last) {event.preventDefault();first.focus();}
-  };
-  return <section className="conflict-dialog" role="alertdialog" aria-modal="true" aria-label="Save conflict" ref={dialog} onKeyDown={trap}>
-    <h2>The file changed on disk</h2>
-    <p>Another edit changed this file after you opened it. Reload takes the text on disk. Overwrite saves your text over it.</p>
-    <div className="form-actions"><button onClick={onReload} disabled={busy}>Reload</button><button className="primary" onClick={onOverwrite} disabled={busy}>Overwrite</button></div>
-    <ReviewDiff before={splitFront(current).body} after={draft} complete/>
-  </section>;
+function References({refs, canEdit, source, snapshot, go, run}) {
+  const [form, setForm] = useState(null), addButton = useRef(null);
+  const target = r => snapshot.artifacts.find(a => a.id === r.artifact)?.elements.find(e => e.id === r.targetId);
+  const label = r => target(r)?.title || `${artifactTitle(snapshot, r.artifact)} / ${r.element}`;
+  const close = () => {setForm(null);requestAnimationFrame(() => addButton.current?.focus());};
+  // Add first: a failed add keeps the old reference.
+  const replace = async (r, input) => {await run('reference.add', {path: source, ...input});await run('reference.remove', {path: source, artifact: r.artifact, element: r.element});};
+  return <Prop label="References" group>
+    {refs.length ? <ul className="reference-list">{refs.map(r => {
+      const element = target(r);
+      return <li key={r.id}>
+        {element && r.resolved ? <button className="link" onClick={() => go({kind: 'document', artifact: element.artifact, source: element.file})}>{label(r)}</button> : <span className="reference-target">{label(r)}</span>}
+        {r.reason && <span className="reference-reason">{r.reason}</span>}
+        {!r.resolved && <span className="reference-state"><Badge tone="failed">Unresolved</Badge>{r.diagnostic && <span className="tiny"> {r.diagnostic}</span>}</span>}
+        {canEdit && form !== r.id && <span className="reference-actions">
+          {!r.resolved && <button className="link small" aria-label={`Fix reference to ${label(r)}`} onClick={() => setForm(r.id)}>Fix</button>}
+          <RemoveReference label={`Remove reference to ${label(r)}`} onRemove={() => run('reference.remove', {path: source, artifact: r.artifact, element: r.element})}/>
+        </span>}
+        {form === r.id && <ActionForm open submitLabel="Replace reference" onClose={() => setForm(null)} onSubmit={v => replace(r, v)}
+          fields={referenceFields(snapshot, {artifact: snapshot.artifacts.some(a => a.id === r.artifact) ? r.artifact : undefined, requires: r.reason})}/>}
+      </li>;
+    })}</ul> : <span className="muted small">None</span>}
+    {canEdit && form !== 'add' && <div><button ref={addButton} className="link small" onClick={() => setForm('add')}>+ Add reference</button></div>}
+    {form === 'add' && <ActionForm open submitLabel="Add reference" onClose={close} fields={referenceFields(snapshot)} onSubmit={v => run('reference.add', {path: source, ...v})}/>}
+  </Prop>;
+}
+function RemoveReference({label, onRemove}) {
+  const [error, setError] = useState(null), [busy, setBusy] = useState(false);
+  return <><button className="link small danger-link" aria-label={label} disabled={busy} onClick={async () => {setBusy(true);setError(null);try {await onRemove();} catch (failure) {setError(failure);setBusy(false);}}}>Remove</button><OperationError error={error}/></>;
 }
 
-// The document page: one source with its state since main, properties and an
-// in-place editor. Every write is an operation of the knowledge service.
-export default function DocumentPage({entry, snapshot, root, worktree, epoch, project, targets, onOpen, onBack, backLabel, onReadEstablished, onFlows}) {
-  const edit = useEdit(), page = useRef(null);
-  useEffect(() => {(page.current?.querySelector('.back-button') || page.current?.querySelector('h1'))?.focus();}, [entry]);
-  const artifact = snapshot.artifacts.find(a => a.id === (entry.artifact || entry.scope?.artifact));
-  const element = artifact?.elements.find(e => e.file === entry.source && (entry.scope?.change ? e.source === `change:${entry.scope.change}` : !e.source.startsWith('change:')));
-  const refs = element ? snapshot.references.filter(r => r.consumer === element.id) : [];
-  const state = entry.established ? `Established text on ${String(artifact?.baseline?.ref || 'main').replace('refs/heads/', '')}` : element ? element.source === 'working' ? ({added: 'New since main', modified: 'Changed since main', unchanged: 'Unchanged since main'})[element.state] || 'State since main unknown' : element.source.replace(':', ' · ') : null;
-  // Established text comes from the protected ref through the contained query route.
-  const reading = useMemo(() => {
-    const scope = entry.scope || (entry.artifact ? {artifact: entry.artifact} : {});
-    const load = entry.load || (entry.established ? signal => repositoryQuery({path: root, worktree, section: 'markdown', artifact: scope.artifact, source: entry.source, revision: 'established'}, signal).then(r => ({markdown: r.data.markdown, source: r.data.source, partial: r.completeness === 'partial'})) : undefined);
-    return {...entry, scope, load};
-  }, [entry, root, worktree]);
-  const writable = edit.editable && !entry.load && !entry.established && entry.source.startsWith('docs/artifacts/') && !/\/versions\//.test(entry.source) && (artifact ? artifact.layout === 'in-place' : entry.source.includes('/units-of-work/'));
-  const [loaded, setLoaded] = useState(null), [mode, setMode] = useState(entry.edit ? 'edit' : 'view'), [base, setBase] = useState(null), [draft, setDraft] = useState(''), [preview, setPreview] = useState(false);
-  const [busy, setBusy] = useState(false), [error, setError] = useState(null), [conflict, setConflict] = useState(null), [compare, setCompare] = useState(null);
-  useEffect(() => {setMode(entry.edit ? 'edit' : 'view');setBase(null);setConflict(null);setError(null);setCompare(null);}, [entry]);
-  const onLoaded = async value => {if (value.partial) return;setLoaded({markdown: value.markdown, digest: await sha256(value.markdown)});};
-  // Entering edit mode takes the loaded bytes as the base of the save.
-  useEffect(() => {if (mode === 'edit' && !base && loaded) {setBase(loaded);setDraft(splitFront(loaded.markdown).body);}}, [mode, base, loaded]);
-  const dirty = mode === 'edit' && base && draft !== splitFront(base.markdown).body;
-  const changedOnDisk = mode === 'edit' && base && loaded && loaded.digest !== base.digest;
-  useEffect(() => {edit.setUnsaved(entry.source, Boolean(dirty));return () => edit.setUnsaved(entry.source, false);}, [dirty, entry.source]);
-  const values = useMemo(() => frontValue(loaded?.markdown), [loaded]);
-  async function save(digest = base.digest) {
+// Changes, units and documents that name this document.
+function UsedBy({element, source, snapshot, worktree, go}) {
+  const items = [], seen = new Set();
+  const add = (key, label, page, kind) => {if (!seen.has(key)) {seen.add(key);items.push({key, label, page, kind});}};
+  for (const c of worktree?.changes || []) {
+    const named = (c.steps || []).some(s => (s.evidence || []).some(e => e.file === source || String(e.source || '').split('#')[0] === source));
+    const changing = !c.history && !c.version && c.artifact === element.artifact && ['added', 'modified'].includes(element.state);
+    if (!named && !changing) continue;
+    add(`c:${c.artifact}/${c.name}`, changeTitle(c), {kind: 'change', artifact: c.artifact, change: c.name}, 'Change');
+    const unit = memberUnit(worktree, c.artifact, c.name);
+    if (unit) add(`u:${unit.id}`, unit.title, {kind: 'unit', unit: unit.id}, 'Unit of work');
+  }
+  const elements = new Map(snapshot.artifacts.flatMap(a => a.elements.map(e => [e.id, e])));
+  for (const r of snapshot.references.filter(r => r.targetId === element.id)) {
+    const consumer = elements.get(r.consumer);
+    if (!consumer) continue;
+    const flow = isFlow(consumer) && `${consumer.artifact}:${consumer.path.split('/').at(-1).replace(/\.md$/, '')}`;
+    add(`e:${consumer.id}`, consumer.title, flow ? {kind: 'flow', artifact: consumer.artifact, flow} : {kind: 'document', artifact: consumer.artifact, source: consumer.file}, flow ? 'Flow' : 'Document');
+  }
+  return <Prop label="Used by">
+    {items.length ? <ul className="used-by">{items.map(i => <li key={i.key}><span className="used-kind">{i.kind}</span><button className="link" aria-label={`${i.label} (${i.kind.toLowerCase()})`} onClick={() => go(i.page)}>{i.label}</button></li>)}</ul> : <span className="muted small">Nothing names this document.</span>}
+  </Prop>;
+}
+
+function DeleteDocument({element, source, edit, go, artifact, section}) {
+  const [confirming, setConfirming] = useState(false), [busy, setBusy] = useState(false), [error, setError] = useState(null), opener = useRef(null);
+  async function remove() {
     setBusy(true);setError(null);
-    try {await edit.run('document.save', {path: entry.source, body: draft}, {expected: {[entry.source]: digest}});setConflict(null);setMode('view');setBase(null);}
-    catch (failure) {if (failure.code === 'digest-mismatch' && failure.current?.[entry.source] !== undefined) setConflict({current: failure.current[entry.source]});else setError(failure);}
-    finally {setBusy(false);}
+    try {await edit.run('document.delete', {path: source});go({kind: 'artifact', artifact: artifact.id, ...(section ? {section} : {})});}
+    catch (failure) {setError(failure);setBusy(false);}
   }
-  const discard = () => {if (dirty && !window.confirm('Discard unsaved changes?')) return;setMode('view');setBase(null);setError(null);};
-  async function reload(text = conflict?.current ?? loaded?.markdown) {const next = {markdown: text, digest: await sha256(text)};setBase(next);setDraft(splitFront(text).body);setConflict(null);}
-  async function overwrite() {await save(await sha256(conflict.current));}
-  async function showCompare() {
-    if (compare) {setCompare(null);return;}
-    setCompare({loading: true});
-    try {
-      const established = await repositoryQuery({path: root, worktree, section: 'markdown', artifact: artifact.id, source: entry.source, revision: 'established'});
-      setCompare({before: established.data.markdown, after: loaded?.markdown || ''});
-    } catch (failure) {setCompare({error: failure.message});}
-  }
-  async function saveFront(text) {
-    await edit.run('document.properties.set', {path: entry.source, frontMatter: text}, {expected: loaded ? {[entry.source]: loaded.digest} : undefined});
-  }
-  const replaceReference = async (ref, input) => {
-    // Add first: a failed add keeps the old reference.
-    await edit.run('reference.add', {path: entry.source, ...input});
-    await edit.run('reference.remove', {path: entry.source, artifact: ref.artifact, element: ref.element});
-  };
-  const openTarget = ref => {
-    const target = snapshot.artifacts.find(a => a.id === ref.artifact)?.elements.find(e => e.id === ref.targetId);
-    if (target) onOpen({kind: 'document', artifact: target.artifact, source: target.file, title: target.path, ...(target.source.startsWith('change:') ? {scope: {artifact: target.artifact, change: target.source.slice(7)}} : {})});
-  };
-  const selfCheck = values.self_check;
-  const models = Array.isArray(values.models) ? values.models : [];
-  return <section className="page document-page" aria-label="Document page" ref={page}>
-    <PageHeader project={project} artifact={artifact?.id} crumb={entry.title || entry.source.split('/').at(-1)} title={entry.title || entry.source} onNavigate={onOpen} onBack={onBack} backLabel={backLabel}
-      status={state}
-      actions={mode === 'edit' ? null : <>
-        {writable && <button className="primary" disabled={!loaded} onClick={() => setMode('edit')}>Edit</button>}
-        {element?.state === 'modified' && !entry.established && <><button aria-pressed={Boolean(compare)} onClick={showCompare}>Compare with main</button><button onClick={() => onReadEstablished(element)}>Read established on {String(artifact.baseline?.ref || 'main').replace('refs/heads/', '')}</button></>}
-        {element && <button onClick={() => onFlows({artifact: element.artifact, ids: [element.id]}, element.source.startsWith('change:'))}>Find participating flows</button>}
-      </>}/>
-    {(writable || refs.length > 0 || models.length > 0 || selfCheck) && mode === 'view' && <section className="properties-strip" aria-label="Properties">
-      {(writable || selfCheck) && <div className="property"><h2>Self-check</h2>
-        <p>{selfCheck ? `${selfCheck.result || 'invalid'} · ${selfCheck.source || 'no source'}` : 'Not recorded.'}</p>
-        {writable && <ActionForm label="Record self-check" submitLabel="Record" fields={[resultField, {name: 'detail', label: 'Detail', type: 'textarea', rows: 3, required: true, value: 'The content is complete and agrees with its governing knowledge.'}]}
-          onSubmit={v => edit.run('selfcheck.record', {path: entry.source, result: v.result, detail: v.detail})}/>}
-      </div>}
-      {(writable || refs.length > 0) && <div className="property" aria-label="References" role="group"><h2>References</h2>
-        {refs.length ? <ul className="reference-rows">{refs.map(r => <li key={r.id} className="reference-row">
-          <span className={`source-tag ${r.status === 'proposed' ? 'proposed' : ''}`}>{r.status} · {r.resolved ? 'resolved' : 'unresolved'}</span>
-          <button className="reference-target" disabled={!r.resolved} onClick={() => openTarget(r)}>{r.artifact} / {r.element}</button>
-          <span className="reference-reason">{r.reason}</span>
-          {r.diagnostic && <span className="error-text">{r.diagnostic}</span>}
-          {writable && <span className="row-actions">
-            {!r.resolved && <ActionForm label="Fix" submitLabel="Replace reference" fields={referenceFields(snapshot, {artifact: snapshot.artifacts.some(a => a.id === r.artifact) ? r.artifact : undefined, requires: r.reason})} onSubmit={v => replaceReference(r, v)}/>}
-            <RemoveButton label={`Remove reference to ${r.artifact} / ${r.element}`} onRemove={() => edit.run('reference.remove', {path: entry.source, artifact: r.artifact, element: r.element})}/>
-          </span>}
-        </li>)}</ul> : <p className="muted">No references.</p>}
-        {writable && <ActionForm label="Add reference" submitLabel="Add reference" fields={referenceFields(snapshot)} onSubmit={v => edit.run('reference.add', {path: entry.source, ...v})}/>}
-      </div>}
-      {models.length > 0 && <div className="property"><h2>Declared models</h2><ul>{models.map(m => <li key={m.id}><strong>{m.title || m.id}</strong> {m.description}</li>)}</ul></div>}
-    </section>}
-    {compare && <section className="page-section" aria-label="Comparison with main">{compare.loading ? <p role="status">Loading the established text…</p> : compare.error ? <p role="alert">{compare.error}</p> : <ReviewDiff before={compare.before} after={compare.after} complete/>}</section>}
-    {mode === 'edit' && <section className="document-editor" aria-label="Document editor">
-      {!base ? <p role="status">Loading source…</p> : <>
-        {changedOnDisk && <div className="notice" role="status">The file changed on disk. <button onClick={() => reload(loaded.markdown)}>Reload</button><button onClick={() => save(loaded.digest)}>Overwrite</button></div>}
-        <div className="editor-toolbar">
-          <button className="primary" disabled={busy} aria-busy={busy} onClick={() => save()}>Save</button>
-          <button onClick={discard}>Discard</button>
-          <button aria-pressed={preview} onClick={() => setPreview(value => !value)}>Preview</button>
-          <span className="tiny">{dirty ? 'Unsaved changes · Ctrl+S saves' : 'No changes'}</span>
-        </div>
+  return <div className="prop">
+    {!confirming ? <button ref={opener} className="danger delete-document" onClick={() => setConfirming(true)}>Delete document</button>
+      : <div className="inline-form delete-confirm" role="group" aria-label="Delete document">
+        <p>Delete “{element.title}”? The file is removed from this branch.</p>
         <OperationError error={error}/>
-        {conflict && <ConflictDialog current={conflict.current} draft={draft} busy={busy} onReload={() => reload()} onOverwrite={overwrite}/>}
-        {preview ? <div className="editor-preview"><Markdown text={draft}/></div> :
-          <textarea className="text-editor" aria-label="Document text" value={draft} spellCheck autoFocus onChange={e => setDraft(e.target.value)}
-            onKeyDown={e => {if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === 's') {e.preventDefault();save();}}}/>}
-      </>}
-    </section>}
-    <div hidden={mode === 'edit'}>
-      <Reader entry={reading} root={root} worktree={worktree} epoch={epoch} targets={targets} onLoaded={onLoaded} onNavigate={({kind, fragment, ...link}) => onOpen({...link, kind: 'document', artifact: link.scope?.artifact || entry.artifact})}/>
-    </div>
-    {writable && mode === 'view' && loaded && <details className="advanced-front">
-      <summary>Advanced front matter</summary>
-      <FrontMatterEditor key={loaded.digest} text={splitFront(loaded.markdown).front ?? ''} onSave={saveFront}/>
-    </details>}
-  </section>;
-}
-export function FrontMatterEditor({text, onSave}) {
-  const [value, setValue] = useState(text), [busy, setBusy] = useState(false), [error, setError] = useState(null);
-  return <div className="front-editor">
-    <textarea className="text-editor" aria-label="Front matter" value={value} rows={10} spellCheck={false} onChange={e => setValue(e.target.value)}/>
-    <OperationError error={error}/>
-    <button disabled={busy} onClick={async () => {setBusy(true);setError(null);try {await onSave(value);} catch (failure) {setError(failure);} finally {setBusy(false);}}}>Save front matter</button>
+        <div className="form-actions"><button className="primary danger-primary" disabled={busy} aria-busy={busy} onClick={remove}>Delete</button>
+          <button onClick={() => {setConfirming(false);requestAnimationFrame(() => opener.current?.focus());}}>Cancel</button></div>
+      </div>}
   </div>;
-}
-// Removal applies directly; a failure stays next to the record.
-export function RemoveButton({label, onRemove, children = 'Remove'}) {
-  const [error, setError] = useState(null), [busy, setBusy] = useState(false);
-  return <><button aria-label={label} disabled={busy} onClick={async () => {setBusy(true);setError(null);try {await onRemove();} catch (failure) {setError(failure);} finally {setBusy(false);}}}>{children}</button><OperationError error={error}/></>;
 }

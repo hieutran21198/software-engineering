@@ -1,0 +1,33 @@
+/* Unit page: completion line, criteria rows with in-place editing. */
+.unit-page .lead { margin: 0; }
+.unit-completion { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; margin-top: var(--s3); font-size: 13px; }
+
+.criteria .criterion { display: grid; grid-template-columns: 120px minmax(0, 1fr) auto; gap: var(--s3); align-items: start; padding: 14px var(--s4); border-top: 1px solid var(--divider); }
+.criteria .criterion:first-child { border-top: 0; }
+.criteria .criterion.editing { background: var(--selected-bg); }
+.criterion-id { font-family: var(--mono); font-size: 12px; color: var(--muted); padding-top: 2px; overflow-wrap: anywhere; }
+.criterion-text { display: block; min-width: 0; overflow-wrap: anywhere; }
+.criterion-text .badge { margin-left: 6px; vertical-align: 1px; }
+button.criterion-text { width: 100%; border-radius: var(--r-control); padding: 2px 4px; margin: -2px -4px; }
+button.criterion-text:hover { background: var(--subtle); }
+.criterion-evidence { text-align: right; }
+.badge-button { cursor: pointer; }
+.badge-button:hover { box-shadow: inset 0 0 0 1px currentColor; }
+.criterion-edit { min-width: 0; }
+.criterion-edit textarea { border-color: #9db5ec; }
+.criterion-bar { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; margin-top: 8px; }
+.criterion-bar .check { margin-right: auto; font-size: 13px; align-items: center; }
+.criterion-bar .check input { margin-top: 0; }
+.criterion-edit .operation-error { margin-top: 8px; }
+.criterion-form { grid-column: 2 / -1; }
+.criterion-form .inline-form { background: var(--bg); }
+.section-note { margin-top: 8px; font-size: 13px; color: var(--muted); }
+.unit-page .section > .operation-error { margin-top: 8px; }
+
+@media (max-width: 800px) {
+  .criteria .criterion { grid-template-columns: minmax(0, 1fr) auto; }
+  .criterion-id { grid-column: 1 / -1; padding-top: 0; }
+  .criterion-text, .criterion-edit { grid-column: 1; }
+  .criterion-edit { grid-column: 1 / -1; }
+  .criterion-form { grid-column: 1 / -1; }
+}

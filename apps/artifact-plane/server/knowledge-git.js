@@ -61,7 +61,11 @@ async function commit(root, input, git) {
   const dirty = new Set((await gitStatus(root, git)).knowledge.map(e => e.path));
   const clean = paths.filter(p => !dirty.has(p));
   if (clean.length) throw new EditError(422, `These files have no changes: ${clean.join(', ')}`, {code: 'invalid-input', field: 'paths'});
-  await git(root, ['add', '--all', '--', ...paths]);
+  // A deletion already staged has no file and no index entry; git add would
+  // refuse its pathspec, so only paths that still exist are staged.
+  const present = new Set((await git(root, ['ls-files', '-z', '--cached', '--others', '--exclude-standard', '--', ...paths])).split('\0').filter(Boolean));
+  const stage = paths.filter(p => present.has(p));
+  if (stage.length) await git(root, ['add', '--all', '--', ...stage]);
   // --only commits these paths and leaves other staged changes staged.
   await git(root, ['commit', '--quiet', '--only', '-m', message, '--', ...paths]);
   return {commit: await git(root, ['rev-parse', 'HEAD']), paths};

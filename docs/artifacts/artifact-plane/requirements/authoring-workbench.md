@@ -53,7 +53,7 @@ Round-trip preservation has no baseline because the Plane writes nothing today.
 
 ## Requirements
 
-- W1: Organize the application around the person's work. One navigation tree lists current work (open changes and their units), artifacts with their documents, flows and delivery history, and units of work. The main area shows one content page at a time: artifact, document, change, unit, flow, graph or review. The dependency canvas stays available as a page, not as the home screen.
+- W1: Organize the application around the person's work. The page layout, sidebar and page contents are defined in workbench-redesign.md (D1–D11), which replaces the 1.16.0 navigation tree.
 - W2: Read and edit in one place. A document page renders Markdown and switches to editing of the same page. Structural facts in front matter appear as properties with pickers and forms, never as YAML text in the normal path. A raw front-matter editor remains available for unknown or advanced fields and validates before saving.
 - W3: Provide deterministic domain operations: create artifact; start change; add, save and delete a requirement, specification or decision; set dependencies; add and remove references; record a document self-check; add, update and remove tasks and prerequisites; check a DoD item; record task evidence; record the plan self-check; create a unit; add and remove members; add, update and remove acceptance criteria; record unit evidence; set affected flows; create a flow; add, update and remove steps, transitions and support; set gaps and exclusions; prepare a version; record a publication review; migrate a legacy artifact. Every operation derives identifiers, paths and source fragments from the person's selection, generates safe IDs from titles, and never asks for a value the Plane already knows.
 - W4: Keep every write safe. Writes stay inside docs/artifacts of the selected worktree, never follow symlinks, require a checked-out branch other than main or master, refuse version records and delivered change tasks, preserve unrelated bytes, unknown keys, key order and comments, replace files atomically, detect concurrent edits through expected content digests, support a dry-run preview for every operation, and keep a bounded undo journal.
@@ -68,7 +68,7 @@ Round-trip preservation has no baseline because the Plane writes nothing today.
 
 ## Benchmark scenarios
 
-Each scenario starts from a clean fixture on a non-protected branch. Baseline values describe the manual path with the current formats. Targets are the acceptance thresholds for the scenario tests.
+Each scenario starts from a clean fixture on a non-protected branch. Baseline values describe the manual path with the current formats. The Target column records the 1.16.0 thresholds. The workbench redesign replaces the action targets: a scenario must not need more actions than its 1.16.0 measurement, and the other targets stay.
 
 | ID | Scenario | Baseline (manual) | Target (Plane) |
 | --- | --- | --- | --- |
@@ -83,13 +83,13 @@ Each scenario starts from a clean fixture on a non-protected branch. Baseline va
 
 ## Acceptance criteria
 
-- A1: A person completes S1–S8 in the Plane with the targets above; the scenario tests record the counts.
+- A1: A person completes S1–S8 in the Plane with 0 YAML lines, 0 typed identifiers or paths and 0 validation errors; the scenario tests record the action counts, which must not exceed the 1.16.0 measurements (workbench-redesign.md B6).
 - A2: No write leaves docs/artifacts of the selected worktree, follows a symlink, happens on main or master, or touches a version record or delivered change tasks; each case is a rejected request with a reason.
 - A3: For every operation, a test shows that bytes outside the targeted front-matter keys and body sections are unchanged, that unknown keys and comments survive, and that a dry run writes nothing.
 - A4: A save whose expected digest no longer matches is rejected with the current content; an undo restores the previous bytes only while the post-image is unchanged; an interrupted multi-file write leaves a reported partial state that Git status shows.
 - A5: Every operation that would create a new error diagnostic for the touched records is rejected and returns the diagnostics; successful operations leave validate-knowledge at 0 errors on the fixtures.
 - A6: The branch, protected state, commit and discard actions behave as specified; commits contain only the selected knowledge paths; the Plane refuses to commit on main or master.
-- A7: The work list, artifact, document, change, unit, flow, graph and review pages exist as specified, with the navigation tree replacing the three view switchers; existing reading, graph, delivery, review, flow discovery and runtime observation capabilities remain reachable.
+- A7: The work, artifact, document, change, unit and flow pages exist as specified in the authoring workbench contract; existing reading, graph, delivery, review, flow discovery and runtime observation capabilities remain reachable.
 - A8: The HTTP operation route and the opt-in MCP tools apply the same operation with the same result; without the flag the MCP server registers no write tool.
 - A9: Legacy artifacts remain readable and read-only with a migration action; existing Node tests, fixtures and read endpoints pass unchanged.
 - A10: Screenshots and geometry at 390, 700, 851 and 1440 pixels show usable editing without horizontal overflow; keyboard-only completion of S1 is covered by a browser test; the label corrections of W10 are covered by tests.

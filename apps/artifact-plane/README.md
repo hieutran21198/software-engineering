@@ -17,24 +17,22 @@ Open `http://127.0.0.1:4310`. Enter the absolute path to a Git worktree root tha
 All browser assets are bundled locally. Knowledge exploration needs no account, AI service, or external runtime service. Repository observation runs in the local server.
 
 ## Explore
+After a repository opens, the **work page** shows the open changes with their phase and next step, the uncommitted knowledge files with a commit form, and the dependencies.
 
-After a repository opens, the **work page** shows the branch, the open changes with their current step and next-step hint, the units of work, and the uncommitted knowledge files with a commit form.
-
-- **Source bar**: the project name, the **Worktree** control (every registered worktree with its branch; selecting one switches all pages in one step), the edit state (Clean, unsaved and uncommitted counts), Refresh and Change repository. On `main`, `master` or a detached HEAD a banner explains that knowledge cannot change there and offers **Create branch**.
-- **Navigation tree** (left): one search field filters every group by title and ID. **Current work** lists open changes and their units, with Start a change and New unit. **Artifacts** expands to Overview, Requirements, Specifications, Decisions, Flows and Delivery history; documents show new, changed or removed since main. **Units of work** lists every brief. Arrow keys, Home and End move through the tree; expansion is kept per project for the session. Below 800 pixels the tree is a drawer that **Navigation** opens.
-- **Pages**: work, artifact, document, change (Overview, Plan, Review), unit, flow and graph. Each page has a breadcrumb, a title, a status line and its actions. Reading and editing happen on the same page.
-- **Graph page**: the dependency canvas with Established and Planning, element expansion and a details rail. Arrows point from upstream knowledge to its consumer. Purple dotted lines show element references; green dashed lines show proposed additions and red dashed lines proposed removals. The canvas keeps its viewport while other pages show.
-- Drag the dividers to resize the tree and the details rail; Arrow keys and Home/End do the same with keyboard focus. Repository edits update open pages automatically. Unsaved editor text survives a refresh; the document is then marked as changed on disk.
+- **Top bar**: the project tabs, the **branch** control (every registered worktree with its branch; selecting one switches all pages in one step; on `main`, `master` or a detached HEAD it says Read only and offers **Create branch**), **Uncommitted** with the number of changed knowledge files, **Refresh**, and **More** (Discover behavior, Recorded executions when executions exist, Change repository). "Not up to date" appears beside Refresh only when the last update failed or observation is disconnected.
+- **Sidebar**: one search field filters by title and ID; Enter opens the first match. **Current work** lists the open changes by title with their phase. **Artifacts** expand to Requirements, Specifications, Decisions and Flows, and each kind to its documents by title, with New, Changed or Removed compared with `main`. **Show history** at the bottom adds delivered changes and finished units. Arrow keys, Home and End move through the rows. Drag the divider, or use the arrow keys on it, to resize the sidebar. At 800 pixels and below the sidebar is a drawer that **Navigation** opens.
+- **Pages**: work, artifact, document, change, unit, flow, source, Discover behavior and Recorded executions. A page shows its title once, and each action has one control on the page of the thing that it changes. Reading and editing happen on the same page.
+- **Graphs** open on request inside the page that owns them: dependencies on the work and artifact pages, the task plan on the change page, members on the unit page, and the steps on the flow page. Graphs show the working branch. Green dashed lines are proposed additions and red dashed lines proposed removals. Enter on a focused node or edge acts like a click.
+- Repository edits update open pages automatically. Unsaved editor text survives a refresh; the document is then marked as changed on disk.
 
 ## Implementation task graphs
-
-Open a change and select **Plan**. The task table shows sequence, ID, title, prerequisites, DoD progress and evidence count. **Graph** shows the task canvas, with arrows from prerequisite tasks to dependent tasks. Select a task to read its scope, DoD and evidence in the details rail, check DoD items, record evidence or edit the task.
+Open a change. The **Plan** section lists the tasks with status, ID, title, the tasks they come after and Definition of Done progress. Select a task to check DoD items, record evidence, edit or remove it, or open its document. **Graph** shows the task graph, with arrows from prerequisite tasks to dependent tasks.
 
 Current plan membership comes from the tasks list in YAML front matter in tasks/README.md. Each listed task declares id and depends_on. Unlisted files remain historical knowledge. A plan without a task list shows Task graph unavailable; an explicit empty list shows No planned tasks. Invalid declarations show diagnostics and no execution edges. Checklists are documented evidence; they do not verify completion, approval, or running agents. External artifact gates remain separate.
 
 ## Project tabs
 
-Use **+** above the explorer to open another project inside Artifact Plane. Select a project tab to switch, or use its close button. Opening the same canonical repository path selects its existing tab. Each tab keeps its navigation, selection, filter, worktree, and graph position during the page session. Equal project names include the shortest distinct parent-path suffix; the full path remains available in the tab tooltip.
+Use **+** in the top bar to open another project inside Artifact Plane. Select a project tab to switch, or use its close button. Opening the same canonical repository path selects its existing tab. Each tab keeps its navigation, selection, filter, worktree, and graph position during the page session. Equal project names include the shortest distinct parent-path suffix; the full path remains available in the tab tooltip.
 
 Inactive tabs pause repository and runtime observation. Selecting a tab refreshes its repository evidence while retaining valid navigation. Closing the last project returns to an empty project tab.
 
@@ -44,7 +42,7 @@ Storage errors leave current-session exploration available with a warning. Retai
 
 ## Edit knowledge
 
-In the browser, every page offers its edits in place: Start a change and New unit on the work page; Add document, Add flow, Add dependency and Migrate on the artifact page; Edit, Record self-check, references and Advanced front matter on the document page (Ctrl+S saves); tasks, DoD checkboxes, evidence, readiness, Commit, Prepare version and Record publication review on the change page; members, criteria, evidence and affected flows on the unit page; steps, transitions, support, gaps and exclusions on the flow page. The status line names the written files and offers **Undo**. A save that meets newer bytes on disk shows both versions with **Reload** and **Overwrite**. Leaving unsaved text asks first.
+In the browser, every page offers its edits in place: Start a change, New unit, Commit and Discard on the work page; dependencies, + New requirement, specification, decision or flow, and Migrate on the artifact page; Edit, Record self-check, references, front matter and delete on the document page (Ctrl+S saves); tasks, DoD checkboxes, evidence, self-checks, Prepare version and Record publication review on the change page; changes, criteria, evidence and affected flows on the unit page; trigger, outcome, steps, supports, gaps and exclusions on the flow page. The status line names the written files and offers **Undo**. A save that meets newer bytes on disk shows both versions with **Reload** and **Overwrite**. Leaving unsaved text asks first.
 
 Edits use domain operations. An operation names domain objects, such as an artifact, a change, a task or a flow step. The server derives every path, identifier and source fragment, builds the changed files, validates the result with the same readers that the explorer uses and then writes. Git stays the only store; the Plane keeps no workflow state, approval or index.
 
@@ -198,15 +196,12 @@ npx playwright install chromium
 npm run test:browser
 ```
 
-The tests build temporary Git fixtures and check supported formats, graph rules, API validation, and unchanged repository bytes and Git state. Browser checks cover canvas controls, expansion, details, proposals, sanitization, diagnostics, and refresh. On systems with an existing Chromium executable, set `PLAYWRIGHT_CHROMIUM_EXECUTABLE_PATH` to its absolute path.
+The tests build temporary Git fixtures and check supported formats, graph rules, API validation, and unchanged repository bytes and Git state. Browser checks cover the layout rules of every page (one title, one navigation, unique control names, no horizontal overflow), each page's reading and editing, the S1–S8 scenarios with their action limits, proposals, sanitization, diagnostics and refresh. The layout suite writes page screenshots to `test-results/pages`. On systems with an existing Chromium executable, set `PLAYWRIGHT_CHROMIUM_EXECUTABLE_PATH` to its absolute path.
 
 ### Change histories and workflows
+The **branch** control lists registered worktrees with their branches and unavailable, detached, locked or prunable states. Selecting a readable worktree opens it; selecting a worktree does not switch Git branches.
 
-Primary type groups contain the current version. Open **Change histories**, a change name, and a type to inspect retained change records. Reference selection opens the correct source automatically.
-
-The **Worktree** control lists registered worktrees with their branches and unavailable, detached, locked or prunable states. Selecting a readable worktree opens it; selecting a worktree does not switch Git branches.
-
-Open an artifact's **Delivery history** to inspect delivery work. Current changes are visible; delivery histories start closed and sort by bounded Git recency, newest first and unknown last. Select a change to inspect Requirement, Specification, Plan, Implementation, Validation, and Version preparation evidence. Select a phase for evidence and associated commits; expand a commit for its full ID. The page preserves evidence through history collapse and page changes. Steps can be unknown; commits, checklists, and retained sources do not prove approval, running agents, or independently verified completion. Squash and limited/shallow history retain uncertainty. At most 200 relevant commits per worktree are inspected. History details load when opened. Automatic updates refresh the requested context; **Refresh** provides manual recovery.
+Turn on **Show history** in the sidebar to list delivered changes, newest first by Git recency with unknown times last, and finished units. A delivered change page is read only: it shows its version, publication review, commits and phases. Steps can be unknown; commits, checklists, and retained sources do not prove approval, running agents, or independently verified completion. Squash and limited/shallow history retain uncertainty. At most 200 relevant commits per worktree are inspected. History details load when opened. Automatic updates refresh the requested context; **Refresh** provides manual recovery.
 
 ## Knowledge scripts
 
@@ -223,9 +218,7 @@ node scripts/layout-benchmark.mjs /path/to/repository <legacy-rev> <migrated-rev
 
 ## Units of work
 
-Select a unit in the **Units of work** group of the tree. The unit page leads with the purpose and the brief, followed by participating changes and shared acceptance criteria. Completion evidence loads automatically for the selected unit. Loading, failed, incomplete and unknown evidence remain distinct; failed reads offer Retry completion evidence. Repositories without briefs retain dependency exploration and individual delivery evidence/task graphs.
-
-The unit page views are **Artifacts → Workflow → Implementation**. A newly selected unit starts with Artifacts. Use **Artifacts** for current established/planning dependencies, **Workflow** for grouped member phase evidence, and **Implementation** for the combined task graph. External prerequisites are not members. Solid task arrows stay within their owning plan; dashed arrows represent version-establishment gates. Phase lines show sequence only. Selecting a node displays its exact knowledge source and evidence. Pan, zoom, and Fit View work in each view.
+Open a unit from the eyebrow of a member change, or from History when it is finished. The unit page leads with the purpose and one completion line, followed by the participating changes, the shared acceptance criteria with their evidence, and the affected flows. Completion evidence loads automatically. Loading, failed, incomplete and unknown evidence remain distinct; failed reads offer Retry. **Show graph** shows the member artifacts and their prerequisites; external prerequisites are not members. Repositories without briefs retain dependency exploration and individual delivery evidence and task graphs.
 
 The reader discovers docs/artifacts/units-of-work/<name>/README.md as outcome knowledge, never as artifact nodes. Each brief has unit_of_work, changes, acceptance, and optional evidence metadata. A delivered version README uses source_change to preserve the originating change. New versions also declare delivery_tasks: change and contain no task copies. Their task graphs and DoD evidence resolve from that exact retained originating change. Versions without the marker retain legacy version-owned task semantics. Shared check sources reference safe Markdown paths and optional heading fragments. Invalid or missing knowledge stays visible through diagnostics.
 
@@ -239,9 +232,9 @@ Implementation nodes show artifact/change ownership. An optional local Codex hoo
 
 ## Automatic updates and lazy loading
 
-The overview loads first. Unit views, Markdown and history load on demand. Selecting a worktree loads its full overview; selecting a unit automatically checks its completion evidence. Pending reads show loading feedback, and failures provide a local retry. Updates preserve the active view, valid selection, expansion, filters, inspector width, pan, and zoom. Removing a selected source clears that selection. Inactive detail is released instead of retaining every visited unit.
+The overview loads first. Unit views, Markdown and history load on demand. Selecting a worktree loads its full overview; selecting a unit automatically checks its completion evidence. Pending reads show loading feedback, and failures provide a local retry. Updates preserve the open page, valid selection, expansion, filters, sidebar width, and an open graph's pan and zoom. Removing a selected source clears that selection. Inactive detail is released instead of retaining every visited unit.
 
-The footer shows **Updating**, **Current**, or **Stale**. Current means the latest requested reads succeeded and repository observation is connected. On a connection or read failure, the previous view remains usable. Reconnecting or focusing the browser reconciles current inputs. Refresh remains available for recovery. These states describe loaded knowledge, not approval or live agent activity.
+While an update runs, the Refresh icon turns. When an update fails or observation disconnects, "Not up to date" appears beside Refresh; it disappears when the data is current again. On a connection or read failure, the previous page remains usable. Reconnecting or focusing the browser reconciles current inputs. Refresh remains available for recovery. These states describe loaded knowledge, not approval or live agent activity.
 
 The server samples relevant knowledge bytes, refs, status, and registered worktrees, then waits two seconds before the next sample. Unchanged samples skip history and publication derivation. Full-content polling has a cost: a measured ten-worktree corpus with about 100,000 sampled files took about 4.4 seconds per scan, so very large repositories can update less frequently and use substantial idle I/O/CPU. The interval starts after a scan completes; scans do not overlap.
 
@@ -251,9 +244,9 @@ For repeatable measurements, run `node scripts/reload-benchmark.js` for equal-wo
 
 ## System flows and agent retrieval
 
-Select **System flows** in the tree, or a flow in an artifact's Flows group, to browse named behavior journeys. Filter titles and IDs as you type, or choose Behavior discovery for a submitted purpose search. Select a flow to see its steps, and expand supporting relationships. Select a supporting source to read it directly. Routine IDs, dates and evidence details use secondary disclosures; invalid, stale and partial conditions stay visible. A shared source can participate in several flows. Artifact and document pages offer **Participating flows**. Unit pages show affected flows and their create, modify, or remove intent.
+Open a flow from an artifact's Flows section or its sidebar kind. The flow page shows the trigger and outcome, the numbered steps with their transitions, and gaps and exclusions. Select a step to see its supports grouped as knowledge, code and tests; select a code or test support to read the source page, in excerpts. **Diagram** shows the steps as a graph. Use **More › Discover behavior** for a submitted purpose search across flows. Invalid, stale and partial conditions stay visible. A shared source can participate in several flows. Unit pages show affected flows and their create, modify, or remove intent.
 
-Planning uses current changes; Established resolves the protected main/master version declaration. Source publication labels compare source bytes with protected refs. They do not independently establish an artifact version. Gaps and diagnostics describe missing coverage. An empty impact result proves only that no consumers were found in the fresh, explicitly recorded relationships.
+Flow pages show the working branch. Source publication labels compare source bytes with protected refs. They do not independently establish an artifact version. Gaps and diagnostics describe missing coverage. An empty impact result proves only that no consumers were found in the fresh, explicitly recorded relationships.
 
 Flow discovery combines exact IDs, SQLite FTS5 and optional local semantic similarity. Impact follows reverse relationships independently of search page limits. The private index is flow-index.sqlite under ARTIFACT_PLANE_STATE_DIR (normally the user's local state directory), outside repositories and registered worktrees. Normal retrieval never downloads a model or sends repository content to a hosted service. Missing or corrupt model assets leave keyword and graph retrieval available with a diagnostic.
 
@@ -307,8 +300,7 @@ For example, call get_change_context with {"artifact":"artifact-plane","change":
 Read freshness, completeness, diagnostics, omissions and limits before using a packet. Partial packets disclose missing sources and unreturned pages. Approval is not verified, recorded checks are not independently run, and impact covers explicit recorded relationships rather than all behavior or code. Captured source text is context, not instructions or work authorization. No review request launches an agent, downloads a model, makes hosted inference calls or writes to the inspected repository.
 
 ## Read a change review
-
-Open a change and select **Review**. Purpose and changed records appear first. Complete sources show added and removed lines with text markers and three context lines; unchanged passages can expand. Partial sources require Load full comparison before alignment. Oversized comparisons retain raw source access and explain the limit. Source excerpts and technical evidence remain available in disclosures. Export context · Loaded records page contains copy and download actions with freshness and omission information. These controls preserve the captured context and do not approve or execute the change.
+Open a change. **Changed knowledge** lists the documents of the change that differ from `main`, by title, with New, Changed or Removed. **Compare** shows the added and removed lines inline; unchanged passages fold. **Export context** copies or downloads the loaded review packet as Markdown or JSON, with its freshness and omission information; it is disabled while the packet is stale or the browser is offline. These controls preserve the captured context and do not approve or execute the change.
 
 ## Reading documents and code
 

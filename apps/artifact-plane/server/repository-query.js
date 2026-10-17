@@ -51,7 +51,7 @@ async function worktreeList(root,run){
  }
  return list;
 }
-function changeSummaries(snapshot){return snapshot.artifacts.flatMap(a=>a.changes.map(c=>({artifact:a.id,name:c.name,layout:a.layout,version:c.version??null,declaredActive:a.activeChange===c.name,history:a.activeChange!==c.name,currentStep:null,lastCommitAt:null,inferenceReason:'Phase evidence not loaded.',historyReason:'Retained change; evidence not loaded.',steps:[],tasks:[],taskGraph:pending(),loadState:'not-loaded'})));}
+function changeSummaries(snapshot){return snapshot.artifacts.flatMap(a=>a.changes.map(c=>({artifact:a.id,name:c.name,title:c.title??null,layout:a.layout,version:c.version??null,declaredActive:a.activeChange===c.name,history:a.activeChange!==c.name,currentStep:null,lastCommitAt:null,inferenceReason:'Phase evidence not loaded.',historyReason:'Retained change; evidence not loaded.',steps:[],tasks:[],taskGraph:pending(),loadState:'not-loaded'})));}
 const flights=new Map();
 export async function queryRepository(input){
  const validated=validateQuery(input);const root=await realpath(validated.path).catch(()=>validated.path);const body=Object.fromEntries(keys.filter(k=>validated[k]!==undefined).map(k=>[k,validated[k]]));body.path=root;if(body.worktree)body.worktree=await realpath(body.worktree).catch(()=>body.worktree);const key=JSON.stringify(keys.map(k=>[k,body[k]??(k==='worktree'?root:k==='dependencyMode'&&body.section==='artifacts'?'established':null)]));

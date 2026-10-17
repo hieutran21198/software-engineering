@@ -89,11 +89,11 @@ flow:
       basis: documented
     - id: ux-browser-checks
       kind: test
-      path: apps/artifact-plane/test/browser/change-review.spec.js
+      path: apps/artifact-plane/test/browser/change-page.spec.js
       requires: Exercise the scoped user journey and its preserved evidence boundaries.
       basis: observed
       evidence:
-        - docs/artifacts/artifact-plane/changes/change-ux-simplification/tasks/07-integration-publication.md
+        - docs/artifacts/artifact-plane/changes/change-workbench-redesign/tasks/07-browser-suites.md
     - id: ux-simplification-contract
       kind: element
       artifact: artifact-plane
@@ -116,7 +116,7 @@ flow:
       basis: static
     - id: review-interface
       kind: implementation
-      path: apps/artifact-plane/src/ChangeReview.jsx
+      path: apps/artifact-plane/src/pages/ChangePageReview.jsx
       requires: Present captured context, source comparisons, recovery and local exports.
       basis: static
     - id: review-checks
@@ -126,26 +126,24 @@ flow:
       basis: static
     - id: browser-checks
       kind: test
-      path: apps/artifact-plane/test/browser/change-review.spec.js
+      path: apps/artifact-plane/test/browser/change-page.spec.js
       requires: Exercise review navigation, exports, refresh and delayed replies.
       basis: static
     - id: spacing-control-contract
       kind: element
       artifact: artifact-plane
       element: specifications/spacing-control-consistency.md
-      requires: Present inspector blocks and native controls consistently without
-        changing evidence or journey meaning.
+      requires: Present page blocks and native controls consistently without changing evidence or journey meaning.
       basis: documented
     - id: shared-presentation
       kind: implementation
-      path: apps/artifact-plane/src/style.css
-      requires: Share native dropdown appearance and scoped inspector rhythm.
+      path: apps/artifact-plane/src/styles.css
+      requires: Share one set of tokens, controls and page rhythm.
       basis: static
     - id: presentation-checks
       kind: test
-      path: apps/artifact-plane/test/browser/presentation.spec.js
-      requires: Check measured gaps, native dropdown styles, keyboard access and
-        completion feedback.
+      path: apps/artifact-plane/test/browser/layout.spec.js
+      requires: Check one title, one navigation, unique control names and no horizontal overflow on every page.
       basis: static
     - id: evidence-usability-contract
       kind: element
@@ -167,11 +165,11 @@ flow:
       basis: static
     - id: change-unit-tests
       kind: test
-      path: apps/artifact-plane/test/browser/change-unit-pages.spec.js
+      path: apps/artifact-plane/test/browser/change-page.spec.js
       requires: Prove the Review tab actions in the browser.
       basis: observed
       evidence:
-        - apps/artifact-plane/test/browser/change-unit-pages.spec.js
+        - docs/artifacts/artifact-plane/changes/change-workbench-redesign/tasks/07-browser-suites.md
   gaps:
     - Declared current is not a historical code predecessor; recorded
       relationships are not exhaustive impact.

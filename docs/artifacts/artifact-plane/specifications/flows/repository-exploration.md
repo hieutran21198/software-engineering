@@ -116,12 +116,12 @@ flow:
       basis: documented
     - id: reading-controls-browser
       kind: test
-      path: apps/artifact-plane/test/browser/reading-controls.spec.js
+      path: apps/artifact-plane/test/browser/artifact-document.spec.js
       requires: Check visible heading hierarchy, bounded navigation geometry and inert
         highlighted code.
       basis: observed
       evidence:
-        - docs/artifacts/artifact-plane/changes/change-ux-simplification/tasks/11-reading-controls-validation.md
+        - docs/artifacts/artifact-plane/changes/change-workbench-redesign/tasks/07-browser-suites.md
     - id: reading-controls-contract
       kind: element
       artifact: artifact-plane
@@ -131,11 +131,11 @@ flow:
       basis: documented
     - id: ux-browser-checks
       kind: test
-      path: apps/artifact-plane/test/browser/ux-simplification.spec.js
+      path: apps/artifact-plane/test/browser/worktrees-links.spec.js
       requires: Exercise the scoped user journey and its preserved evidence boundaries.
       basis: observed
       evidence:
-        - docs/artifacts/artifact-plane/changes/change-ux-simplification/tasks/07-integration-publication.md
+        - docs/artifacts/artifact-plane/changes/change-workbench-redesign/tasks/07-browser-suites.md
     - id: ux-simplification-contract
       kind: element
       artifact: artifact-plane
@@ -199,7 +199,7 @@ flow:
       basis: static
     - id: label-browser-checks
       kind: test
-      path: apps/artifact-plane/test/browser/edge-labels.spec.js
+      path: apps/artifact-plane/test/browser/flow-page.spec.js
       requires: Check actual long, loop, reverse and parallel geometry at 1440 and 700
         widths.
       basis: static
@@ -207,19 +207,17 @@ flow:
       kind: element
       artifact: artifact-plane
       element: specifications/spacing-control-consistency.md
-      requires: Present inspector blocks and native controls consistently without
-        changing evidence or journey meaning.
+      requires: Present page blocks and native controls consistently without changing evidence or journey meaning.
       basis: documented
     - id: shared-presentation
       kind: implementation
-      path: apps/artifact-plane/src/style.css
-      requires: Share native dropdown appearance and scoped inspector rhythm.
+      path: apps/artifact-plane/src/styles.css
+      requires: Share one set of tokens, controls and page rhythm.
       basis: static
     - id: presentation-checks
       kind: test
-      path: apps/artifact-plane/test/browser/presentation.spec.js
-      requires: Check measured gaps, native dropdown styles, keyboard access and
-        completion feedback.
+      path: apps/artifact-plane/test/browser/layout.spec.js
+      requires: Check one title, one navigation, unique control names and no horizontal overflow on every page.
       basis: static
     - id: evidence-usability-contract
       kind: element
@@ -242,9 +240,8 @@ flow:
       basis: documented
     - id: navigation-tree
       kind: implementation
-      path: apps/artifact-plane/src/NavigationTree.jsx
-      requires: One tree for current work, artifacts and units with search and
-        keyboard navigation.
+      path: apps/artifact-plane/src/Sidebar.jsx
+      requires: One sidebar for current work and artifacts with search, keys and History.
       basis: static
     - id: work-page
       kind: implementation
@@ -254,11 +251,11 @@ flow:
       basis: static
     - id: workbench-shell-tests
       kind: test
-      path: apps/artifact-plane/test/browser/workbench-shell.spec.js
-      requires: Prove the tree, the work page, the branch control and the widths.
+      path: apps/artifact-plane/test/browser/shell.spec.js
+      requires: Prove the sidebar, the branch menu, the drawer and the widths.
       basis: observed
       evidence:
-        - apps/artifact-plane/test/browser/workbench-shell.spec.js
+        - docs/artifacts/artifact-plane/changes/change-workbench-redesign/tasks/07-browser-suites.md
   gaps:
     - The flow documents discovery behavior, not complete knowledge coverage or
       artifact establishment.

@@ -92,11 +92,11 @@ flow:
       basis: documented
     - id: reading-controls-browser
       kind: test
-      path: apps/artifact-plane/test/browser/reading-controls.spec.js
+      path: apps/artifact-plane/test/browser/artifact-document.spec.js
       requires: Check visible heading hierarchy, bounded navigation geometry and inert highlighted code.
       basis: observed
       evidence:
-        - docs/artifacts/artifact-plane/changes/change-ux-simplification/tasks/11-reading-controls-validation.md
+        - docs/artifacts/artifact-plane/changes/change-workbench-redesign/tasks/07-browser-suites.md
     - id: reading-controls-contract
       kind: element
       artifact: artifact-plane
@@ -105,11 +105,11 @@ flow:
       basis: documented
     - id: ux-browser-checks
       kind: test
-      path: apps/artifact-plane/test/browser/ux-simplification.spec.js
+      path: apps/artifact-plane/test/browser/worktrees-links.spec.js
       requires: Exercise the scoped user journey and its preserved evidence boundaries.
       basis: observed
       evidence:
-        - docs/artifacts/artifact-plane/changes/change-ux-simplification/tasks/07-integration-publication.md
+        - docs/artifacts/artifact-plane/changes/change-workbench-redesign/tasks/07-browser-suites.md
     - id: ux-simplification-contract
       kind: element
       artifact: artifact-plane
@@ -203,13 +203,12 @@ flow:
       basis: static
     - id: flow-search-controls
       kind: implementation
-      path: apps/artifact-plane/src/Flows.jsx
-      requires: Select artifact scope and title filtering or explicitly submitted
-        behavior discovery.
+      path: apps/artifact-plane/src/pages/DiscoverPage.jsx
+      requires: Submit a behavior search and open the matching flow.
       basis: static
     - id: search-browser-checks
       kind: test
-      path: apps/artifact-plane/test/browser/search-usability.spec.js
+      path: apps/artifact-plane/test/browser/discovery-recorded.spec.js
       requires: Verify complete named matches, cross-owner participation, contextual
         entry and delayed replies.
       basis: static
@@ -217,19 +216,17 @@ flow:
       kind: element
       artifact: artifact-plane
       element: specifications/spacing-control-consistency.md
-      requires: Present inspector blocks and native controls consistently without
-        changing evidence or journey meaning.
+      requires: Present page blocks and native controls consistently without changing evidence or journey meaning.
       basis: documented
     - id: shared-presentation
       kind: implementation
-      path: apps/artifact-plane/src/style.css
-      requires: Share native dropdown appearance and scoped inspector rhythm.
+      path: apps/artifact-plane/src/styles.css
+      requires: Share one set of tokens, controls and page rhythm.
       basis: static
     - id: presentation-checks
       kind: test
-      path: apps/artifact-plane/test/browser/presentation.spec.js
-      requires: Check measured gaps, native dropdown styles, keyboard access and
-        completion feedback.
+      path: apps/artifact-plane/test/browser/layout.spec.js
+      requires: Check one title, one navigation, unique control names and no horizontal overflow on every page.
       basis: static
     - id: document-page
       kind: implementation
@@ -238,11 +235,11 @@ flow:
       basis: static
     - id: document-tests
       kind: test
-      path: apps/artifact-plane/test/browser/document-editing.spec.js
+      path: apps/artifact-plane/test/browser/artifact-document.spec.js
       requires: Prove document reading and editing in the browser.
       basis: observed
       evidence:
-        - apps/artifact-plane/test/browser/document-editing.spec.js
+        - docs/artifacts/artifact-plane/changes/change-workbench-redesign/tasks/07-browser-suites.md
   gaps:
     - Retrieval ranks candidates; it does not prove compatibility or complete
       system discovery.

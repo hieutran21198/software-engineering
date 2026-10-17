@@ -56,11 +56,11 @@ flow:
   support:
     - id: ux-browser-checks
       kind: test
-      path: apps/artifact-plane/test/browser/runtime.spec.js
+      path: apps/artifact-plane/test/browser/discovery-recorded.spec.js
       requires: Exercise the scoped user journey and its preserved evidence boundaries.
       basis: observed
       evidence:
-        - docs/artifacts/artifact-plane/changes/change-ux-simplification/tasks/07-integration-publication.md
+        - docs/artifacts/artifact-plane/changes/change-workbench-redesign/tasks/07-browser-suites.md
     - id: ux-simplification-contract
       kind: element
       artifact: artifact-plane
@@ -99,26 +99,24 @@ flow:
       basis: documented
     - id: worktree-checks
       kind: test
-      path: apps/artifact-plane/test/browser/runtime.spec.js
+      path: apps/artifact-plane/test/browser/discovery-recorded.spec.js
       requires: Verify matching worktree observations and retained captured identities.
       basis: static
     - id: spacing-control-contract
       kind: element
       artifact: artifact-plane
       element: specifications/spacing-control-consistency.md
-      requires: Present inspector blocks and native controls consistently without
-        changing evidence or journey meaning.
+      requires: Present page blocks and native controls consistently without changing evidence or journey meaning.
       basis: documented
     - id: shared-presentation
       kind: implementation
-      path: apps/artifact-plane/src/style.css
-      requires: Share native dropdown appearance and scoped inspector rhythm.
+      path: apps/artifact-plane/src/styles.css
+      requires: Share one set of tokens, controls and page rhythm.
       basis: static
     - id: presentation-checks
       kind: test
-      path: apps/artifact-plane/test/browser/presentation.spec.js
-      requires: Check measured gaps, native dropdown styles, keyboard access and
-        completion feedback.
+      path: apps/artifact-plane/test/browser/layout.spec.js
+      requires: Check one title, one navigation, unique control names and no horizontal overflow on every page.
       basis: static
   gaps:
     - Observed lifecycle activity and reported checks do not prove task DoD,

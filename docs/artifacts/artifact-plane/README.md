@@ -1,5 +1,5 @@
 ---
-current_version: 1.16.0
+current_version: 1.17.0
 depends_on: [artifact-driven]
 ---
 
@@ -20,7 +20,7 @@ This artifact owns the repository explorer and its input interpretation rules.
 This artifact uses the in-place layout. Working knowledge is in requirements, specifications and decisions; system flows are in specifications/flows. Start with:
 
 - [Explorer requirements](requirements/explorer.md) and [explorer contract](specifications/explorer.md)
-- [Authoring requirements](requirements/authoring-workbench.md), [workbench contract](specifications/authoring-workbench.md) and [knowledge editing contract](specifications/knowledge-editing.md)
+- [Authoring requirements](requirements/authoring-workbench.md), [workbench redesign requirements](requirements/workbench-redesign.md), [workbench contract](specifications/authoring-workbench.md) and [knowledge editing contract](specifications/knowledge-editing.md)
 - [In-place layout reading](specifications/knowledge-layout-reading.md)
 - [Local server decision](decisions/001-local-server.md) and [derived workflow decision](decisions/002-derived-workflow.md)
 
