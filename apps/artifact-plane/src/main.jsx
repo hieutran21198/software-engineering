@@ -265,7 +265,7 @@ export function ProjectExplorer({active: isActive = true, initialPath = '', onOp
               <div className="open-form">
                 <div className="field"><label htmlFor={`repository-path-${tabId}`}>Repository path</label>
                   <input id={`repository-path-${tabId}`} placeholder="/absolute/path/to/add-repository" value={path} onChange={event => setPath(event.target.value)} required autoComplete="off" spellCheck={false}/></div>
-                <button className="primary" aria-busy={busy} disabled={busy}>Open repository</button>
+                <button className="primary" aria-busy={busy}>Open repository</button>
                 {snapshot && <button type="button" onClick={() => {setPath(projectRoot);setEditingRepo(false);}}>Cancel</button>}
               </div>
               {busy && <p className="muted" role="status">Reading repository…</p>}
