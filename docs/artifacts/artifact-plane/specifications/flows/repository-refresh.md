@@ -35,9 +35,12 @@ flow:
     - id: apply
       title: Apply only the current project generation
       supports:
+        - authoring-contract
         - explorer
         - reload-tests
         - evidence-usability-contract
+        - document-page
+        - document-tests
   transitions:
     - from: observe
       to: notify
@@ -53,6 +56,12 @@ flow:
       to: observe
       condition: Continue observing until the last client leaves.
   support:
+    - id: authoring-contract
+      kind: element
+      artifact: artifact-plane
+      element: specifications/authoring-workbench.md
+      requires: Define the work-centered shell, editable pages and journeys that this journey now serves.
+      basis: documented
     - id: ux-browser-checks
       kind: test
       path: apps/artifact-plane/test/browser/lazy-reload.spec.js
@@ -109,6 +118,19 @@ flow:
       element: specifications/knowledge-layout-reading.md
       requires: Invalidate in-place baselines and comparisons when the protected ref or working knowledge changes.
       basis: documented
+    - id: document-page
+      kind: implementation
+      path: apps/artifact-plane/src/pages/DocumentPage.jsx
+      requires: Keep unsaved editor text through a refresh and mark the document
+        changed on disk.
+      basis: static
+    - id: document-tests
+      kind: test
+      path: apps/artifact-plane/test/browser/document-editing.spec.js
+      requires: Prove that a refresh keeps editor text.
+      basis: observed
+      evidence:
+        - apps/artifact-plane/test/browser/document-editing.spec.js
   gaps:
     - Referenced implementation/test observation must be registered by a flow
       retrieval context; unreferenced code changes are outside the map.

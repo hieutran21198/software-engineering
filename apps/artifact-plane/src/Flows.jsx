@@ -58,7 +58,7 @@ function FlowModels({flow, models=[], sources=[], onRead, onFlow}){
   </div>}
  </section>;
 }
-export default function Flows({path,worktree,epoch,isActive,entry,knowledge,sidebar,inspector,onSelection,onRead,artifacts=[]}){
+export default function Flows({path,worktree,epoch,isActive,entry,knowledge,sidebar,inspector,onSelection,onFlow,onRead,artifacts=[]}){
  const artifactControl=useId();
  const [text,setText]=useState(''),[search,setSearch]=useState(''),[match,setMatch]=useState('title'),[artifact,setArtifact]=useState('');
  const [impact,setImpact]=useState(null),[list,setList]=useState(null),[selected,setSelected]=useState(null),[detail,setDetail]=useState(null),[source,setSource]=useState(null),[expanded,setExpanded]=useState(false),[node,setNode]=useState(null),[error,setError]=useState(''),[cursor,setCursor]=useState(null),[loading,setLoading]=useState(false),[retry,setRetry]=useState(0),[sentinel,setSentinel]=useState(null),[options,setOptions]=useState(null);
@@ -74,7 +74,7 @@ export default function Flows({path,worktree,epoch,isActive,entry,knowledge,side
  useEffect(()=>{
   if(!entry)return;
   setSelected(entry.flow||null);setDetail(null);setSource(null);setCursor(null);setNode(null);setExpanded(false);
-  setText(entry.query||'');setSearch(normalizeName(entry.query));setMatch('title');setArtifact(entry.artifact||'');setImpact(entry.ids||null);setList(null);
+  setText(entry.query||'');setSearch(entry.discover?'':normalizeName(entry.query));setMatch(entry.discover?'discovery':'title');setArtifact(entry.artifact||'');setImpact(entry.ids||null);setList(null);
   listCache.current=detailCache.current=null;
  },[entry]);
  const pending=match==='title'&&normalizeName(text)!==search;
@@ -123,6 +123,7 @@ export default function Flows({path,worktree,epoch,isActive,entry,knowledge,side
  const artifactOptions=options?.scope===optionScope&&options.epoch===epoch?options.items:(!worktree||worktree===path?artifacts:[]);
  const missingArtifact=artifact&&!artifactOptions.some(a=>a.id===artifact);
  useEffect(()=>{onSelection?.(Boolean(selected));},[selected,onSelection]);
+ useEffect(()=>{onFlow?.(selected&&detail?.data?.flow?detail.data.flow:null);},[selected,detail,onFlow]);
  const flow=detail?.data?.flow,graph=useMemo(()=>flowCanvas(detail?.data?.graph,flow,expanded,node),[detail,flow,expanded,node]);
  const supports=(flow?.support||[]).filter(s=>!node||s.targetId===node||(flow.steps||[]).find(t=>t.nodeId===node)?.supports.includes(s.id));
  if(!isActive)return null;
@@ -155,6 +156,6 @@ export default function Flows({path,worktree,epoch,isActive,entry,knowledge,side
  </>}</section>;
  return <>{sidebar&&createPortal(left,sidebar)}{inspector&&createPortal(right,inspector)}<section className="flows-view" aria-label="Flow exploration">
  {impact&&<p>Related flow candidates from explicit known relationships. Review contracts to determine change impact.</p>}<Diagnostics items={[...(list?.diagnostics||[]),...(detail?.diagnostics||[])]}/>
- {!flow?<p role="status">{selected?'Loading flow…':'Select a flow from the sidebar.'}</p>:flow.state==='invalid'?<p role="alert">Invalid flow record. No execution order is inferred.</p>:<><h2>{flow.title}</h2><label className="flow-support-toggle"><input type="checkbox" checked={expanded} onChange={e=>setExpanded(e.target.checked)}/>Show supporting nodes</label><div className="flow-surface"><ReactFlowProvider key={flow.id}><ReactFlow nodes={graph.nodes} edges={graph.edges} nodeTypes={nodeTypes} edgeTypes={labelledEdgeTypes} minZoom={0.1} onNodeClick={(_,n)=>setNode(n.id)} fitView nodesDraggable={false} nodesConnectable={false} deleteKeyCode={null} colorMode="dark"><GraphLabelLayout/><Background/></ReactFlow></ReactFlowProvider></div><p className="tiny">Arrows show behavior transitions and support. Participation does not create prerequisites or unit membership.</p><FlowModels flow={flow} models={detail.data.models||[]} sources={detail.data.sources||[]} onRead={readSource} onFlow={id=>{setError('');setSelected(id);}}/></>}
+ {!flow?<p role="status">{selected?'Loading flow…':'Select a flow from the list.'}</p>:flow.state==='invalid'?<p role="alert">Invalid flow record. No execution order is inferred.</p>:<><h2>{flow.title}</h2><label className="flow-support-toggle"><input type="checkbox" checked={expanded} onChange={e=>setExpanded(e.target.checked)}/>Show supporting nodes</label><div className="flow-surface"><ReactFlowProvider key={flow.id}><ReactFlow nodes={graph.nodes} edges={graph.edges} nodeTypes={nodeTypes} edgeTypes={labelledEdgeTypes} minZoom={0.1} onNodeClick={(_,n)=>setNode(n.id)} fitView nodesDraggable={false} nodesConnectable={false} deleteKeyCode={null} colorMode="dark"><GraphLabelLayout/><Background/></ReactFlow></ReactFlowProvider></div><p className="tiny">Arrows show behavior transitions and support. Participation does not create prerequisites or unit membership.</p><FlowModels flow={flow} models={detail.data.models||[]} sources={detail.data.sources||[]} onRead={readSource} onFlow={id=>{setError('');setSelected(id);}}/></>}
  </section></>;
 }

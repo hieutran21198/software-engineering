@@ -12,6 +12,7 @@ flow:
     - id: select
       title: Select the registered worktree and artifact change
       supports:
+        - authoring-contract
         - ux-simplification-contract
         - ux-browser-checks
         - contract
@@ -20,6 +21,8 @@ flow:
         - review-checks
         - browser-checks
         - evidence-usability-contract
+        - change-page
+        - change-unit-tests
     - id: compare
       title: Compare contract knowledge with the declared current version
       supports:
@@ -42,6 +45,7 @@ flow:
     - id: evidence
       title: Read governing sources and missing review proof
       supports:
+        - authoring-contract
         - contract
         - review-service
         - review-interface
@@ -49,9 +53,12 @@ flow:
         - browser-checks
         - evidence-usability-contract
         - layout-reading
+        - change-page
+        - change-unit-tests
     - id: return
       title: Return to delivery or capture the reviewed context
       supports:
+        - authoring-contract
         - contract
         - review-service
         - review-interface
@@ -74,6 +81,12 @@ flow:
       to: select
       condition: The source selection changes or a stale/error reply requires a new read.
   support:
+    - id: authoring-contract
+      kind: element
+      artifact: artifact-plane
+      element: specifications/authoring-workbench.md
+      requires: Define the work-centered shell, editable pages and journeys that this journey now serves.
+      basis: documented
     - id: ux-browser-checks
       kind: test
       path: apps/artifact-plane/test/browser/change-review.spec.js
@@ -147,6 +160,18 @@ flow:
       element: specifications/knowledge-layout-reading.md
       requires: Compare in-place working knowledge with the protected-branch baseline through Git and derive declared evidence.
       basis: documented
+    - id: change-page
+      kind: implementation
+      path: apps/artifact-plane/src/pages/ChangePage.jsx
+      requires: Show the Review tab with comparison, diagnostics, commit and version actions.
+      basis: static
+    - id: change-unit-tests
+      kind: test
+      path: apps/artifact-plane/test/browser/change-unit-pages.spec.js
+      requires: Prove the Review tab actions in the browser.
+      basis: observed
+      evidence:
+        - apps/artifact-plane/test/browser/change-unit-pages.spec.js
   gaps:
     - Declared current is not a historical code predecessor; recorded
       relationships are not exhaustive impact.

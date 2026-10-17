@@ -1,15 +1,15 @@
 ---
-current_version: 1.15.0
+current_version: 1.16.0
 depends_on: [artifact-driven]
 ---
 
 # Artifact Plane
 
-Artifact Plane provides read-only knowledge exploration of local ADD repositories and optional local Codex execution observation.
+Artifact Plane is the local workbench for exploring and authoring ADD repositories, with optional local Codex execution observation.
 
 ## Scope
 
-Discover artifact knowledge and visualize artifact dependencies, knowledge references and maintained system flows. Retrieve source-backed context through local keyword, semantic and graph discovery, HTTP and stdio MCP. Inspect local worktrees and workflow evidence. Observe explicitly bound Codex attempts and retain their graph context outside repositories. Implementation belongs in apps/artifact-plane.
+Discover artifact knowledge and visualize artifact dependencies, knowledge references and maintained system flows. Create and maintain artifacts, changes, documents, dependencies, references, tasks, units, flows and versions through deterministic operations that write only inside docs/artifacts of a selected worktree on a non-protected branch. Retrieve source-backed context through local keyword, semantic and graph discovery, HTTP and stdio MCP. Inspect local worktrees and workflow evidence. Observe explicitly bound Codex attempts and retain their graph context outside repositories. Implementation belongs in apps/artifact-plane.
 
 ## Ownership
 
@@ -20,6 +20,7 @@ This artifact owns the repository explorer and its input interpretation rules.
 This artifact uses the in-place layout. Working knowledge is in requirements, specifications and decisions; system flows are in specifications/flows. Start with:
 
 - [Explorer requirements](requirements/explorer.md) and [explorer contract](specifications/explorer.md)
+- [Authoring requirements](requirements/authoring-workbench.md), [workbench contract](specifications/authoring-workbench.md) and [knowledge editing contract](specifications/knowledge-editing.md)
 - [In-place layout reading](specifications/knowledge-layout-reading.md)
 - [Local server decision](decisions/001-local-server.md) and [derived workflow decision](decisions/002-derived-workflow.md)
 

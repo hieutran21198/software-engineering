@@ -16,12 +16,12 @@ The inspected repository must remain unchanged. This restriction includes Git me
 6. Resolve established element references through the owner's declared current version. Do not substitute the newest version directory. Keep active change elements distinguishable from established elements.
 7. Report missing targets, cycles, conflicting index data, ambiguous metadata, and multiple active changes. Keep valid portions inspectable without silently fixing repository data.
 8. Display Markdown details safely. Repository content cannot execute browser scripts or cause reads outside the chosen repository through element paths or symlinks.
-9. Opening, inspecting, and refreshing leave repository files and Git state unchanged.
+9. Opening, inspecting, and refreshing leave repository files and Git state unchanged. Explicit authoring operations are governed by requirements/authoring-workbench.md.
 10. Explore the graph on an interactive canvas: pan, zoom, fit the graph, select nodes, and expand or collapse an artifact to show its element dependencies in place. Canvas actions change only the browser view.
 
 ## Constraints
 
-The knowledge explorer remains read-only with no workflow engine or agent controls. The Codex execution extension permits a local observation store outside inspected repositories, local event authentication, and live browser updates. Retained graph context belongs only to execution history; current knowledge graphs remain derived. Prefer existing libraries.
+Reading operations remain read-only with no workflow engine or agent controls; the authoring extension in requirements/authoring-workbench.md defines the only write path, limited to docs/artifacts of the selected worktree on a non-protected branch. The Codex execution extension permits a local observation store outside inspected repositories, local event authentication, and live browser updates. Retained graph context belongs only to execution history; current knowledge graphs remain derived. Prefer existing libraries.
 
 ## Behavior examples
 

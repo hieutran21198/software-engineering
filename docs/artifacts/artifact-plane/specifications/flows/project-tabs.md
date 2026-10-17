@@ -17,6 +17,7 @@ flow:
     - id: open
       title: Create or select a canonical project tab
       supports:
+        - authoring-contract
         - workspace
     - id: select
       title: Activate one explorer and pause inactive work
@@ -25,7 +26,10 @@ flow:
     - id: navigate
       title: Maintain project-scoped graph and inspector state
       supports:
+        - authoring-contract
         - workspace
+        - source-bar
+        - workbench-shell-tests
     - id: close
       title: Release the closed explorer and select a survivor
       supports:
@@ -49,6 +53,12 @@ flow:
       to: open
       condition: No project remains or a new one is requested.
   support:
+    - id: authoring-contract
+      kind: element
+      artifact: artifact-plane
+      element: specifications/authoring-workbench.md
+      requires: Define the work-centered shell, editable pages and journeys that this journey now serves.
+      basis: documented
     - id: ux-browser-checks
       kind: test
       path: apps/artifact-plane/test/browser/project-tabs.spec.js
@@ -78,6 +88,18 @@ flow:
       path: apps/artifact-plane/test/project-tabs.test.js
       requires: Exercise preference validation and close selection.
       basis: static
+    - id: source-bar
+      kind: implementation
+      path: apps/artifact-plane/src/SourceBar.jsx
+      requires: Show the worktree control, the edit state and the protected-branch banner.
+      basis: static
+    - id: workbench-shell-tests
+      kind: test
+      path: apps/artifact-plane/test/browser/workbench-shell.spec.js
+      requires: Prove the branch control and page state per project.
+      basis: observed
+      evidence:
+        - apps/artifact-plane/test/browser/workbench-shell.spec.js
   gaps:
     - Browser persistence is a preference store, not repository evidence or a
       workflow registry.

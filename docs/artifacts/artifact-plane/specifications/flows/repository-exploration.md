@@ -11,6 +11,7 @@ flow:
     - id: select
       title: Select the project and worktree
       supports:
+        - authoring-contract
         - reading-controls-browser
         - reading-controls-contract
         - ux-simplification-contract
@@ -18,6 +19,8 @@ flow:
         - explorer
         - search-label-contract
         - evidence-usability-contract
+        - navigation-tree
+        - workbench-shell-tests
     - id: validate
       title: Resolve a readable Git root and ADD directory
       supports:
@@ -46,6 +49,8 @@ flow:
         - label-browser-checks
         - evidence-usability-contract
         - model-presentation
+        - work-page
+        - workbench-shell-tests
       interactions:
         - from: snapshot
           to: version
@@ -65,6 +70,7 @@ flow:
     - id: inspect
       title: Inspect selected knowledge and diagnostics
       supports:
+        - authoring-contract
         - explorer
         - reader-tests
         - evidence-review-contract
@@ -102,6 +108,12 @@ flow:
       to: inspect
       condition: Relevant knowledge is selected.
   support:
+    - id: authoring-contract
+      kind: element
+      artifact: artifact-plane
+      element: specifications/authoring-workbench.md
+      requires: Define the work-centered shell, editable pages and journeys that this journey now serves.
+      basis: documented
     - id: reading-controls-browser
       kind: test
       path: apps/artifact-plane/test/browser/reading-controls.spec.js
@@ -228,6 +240,25 @@ flow:
       element: specifications/knowledge-layout-reading.md
       requires: Detect each artifact layout and read in-place identity, change and version records from front matter only.
       basis: documented
+    - id: navigation-tree
+      kind: implementation
+      path: apps/artifact-plane/src/NavigationTree.jsx
+      requires: One tree for current work, artifacts and units with search and
+        keyboard navigation.
+      basis: static
+    - id: work-page
+      kind: implementation
+      path: apps/artifact-plane/src/pages/WorkPage.jsx
+      requires: Show branch state, open changes with phase chips, units and
+        uncommitted knowledge.
+      basis: static
+    - id: workbench-shell-tests
+      kind: test
+      path: apps/artifact-plane/test/browser/workbench-shell.spec.js
+      requires: Prove the tree, the work page, the branch control and the widths.
+      basis: observed
+      evidence:
+        - apps/artifact-plane/test/browser/workbench-shell.spec.js
   gaps:
     - The flow documents discovery behavior, not complete knowledge coverage or
       artifact establishment.

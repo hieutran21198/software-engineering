@@ -1,7 +1,6 @@
-import {matchesName} from './SearchField.jsx';
 import React,{useMemo,useState} from 'react';
 import {ReactFlow,ReactFlowProvider,Background,Controls,Handle,Position} from '@xyflow/react';
-import {unitCanvas,unitNode,unitKey} from './unit-canvas.js';
+import {unitCanvas,unitNode} from './unit-canvas.js';
 import Markdown from './Markdown.jsx';
 import {documentSummary} from './Reader.jsx';
 import {checklistLabel} from './runtime-model.js';
@@ -18,17 +17,6 @@ function UnitNode({data,selected}) {
  </div>;
 }
 const nodeTypes={unit:UnitNode};
-export function UnitList({snapshot,worktreePath,selected,onSelect,filter}) {
- const worktrees=snapshot.workflow?.worktrees||[],worktree=worktrees.find(w=>w.path===worktreePath)||worktrees.find(w=>w.selected);
- const matches=(worktree?.unitsOfWork||[]).filter(u=>matchesName(filter,u.id,u.title));
- const selectionOutside=selected&&!(matches||[]).some(u=>selected===unitKey(worktree,u));
- return <section className="unit-list">
-  <nav aria-label="Units of work">{matches.map(unit=><button className={`artifact-list-item ${selected===unitKey(worktree,unit)?'active':''}`} key={unit.id} onClick={()=>onSelect(unitKey(worktree,unit))}><span>{unit.title}</span><small>{unit.members.length} participating changes{unit.completion.derivation!=='not-loaded'&&` · ${completionLabel(unit.completion)}`}</small></button>)}</nav>
-  {!!worktree?.unitsOfWork?.length&&!matches.length&&<p role="status">No units match this title or ID.</p>}
-  {selectionOutside&&<p className="flow-selection-note">Selected unit is outside the current results.</p>}
-  {!worktree?.unitsOfWork?.length&&<p className="muted">No unit-of-work briefs in this worktree. Explore artifacts and delivery work in Dependencies.</p>}
- </section>;
-}
 export function UnitView({context,view,onView,planning,onPlanning,selection,onSelect,recorded=false,loading}) {
  const [showAll,setShowAll]=useState(false);
  const ready=context?.unit.loadState!=='not-loaded'&&(view==='workflow'?context?.unit.members.some(m=>m.workflow)||!context?.unit.members.length:view==='implementation'?context?.unit.implementationGraph.state!=='not-loaded':context?.unit.artifactGraph[planning?'planning':'established'].state!=='not-loaded');

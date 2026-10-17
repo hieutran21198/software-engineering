@@ -11,6 +11,7 @@ flow:
     - id: brief
       title: Read the unit brief and unique membership
       supports:
+        - authoring-contract
         - ux-simplification-contract
         - ux-browser-checks
         - units
@@ -18,6 +19,8 @@ flow:
         - shared-search-field
         - search-browser-checks
         - evidence-usability-contract
+        - unit-page
+        - change-unit-tests
     - id: resolve
       title: Resolve delivered versions and exact originating plans
       supports:
@@ -32,9 +35,12 @@ flow:
     - id: criteria
       title: Inspect shared criteria and evidence
       supports:
+        - authoring-contract
         - units
         - unit-tests
         - evidence-usability-contract
+        - unit-page
+        - change-unit-tests
     - id: impact
       title: Follow affected flow references
       supports:
@@ -51,6 +57,8 @@ flow:
         - presentation-checks
         - completion-feedback
         - evidence-usability-contract
+        - unit-page
+        - scenario-tests
   transitions:
     - from: brief
       to: resolve
@@ -70,6 +78,12 @@ flow:
       to: criteria
       condition: Review returns to the unit evidence.
   support:
+    - id: authoring-contract
+      kind: element
+      artifact: artifact-plane
+      element: specifications/authoring-workbench.md
+      requires: Define the work-centered shell, editable pages and journeys that this journey now serves.
+      basis: documented
     - id: ux-browser-checks
       kind: test
       path: apps/artifact-plane/test/browser/units-of-work.spec.js
@@ -175,6 +189,26 @@ flow:
       element: specifications/knowledge-layout-reading.md
       requires: Resolve in-place version records and their introducing commits for member delivery.
       basis: documented
+    - id: unit-page
+      kind: implementation
+      path: apps/artifact-plane/src/pages/UnitPage.jsx
+      requires: Edit members, criteria, evidence and affected flows and name a missing
+        publication review.
+      basis: static
+    - id: change-unit-tests
+      kind: test
+      path: apps/artifact-plane/test/browser/change-unit-pages.spec.js
+      requires: Prove unit editing in the browser.
+      basis: observed
+      evidence:
+        - apps/artifact-plane/test/browser/change-unit-pages.spec.js
+    - id: scenario-tests
+      kind: test
+      path: apps/artifact-plane/test/browser/authoring-scenarios.spec.js
+      requires: Prove the missing publication review label and its action.
+      basis: observed
+      evidence:
+        - apps/artifact-plane/test/browser/authoring-scenarios.spec.js
   gaps:
     - Recorded passing assertions are not independently executed tests; missing
       merge evidence stays unresolved.

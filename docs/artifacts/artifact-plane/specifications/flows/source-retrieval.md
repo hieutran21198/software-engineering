@@ -43,8 +43,11 @@ flow:
     - id: read
       title: Read contained UTF-8 knowledge or tracked code/test support
       supports:
+        - authoring-contract
         - flow-reader
         - reader-tests
+        - document-page
+        - document-tests
     - id: freshness
       title: Validate source bytes and disclose stale or partial results
       supports:
@@ -54,6 +57,7 @@ flow:
     - id: return
       title: Return bounded excerpts and full source pointers
       supports:
+        - authoring-contract
         - flow-contract
         - index
         - adapters-tests
@@ -80,6 +84,12 @@ flow:
     - from: freshness
       to: return
   support:
+    - id: authoring-contract
+      kind: element
+      artifact: artifact-plane
+      element: specifications/authoring-workbench.md
+      requires: Define the work-centered shell, editable pages and journeys that this journey now serves.
+      basis: documented
     - id: reading-controls-browser
       kind: test
       path: apps/artifact-plane/test/browser/reading-controls.spec.js
@@ -221,6 +231,18 @@ flow:
       requires: Check measured gaps, native dropdown styles, keyboard access and
         completion feedback.
       basis: static
+    - id: document-page
+      kind: implementation
+      path: apps/artifact-plane/src/pages/DocumentPage.jsx
+      requires: Read and edit a document with contained links on one page.
+      basis: static
+    - id: document-tests
+      kind: test
+      path: apps/artifact-plane/test/browser/document-editing.spec.js
+      requires: Prove document reading and editing in the browser.
+      basis: observed
+      evidence:
+        - apps/artifact-plane/test/browser/document-editing.spec.js
   gaps:
     - Retrieval ranks candidates; it does not prove compatibility or complete
       system discovery.

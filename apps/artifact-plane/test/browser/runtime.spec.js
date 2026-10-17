@@ -3,10 +3,11 @@ import {execFileSync} from 'node:child_process';
 import {RuntimeStore} from '../../server/runtime-store.js';
 import {runtimeFixture,bind} from '../runtime-fixtures.js';
 import {git,fingerprint} from '../fixtures.js';
+import {openRepository,openUnit} from './workbench.js';
 const stateDir=()=>process.env.ARTIFACT_PLANE_TEST_STATE_DIR;
 function hook(root,session,kind,extra={}){execFileSync(process.execPath,['server/runtime-cli.js','hook','--state-dir',stateDir()],{cwd:new URL('../../',import.meta.url),input:JSON.stringify({cwd:root,session_id:session,hook_event_name:kind,turn_id:'turn',...extra}),stdio:['pipe','pipe','ignore']});}
-async function open(page,root){await page.goto('/');await page.getByLabel('Repository path').fill(root);await page.getByRole('button',{name:'Open repository',exact:true}).click();await expect(page.locator('.repo-info')).toContainText(root.split('/').at(-1));}
-async function unit(page){await page.getByRole('button',{name:'Units of work',exact:true}).click();await page.getByRole('navigation',{name:'Units of work'}).getByRole('button',{name:/Live execution/}).click();await page.getByRole('group',{name:'Unit view'}).getByRole('button',{name:'Implementation',exact:true}).click();}
+async function open(page,root){await openRepository(page,root);await expect(page.locator('.source-bar strong')).toHaveAttribute('title',root);}
+async function unit(page){await openUnit(page,'Live execution');await page.getByRole('group',{name:'Unit view'}).getByRole('button',{name:'Implementation',exact:true}).click();}
 test('hooks drive concurrent nodes, validation, readable labels and preserved selection',async({page})=>{
  const f=await runtimeFixture(),s=new RuntimeStore({stateDir:stateDir()}),errors=[];page.on('pageerror',e=>errors.push(e.message));try{
   const a=await bind(s,f.root),b=await bind(s,f.root,'b.md','other');const before=await fingerprint(f.root);await open(page,f.root);await unit(page);
@@ -41,7 +42,7 @@ test('identical task plans show only the selected source worktree activity',asyn
   await expect(task).toContainText('No recorded execution');await expect(task).not.toContainText('other-worktree');
   await bind(s,f.root,'a.md','selected-worktree');hook(f.root,'selected-worktree','UserPromptSubmit');
   await expect(task).toContainText('Processing');await expect(task).toContainText('selected-worktree');await expect(task).not.toContainText('other-worktree');await expect(task).toContainText('Captured revision:');
-  await page.getByLabel('Worktree',{exact:true}).selectOption(other);await expect(page.locator('.repo-info')).toContainText('scope-worker');await page.getByRole('navigation',{name:'Units of work'}).getByRole('button',{name:/Live execution/}).click();await page.getByRole('group',{name:'Unit view'}).getByRole('button',{name:'Implementation',exact:true}).click();await expect(task).toContainText('other-worktree');await expect(task).not.toContainText('selected-worktree');
+  await page.getByLabel('Worktree',{exact:true}).selectOption(other);await expect(page.getByRole('region',{name:'Work page'})).toContainText('Branch scope-worker');await unit(page);await expect(task).toContainText('other-worktree');await expect(task).not.toContainText('selected-worktree');
  }finally{s.close();git(f.root,'worktree','remove','--force',other);await f.cleanup();}
 });
 

@@ -73,6 +73,7 @@ export async function scanRepository(path, options = {}) {
   const loadedPaths=new Set();
   const files = new Map(),
     layouts = {},
+    copied = {},
     workingBytes = new Map(),
     diagnostics = [],
     unsafeTaskPaths = new Set();
@@ -228,7 +229,11 @@ export async function scanRepository(path, options = {}) {
       files.set(`${changePath}/README.md`, "");
       await load(`${changePath}/README.md`);
       await load(`${changePath}/dependencies.yaml`);
-      if(options.indexOnly)await load(`${changePath}/tasks/README.md`);
+      if(options.indexOnly){
+        await load(`${changePath}/tasks/README.md`);
+        // Index-only scans skip copied knowledge; record it so a retained legacy change never looks open.
+        if(inPlace&&(await directory(changePath)).some(e=>KNOWLEDGE_KINDS.includes(e.name)))(copied[entry.name]??=new Set()).add(change.name);
+      }
       for (const kind of [
         "requirements",
         "specifications",
@@ -274,7 +279,7 @@ export async function scanRepository(path, options = {}) {
     files,
     { path: root, branch, head, dirty: Boolean(status), status },
     diagnostics,
-    { layouts, baselines },
+    { layouts, baselines, copied },
   );
   contentHash.update(JSON.stringify(Object.entries(baselines).map(([id, b]) => [id, b.oid ?? b.state])));
   return { snapshot, files, unsafeTaskPaths, baselines, revision:contentHash.digest('hex') };
