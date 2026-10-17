@@ -99,6 +99,8 @@ test('uncommitted count opens the work page; the sidebar resizes and becomes a d
     await treeItem(page, /^Next identity rules/).click();await expect(region(page, 'Change page')).toBeVisible();
     await page.getByRole('button', {name: 'Uncommitted knowledge, 1 file', exact: true}).click();
     await expect(region(page, 'Work page')).toBeVisible();
+    // The work page moves focus to its uncommitted section once that section loads.
+    await expect(region(page, 'Work page').getByRole('heading', {name: /^Uncommitted knowledge/})).toBeFocused();
     const divider = page.getByRole('separator', {name: 'Resize navigation'});
     await expect(divider).toHaveAttribute('aria-valuenow', '264');
     await divider.focus();await page.keyboard.press('ArrowRight');await expect(divider).toHaveAttribute('aria-valuenow', '284');

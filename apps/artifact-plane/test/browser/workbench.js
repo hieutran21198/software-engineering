@@ -32,6 +32,7 @@ export const openChange = (page, title) => openRow(page, title, 'Change page');
 // A document opens from its kind in the sidebar: artifact, kind, then title.
 export async function openDocument(page, artifact, kind, title) {
   await openArtifact(page, artifact);
+  await showSidebar(page);
   const kindRow = treeItem(page, exact(kind)).first();
   if ((await kindRow.getAttribute('aria-expanded')) !== 'true') await kindRow.click();
   return openRow(page, title, kind === 'Flows' ? 'Flow page' : 'Document page');
@@ -69,6 +70,7 @@ export async function layoutFacts(page) {
       treesInMain: main.querySelectorAll('[role="tree"]').length,
       modeControls: [...main.querySelectorAll('button')].filter(visible).map(name).filter(n => /^(Established|Planning|All snapshots)$/.test(n)),
       duplicates: [...seen].filter(([, n]) => n > 1).map(([c]) => c),
+      controls: controls.length,
     };
   });
 }
