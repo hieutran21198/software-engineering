@@ -21,10 +21,11 @@ const plural = (n, word, many = word) => `${n} ${n === 1 ? word : many}`;
 const list = value => Array.isArray(value) ? value : [];
 
 // One expanded step: grouped supports and the six step actions, one form at a time.
-function StepDetail({step, index, steps, support, resolved, editable, run, snapshot, owner, self, go, tracked, action, onAction}) {
+function StepDetail({step, index, steps, support, resolved, editable, run, snapshot, owner, self, go, tracked, action, onAction, sources, flowId}) {
   const [error, setError] = useState(null), quick = (operation, input) => {setError(null);run(operation, input).catch(setError);};
   const supports = list(step.supports).map(id => support.find(s => s.id === id) || {id, missing: true});
   const close = () => onAction(null);
+  const readable = path => path && flowId ? list(sources).find(s => s.path === path) : null;
   // A support that only this step uses is removed from the flow; a shared one only leaves this step.
   const removeSupport = id => steps.some(s => s.id !== step.id && list(s.supports).includes(id))
     ? quick('flow.step.update', {step: step.id, supports: list(step.supports).filter(x => x !== id)})
@@ -38,7 +39,7 @@ function StepDetail({step, index, steps, support, resolved, editable, run, snaps
       return <div key={group} className="support-group">
         <h3>{label}</h3>
         <ul>{items.map(s => {const t = supportTarget(snapshot, s), unresolved = resolved.get(s.id) === false;return <li key={s.id}>
-          {t.page ? <button className="link" onClick={() => go(t.page)}>{t.title}</button> : t.title ? <span>{t.title}</span> : <span className="mono">{t.path}</span>}
+          {t.page ? <button className="link" onClick={() => go(t.page)}>{t.title}</button> : readable(t.path) ? <button className="link mono" onClick={() => go({kind: 'source', artifact: owner, flow: self, flowId, sourceId: readable(t.path).id, path: t.path})}>{t.path}</button> : t.title ? <span>{t.title}</span> : <span className="mono">{t.path}</span>}
           <span className={`basis ${unresolved ? 'unresolved' : ''}`}>{s.basis || 'basis unknown'}{s.basis === 'observed' && list(s.evidence).length ? ` · ${plural(s.evidence.length, 'evidence file', 'evidence files')}` : ''}{unresolved ? ' · unresolved' : ''}</span>
           {editable && <button className="icon support-remove" aria-label={`Remove ${t.title || t.path || s.id} from this step`} title="Remove from this step" onClick={() => removeSupport(s.id)}>×</button>}
         </li>;})}</ul>
@@ -154,7 +155,7 @@ export default function FlowPage({page}) {
               {out.length > 0 && <span className="step-paths">{out.map(p => <span key={p.key}>{p.back ? '↩' : '→'} <b>{p.label}</b>{p.condition ? ` when ${sentence(p.condition)}.` : ''}</span>)}</span>}
             </button>
             {expanded && <StepDetail step={step} index={i} steps={steps} support={support} resolved={resolved} editable={editable} run={run} snapshot={snapshot}
-              owner={artifact.id} self={page.flow} go={go} tracked={tracked} action={action} onAction={setAction}/>}
+              owner={artifact.id} self={page.flow} go={go} tracked={tracked} action={action} onAction={setAction} sources={detail.data?.sources} flowId={detail.data?.flow?.id}/>}
           </div>
         </li>;})}
       </ol>
