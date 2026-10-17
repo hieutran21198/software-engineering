@@ -66,14 +66,14 @@ function commitMessage(entries, changes) {
   return `Update knowledge of ${owners.filter(o => o !== 'units-of-work').join(', ') || 'units of work'}`;
 }
 
-function UncommittedSection({entries, changes, snapshot, worktree, focus}) {
+function UncommittedSection({entries, changes, snapshot, worktree, focus, at}) {
   const edit = useEdit(), heading = useRef(null);
   const [excluded, setExcluded] = useState(() => new Set()), [typed, setTyped] = useState(null), [busy, setBusy] = useState(false), [error, setError] = useState(null);
   useEffect(() => {
     if (focus !== 'uncommitted') return;
     const frame = requestAnimationFrame(() => {heading.current?.scrollIntoView({block: 'start'});heading.current?.focus({preventScroll: true});});
     return () => cancelAnimationFrame(frame);
-  }, [focus]);
+  }, [focus, at]);
   const rows = entries.map(e => ({...e, ...describeFile(e.path, snapshot, worktree), badge: fileBadge(e.code)}));
   // Two files with one title are named by their paths.
   const counts = rows.reduce((map, r) => map.set(r.title, (map.get(r.title) || 0) + 1), new Map());
@@ -154,7 +154,7 @@ export default function WorkPage({page}) {
       <h2>No open change.</h2>
       {editable && startButton('primary')}
     </div> : changes.map(c => <ChangeCard key={`${c.artifact}/${c.name}`} change={c} snapshot={snapshot} worktree={worktree} go={go}/>)}
-    <UncommittedSection entries={entries} changes={changes} snapshot={snapshot} worktree={worktree} focus={page.focus}/>
+    <UncommittedSection entries={entries} changes={changes} snapshot={snapshot} worktree={worktree} focus={page.focus} at={page.at}/>
     <Section title="Dependencies" actions={<button className="quiet" aria-expanded={graph} onClick={() => setGraph(value => !value)}>{graph ? 'Hide graph' : 'Show graph'}</button>}>
       <p className="muted">{dependencySentence(snapshot)}</p>
       {graph && <DependencyGraph snapshot={snapshot} onOpen={go}/>}

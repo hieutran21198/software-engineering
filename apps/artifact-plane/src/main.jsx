@@ -242,7 +242,7 @@ export function ProjectExplorer({active: isActive = true, initialPath = '', onOp
 
   return <EditContext.Provider value={editing}><ShellContext.Provider value={shell}><RuntimeProvider snapshot={snapshot} active={isActive}>
     {isActive && slot && snapshot && !editingRepo && createPortal(<RecordedAvailable>{recorded => <TopBar snapshot={snapshot} worktreePath={worktreePath} onWorktree={activateWorktree} opening={openingWorktree} busy={busy}
-      stale={disconnected || Boolean(error)} uncommitted={uncommitted} onUncommitted={() => go({kind: 'work', focus: 'uncommitted'})} onRefresh={() => open(projectRoot, true)}
+      stale={disconnected || Boolean(error)} uncommitted={uncommitted} onUncommitted={() => go({kind: 'work', focus: 'uncommitted', at: Date.now()})} onRefresh={() => open(projectRoot, true)}
       onCreateBranch={createBranch} drawer={{open: drawerOpen, id: drawerId, toggle: () => setDrawerOpen(value => !value)}} recorded={recorded} onOpen={go}
       onChangeRepository={() => {if (leave()) setEditingRepo(true);}}/>}</RecordedAvailable>, slot)}
     <div className="explorer">
