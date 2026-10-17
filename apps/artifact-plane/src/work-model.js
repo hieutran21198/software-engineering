@@ -58,7 +58,7 @@ export function treeRows({snapshot, worktree, filter = '', expanded}) {
   const changes = currentChanges(worktree), units = currentUnits(worktree);
   group('g:work', 'Current work', changes.length + units.length, () => [
     ...changes.flatMap(c => {const p = phase(c);return leaf({key: `c:${c.artifact}/${c.name}`, level: 2, label: `${c.artifact} / ${c.name}`, chip: p.chip, hint: p.hint, page: {kind: 'change', artifact: c.artifact, change: c.name}}, c.artifact, c.name);}),
-    ...units.flatMap(u => leaf({key: `w:${u.id}`, level: 2, label: u.title, detail: unitStatus(u) || `${u.members.length} changes`, page: {kind: 'unit', unit: u.id}}, u.id)),
+    ...units.flatMap(u => leaf({key: `w:${u.id}`, level: 2, label: u.title, detail: unitStatus(u) || `${u.members.length} ${u.members.length === 1 ? 'change' : 'changes'}`, page: {kind: 'unit', unit: u.id}}, u.id)),
   ]);
   group('g:artifacts', 'Artifacts', snapshot.artifacts.length, () => [...leaf({key: 'graph', level: 2, label: 'Dependency graph', action: true, page: {kind: 'graph'}}), ...leaf({key: 'flows', level: 2, label: 'System flows', action: true, page: {kind: 'flow'}}), ...snapshot.artifacts.flatMap(a => {
     const docs = artifactDocuments(a), key = `a:${a.id}`, children = [];
