@@ -111,10 +111,10 @@ export default function ChangeReview({root,contextKey,epoch,session,active,updat
 <p key={i}>{limit}</p>)}</details>
 </>}</div>;
  return <>{active&&<section className="change-review" aria-label="Change review">
-<div className="review-heading">
+{onBack&&<div className="review-heading">
 <button onClick={onBack}>Back to delivery</button>
 <h2>{artifact} / {change}</h2>
-</div>
+</div>}
 <div role="status" aria-label="Review status">{displayStatus}</div>
 {packet&&<>
 {packet.data.baseline.kind==='protected-ref'?<p>Baseline: established on {String(packet.data.baseline.ref||'main').replace('refs/heads/','')} · {packet.data.baseline.baselineLayout==='legacy'?`legacy snapshot ${packet.data.baseline.version||''}`:`version ${packet.data.baseline.version||'none'}`} · {packet.data.baseline.state}{packet.data.baseline.reason?` · ${packet.data.baseline.reason}`:''}</p>:<p>Baseline: declared-current {packet.context.baseline.version||(packet.data.baseline.state==='initial'?'None (initial)':'Unavailable')} · {packet.data.baseline.state}</p>}
