@@ -14,10 +14,19 @@ async function editable(files = inPlaceFixture(), branch = 'work') {
   return fixture;
 }
 // Preview, then apply with the previewed digests, as the user interface does.
+// Every applied operation changes exactly the files that its response lists,
+// with the bytes that its preview showed.
 function operator(root, service = createKnowledgeService()) {
   const run = async (operation, input) => {
+    const before = await fingerprint(root);
     const preview = await service.apply({path: root, operation, input, dryRun: true});
-    return service.apply({path: root, operation, input, expected: preview.expected});
+    assert.deepEqual(await fingerprint(root), before);
+    const applied = await service.apply({path: root, operation, input, expected: preview.expected});
+    const after = await fingerprint(root);
+    assert.deepEqual(Object.keys(diff(before, after)).sort(), applied.files.map(x => x.path).sort(), operation);
+    for (const file of applied.files) assert.equal(after[file.path] === undefined ? null : Buffer.from(after[file.path], 'base64').toString(), file.after, file.path);
+    assert.deepEqual(applied.files.map(x => x.after), preview.files.map(x => x.after));
+    return applied;
   };
   run.service = service;
   return run;
