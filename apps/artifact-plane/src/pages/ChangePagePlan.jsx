@@ -20,7 +20,7 @@ function StatusDot({state}) {
 
 // Observed execution of one task, shown only in its expanded row.
 function TaskRuntime({change, task, worktreePath}) {
-  const value = useTaskRuntime(change.artifact, change.name, task.path, undefined, worktreePath);
+  const value = useTaskRuntime(change.artifact, change.name, task.path, undefined, worktreePath, task);
   const attempt = value.attempts[0];
   return <p className="task-runtime"><span className="muted">Execution</span> <Badge tone={['done'].includes(value.state) ? 'ok' : ['failed', 'blocked', 'interrupted'].includes(value.state) ? 'failed' : ''}>{stateLabels[value.state] || 'Unknown'}</Badge>
     {attempt && <span className="muted"> {value.attempts.length > 1 ? `${value.attempts.length} agents` : attempt.agent || attempt.session} · {elapsedLabel(Math.max(...value.attempts.map(a => a.elapsedMs)))}{attempt.stale ? ` · stale, last observed ${attempt.lastObservedState}` : ''}</span>}

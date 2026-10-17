@@ -3,6 +3,7 @@ import {mkdir, writeFile, readFile, rm} from 'node:fs/promises';
 import {execFileSync} from 'node:child_process';
 import {join} from 'node:path';
 import {RuntimeStore} from '../../server/runtime-store.js';
+import {runtimeFixture, bind} from '../runtime-fixtures.js';
 import {formatContextMarkdown} from '../../src/context-packet.js';
 import {fixtureRepository, orderingFixture, identity, versionRecord} from '../fixtures.js';
 import {openRepository, openChange, region, tree, treeItem, setHistory, refresh, noOverflow, layoutFacts} from './workbench.js';
@@ -231,6 +232,16 @@ function liveRepository() {
 }
 const bindTask = (store, root, file, session) => store.bind({root, artifact: 'demo', change: 'change-live', task: file, session});
 const execution = (page, number) => details(page, number).locator('.task-runtime');
+test('a task of a legacy change also shows its observed execution', async ({page}) => {
+  const f = await runtimeFixture(), s = new RuntimeStore({stateDir: stateDir()});
+  try {
+    await openRepository(page, f.root);await openChange(page, 'Live');
+    await row(page, '01', 'Task A').click();
+    await expect(execution(page, '01')).toContainText('No recorded execution');
+    await bind(s, f.root, 'a.md', 'legacy-session');hook(f.root, 'legacy-session', 'UserPromptSubmit');
+    await expect(execution(page, '01')).toContainText('Processing');await expect(execution(page, '01')).toContainText('legacy-session ·');
+  } finally {s.close();await f.cleanup();}
+});
 test('the expanded task row shows observed execution; a completed task never observed says so', async ({page}) => {
   const f = await liveRepository(), s = new RuntimeStore({stateDir: stateDir()}), before = await fingerprint(f.root);
   try {
