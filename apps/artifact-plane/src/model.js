@@ -26,6 +26,21 @@ export function detectLayout(files, id) {
 export const currentSource = (artifact) =>
   artifact?.layout === "in-place" ? WORKING : artifact?.currentVersion ? `version:${artifact.currentVersion}` : null;
 const info = (ds, code, path, message) => ds.push({ code, path, message, severity: "info" });
+// The first level-1 heading outside front matter and code fences, or null.
+export function headingTitle(markdown = "") {
+  let fence = null;
+  for (const line of markdown.replace(/^---\r?\n[\s\S]*?\r?\n---(?:\r?\n|$)/, "").split(/\r?\n/)) {
+    const marker = line.match(/^\s{0,3}(`{3,}|~{3,})/);
+    if (marker) fence = fence ? (marker[1][0] === fence[0] && marker[1].length >= fence.length ? null : fence) : marker[1];
+    else if (!fence) {
+      const heading = line.match(/^ {0,3}#[ \t]+(.+?)(?:[ \t]+#+)?[ \t]*$/);
+      if (heading) return heading[1].trim();
+    }
+  }
+  return null;
+}
+// Pages show documents by title; a document without a heading shows its file name.
+export const documentTitle = (markdown, path) => headingTitle(markdown) || path.split("/").at(-1).replace(/\.md$/, "");
 export function safeElementPath(path) {
   return (
     typeof path === "string" &&
@@ -244,6 +259,7 @@ function inPlaceArtifact(a, files, baseline, diagnostics, known = []) {
         path: rest,
         source: WORKING,
         state: baseline?.state === "available" ? baseline.status?.get(path) || "added" : "unknown",
+        title: documentTitle(markdown, rest),
         markdown,
         file: path,
       });
@@ -253,6 +269,7 @@ function inPlaceArtifact(a, files, baseline, diagnostics, known = []) {
         artifact: a.id,
         path: change[2],
         source: `change:${change[1]}`,
+        title: documentTitle(markdown, change[2]),
         markdown,
         file: path,
       });
@@ -312,6 +329,7 @@ export function buildSnapshot(files, repository = {}, inputDiagnostics = [], opt
     }
     a.changes = [...changes].sort().map((name) => ({
       name,
+      title: headingTitle(files.get(`${prefix}changes/${name}/README.md`) || ""),
       readme: files.get(`${prefix}changes/${name}/README.md`) || "",
     }));
     if (a.layout === "in-place") {
@@ -372,6 +390,7 @@ export function buildSnapshot(files, repository = {}, inputDiagnostics = [], opt
             artifact: a.id,
             path: elementPath,
             source,
+            title: documentTitle(markdown, elementPath),
             markdown,
             file: path,
           });

@@ -12,4 +12,4 @@ export function refreshQueue(load){
 }
 export const repositoryQuery=(body,signal)=>postJSON('/api/repository/query',body,signal);
 export function mergeUnit(snapshot,key,unit){const [path,id]=JSON.parse(key);return {...snapshot,workflow:{...snapshot.workflow,worktrees:snapshot.workflow.worktrees.map(w=>w.path!==path?w:{...w,unitsOfWork:w.unitsOfWork.map(u=>u.id===id?unit:u)})}};}
-export function mergeChange(snapshot,key,change){const [path,artifact,name]=JSON.parse(key);return {...snapshot,workflow:{...snapshot.workflow,worktrees:snapshot.workflow.worktrees.map(w=>w.path!==path?w:{...w,changes:w.changes.map(c=>c.artifact===artifact&&c.name===name?change:c)})}};}
+export function mergeChange(snapshot,key,change){const [path,artifact,name]=JSON.parse(key);return {...snapshot,workflow:{...snapshot.workflow,worktrees:snapshot.workflow.worktrees.map(w=>w.path!==path?w:{...w,changes:w.changes.map(c=>c.artifact===artifact&&c.name===name?{title:c.title??null,...change}:c)})}};}
