@@ -89,8 +89,9 @@ export default function DocumentPage({entry, snapshot, root, worktree, epoch, pr
     await edit.run('document.properties.set', {path: entry.source, frontMatter: text}, {expected: loaded ? {[entry.source]: loaded.digest} : undefined});
   }
   const replaceReference = async (ref, input) => {
-    await edit.run('reference.remove', {path: entry.source, artifact: ref.artifact, element: ref.element});
+    // Add first: a failed add keeps the old reference.
     await edit.run('reference.add', {path: entry.source, ...input});
+    await edit.run('reference.remove', {path: entry.source, artifact: ref.artifact, element: ref.element});
   };
   const openTarget = ref => {
     const target = snapshot.artifacts.find(a => a.id === ref.artifact)?.elements.find(e => e.id === ref.targetId);
@@ -119,7 +120,7 @@ export default function DocumentPage({entry, snapshot, root, worktree, epoch, pr
           <span className="reference-reason">{r.reason}</span>
           {r.diagnostic && <span className="error-text">{r.diagnostic}</span>}
           {writable && <span className="row-actions">
-            {!r.resolved && <ActionForm label="Fix" submitLabel="Replace reference" fields={referenceFields(snapshot, {requires: r.reason})} onSubmit={v => replaceReference(r, v)}/>}
+            {!r.resolved && <ActionForm label="Fix" submitLabel="Replace reference" fields={referenceFields(snapshot, {artifact: snapshot.artifacts.some(a => a.id === r.artifact) ? r.artifact : undefined, requires: r.reason})} onSubmit={v => replaceReference(r, v)}/>}
             <RemoveButton label={`Remove reference to ${r.artifact} / ${r.element}`} onRemove={() => edit.run('reference.remove', {path: entry.source, artifact: r.artifact, element: r.element})}/>
           </span>}
         </li>)}</ul> : <p className="muted">No references.</p>}
@@ -140,7 +141,7 @@ export default function DocumentPage({entry, snapshot, root, worktree, epoch, pr
         <OperationError error={error}/>
         {conflict && <ConflictDialog current={conflict.current} draft={draft} busy={busy} onReload={() => reload()} onOverwrite={overwrite}/>}
         {preview ? <div className="editor-preview"><Markdown text={draft}/></div> :
-          <textarea className="text-editor" aria-label="Document text" value={draft} spellCheck onChange={e => setDraft(e.target.value)}
+          <textarea className="text-editor" aria-label="Document text" value={draft} spellCheck autoFocus onChange={e => setDraft(e.target.value)}
             onKeyDown={e => {if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === 's') {e.preventDefault();save();}}}/>}
       </>}
     </section>}
