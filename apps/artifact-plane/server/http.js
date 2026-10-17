@@ -8,6 +8,9 @@ import {createFlowService} from './flow-index.js';
 import {createReviewService} from './change-review.js';
 import {queryRepository} from './repository-query.js';
 import { runtimeService } from "./runtime-api.js";
+import {createKnowledgeService} from './knowledge-operations.js';
+import {knowledgeGit} from './knowledge-git.js';
+import {errorBody as editError} from './knowledge-writer.js';
 const DIST = fileURLToPath(new URL("../dist/", import.meta.url));
 const mime = {
   ".html": "text/html; charset=utf-8",
@@ -36,6 +39,8 @@ export function createAppServer(options = {}) {
   const getFlows=()=>flows??=(createFlowService({stateDir:options.stateDir,roots:options.flowRoots||[]}));
   let reviews=options.reviewService;
   const getReviews=()=>reviews??=createReviewService({roots:options.reviewRoots||options.flowRoots||[]});
+  let knowledge=options.knowledgeService;
+  const getKnowledge=()=>knowledge??=createKnowledgeService();
   const observation=options.repositoryObservation||{};
   const repositories=repositoryService({...observation,sample:async(root,settings)=>{const base=observation.sample?await observation.sample(root,settings):await settings.base(settings);return registeredSourceFingerprint(root,base,[...(flows?.observedSources(root)||[]),...(reviews?.observedSources(root)||[])],settings);}});
   const server = createServer(async (req, res) => {
@@ -57,6 +62,16 @@ export function createAppServer(options = {}) {
         if (req.method !== "GET") return json(res, 405, {error: "Use GET for events."});
         if (!runtime.subscribe(req, res, security)) return json(res, 429, {error: "Too many observation clients."});
         return;
+      }
+      if (url.pathname === "/api/knowledge/edit" || url.pathname === "/api/knowledge/git") {
+        if (req.method !== "POST") return json(res, 405, {error: "Use POST to edit knowledge."});
+        if (req.headers["content-type"]?.split(";")[0].trim() !== "application/json") return json(res, 415, {error: "Send application/json."});
+        const chunks = [];let size = 0;
+        for await (const chunk of req) {size += chunk.length;if (size > 2 * 1024 * 1024) return json(res, 413, {error: "Request is too large."});chunks.push(chunk);}
+        let body;
+        try {body = JSON.parse(Buffer.concat(chunks).toString("utf8"));} catch {return json(res, 400, {error: "Request must contain valid JSON."});}
+        try {return json(res, 200, url.pathname === "/api/knowledge/edit" ? await getKnowledge().apply(body) : await knowledgeGit(body));}
+        catch (error) {const {status, body: payload} = editError(error);return json(res, status, payload);}
       }
       if (["/api/explore", "/api/runtime/query", "/api/repository/query", "/api/flows/query", "/api/review/query"].includes(url.pathname)) {
         if (req.method !== "POST")

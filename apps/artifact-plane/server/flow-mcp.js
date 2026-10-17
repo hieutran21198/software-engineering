@@ -1,10 +1,13 @@
 import {McpServer} from '@modelcontextprotocol/sdk/server/mcp.js';
+import {realpath} from 'node:fs/promises';
 import {z} from 'zod/v4';
 import {createFlowService} from './flow-index.js';
 import {createReviewService} from './change-review.js';
+import {createKnowledgeService, OPERATION_NAMES} from './knowledge-operations.js';
+import {errorBody as editError} from './knowledge-writer.js';
 
 // Both adapters pass selectors through the same read-only query service.
-export function createFlowMcpServer({service,reviewService,roots=[],stateDir}={}){
+export function createFlowMcpServer({service,reviewService,knowledgeService,roots=[],stateDir,allowWrites=false}={}){
  if(!service&&!roots.length)throw Error('Configure at least one repository root.');
  let flows=service,reviews=reviewService;
  const getService=()=>flows??=createFlowService({roots,stateDir});
@@ -36,5 +39,21 @@ export function createFlowMcpServer({service,reviewService,roots=[],stateDir}={}
    return {content:[{type:'text',text:JSON.stringify(result)}],structuredContent:result};
   }catch(error){return {isError:true,content:[{type:'text',text:JSON.stringify({error:error.status?error.message:'Change retrieval failed.',status:error.status||500})}]};}
  });
+ // Write tools exist only with --allow-writes. They share the HTTP operation service.
+ if(allowWrites){
+  let knowledge=knowledgeService;const getKnowledge=async()=>knowledge??=createKnowledgeService({roots:await Promise.all(roots.map(r=>realpath(r).catch(()=>r)))});
+  const editInput={path:common.path,worktree:common.worktree,operation:z.enum(OPERATION_NAMES),input:z.record(z.string(),z.unknown()).optional(),expected:z.record(z.string(),z.string().regex(/^[a-f0-9]{64}$/)).optional()};
+  for(const [name,description,dryRun] of [
+   ['preview_knowledge_operation','Plan a knowledge operation, validate the result and return the file changes and the expected digests. Writes nothing.',true],
+   ['apply_knowledge_operation','Apply a knowledge operation in docs/artifacts of a worktree with a non-protected branch. Pass the expected digests from the preview or from read_change_context_source fingerprints.',false],
+  ])server.registerTool(name,{description,inputSchema:z.strictObject(editInput),annotations:{readOnlyHint:false,destructiveHint:true,idempotentHint:false,openWorldHint:false}},async args=>{
+   try{
+    const path=args.path??(roots.length===1?roots[0]:undefined);
+    if(!path)return {isError:true,content:[{type:'text',text:JSON.stringify({error:'Select one configured repository path.',status:400})}]};
+    const result=await (await getKnowledge()).apply({...args,path,dryRun});
+    return {content:[{type:'text',text:JSON.stringify(result)}],structuredContent:result};
+   }catch(error){const {status,body}=editError(error);return {isError:true,content:[{type:'text',text:JSON.stringify({...body,status})}]};}
+  });
+ }
  return {server,get service(){return flows;},async close(){await server.close();await flows?.close();}};
 }

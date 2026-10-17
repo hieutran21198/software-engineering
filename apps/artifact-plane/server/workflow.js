@@ -80,7 +80,7 @@ function declaredRecord(value, path, files, diagnostics, label) {
   if (!detail) {diagnostics.push({code: 'missing-evidence', path: value.source, message: `${label} source or nonempty details cannot be resolved.`});return null;}
   return {result: value.result, source: value.source};
 }
-function declaredChange(artifact, name, files, data, diagnostics) {
+export function declaredChange(artifact, name, files, data, diagnostics) {
   const prefix = `docs/artifacts/${artifact.id}/changes/${name}/`;
   const steps = phases.map(step => ({name: step, state: 'not-declared', evidence: [], commits: [], completionCommit: null}));
   const step = label => steps.find(s => s.name === label);

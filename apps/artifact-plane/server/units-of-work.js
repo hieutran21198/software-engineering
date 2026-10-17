@@ -257,7 +257,7 @@ export async function publication(root, prefix, files, git, reviewText = '', rev
     return {state: reviews.length ? 'established' : 'unverified', reasons: reviews.length ? [] : [layout === 'in-place' ? 'Knowledge is published; no publication_reviews record covers this version.' : 'Knowledge is published; all required implementation merges lack explicit scoped Publication review evidence.'], sources};
   } catch {return {state:'unknown',reasons:['Protected-ref snapshot evidence could not be read.'],sources:[]};}
 }
-function anchor(text) {return text.toLowerCase().replace(/[^\p{L}\p{N}_\s-]/gu,'').trim().replace(/\s/g,'-');}
+export function anchor(text) {return text.toLowerCase().replace(/[^\p{L}\p{N}_\s-]/gu,'').trim().replace(/\s/g,'-');}
 export function evidenceDetail(markdown, fragment) {
   const body = markdown.replace(/^---\r?\n[\s\S]*?\r?\n---(?:\r?\n|$)/,'');
   const tokens = marked.lexer(body);
