@@ -1,0 +1,35 @@
+/* Artifact page: purpose lead, current work notice, knowledge by kind, versions. */
+.artifact-page .subtitle { display: flex; flex-wrap: wrap; align-items: center; column-gap: 4px; row-gap: 2px; }
+.artifact-page .subtitle button.link { font-weight: 400; }
+.artifact-page .dependency-edit { height: 28px; margin-left: 4px; }
+.artifact-page .page-header + .inline-form { margin: -4px 0 24px; }
+.artifact-graph { margin-bottom: 24px; }
+.artifact-graph .graph-hint { margin-top: 8px; }
+.dependency-explanation { margin-top: 16px; }
+.dependency-explanation .section-head { margin-bottom: 4px; }
+.dependency-edge + .dependency-edge { margin-top: 12px; }
+.dependency-edge > .tiny { margin-bottom: 8px; }
+.dependency-explanation > .tiny:last-child { margin-top: 8px; }
+.dependency-reasons { margin: 4px 0 0; padding-left: 18px; font-size: 13px; }
+.dependency-reasons li + li { margin-top: 4px; }
+.purpose { margin-bottom: 24px; }
+.purpose .lead .markdown p { margin: 0 0 8px; }
+.purpose .lead .knowledge-link { height: auto; padding: 0; border: 0; background: none; color: var(--accent); font: inherit; display: inline; white-space: normal; text-align: left; }
+.purpose .lead code { font-size: .82em; background: var(--soft); border-radius: 4px; padding: 1px 4px; }
+.purpose-more { font-size: 14px; }
+.purpose-more button.link { font-weight: 400; }
+.no-change .inline-form { margin-bottom: 16px; }
+.artifact-page .section .inline-form { margin-bottom: 12px; }
+.artifact-page .empty-kind { padding: 10px 4px; border-top: 1px solid var(--divider); font-size: 13px; }
+.artifact-page .show-all { font-weight: 400; }
+.artifact-page .notice p { margin: 0; }
+.artifact-page .notice button.link { font-weight: 400; }
+.version-list { margin-top: 12px; }
+.version-list .version-number { font-family: var(--mono); font-size: 12px; color: var(--muted); min-width: 52px; }
+.migration { display: flex; flex-direction: column; gap: 8px; }
+.migration .inline-form { background: var(--bg); }
+.migration-files { margin: 0; padding-left: 18px; font-size: 13px; max-height: 240px; overflow-y: auto; }
+.dependency-reasons li > .tiny { display: block; }
+.notice > .migration:has(.inline-form) { flex-basis: 100%; }
+.migration .inline-form { color: var(--text); max-width: none; }
+@media (max-width: 800px) { .artifact-page .page-header > button.quiet { margin-left: -8px; } .artifact-page .dependency-edit { height: 32px; } }
