@@ -8,6 +8,7 @@ import {
   fingerprint,
   git,
 } from "../fixtures.js";
+import {selectOnGraph, details, documentPage, openGraph, openRepository} from "./workbench.js";
 
 test("B1-B7: explore, expand, select, pan, zoom, proposals, diagnostics, refresh; no repository writes", async ({
   page,
@@ -24,7 +25,7 @@ test("B1-B7: explore, expand, select, pan, zoom, proposals, diagnostics, refresh
     external = [];
   page.on("pageerror", (e) => errors.push(e.message));
   page.on("request", (request) => {
-    if (!request.url().startsWith("http://127.0.0.1:4311"))
+    if (new URL(request.url()).hostname !== "127.0.0.1")
       external.push(request.url());
   });
   try {
@@ -32,22 +33,16 @@ test("B1-B7: explore, expand, select, pan, zoom, proposals, diagnostics, refresh
     await expect(
       page.getByRole("heading", { name: "Artifact Plane", exact: true }),
     ).toBeVisible();
-    await page.getByLabel("Repository path").fill(fixture.root);
-    await page.getByRole("button", { name: "Open repository" }).click();
-    const nav = page.getByRole("navigation", { name: "Artifacts" });
-    await expect(nav.getByRole("button", { name: /Tenant/ })).toBeVisible();
-    await nav.getByRole("button", { name: /Initial/ }).click();
-    const panel = page.getByRole("complementary", {
-      name: "Selection details",
-    });
+    await openRepository(page, fixture.root);
+    const panel = await selectOnGraph(page, "Initial");
     await expect(
       panel.getByText("No established version", { exact: true }),
     ).toBeVisible();
     await expect(
-      panel.getByText("Active change: change-initial"),
+      panel.getByText("Open change: change-initial"),
     ).toBeVisible();
-    await nav.getByRole("button", { name: /Authentication/ }).click();
-    await expect(panel.getByText("Active change: change-login")).toBeVisible();await panel.getByText("Dependencies",{exact:true}).click();
+    await page.locator(".canvas-surface .react-flow__node-artifact").filter({hasText: "Authentication"}).click();
+    await expect(panel.getByText("Open change: change-login")).toBeVisible();await panel.getByText("Dependencies",{exact:true}).click();
     await expect(
       panel.getByRole("heading", { name: "Established dependencies" }),
     ).toBeVisible();
@@ -90,9 +85,9 @@ test("B1-B7: explore, expand, select, pan, zoom, proposals, diagnostics, refresh
         exact: true,
       }),
     ).toBeVisible();
-    await panel.getByRole("button",{name:"Read document",exact:true}).click();await expect(page.getByRole("region",{name:"Knowledge reader"})).toContainText("Stable identity rules.");
+    await panel.getByRole("button",{name:"Read document",exact:true}).click();await expect(documentPage(page)).toContainText("Stable identity rules.");
     expect(await page.evaluate(() => window.compromised)).toBeUndefined();
-    await expect(page.getByRole("region",{name:"Knowledge reader"}).locator("a[href], img, script")).toHaveCount(0);await page.getByRole("button",{name:"Back to graph",exact:true}).click();
+    await expect(documentPage(page).locator("a[href], img, script")).toHaveCount(0);await page.getByRole("button",{name:"Back to graph",exact:true}).click();
     // Built-in zoom and fit controls actually change viewport state.
     const viewport = page.locator(".canvas-surface .react-flow__viewport");
     const initialTransform = await viewport.getAttribute("style");
@@ -150,7 +145,7 @@ test("B1-B7: explore, expand, select, pan, zoom, proposals, diagnostics, refresh
     );
     await page.getByRole("button", { name: "Refresh", exact: true }).click();
     await panel.getByRole('button',{name:'Read document',exact:true}).click();
-    await expect(page.getByRole('region',{name:'Knowledge reader'}).getByRole('heading',{name:'Updated identity',exact:true})).toBeVisible();
+    await expect(documentPage(page).getByRole('heading',{name:'Updated identity',exact:true})).toBeVisible();
     expect(errors).toEqual([]);
     expect(external).toEqual([]);
     await page.screenshot({
@@ -175,6 +170,8 @@ test("invalid path error and empty artifact directory are usable", async ({
     await expect(page.getByRole("alert")).toContainText("does not exist");
     await page.getByLabel("Repository path").fill(fixture.root);
     await page.getByRole("button", { name: "Open repository" }).click();
+    await expect(page.getByRole("region", {name: "Open changes"})).toContainText("No open change");
+    await openGraph(page);
     await expect(
       page.getByRole("heading", { name: "No artifacts found" }),
     ).toBeVisible();
@@ -189,13 +186,8 @@ test("B8-B9: collapsible type groups, logical source order, compact records, and
   const fixture = await fixtureRepository(orderingFixture());
   const before = await fingerprint(fixture.root);
   try {
-    await page.goto("/");
-    await page.getByLabel("Repository path").fill(fixture.root);
-    await page.getByRole("button", { name: "Open repository" }).click();
-    await page
-      .getByRole("navigation", { name: "Artifacts" })
-      .getByRole("button", { name: /Knowledge/ })
-      .click();
+    await openRepository(page, fixture.root);
+    await selectOnGraph(page, "Knowledge");
     await page
       .getByRole("button", { name: "Expand Knowledge", exact: true })
       .click();
@@ -287,10 +279,8 @@ test('B11: history references reveal only their source and collapse preserves de
   files.set('docs/artifacts/knowledge/versions/1.0.0/specifications/contract.md', '# History reference\n\n```yaml\nreferences:\n  - artifact: knowledge\n    element: requirements/need.md\n    requires: proposed requirement\n    status: proposed\n    change: change-next\n```\n');
   const fixture=await fixtureRepository(files),before=await fingerprint(fixture.root);
   try {
-    await page.goto('/');
-    await page.getByLabel('Repository path').fill(fixture.root);
-    await page.getByRole('button',{name:'Open repository'}).click();
-    await page.getByRole('navigation',{name:'Artifacts'}).getByRole('button',{name:/Knowledge/}).click();
+    await openRepository(page, fixture.root);
+    await selectOnGraph(page, 'Knowledge');
     await page.getByRole('button',{name:'Expand Knowledge',exact:true}).click();
     const history=page.getByRole('button',{name:'Historical documents in Knowledge',exact:true});
     await expect(history).toHaveAttribute('aria-expanded','false');

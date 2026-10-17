@@ -2,6 +2,7 @@ import {test,expect} from '@playwright/test';
 import {mkdir,writeFile} from 'node:fs/promises';
 import {join} from 'node:path';
 import {fixtureRepository,fingerprint,git,identity,versionRecord} from '../fixtures.js';
+import {openRepository,selectOnGraph,openChange,documentPage,noOverflow} from './workbench.js';
 // In-place layout: working knowledge, the established view on main, delivery
 // records with declared evidence, and the Git-baseline review.
 const base='docs/artifacts/tenant/',change=base+'changes/change-next/';
@@ -22,8 +23,7 @@ const panel=page=>page.getByRole('tabpanel').filter({visible:true}),details=page
 test('L5: in-place working knowledge, established view, declared delivery evidence and review fit wide and narrow widths',async({page})=>{
  const f=await fixture(),before=await fingerprint(f.root),errors=[];page.on('pageerror',e=>errors.push(e.message));
  try{
-  await page.goto('/');await panel(page).getByLabel('Repository path').fill(f.root);await panel(page).getByRole('button',{name:'Open repository',exact:true}).click();
-  await panel(page).getByRole('navigation',{name:'Artifacts'}).getByRole('button',{name:/Tenant/}).click();
+  await openRepository(page,f.root);await selectOnGraph(page,'Tenant');
   await expect(details(page)).toContainText('In-place layout');await expect(details(page)).toContainText('Established v1.0.0');
   await page.getByRole('button',{name:'Expand Tenant',exact:true}).click();
   await page.getByRole('button',{name:'Specifications in Tenant',exact:true}).click();
@@ -32,21 +32,22 @@ test('L5: in-place working knowledge, established view, declared delivery eviden
   await expect(details(page)).toContainText('Working · proposed (changed)');
   const established=details(page).getByRole('button',{name:'Read established on main',exact:true});
   await established.focus();await page.keyboard.press('Enter');
-  const reader=page.getByRole('region',{name:'Knowledge reader'});
+  const reader=documentPage(page);
   await expect(reader).toContainText('Established identity rules.');
-  await reader.getByRole('button',{name:'Back to artifact',exact:true}).click();
-  // Back returns to the artifact inspector and keeps keyboard focus inside it.
+  await reader.getByRole('button',{name:'Back to graph',exact:true}).click();
+  // Back returns to the graph details and keeps keyboard focus inside them.
   await expect(details(page).locator(':focus')).toHaveCount(1);
   await panel(page).locator('.element-node').filter({hasText:'specifications/identity.md'}).click();
-  await details(page).getByRole('button',{name:'Read document',exact:true}).click();await expect(reader).toContainText('Proposed identity rules.');await reader.getByRole('button',{name:'Back to artifact',exact:true}).click();
-  await details(page).getByRole('button',{name:/^change-next/}).click();
-  await expect(details(page).getByRole('navigation',{name:'Change phases'})).toContainText('Not declared');
-  await expect(details(page).getByRole('navigation',{name:'Change phases'})).toContainText('Documented complete');
-  await details(page).getByRole('button',{name:'Review change',exact:true}).click();
+  await details(page).getByRole('button',{name:'Read document',exact:true}).click();await expect(reader).toContainText('Proposed identity rules.');await reader.getByRole('button',{name:'Back to graph',exact:true}).click();
+  const change=await openChange(page,'change-next');
+  await expect(change.getByRole('navigation',{name:'Change phases'})).toContainText('Not declared');
+  await expect(change.getByRole('navigation',{name:'Change phases'})).toContainText('Documented complete');
+  await expect(change).toContainText('current step: Requirement');
+  await change.getByRole('group',{name:'Change sections'}).getByRole('button',{name:'Review',exact:true}).click();
   const review=panel(page).getByRole('region',{name:'Change review',exact:true});
   await expect(review).toContainText('Baseline: established on main');
   await expect(review.getByRole('region',{name:'Declared evidence'})).toContainText('Remaining gate: Requirement');
-  for(const width of [1440,390]){await page.setViewportSize({width,height:1000});expect(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth)).toBe(true);await page.screenshot({path:`test-results/in-place-${width}.png`,fullPage:true});}
+  for(const width of [1440,390]){await page.setViewportSize({width,height:1000});expect(await noOverflow(page)).toBe(true);await page.screenshot({path:`test-results/in-place-${width}.png`,fullPage:true});}
   expect(await fingerprint(f.root)).toEqual(before);expect(errors).toEqual([]);
  }finally{await f.cleanup();}
 });
