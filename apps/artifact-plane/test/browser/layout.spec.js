@@ -73,3 +73,25 @@ test('no page overflows horizontally at 390, 700, 851 and 1440 pixels', async ({
     }
   } finally {await f.cleanup();}
 });
+
+// Screenshots of every page for the owner's comparison with the approved mockups.
+test('screenshots of every page at 1440 and 390 pixels', async ({page}) => {
+  test.setTimeout(120000);
+  const f = await fixture();
+  try {
+    await openRepository(page, f.root);
+    for (const width of [1440, 390]) {
+      await page.setViewportSize({width, height: width < 500 ? 844 : 900});
+      for (const [name, open] of PAGES) {
+        await open(page);await expect(region(page, name)).toBeVisible();
+        await expect(page.locator('main [role="status"]').filter({hasText: /^(Reading|Loading)/})).toHaveCount(0, {timeout: 20000});
+        const file = name.toLowerCase().replace(/ page$/, '').replace(/\s+/g, '-');
+        // The page area scrolls inside the window; capture its full height.
+        const height = await page.evaluate(() => Math.max(innerHeight, document.querySelector('main').scrollHeight + 60));
+        await page.setViewportSize({width, height: Math.min(height, 4000)});
+        await page.screenshot({path: `test-results/pages/${file}-${width}.png`});
+        await page.setViewportSize({width, height: width < 500 ? 844 : 900});
+      }
+    }
+  } finally {await f.cleanup();}
+});
