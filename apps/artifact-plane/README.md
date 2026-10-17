@@ -1,6 +1,6 @@
 # Artifact Plane
 
-Explore a local Artifact-Driven Development repository on an interactive dependency canvas. The application reads Git and Markdown. It derives dependency and behavior graphs and stores a rebuildable flow index outside inspected repositories. It does not write to the repository you open.
+Explore and author a local Artifact-Driven Development repository. The application reads Git and Markdown, derives dependency and behavior graphs and stores a rebuildable flow index outside inspected repositories. Opening, reading and refreshing change nothing. Explicit edit operations write ADD records in `docs/artifacts` of a worktree with a non-protected branch; see [Edit knowledge](#edit-knowledge).
 
 ## Run
 
@@ -47,6 +47,29 @@ Inactive tabs pause repository and runtime observation. Selecting a tab refreshe
 The application saves successfully opened project paths, tab order, and the active project in browser-local storage. Refresh or restart restores these projects in the same browser profile and application origin. Inactive restored projects load when selected. A missing project keeps its path so you can retry or close it. Navigation details and graph data are not saved across page reloads. Separate browser windows do not synchronize their tabs. Changing the server port creates a different storage origin.
 
 Storage errors leave current-session exploration available with a warning. Retained session memory grows with open projects; closing tabs releases their state and connections.
+
+## Edit knowledge
+
+Edits use domain operations. An operation names domain objects, such as an artifact, a change, a task or a flow step. The server derives every path, identifier and source fragment, builds the changed files, validates the result with the same readers that the explorer uses and then writes. Git stays the only store; the Plane keeps no workflow state, approval or index.
+
+Rules:
+
+- Writes stay inside `docs/artifacts` of the selected registered worktree. Paths with `..`, `.git`, backslashes, NUL, symbolic links, non-Markdown files, files over 1 MiB and invalid UTF-8 are refused.
+- A worktree with `main`, `master` or a detached HEAD accepts no write. Create a branch first.
+- Version records are created once and never changed, except for the Publication review section of an unestablished record. Tasks of a change that a version record names cannot change. Legacy artifacts accept only `artifact.migrate`.
+- Front-matter edits replace only the YAML nodes that the operation changes. Comments, unknown keys, key order and other nodes keep their bytes. Body edits replace one section or, for a document save, the whole body; the front matter stays.
+- An operation that adds an error diagnostic is refused with status 422 and the diagnostics. Existing diagnostics elsewhere do not block it.
+- A preview (`dryRun: true`) writes nothing and returns the files and their SHA-256 digests. An apply that changes or deletes a file needs those digests in `expected`. A file that changed since then returns status 409 with its current text.
+- Files are written to temporary files and renamed. If a rename fails, the files already replaced are restored.
+- The server keeps the last 50 operations per worktree in memory. `undo` restores one operation while its files still have the bytes that it wrote. A restart clears the journal; Git keeps the history.
+
+Operations: `artifact.create`, `artifact.dependencies.set`, `change.start`, `document.add`, `document.save`, `document.delete`, `document.properties.set`, `reference.add`, `reference.remove`, `selfcheck.record`, `task.add`, `task.update`, `task.remove`, `task.checklist.set`, `evidence.record`, `plan.selfcheck.record`, `unit.create`, `unit.member.add`, `unit.member.remove`, `unit.acceptance.set`, `unit.evidence.record`, `unit.flows.set`, `flow.create`, `flow.step.add`, `flow.step.update`, `flow.step.move`, `flow.step.remove`, `flow.transition.set`, `flow.transition.remove`, `flow.support.add`, `flow.support.update`, `flow.support.remove`, `flow.meta.set`, `version.prepare`, `publication.record`, `artifact.migrate` and `undo`. The [knowledge editing specification](../../docs/artifacts/artifact-plane/specifications/knowledge-editing.md) lists their inputs and the files that each one writes.
+
+Git actions: `status`, `branch.create`, `commit` and `discard`. A commit stages and commits only the selected `docs/artifacts` paths with the configured author; other staged or changed files stay as they are. Discard restores a tracked knowledge file from HEAD or deletes an untracked one. The Plane never pushes, fetches, merges, rebases, resets, tags, stashes or cleans. Approval and publication happen outside the Plane.
+
+HTTP: `POST /api/knowledge/edit` takes `{path, worktree?, operation, input, expected?, dryRun?}`. `POST /api/knowledge/git` takes `{path, worktree?, operation, input}`. Both routes use the loopback host and origin checks and accept JSON bodies up to 2 MiB. Errors use 400 (malformed request), 403 (protected branch or unconfigured root), 404 (missing repository, worktree or record), 409 (changed file or undo conflict), 422 (validation or unsafe path) and 500, with `error` and, where available, `code`, `field`, `diagnostics` and `current` file contents.
+
+MCP: start the stdio server with `--allow-writes` to add `preview_knowledge_operation` and `apply_knowledge_operation`. Without the flag, only the read tools exist. Git actions are not exposed to agents. An agent can pass the fingerprints of `read_change_context_source` as expected digests.
 
 ## Supported repository structure
 
@@ -269,7 +292,7 @@ Use stdio MCP from an explicitly configured client. Example registration (replac
 }
 ```
 
-Repeat --repository for multiple roots; pass --state-dir for a private cache directory. With one configured root, tools can omit path. With several roots, select path explicitly. The existing flow tools are search_flows, get_flow, get_impact_context and read_flow_source. The same server also supplies get_change_review, get_change_context and read_change_context_source. They use the same query service as HTTP, carry read-only annotations, and write only protocol traffic to stdout. Diagnostics go to stderr. Client registration does not grant ADD approval, edit knowledge, launch agents or establish versions.
+Repeat --repository for multiple roots; pass --state-dir for a private cache directory. With one configured root, tools can omit path. With several roots, select path explicitly. The existing flow tools are search_flows, get_flow, get_impact_context and read_flow_source. The same server also supplies get_change_review, get_change_context and read_change_context_source. They use the same query service as HTTP, carry read-only annotations, and write only protocol traffic to stdout. Diagnostics go to stderr. Client registration does not grant ADD approval, launch agents or establish versions. Only a server started with `--allow-writes` can edit knowledge; see [Edit knowledge](#edit-knowledge).
 
 Run node scripts/benchmark-flows.mjs /absolute/repository to measure retrieval against the initial inventory. The benchmark reports hardware, dataset size, latency, response bytes and expected-query ranks. These measurements do not estimate hidden reasoning or token savings.
 
