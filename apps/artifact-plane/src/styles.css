@@ -44,7 +44,7 @@ body { margin: 0; background: var(--bg); color: var(--text); font: 14px/1.5 var(
 a { color: var(--accent); text-decoration: none; }
 a:hover { color: var(--accent-hover); text-decoration: underline; }
 :focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
-[hidden] { display: none; }
+[hidden] { display: none !important; }
 h1, h2, h3, h4 { margin: 0; }
 p { margin: 0; }
 code, .mono { font-family: var(--mono); font-size: 12px; }
