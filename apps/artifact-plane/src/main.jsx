@@ -154,15 +154,15 @@ export function ProjectExplorer({active: isActive = true, initialPath = '', onOp
     if (entry?.availability !== 'readable') {setError(entry?.diagnostics.map(d => d.message).join(' ') || 'This worktree is unavailable.');return;}
     setOpeningWorktree(target);open(projectRoot, false, target, true);
   }
-  // Declared evidence of open changes gives the phases of the sidebar and work page.
-  // Open legacy changes are rare, so replaying their history here stays bounded.
+  // Declared evidence of open in-place changes gives the phases of the sidebar and work page.
+  // Legacy evidence replays history, so it loads only on its change page.
   useEffect(() => {
     const root = projectRoot, base = overviewRef.current, worktree = base?.workflow?.worktrees.find(w => w.path === base.repository.path);
     if (!isActive || !root || !worktree) return;
     const controller = new AbortController(), sessionId = generation.current;
     const patch = update => {overviewRef.current = update(overviewRef.current);setSnapshot(current => current && update(current));};
     (async () => {
-      for (const c of currentChanges(worktree)) {
+      for (const c of currentChanges(worktree).filter(c => c.layout === 'in-place')) {
         if (controller.signal.aborted) return;
         try {
           const key = changeKey(worktree.path, c.artifact, c.name), result = await repositoryQuery({path: root, worktree: worktree.path, artifact: c.artifact, change: c.name, section: 'workflow'}, controller.signal);

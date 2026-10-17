@@ -31,7 +31,9 @@ const HINTS = [
 // {state: 'loading'|'open'|'review'|'closed', current: index or null, steps, hint}
 export function phaseModel(change) {
   if (!change) return {state: 'closed', current: null, steps: PHASES.map(name => ({name, state: 'todo'})), hint: ''};
-  if (change.loadState === 'not-loaded') return {state: 'loading', current: null, steps: PHASES.map(name => ({name, state: 'todo'})), hint: 'Reading declared evidence…'};
+  if (change.loadState === 'not-loaded') return change.layout === 'in-place'
+    ? {state: 'loading', current: null, steps: PHASES.map(name => ({name, state: 'todo'})), hint: 'Reading declared evidence…'}
+    : {state: 'unread', current: null, steps: PHASES.map(name => ({name, state: 'todo'})), hint: 'open the change to read its phase evidence.'};
   const sources = Object.fromEntries((change.steps || []).filter(s => s.state === 'documented-complete').map(s => [DISPLAY[s.name], s.evidence?.find(e => e.file)?.file || null]));
   if (change.history || change.version) return {state: 'closed', current: null, steps: PHASES.map((name, i) => ({name, state: 'done', source: sources[i] || null})), hint: ''};
   if (change.currentStep && DISPLAY[change.currentStep] !== undefined) {
@@ -46,6 +48,7 @@ export function phaseModel(change) {
 export function phaseLabel(change) {
   const model = phaseModel(change);
   if (model.state === 'loading') return 'Reading…';
+  if (model.state === 'unread') return 'Phase not read';
   if (model.state === 'review') return 'Team review';
   if (model.state === 'closed') return change.version ? `Version ${change.version}` : 'Retained';
   return model.current === null ? 'Phase unknown' : PHASES[model.current];

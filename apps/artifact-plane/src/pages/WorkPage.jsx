@@ -64,7 +64,7 @@ function commitMessage(entries, changes) {
   // A unit brief travels with its change, so it does not make the commit generic.
   const artifacts = owners.filter(o => o !== 'units-of-work');
   const single = artifacts.length === 1 ? changes.find(c => c.artifact === artifacts[0]) : null;
-  if (single) return `${single.artifact} ${single.name}: ${phaseModel(single).state === 'loading' ? 'update' : phaseLabel(single)}`;
+  if (single) return `${single.artifact} ${single.name}: ${['loading', 'unread'].includes(phaseModel(single).state) ? 'update' : phaseLabel(single)}`;
   return `Update knowledge of ${owners.filter(o => o !== 'units-of-work').join(', ') || 'units of work'}`;
 }
 
