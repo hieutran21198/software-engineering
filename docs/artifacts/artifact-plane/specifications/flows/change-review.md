@@ -21,6 +21,8 @@ flow:
         - review-checks
         - browser-checks
         - evidence-usability-contract
+        - change-page
+        - change-unit-tests
     - id: compare
       title: Compare contract knowledge with the declared current version
       supports:
@@ -51,6 +53,8 @@ flow:
         - browser-checks
         - evidence-usability-contract
         - layout-reading
+        - change-page
+        - change-unit-tests
     - id: return
       title: Return to delivery or capture the reviewed context
       supports:
@@ -156,8 +160,19 @@ flow:
       element: specifications/knowledge-layout-reading.md
       requires: Compare in-place working knowledge with the protected-branch baseline through Git and derive declared evidence.
       basis: documented
+    - id: change-page
+      kind: implementation
+      path: apps/artifact-plane/src/pages/ChangePage.jsx
+      requires: Show the Review tab with comparison, diagnostics, commit and version actions.
+      basis: static
+    - id: change-unit-tests
+      kind: test
+      path: apps/artifact-plane/test/browser/change-unit-pages.spec.js
+      requires: Prove the Review tab actions in the browser.
+      basis: observed
+      evidence:
+        - apps/artifact-plane/test/browser/change-unit-pages.spec.js
   gaps:
-    - The authoring extension adds the change Review tab with commit, version preparation and publication review actions; implementation and observed evidence are pending.
     - Declared current is not a historical code predecessor; recorded
       relationships are not exhaustive impact.
     - The evidence-and-usability extension is specified; implementation and

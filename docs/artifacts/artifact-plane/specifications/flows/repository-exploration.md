@@ -19,6 +19,8 @@ flow:
         - explorer
         - search-label-contract
         - evidence-usability-contract
+        - navigation-tree
+        - workbench-shell-tests
     - id: validate
       title: Resolve a readable Git root and ADD directory
       supports:
@@ -47,6 +49,8 @@ flow:
         - label-browser-checks
         - evidence-usability-contract
         - model-presentation
+        - work-page
+        - workbench-shell-tests
       interactions:
         - from: snapshot
           to: version
@@ -236,8 +240,26 @@ flow:
       element: specifications/knowledge-layout-reading.md
       requires: Detect each artifact layout and read in-place identity, change and version records from front matter only.
       basis: documented
+    - id: navigation-tree
+      kind: implementation
+      path: apps/artifact-plane/src/NavigationTree.jsx
+      requires: One tree for current work, artifacts and units with search and
+        keyboard navigation.
+      basis: static
+    - id: work-page
+      kind: implementation
+      path: apps/artifact-plane/src/pages/WorkPage.jsx
+      requires: Show branch state, open changes with phase chips, units and
+        uncommitted knowledge.
+      basis: static
+    - id: workbench-shell-tests
+      kind: test
+      path: apps/artifact-plane/test/browser/workbench-shell.spec.js
+      requires: Prove the tree, the work page, the branch control and the widths.
+      basis: observed
+      evidence:
+        - apps/artifact-plane/test/browser/workbench-shell.spec.js
   gaps:
-    - The authoring extension replaces the view switchers and sidebars with one navigation tree and content pages; implementation and observed evidence are pending.
     - The flow documents discovery behavior, not complete knowledge coverage or
       artifact establishment.
     - New contextual review navigation is specified but not implemented or

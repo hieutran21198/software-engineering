@@ -19,6 +19,8 @@ flow:
         - shared-search-field
         - search-browser-checks
         - evidence-usability-contract
+        - unit-page
+        - change-unit-tests
     - id: resolve
       title: Resolve delivered versions and exact originating plans
       supports:
@@ -37,6 +39,8 @@ flow:
         - units
         - unit-tests
         - evidence-usability-contract
+        - unit-page
+        - change-unit-tests
     - id: impact
       title: Follow affected flow references
       supports:
@@ -53,6 +57,8 @@ flow:
         - presentation-checks
         - completion-feedback
         - evidence-usability-contract
+        - unit-page
+        - scenario-tests
   transitions:
     - from: brief
       to: resolve
@@ -183,8 +189,27 @@ flow:
       element: specifications/knowledge-layout-reading.md
       requires: Resolve in-place version records and their introducing commits for member delivery.
       basis: documented
+    - id: unit-page
+      kind: implementation
+      path: apps/artifact-plane/src/pages/UnitPage.jsx
+      requires: Edit members, criteria, evidence and affected flows and name a missing
+        publication review.
+      basis: static
+    - id: change-unit-tests
+      kind: test
+      path: apps/artifact-plane/test/browser/change-unit-pages.spec.js
+      requires: Prove unit editing in the browser.
+      basis: observed
+      evidence:
+        - apps/artifact-plane/test/browser/change-unit-pages.spec.js
+    - id: scenario-tests
+      kind: test
+      path: apps/artifact-plane/test/browser/authoring-scenarios.spec.js
+      requires: Prove the missing publication review label and its action.
+      basis: observed
+      evidence:
+        - apps/artifact-plane/test/browser/authoring-scenarios.spec.js
   gaps:
-    - The authoring extension adds member, criterion, evidence and affected-flow editing to the unit page; implementation and observed evidence are pending.
     - Recorded passing assertions are not independently executed tests; missing
       merge evidence stays unresolved.
     - The evidence-and-usability extension is specified; implementation and

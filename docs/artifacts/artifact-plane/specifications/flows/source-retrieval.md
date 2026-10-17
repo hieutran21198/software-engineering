@@ -46,6 +46,8 @@ flow:
         - authoring-contract
         - flow-reader
         - reader-tests
+        - document-page
+        - document-tests
     - id: freshness
       title: Validate source bytes and disclose stale or partial results
       supports:
@@ -229,8 +231,19 @@ flow:
       requires: Check measured gaps, native dropdown styles, keyboard access and
         completion feedback.
       basis: static
+    - id: document-page
+      kind: implementation
+      path: apps/artifact-plane/src/pages/DocumentPage.jsx
+      requires: Read and edit a document with contained links on one page.
+      basis: static
+    - id: document-tests
+      kind: test
+      path: apps/artifact-plane/test/browser/document-editing.spec.js
+      requires: Prove document reading and editing in the browser.
+      basis: observed
+      evidence:
+        - apps/artifact-plane/test/browser/document-editing.spec.js
   gaps:
-    - The authoring extension turns the reader into an editable document page with the same contained navigation; implementation and observed evidence are pending.
     - Retrieval ranks candidates; it does not prove compatibility or complete
       system discovery.
   exclusions:

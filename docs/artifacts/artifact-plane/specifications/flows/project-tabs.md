@@ -28,6 +28,8 @@ flow:
       supports:
         - authoring-contract
         - workspace
+        - source-bar
+        - workbench-shell-tests
     - id: close
       title: Release the closed explorer and select a survivor
       supports:
@@ -86,8 +88,19 @@ flow:
       path: apps/artifact-plane/test/project-tabs.test.js
       requires: Exercise preference validation and close selection.
       basis: static
+    - id: source-bar
+      kind: implementation
+      path: apps/artifact-plane/src/SourceBar.jsx
+      requires: Show the worktree control, the edit state and the protected-branch banner.
+      basis: static
+    - id: workbench-shell-tests
+      kind: test
+      path: apps/artifact-plane/test/browser/workbench-shell.spec.js
+      requires: Prove the branch control and page state per project.
+      basis: observed
+      evidence:
+        - apps/artifact-plane/test/browser/workbench-shell.spec.js
   gaps:
-    - The authoring extension moves the worktree selector into the source bar as the branch control and adds the edit state; implementation and observed evidence are pending.
     - Browser persistence is a preference store, not repository evidence or a
       workflow registry.
   exclusions:

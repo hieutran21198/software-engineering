@@ -39,6 +39,8 @@ flow:
         - explorer
         - reload-tests
         - evidence-usability-contract
+        - document-page
+        - document-tests
   transitions:
     - from: observe
       to: notify
@@ -116,8 +118,20 @@ flow:
       element: specifications/knowledge-layout-reading.md
       requires: Invalidate in-place baselines and comparisons when the protected ref or working knowledge changes.
       basis: documented
+    - id: document-page
+      kind: implementation
+      path: apps/artifact-plane/src/pages/DocumentPage.jsx
+      requires: Keep unsaved editor text through a refresh and mark the document
+        changed on disk.
+      basis: static
+    - id: document-tests
+      kind: test
+      path: apps/artifact-plane/test/browser/document-editing.spec.js
+      requires: Prove that a refresh keeps editor text.
+      basis: observed
+      evidence:
+        - apps/artifact-plane/test/browser/document-editing.spec.js
   gaps:
-    - The authoring extension requires refresh to keep unsaved editor text and to mark documents changed on disk; implementation and observed evidence are pending.
     - Referenced implementation/test observation must be registered by a flow
       retrieval context; unreferenced code changes are outside the map.
     - The evidence-and-usability extension is specified; implementation and

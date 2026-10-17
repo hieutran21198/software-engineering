@@ -15,6 +15,8 @@ flow:
       supports:
         - workbench-contract
         - editing-contract
+        - workbench-shell
+        - scenario-tests
     - id: guard-branch
       title: Confirm a non-protected branch in the selected worktree
       supports:
@@ -32,6 +34,12 @@ flow:
         - edit-routes
         - operation-tests
         - interface-tests
+        - edit-forms
+        - document-page
+        - flow-editor
+        - scenario-tests
+        - document-tests
+        - flow-page-tests
     - id: validate
       title: Validate the post-image with the readers and preview the files
       supports:
@@ -39,17 +47,26 @@ flow:
         - layout-contract
         - operations-module
         - operation-tests
+        - edit-forms
+        - scenario-tests
     - id: write
       title: Write atomically with digests and a journal entry
       supports:
         - editing-contract
         - writer-module
         - writer-tests
+        - document-page
+        - scenario-tests
+        - document-tests
     - id: review
       title: Review changed knowledge, diagnostics and readiness
       supports:
         - workbench-contract
         - review-contract
+        - workbench-shell
+        - change-page
+        - scenario-tests
+        - change-unit-tests
     - id: commit
       title: Commit selected knowledge paths on the branch
       supports:
@@ -57,6 +74,9 @@ flow:
         - git-module
         - edit-routes
         - git-tests
+        - change-page
+        - scenario-tests
+        - change-unit-tests
     - id: version
       title: Prepare the version record and identity record together
       supports:
@@ -64,6 +84,8 @@ flow:
         - layout-contract
         - operations-module
         - operation-tests
+        - change-page
+        - change-unit-tests
   transitions:
     - from: select-work
       to: guard-branch
@@ -172,9 +194,66 @@ flow:
       basis: observed
       evidence:
         - apps/artifact-plane/test/knowledge-interfaces.test.js
+    - id: workbench-shell
+      kind: implementation
+      path: apps/artifact-plane/src/main.jsx
+      requires: Route pages by project and worktree, run operations and show the
+        status with Undo.
+      basis: static
+    - id: edit-forms
+      kind: implementation
+      path: apps/artifact-plane/src/editing.jsx
+      requires: Inline forms, operation errors and diagnostics at the field.
+      basis: static
+    - id: document-page
+      kind: implementation
+      path: apps/artifact-plane/src/pages/DocumentPage.jsx
+      requires: Edit bodies, references, self-checks and front matter with conflict handling.
+      basis: static
+    - id: change-page
+      kind: implementation
+      path: apps/artifact-plane/src/pages/ChangePage.jsx
+      requires: Plan tasks, show readiness, commit, prepare versions and record
+        publication reviews.
+      basis: static
+    - id: flow-editor
+      kind: implementation
+      path: apps/artifact-plane/src/pages/FlowEditor.jsx
+      requires: Edit flow steps, transitions and support with pickers.
+      basis: static
+    - id: scenario-tests
+      kind: test
+      path: apps/artifact-plane/test/browser/authoring-scenarios.spec.js
+      requires: Run the S1–S8 scenarios with measurements, keyboard use and widths.
+      basis: observed
+      evidence:
+        - apps/artifact-plane/test/browser/authoring-scenarios.spec.js
+    - id: document-tests
+      kind: test
+      path: apps/artifact-plane/test/browser/document-editing.spec.js
+      requires: Prove editing, conflicts, references, self-checks and undo in the browser.
+      basis: observed
+      evidence:
+        - apps/artifact-plane/test/browser/document-editing.spec.js
+    - id: change-unit-tests
+      kind: test
+      path: apps/artifact-plane/test/browser/change-unit-pages.spec.js
+      requires: Prove change, plan, commit, version and unit actions in the browser.
+      basis: observed
+      evidence:
+        - apps/artifact-plane/test/browser/change-unit-pages.spec.js
+    - id: flow-page-tests
+      kind: test
+      path: apps/artifact-plane/test/browser/flow-page.spec.js
+      requires: Prove flow editing in the browser.
+      basis: observed
+      evidence:
+        - apps/artifact-plane/test/browser/flow-page.spec.js
   gaps:
-    - This journey is specified; implementation and observed browser evidence are added by the approved tasks.
-    - Approval and publication are decisions outside the files and are not steps of this journey.
+    - The S1 and S3–S6 scenarios need more user actions than the requirement
+      targets; the unit brief records the measurements.
+    - Approval and publication are decisions outside the files and are not steps
+      of this journey.
   exclusions:
     - Push, pull requests, merge, edits to established versions and the flow model layer.
 ---
@@ -183,7 +262,7 @@ flow:
 
 ## Coverage
 
-The structured record owns this journey. It covers the person's path from choosing work to a phase commit or version preparation. Validation happens before every write; the readers that govern reading also govern writing. Support is documented until the implementation tasks add static and observed evidence.
+The structured record owns this journey. It covers the person's path from choosing work to a phase commit or version preparation. Validation happens before every write; the readers that govern reading also govern writing. Static support names the implementing modules; observed support names the Node and browser tests that exercise each step.
 
 ## Branches
 
