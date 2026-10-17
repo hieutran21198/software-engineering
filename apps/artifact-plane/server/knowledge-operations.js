@@ -725,6 +725,13 @@ const keyOf = d => JSON.stringify([d.code, d.path, d.message]);
 const REQUEST_KEYS = ['path', 'worktree', 'operation', 'input', 'expected', 'dryRun'];
 export const OPERATION_NAMES = [...Object.keys(OPERATIONS), 'undo'];
 export function createKnowledgeService({journal = createJournal(), git = runGit, roots = null} = {}) {
+  // Pre-image diagnostics by worktree and content revision: a preview and its apply validate once.
+  const baseline = new Map();
+  const preDiagnostics = ctx => {
+    const key = JSON.stringify([ctx.root, ctx.scan.revision]);
+    if (!baseline.has(key)) {baseline.set(key, new Set(diagnose(ctx.files, ctx).map(keyOf)));while (baseline.size > 8) baseline.delete(baseline.keys().next().value);}
+    return baseline.get(key);
+  };
   async function plan(ctx, request) {
     if (request.operation === 'undo') {
       if (typeof request.input.operationId !== 'string') fail('operationId', 'operationId is required.');
@@ -758,7 +765,7 @@ export function createKnowledgeService({journal = createJournal(), git = runGit,
         const after = new Map(ctx.files);
         for (const edit of edits) if (edit.action === 'delete') after.delete(edit.path);else after.set(edit.path, Buffer.isBuffer(edit.after) ? edit.after.toString('utf8') : edit.after);
         const layouts = {...ctx.layouts, ...(planned.layouts || {})};
-        const before = new Set(diagnose(ctx.files, ctx).map(keyOf)), post = diagnose(after, ctx, layouts);
+        const before = preDiagnostics(ctx), post = diagnose(after, ctx, layouts);
         const touched = new Set(edits.map(e => e.path));
         diagnostics = post.filter(d => !before.has(keyOf(d)) || touched.has(d.path)).map(d => ({...d, state: before.has(keyOf(d)) ? 'existing' : 'new'}));
         const blocking = diagnostics.filter(d => d.state === 'new' && d.severity === 'error' && !(planned.tolerate || []).includes(d.code));
