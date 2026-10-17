@@ -58,7 +58,7 @@ function FlowModels({flow, models=[], sources=[], onRead, onFlow}){
   </div>}
  </section>;
 }
-export default function Flows({path,worktree,epoch,isActive,entry,knowledge,sidebar,inspector,onSelection,onRead,artifacts=[]}){
+export default function Flows({path,worktree,epoch,isActive,entry,knowledge,sidebar,inspector,onSelection,onFlow,onRead,artifacts=[]}){
  const artifactControl=useId();
  const [text,setText]=useState(''),[search,setSearch]=useState(''),[match,setMatch]=useState('title'),[artifact,setArtifact]=useState('');
  const [impact,setImpact]=useState(null),[list,setList]=useState(null),[selected,setSelected]=useState(null),[detail,setDetail]=useState(null),[source,setSource]=useState(null),[expanded,setExpanded]=useState(false),[node,setNode]=useState(null),[error,setError]=useState(''),[cursor,setCursor]=useState(null),[loading,setLoading]=useState(false),[retry,setRetry]=useState(0),[sentinel,setSentinel]=useState(null),[options,setOptions]=useState(null);
@@ -123,6 +123,7 @@ export default function Flows({path,worktree,epoch,isActive,entry,knowledge,side
  const artifactOptions=options?.scope===optionScope&&options.epoch===epoch?options.items:(!worktree||worktree===path?artifacts:[]);
  const missingArtifact=artifact&&!artifactOptions.some(a=>a.id===artifact);
  useEffect(()=>{onSelection?.(Boolean(selected));},[selected,onSelection]);
+ useEffect(()=>{onFlow?.(selected&&detail?.data?.flow?detail.data.flow:null);},[selected,detail,onFlow]);
  const flow=detail?.data?.flow,graph=useMemo(()=>flowCanvas(detail?.data?.graph,flow,expanded,node),[detail,flow,expanded,node]);
  const supports=(flow?.support||[]).filter(s=>!node||s.targetId===node||(flow.steps||[]).find(t=>t.nodeId===node)?.supports.includes(s.id));
  if(!isActive)return null;

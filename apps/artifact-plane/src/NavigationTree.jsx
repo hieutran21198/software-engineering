@@ -4,9 +4,9 @@ import {treeRows, samePage} from './work-model.js';
 
 // One tree replaces the view switchers and sidebars. Rows open pages; groups
 // and kinds expand. Roving tabindex keeps one row in the tab order.
-export default function NavigationTree({snapshot, worktree, page, expanded, onToggle, onOpen, id}) {
+export default function NavigationTree({snapshot, worktree, page, expanded, onToggle, onOpen, id, editable}) {
   const [filter, setFilter] = useState(''), [focus, setFocus] = useState(null), tree = useRef(null);
-  const rows = useMemo(() => treeRows({snapshot, worktree, filter, expanded}), [snapshot, worktree, filter, expanded]);
+  const rows = useMemo(() => treeRows({snapshot, worktree, filter, expanded, editable}), [snapshot, worktree, filter, expanded, editable]);
   const current = rows.find(r => r.page && samePage(r.page, page));
   const focused = rows.some(r => r.key === focus) ? focus : current?.key || rows[0]?.key;
   useEffect(() => {if (tree.current?.contains(document.activeElement) && document.activeElement.dataset.key !== focused) tree.current.querySelector(`[data-key="${CSS.escape(focused || '')}"]`)?.focus();}, [focused]);

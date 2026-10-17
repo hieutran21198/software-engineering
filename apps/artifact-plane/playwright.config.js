@@ -20,7 +20,8 @@ export default defineConfig({
   webServer: {
     command: "npm start",
     url: `http://127.0.0.1:${port}`,
-    env: { PORT: port, ARTIFACT_PLANE_STATE_DIR: process.env.ARTIFACT_PLANE_TEST_STATE_DIR },
+    // Knowledge commits need an author; fixtures have no Git configuration.
+    env: { PORT: port, ARTIFACT_PLANE_STATE_DIR: process.env.ARTIFACT_PLANE_TEST_STATE_DIR, GIT_AUTHOR_NAME: "Plane Test", GIT_AUTHOR_EMAIL: "plane-test@example.invalid", GIT_COMMITTER_NAME: "Plane Test", GIT_COMMITTER_EMAIL: "plane-test@example.invalid" },
     reuseExistingServer: false,
   },
 });

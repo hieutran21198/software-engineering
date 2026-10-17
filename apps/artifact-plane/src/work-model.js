@@ -20,9 +20,7 @@ export const currentChanges = worktree => (worktree?.changes || []).filter(c => 
 export function phase(change) {
   if (!change) return {chip: null, hint: ''};
   if (change.loadState === 'not-loaded') return change.layout === 'in-place' ? {chip: 'Loading', hint: 'Reading declared evidence…', loading: true} : {chip: null, hint: 'Open the change to read its phase evidence.', loading: true};
-  // In-place: the first declared step that is not documented complete.
-  const step = change.currentStep || (change.layout === 'in-place' ? change.steps?.find(s => s.state !== 'documented-complete')?.name : null);
-  if (step) return {chip: step, hint: HINTS[step] || ''};
+  if (change.currentStep) return {chip: change.currentStep, hint: HINTS[change.currentStep] || ''};
   if (change.layout === 'in-place' && change.steps?.every(s => s.state === 'documented-complete')) return {chip: 'Team review', hint: 'Open a pull request for team review and merge.'};
   return {chip: 'Unknown step', hint: change.inferenceReason || 'No current step can be derived from the evidence.'};
 }
@@ -44,7 +42,7 @@ export function artifactDocuments(artifact) {
 }
 const title = path => path.split('/').at(-1);
 // Flat tree rows with levels; filtering keeps matches and their ancestors open.
-export function treeRows({snapshot, worktree, filter = '', expanded}) {
+export function treeRows({snapshot, worktree, filter = '', expanded, editable = false}) {
   if (!snapshot) return [];
   const rows = [], active = Boolean(filter.trim());
   const open = key => active || expanded.has(key);
@@ -56,7 +54,9 @@ export function treeRows({snapshot, worktree, filter = '', expanded}) {
   };
   const leaf = (row, ...fields) => !active || matchesName(filter, row.label, ...fields) ? [row] : [];
   const changes = currentChanges(worktree), units = currentUnits(worktree);
+  const actions = rows => active || !editable ? [] : rows;
   group('g:work', 'Current work', changes.length + units.length, () => [
+    ...actions([{key: 'w:start', level: 2, label: 'Start a change', action: true, page: {kind: 'work', add: 'change'}}, {key: 'w:unit', level: 2, label: 'New unit', action: true, page: {kind: 'work', add: 'unit'}}]),
     ...changes.flatMap(c => {const p = phase(c);return leaf({key: `c:${c.artifact}/${c.name}`, level: 2, label: `${c.artifact} / ${c.name}`, chip: p.chip, hint: p.hint, page: {kind: 'change', artifact: c.artifact, change: c.name}}, c.artifact, c.name);}),
     ...units.flatMap(u => leaf({key: `w:${u.id}`, level: 2, label: u.title, detail: unitStatus(u) || `${u.members.length} ${u.members.length === 1 ? 'change' : 'changes'}`, page: {kind: 'unit', unit: u.id}}, u.id)),
   ]);
@@ -69,9 +69,10 @@ export function treeRows({snapshot, worktree, filter = '', expanded}) {
       if (open(ck)) children.push(...inner);
     };
     children.push(...leaf({key: `${key}:overview`, level: 3, label: 'Overview', page: {kind: 'artifact', artifact: a.id}}, a.id, a.title));
-    for (const g of docs.groups) kind(g.kind, g.label, () => g.documents.flatMap(d => leaf({key: `d:${d.file}`, level: 4, label: title(d.path), pill: sinceMain(d.state), page: {kind: 'document', artifact: a.id, source: d.file, title: d.path, established: d.removed || undefined}}, d.path)));
+    const add = (k, label) => a.layout === 'in-place' ? actions([{key: `${key}:add-${k}`, level: 4, label, action: true, page: {kind: 'artifact', artifact: a.id, add: k}}]) : [];
+    for (const g of docs.groups) kind(g.kind, g.label, () => [...g.documents.flatMap(d => leaf({key: `d:${d.file}`, level: 4, label: title(d.path), pill: sinceMain(d.state), page: {kind: 'document', artifact: a.id, source: d.file, title: d.path, established: d.removed || undefined}}, d.path)), ...add(g.kind.slice(0, -1), `Add ${g.kind.slice(0, -1)}`)]);
     kind('flows', 'Flows', () => [...docs.flows.flatMap(f => leaf({key: `f:${f.flow}`, level: 4, label: title(f.path), pill: sinceMain(f.state), page: {kind: 'flow', artifact: a.id, flow: f.flow}}, f.flow, f.path)),
-      ...(active ? [] : [{key: `${key}:discover`, level: 4, label: 'Discover behavior', action: true, page: {kind: 'flow', artifact: a.id, discover: true}}])]);
+      ...(active ? [] : [{key: `${key}:discover`, level: 4, label: 'Discover behavior', action: true, page: {kind: 'flow', artifact: a.id, discover: true}}]), ...add('flow', 'Add flow')]);
     const history = (worktree?.changes || []).filter(c => c.artifact === a.id && c.history);
     if (history.length) kind('history', 'Delivery history', () => history.flatMap(c => leaf({key: `h:${a.id}/${c.name}`, level: 4, label: c.name, detail: c.version ? `Version ${c.version}` : null, page: {kind: 'change', artifact: a.id, change: c.name}}, c.name)));
     const self = !active || matchesName(filter, a.id, a.title);

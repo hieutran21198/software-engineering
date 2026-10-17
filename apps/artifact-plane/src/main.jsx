@@ -9,7 +9,8 @@ import {RuntimeProvider} from './Runtime.jsx';
 import {RecordedView, RecordedDetails} from './RecordedExecutions.jsx';
 import {taskSelection} from './task-canvas.js';
 import {typeKey, historyKey} from './elements.js';
-import {gitAction, unavailable, knowledgeStatus} from './knowledge-api.js';
+import {gitAction, unavailable, knowledgeStatus, operate, protectedBranch} from './knowledge-api.js';
+import {EditContext, OperationStatus} from './editing.jsx';
 import {changeKey, unitKeyFor, currentChanges, samePage} from './work-model.js';
 import NavigationTree from './NavigationTree.jsx';
 import {SourceBar, ProtectedBanner} from './SourceBar.jsx';
@@ -23,11 +24,12 @@ import FlowPage from './pages/FlowPage.jsx';
 import '@xyflow/react/dist/style.css';
 import './style.css';
 import './workbench.css';
+import './editing.css';
 
 const HOME = {kind: 'work'};
-// The overview reads every in-place change record, so its open-or-retained
-// decision is kept when scoped evidence for one change is merged.
-const withOverview = (snapshot, key, change) => {const known = taskSelection(snapshot?.workflow, key)?.change;return known?.layout === 'in-place' ? {...change, history: known.history, declaredActive: known.declaredActive, historyReason: known.history ? change.historyReason || known.historyReason : ''} : change;};
+const VERBS = {'artifact.create': 'Created artifact', 'artifact.dependencies.set': 'Set dependencies in', 'change.start': 'Started change in', 'document.add': 'Added', 'document.save': 'Saved', 'document.delete': 'Deleted', 'document.properties.set': 'Saved front matter of', 'reference.add': 'Added a reference to', 'reference.remove': 'Removed a reference from', 'selfcheck.record': 'Recorded the self-check in', 'task.add': 'Added task', 'task.update': 'Updated task', 'task.remove': 'Removed task', 'task.checklist.set': 'Updated the checklist in', 'evidence.record': 'Recorded evidence in', 'plan.selfcheck.record': 'Recorded the plan self-check in', 'unit.create': 'Created unit', 'version.prepare': 'Prepared', 'publication.record': 'Recorded the publication review in', 'artifact.migrate': 'Migrated', 'undo': 'Undid the last operation:'};
+const short = path => path.split('/').slice(-2).join('/');
+const describe = (operation, response) => {const files = response.files || [];return `${VERBS[operation] || 'Updated'} ${files.length === 1 ? short(files[0].path) : `${files.length} files`}.`;};
 const KIND = /^docs\/artifacts\/([^/]+)\/(requirements|specifications|decisions)\/(flows\/)?/;
 const pageName = page => ({work: 'work', graph: 'graph', artifact: 'artifact', document: 'document', change: 'change', unit: 'unit', flow: 'flow', recorded: 'executions'})[page?.kind];
 const readTree = root => {try {return new Set(JSON.parse(sessionStorage.getItem('plane-tree:' + root)) || ['g:work', 'g:artifacts', 'g:units']);} catch {return new Set(['g:work', 'g:artifacts', 'g:units']);}};
@@ -41,7 +43,7 @@ export function ProjectExplorer({active: isActive = true, initialPath = '', onOp
   const [expanded, setExpanded] = useState(new Set()), [expandedTypes, setExpandedTypes] = useState(new Set()), [listTypes, setListTypes] = useState(new Set()), [selection, setSelection] = useState(null), [planning, setPlanning] = useState(false);
   const [unitView, setUnitView] = useState('artifacts'), [unitPlanning, setUnitPlanning] = useState(false), [unitNodeSelected, setUnitNodeSelected] = useState(null);
   const [deliveryPhase, setDeliveryPhase] = useState(null), [taskSelected, setTaskSelected] = useState(null), [recordedNode, setRecordedNode] = useState(null);
-  const [flowKnowledge, setFlowKnowledge] = useState('established'), [gitState, setGitState] = useState(null);
+  const [flowKnowledge, setFlowKnowledge] = useState('established'), [gitState, setGitState] = useState(null), [opStatus, setOpStatus] = useState(null), [unsaved, setUnsavedState] = useState(() => new Set());
   const chooseKnowledge = value => {setFlowKnowledge(value);if (value !== 'all') setPlanning(value === 'planning');};
   const workspaceRef = useRef(null), returnFocus = useRef([]);
   const [panelPreference, setPanelWidth] = useState(340), [sidebarPreference, setSidebarPreference] = useState(null), [workspaceWidth, setWorkspaceWidth] = useState(window.innerWidth);
@@ -54,21 +56,30 @@ export function ProjectExplorer({active: isActive = true, initialPath = '', onOp
   useEffect(() => {if (projectRoot) try {sessionStorage.setItem('plane-tree:' + projectRoot, JSON.stringify([...treeOpen]));} catch {}}, [treeOpen, projectRoot]);
   // Opening a page reveals its tree row; Back restores the previous page and focus.
   const routeRef = useRef(route);routeRef.current = route;
+  // Unsaved editor text asks for confirmation before another page opens.
+  const unsavedRef = useRef(unsaved);unsavedRef.current = unsaved;
+  const leave = () => {if (!unsavedRef.current.size) return true;if (!window.confirm('Discard unsaved changes?')) return false;setUnsavedState(new Set());unsavedRef.current = new Set();return true;};
+  const setUnsaved = useCallback((key, dirty) => setUnsavedState(current => {if (current.has(key) === dirty) return current;const next = new Set(current);dirty ? next.add(key) : next.delete(key);return next;}), []);
+  useEffect(() => {if (!unsaved.size) return;const warn = event => {event.preventDefault();event.returnValue = '';};window.addEventListener('beforeunload', warn);return () => window.removeEventListener('beforeunload', warn);}, [unsaved.size]);
   const go = next => {
     const current = routeRef.current, reveal = [];
+    const same = samePage(current.page, next) && current.page.tab === next.tab && current.page.add === next.add && Boolean(current.page.edit) === Boolean(next.edit);
+    if (!same && !leave()) return;
     if (next.artifact && next.kind !== 'change') reveal.push(`a:${next.artifact}`);
     const kind = next.source?.match(KIND);
     if (kind) reveal.push(`a:${kind[1]}:${kind[3] ? 'flows' : kind[2]}`);
     if (next.kind === 'flow' && next.artifact) reveal.push(`a:${next.artifact}:flows`);
+    // A named flow opens with working knowledge, so new and changed flows are visible.
+    if (next.kind === 'flow' && next.flow && flowKnowledge === 'established') chooseKnowledge('planning');
     if (reveal.length) setTreeOpen(open => reveal.every(key => open.has(key)) ? open : new Set([...open, ...reveal]));
     setDrawerOpen(false);
-    if (samePage(current.page, next) && current.page.tab === next.tab) return;
+    if (same) return;
     returnFocus.current = [...returnFocus.current, document.activeElement].slice(-50);
     const value = {page: next, trail: [...current.trail, current.page].slice(-50)};
     routeRef.current = value;setRoute(value);
   };
   const back = () => {
-    const current = routeRef.current;if (!current.trail.length) return;
+    const current = routeRef.current;if (!current.trail.length || !leave()) return;
     const value = {page: current.trail.at(-1), trail: current.trail.slice(0, -1)};routeRef.current = value;setRoute(value);
     const target = returnFocus.current.pop();
     requestAnimationFrame(() => requestAnimationFrame(() => {
@@ -146,7 +157,7 @@ export function ProjectExplorer({active: isActive = true, initialPath = '', onOp
   }, [isActive, projectRoot, snapshot?.repository.path, loadedSession]);
   useEffect(() => () => {generation.current++;queueRef.current?.close();eventsRef.current?.close();completionController.current?.abort();}, []);
   function activateWorktree(target) {
-    if (target === worktreePath && !openingWorktree) return;
+    if (target === worktreePath && !openingWorktree || !leave()) return;
     const entry = snapshot?.workflow.worktrees.find(w => w.path === target);
     if (entry?.availability !== 'readable') {setError(entry?.diagnostics.map(d => d.message).join(' ') || 'This worktree is unavailable.');return;}
     setOpeningWorktree(target);open(projectRoot, false, target, true);
@@ -163,7 +174,7 @@ export function ProjectExplorer({active: isActive = true, initialPath = '', onOp
       if (session !== generation.current || controller.signal.aborted) return;
       if (result.diagnostics.some(d => d.code === 'stale-response')) {setSectionState('Stale');setFresh(false);setError(result.diagnostics.filter(d => d.code === 'stale-response').map(d => d.message).join(' '));return;}
       let unitData = result.data;const existing = body.unit ? unitContext(snapshotRef.current, key)?.unit : null;if (existing?.completionEpoch === overviewEpoch) unitData = {...unitData, completion: existing.completion, evidence: existing.evidence, completionEpoch: existing.completionEpoch};
-      const next = body.unit ? mergeUnit(overviewRef.current, key, unitData) : mergeChange(overviewRef.current, key, withOverview(overviewRef.current, key, result.data));
+      const next = body.unit ? mergeUnit(overviewRef.current, key, unitData) : mergeChange(overviewRef.current, key, result.data);
       setSnapshot(next);setSectionState(result.completeness === 'partial' ? 'Loaded with diagnostics' : 'Loaded');
       if (body.unit) {if (active.current.unitNodeSelected && !unitNode(unitContext(next, key), unitView, unitPlanning, active.current.unitNodeSelected)) setUnitNodeSelected(null);}
       else if (active.current.taskSelected && !taskSelection(next.workflow, key, active.current.taskSelected)?.task) setTaskSelected(null);
@@ -183,7 +194,7 @@ export function ProjectExplorer({active: isActive = true, initialPath = '', onOp
         try {
           const key = changeKey(worktree.path, c.artifact, c.name), result = await repositoryQuery({path: root, worktree: worktree.path, artifact: c.artifact, change: c.name, section: 'workflow'}, controller.signal);
           if (controller.signal.aborted || session !== generation.current) return;
-          if (!result.diagnostics.some(d => d.code === 'stale-response')) patch(current => taskSelection(current.workflow, key) ? mergeChange(current, key, withOverview(current, key, result.data)) : current);
+          if (!result.diagnostics.some(d => d.code === 'stale-response')) patch(current => taskSelection(current.workflow, key) ? mergeChange(current, key, result.data) : current);
         } catch (error) {if (error.name === 'AbortError') return;}
       }
     })();
@@ -194,8 +205,7 @@ export function ProjectExplorer({active: isActive = true, initialPath = '', onOp
     if (!isActive || !projectRoot || !worktreePath) return;
     const controller = new AbortController();
     gitAction({path: projectRoot, worktree: worktreePath, operation: 'status'}, controller.signal).then(result => {
-      const status = result.status && typeof result.status === 'object' ? result.status : result, list = status.knowledge || status.dirty || status.paths;
-      setGitState(Array.isArray(list) ? {count: list.length} : null);
+      setGitState(Array.isArray(result.status?.knowledge) ? result.status : null);
     }).catch(error => {if (error.name !== 'AbortError') setGitState(null);});
     return () => controller.abort();
   }, [isActive, projectRoot, worktreePath, overviewEpoch]);
@@ -264,6 +274,30 @@ export function ProjectExplorer({active: isActive = true, initialPath = '', onOp
     } catch (error) {if (error.name !== 'AbortError') setError(error.message);}}})();
     return () => controller.abort();
   }, [isActive, historyArtifact, deliveryHistoryKey, listTypes.has(deliveryHistoryKey), overviewEpoch]);
+  // Every write goes through one runner: apply, announce with Undo, then refresh.
+  const target = {path: projectRoot, worktree: worktreePath};
+  async function run(operation, input, {expected, label} = {}) {
+    const response = await operate(target, operation, input, {expected});
+    setOpStatus({text: label || describe(operation, response), operationId: response.operationId || null});
+    if (Array.isArray(response.status?.knowledge)) setGitState(response.status);
+    // Pages open the new record after the refreshed overview contains it.
+    await open(projectRoot, true);
+    return response;
+  }
+  async function undo() {
+    const operationId = opStatus?.operationId;if (!operationId) return;
+    try {const response = await operate(target, 'undo', {operationId});setOpStatus({text: describe('undo', response), operationId: null});open(projectRoot, true);}
+    catch (failure) {setOpStatus({text: 'Undo is not possible.', error: failure.message, operationId: null});}
+  }
+  async function runGit(operation, input) {
+    const response = await gitAction({...target, operation, input});
+    if (Array.isArray(response.status?.knowledge)) setGitState(response.status);
+    if (operation === 'commit') setOpStatus({text: `Committed ${response.result?.paths?.length || 0} knowledge files as ${String(response.result?.commit || '').slice(0, 8)}.`, operationId: null});
+    if (operation === 'discard') setOpStatus({text: `Discarded changes to ${short(input.path)}.`, operationId: null});
+    await open(projectRoot, true);
+    return response;
+  }
+  const editing = {editable: Boolean(snapshot) && !protectedBranch(snapshot.repository.branch), run, git: runGit, setUnsaved, status: gitState, root: projectRoot, worktree: worktreePath};
   async function createBranch(name) {
     try {await gitAction({path: projectRoot, worktree: worktreePath, operation: 'branch.create', input: {name}});}
     catch (error) {throw unavailable(error) ? Error('This server cannot create branches yet. Run git switch -c in a terminal, then refresh.') : error;}
@@ -274,14 +308,14 @@ export function ProjectExplorer({active: isActive = true, initialPath = '', onOp
   const {sidebar: sidebarWidth, inspector: panelWidth, sidebarMax, inspectorMax: panelMax} = panelLayout(workspaceWidth, sidebarPreference, panelPreference, true);
   const rail = {width: panelWidth, max: panelMax, onResize: resizePanel};
   const project = snapshot?.repository.path.split('/').at(-1) || '';
-  const uncommitted = gitState?.count ?? knowledgeStatus(snapshot?.repository.status);
-  const editState = uncommitted ? `${uncommitted} uncommitted knowledge ${uncommitted === 1 ? 'file' : 'files'}` : 'Clean';
+  const uncommitted = gitState ? gitState.knowledge.length : knowledgeStatus(snapshot?.repository.status);
+  const editState = [unsaved.size ? `${unsaved.size} unsaved` : null, uncommitted ? `${uncommitted} uncommitted knowledge ${uncommitted === 1 ? 'file' : 'files'}` : null].filter(Boolean).join(' · ') || 'Clean';
   const backLabel = route.trail.length ? pageName(route.trail.at(-1)) : null;
   const common = {project, onOpen: go};
   // The last flow page stays mounted while its sources are read.
   if (page.kind === 'flow') lastFlow.current = page;
   const flowPage = lastFlow.current;
-  return <RuntimeProvider snapshot={snapshot} active={isActive}><div className="app" onKeyDown={event => {if (event.key === 'Escape' && drawerOpen) {setDrawerOpen(false);}}}>
+  return <EditContext.Provider value={editing}><RuntimeProvider snapshot={snapshot} active={isActive}><div className="app" onKeyDown={event => {if (event.key === 'Escape' && drawerOpen) {setDrawerOpen(false);}}}>
     <header className="topbar" hidden={Boolean(snapshot)}>
       <div className="brand"><span className="brand-icon">⌘</span><div><h1>Artifact Plane</h1><span>Local ADD workbench</span></div></div>
     </header>
@@ -294,10 +328,11 @@ export function ProjectExplorer({active: isActive = true, initialPath = '', onOp
     {snapshot && <SourceBar snapshot={snapshot} worktreePath={worktreePath} onSelect={activateWorktree} busy={busy} opening={openingWorktree} editState={editState}
       onRefresh={() => open(projectRoot, true)} onChangeRepository={() => setEditingRepo(true)} drawerOpen={drawerOpen} onDrawer={() => setDrawerOpen(value => !value)} drawerId={`navigation-panel-${tabId}`}/>}
     {snapshot && <ProtectedBanner key={worktreePath} branch={snapshot.repository.branch} onCreate={createBranch}/>}
+    {snapshot && <OperationStatus status={opStatus} onUndo={undo} onDismiss={() => setOpStatus(null)}/>}
     {error && <div role="alert" className="error-banner">{error}</div>}
     <div className={`workspace ${drawerOpen ? 'drawer-open' : ''}`} ref={workspaceRef} style={{'--sidebar-width': sidebarWidth + 'px'}}>
       <aside className="tree-panel" id={`navigation-panel-${tabId}`} aria-label="Repository navigation" hidden={!snapshot || narrow && !drawerOpen}>
-        {snapshot && <NavigationTree snapshot={snapshot} worktree={worktree} page={page} expanded={treeOpen} onToggle={toggleTree} onOpen={go}/>}
+        {snapshot && <NavigationTree snapshot={snapshot} worktree={worktree} page={page} expanded={treeOpen} onToggle={toggleTree} onOpen={go} editable={editing.editable}/>}
         <div className="sidebar-footer">Git + Markdown<br/><span>Source of truth</span></div>
       </aside>
       {snapshot && !narrow && <div className="navigation-divider" role="separator" aria-label="Resize navigation panel" aria-orientation="vertical" aria-valuemin={180} aria-valuemax={sidebarMax} aria-valuenow={sidebarWidth} aria-controls={`navigation-panel-${tabId}`} tabIndex={0}
@@ -308,18 +343,18 @@ export function ProjectExplorer({active: isActive = true, initialPath = '', onOp
         {!snapshot ? <div className="empty-canvas"><div className="empty-symbol">◇ → ◇</div><h2>Work with the knowledge behind your code</h2><p>Open an ADD repository to see current work, artifacts and units of work.</p></div> : <>
           <GraphPage {...common} snapshot={snapshot} active={page.kind === 'graph'} planning={planning} onPlanning={value => chooseKnowledge(value ? 'planning' : 'established')} expanded={expanded} expandedTypes={expandedTypes} listTypes={listTypes} selection={selection} onSelection={setSelection}
             toggle={toggle} toggleType={toggleType} toggleList={toggleList} revealElement={revealElement} document={page.kind === 'graph' ? document_ : null} onRead={readElement} onReadEstablished={readEstablished} onFlows={openFlows} rail={rail} tabId={tabId}/>
-          {page.kind === 'work' && <WorkPage {...common} snapshot={snapshot} worktree={worktree}/>}
+          {page.kind === 'work' && <WorkPage {...common} snapshot={snapshot} worktree={worktree} add={page.add}/>}
           {page.kind === 'artifact' && <ArtifactPage {...common} snapshot={snapshot} artifactId={page.artifact} worktree={worktree} document={document_?.source === documentSource ? document_ : null} planning={planning}
-            historiesOpen={listTypes.has(deliveryHistoryKey)} onToggleHistories={() => toggleList(deliveryHistoryKey)} onGraph={showInGraph} onFlows={openFlows}/>}
+            historiesOpen={listTypes.has(deliveryHistoryKey)} onToggleHistories={() => toggleList(deliveryHistoryKey)} onGraph={showInGraph} onFlows={openFlows} add={page.add}/>}
           {page.kind === 'document' && <DocumentPage {...common} entry={page} snapshot={snapshot} root={projectRoot} worktree={worktreePath} epoch={overviewEpoch} targets={navigationTargets} onBack={route.trail.length ? back : null} backLabel={backLabel} onReadEstablished={readEstablished} onFlows={openFlows}/>}
           {page.kind === 'change' && <ChangePage {...common} context={changeContext} tab={changeTab} onTab={tab => replacePage({...page, tab})} phase={deliveryPhase} onPhase={setDeliveryPhase} taskSelected={taskSelected} onTask={setTaskSelected}
-            document={document_} loading={sectionState} review={{root: projectRoot, epoch: overviewEpoch, session: loadedSession, updating: busy, fresh}} rail={rail} tabId={tabId} active={isActive}/>}
-          {page.kind === 'unit' && <UnitPage {...common} context={selectedUnit} view={unitView} onView={value => {setUnitView(value);setUnitNodeSelected(null);}} planning={unitPlanning} onPlanning={value => {setUnitPlanning(value);setUnitNodeSelected(null);}}
+            document={document_} loading={sectionState} review={{root: projectRoot, epoch: overviewEpoch, session: loadedSession, updating: busy, fresh}} rail={rail} tabId={tabId} active={isActive} snapshot={snapshot} add={page.add}/>}
+          {page.kind === 'unit' && <UnitPage {...common} snapshot={snapshot} context={selectedUnit} view={unitView} onView={value => {setUnitView(value);setUnitNodeSelected(null);}} planning={unitPlanning} onPlanning={value => {setUnitPlanning(value);setUnitNodeSelected(null);}}
             selection={unitNodeSelected} onSelect={setUnitNodeSelected} loading={sectionState} document={document_} completion={{state: completionState, error: completionError, load: loadCompletion}}
             onDocument={source => go({kind: 'document', source, title: source.split('/').at(-1), scope: {unit: page.unit}})}
             onFlow={entry => {const owner = entry.flow?.split(':')[0], member = selectedUnit?.unit.members.find(m => m.artifact === owner);if (member?.sourcePath?.includes('/changes/') || member?.establishmentEvidence?.state === 'proposed') chooseKnowledge('planning');go({kind: 'flow', flow: entry.flow, artifact: owner});}}
             rail={rail} tabId={tabId}/>}
-          {flowPage && <FlowPage {...common} page={flowPage} active={isActive && page.kind === 'flow'} root={projectRoot} worktree={worktreePath} epoch={overviewEpoch} knowledge={flowKnowledge} onKnowledge={chooseKnowledge} artifacts={snapshot.artifacts.map(a => ({id: a.id, title: a.title}))}/>}
+          {flowPage && <FlowPage {...common} snapshot={snapshot} page={flowPage} active={isActive && page.kind === 'flow'} root={projectRoot} worktree={worktreePath} epoch={overviewEpoch} knowledge={flowKnowledge} onKnowledge={chooseKnowledge} artifacts={snapshot.artifacts.map(a => ({id: a.id, title: a.title}))}/>}
           {page.kind === 'recorded' && <section className="page canvas-page" aria-label="Recorded executions">
             <div className="page-body with-rail" style={{'--rail-width': panelWidth + 'px'}}>
               <div className="canvas-area"><RecordedView id={page.context} selection={recordedNode} onSelect={setRecordedNode}/></div>
@@ -335,6 +370,6 @@ export function ProjectExplorer({active: isActive = true, initialPath = '', onOp
       <span>{busy ? 'Reading repository…' : snapshot ? `${snapshot.artifacts.length} artifacts · ${snapshot.references.length} element references` : 'Ready to open a repository'}</span>
       <span role="status" aria-label="Repository update status">{busy || sectionState === 'Loading' ? 'Updating' : snapshot ? connected && fresh && sectionState !== 'Error' && sectionState !== 'Stale' ? 'Current' : 'Stale · repository observation disconnected or update unavailable' : 'Not loaded'}</span>
     </footer>
-  </div></RuntimeProvider>;
+  </div></RuntimeProvider></EditContext.Provider>;
 }
 createRoot(document.getElementById('root')).render(<Workspace Explorer={ProjectExplorer}/>);
