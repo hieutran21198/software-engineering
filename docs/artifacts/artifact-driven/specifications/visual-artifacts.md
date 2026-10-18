@@ -30,7 +30,7 @@ Replace mode removes only the sentences that a row specification names; summariz
 
 ## Corrections
 
-- D3, units-of-work.md, Version provenance and Guidance and delivery: state the in-place rule first. A new version record declares `source_change` only and does not write `delivery_tasks`; delivery resolves to `changes/<source_change>/tasks/`. Limit the `delivery_tasks: change` rules to versions in the legacy layout. Correct line 50 with the same rule, so that the file does not contradict itself.
+- D3, units-of-work.md, Version provenance and Guidance and delivery: state the in-place rule first. A new version record declares `source_change` only and does not write `delivery_tasks`; delivery resolves to `changes/<source_change>/tasks/`. Limit the `delivery_tasks: change` rules to versions in the legacy layout. Correct line 50 and the evidence-source sentence of Shared evidence with the same rule, so that the file does not contradict itself; the second location was found during Implementation.
 - D8, system-flows.md, support kinds element and flow: state that a support resolves in the same checked-out tree, as references do in knowledge-layout.md, and that the status and change selectors are legacy-only and have no effect for in-place artifacts. D8 is added to the survey; it was found in this phase.
 
 Defects D1, D2 and D4 to D7 are not in a drawn passage and stay recorded in the survey. The participant selector wording of model-explanations.md is not contradicted by a current rule and is drawn as written.
