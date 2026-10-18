@@ -81,7 +81,31 @@ acceptance:
       both bundle copies are identical for changed files, and validate-knowledge
       reports no error.
     integration: true
-evidence: []
+evidence:
+  - criterion: semantics
+    method: Review of the ADD contract, the definition row and the guideline in both bundle copies.
+    result: passed
+    source: docs/artifacts/artifact-driven/changes/change-impact-semantics/tasks/02-validation.md#validation-checks
+  - criterion: accuracy
+    method: Nine ground-truth cases with scripts/impact-benchmark.mjs on the delivery branch.
+    result: passed
+    source: docs/artifacts/artifact-plane/changes/change-impact-intelligence/tasks/08-integration-version.md#combined-checks
+  - criterion: explanation
+    method: Service tests of the explanation record, coverage statement and empty answers.
+    result: passed
+    source: docs/artifacts/artifact-plane/changes/change-impact-intelligence/tasks/02-impact-service.md#service-checks
+  - criterion: interfaces
+    method: Route, MCP parity, delegation and packet tests; existing flow and review tests.
+    result: passed
+    source: docs/artifacts/artifact-plane/changes/change-impact-intelligence/tasks/03-interfaces.md#interface-checks
+  - criterion: performance
+    method: Benchmark index, incremental, query and output-size measurements on the delivery branch.
+    result: passed
+    source: docs/artifacts/artifact-plane/changes/change-impact-intelligence/tasks/08-integration-version.md#combined-checks
+  - criterion: integration
+    method: Node, browser, build, Go, website, validate-knowledge and bundle mirror checks on the combined branch.
+    result: passed
+    source: docs/artifacts/artifact-plane/changes/change-impact-intelligence/tasks/08-integration-version.md#combined-checks
 ---
 
 # Explain what a change affects
@@ -100,4 +124,4 @@ A graph database, a second vector store, a hosted model, generated answers, nume
 
 ## Validation evidence
 
-No checks have run. The research prototype and its measurements are recorded in the Plane decision record and the published research page; they are not delivery evidence.
+Six criteria passed on 18 October 2026; the check details are in the task evidence named in the front matter. On the delivery branch the benchmark measured direct precision and recall 1.0 for the eight symbol-seeded cases, 15 of 15 step checks, no hard negative, a full index in about 1 second, an incremental update in 35 ms and warm queries of at most 56 ms. The usability criterion is open until the owner reviews the Impact page. The research prototype measurements in the Plane decision record are not delivery evidence.
