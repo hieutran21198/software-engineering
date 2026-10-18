@@ -7,7 +7,7 @@ Consumers and their agents use the bundled guidance to install ADD from a GitHub
 Observed facts in the canonical bundle on main:
 
 - The binary download, checksum, preview and adopt commands, the destination and conflict rules, and the harness setup instructions occur in 05-adoption/README.md and again in 06-guidelines/adopting-from-git.md. Shorter copies of the adopt command and of the harness setup occur in 06-guidelines/getting-started.md and 06-guidelines/working-with-ai.md. Copies of the same instruction can drift apart.
-- The download examples set the release to v1.1.0. The latest published release is v2.0.0. Its binary contains ADD 2.0.0; ADD 2.1.0 to 2.5.0 merged to main after that tag. The guidance does not say that the adopted bundle matches the release of the binary, not main or the website.
+- The download examples set the release to v1.1.0. The latest published release is v2.0.0. Its binary contains ADD 2.0.0; ADD 2.1.0 to 2.5.0 merged to main after that tag. The guidance does not say that the adopted bundle matches the release of the binary, not main or the website. Validation later found that v1.1.0 is a tag without a published release, so the documented example download returned 404.
 - The adoption guide ends with a pointer to the coordinator skill and two paragraphs about harness setup. It does not give an ordered path from the copied bundle to a reviewed setup and the first artifact change.
 - The bundle overview describes the guidelines as "Git-based adoption" and the adoption section as "Go command available", although the documented path is a released binary that does not need Go.
 

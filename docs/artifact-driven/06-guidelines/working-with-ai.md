@@ -4,7 +4,7 @@
 
 Give the agent the adopted bundle location, knowledge workspace, implementation repositories, intended capability, and relevant constraints. Ask it to use the coordinator skill at `docs/artifact-driven/03-execution/skills/add-coordinator/SKILL.md`.
 
-Ask the consumer AI to adopt the bundle and configure its own harness, such as Command Code, Codex, or Claude Code. It determines the supported skill and agent setup from the installed tool. Keep the canonical ADD bundle intact so skill and pattern references remain available.
+Ask the consumer AI to adopt the bundle and configure its own harness, such as Command Code, Codex, or Claude Code. Use the [adoption request](adopting-from-git.md#ask-an-ai-agent-to-adopt). It determines the supported skill and agent setup from the installed tool. Keep the canonical ADD bundle intact so skill and pattern references remain available.
 
 ## Required Skills
 

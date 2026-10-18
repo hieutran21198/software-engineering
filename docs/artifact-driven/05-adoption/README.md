@@ -17,14 +17,25 @@ Choose the asset for your operating system and processor:
 | Windows | AMD64 / x86-64 | `se-adopt-windows-amd64.exe` |
 | Windows | ARM64 | `se-adopt-windows-arm64.exe` |
 
-Use a chosen release tag for repeatable adoption. The examples use `v1.1.0`; change the tag when selecting another release. Verify the checksum before running the binary.
+The bundle in a release can be older than `main` or the published website. When the two differ, read the adopted copy, not the website.
+
+Set a chosen tag for repeatable adoption. Leave the tag empty to use the latest published release. The scripts use the same tag for the asset and `SHA256SUMS` and print the tag that they use; record it. Verify the checksum before running the binary.
 
 ### Linux and macOS
 
-This shell example selects the platform, downloads into a new temporary directory, and checks the selected asset:
+This shell example resolves the release, selects the platform, downloads into a new temporary directory, and checks the selected asset:
 
 ```sh
-release=v1.1.0
+release=
+repo_url=https://github.com/hieutran21198/software-engineering
+if [ -z "$release" ]; then
+  latest_url=$(curl -fsSLI -o /dev/null -w '%{url_effective}' "$repo_url/releases/latest")
+  release=${latest_url##*/}
+fi
+case "$release" in
+  v*) echo "Using release $release" ;;
+  *) echo 'Could not resolve a release tag.'; exit 1 ;;
+esac
 case "$(uname -s)" in
   Linux) platform=linux ;;
   Darwin) platform=darwin ;;
@@ -38,7 +49,7 @@ esac
 asset="se-adopt-$platform-$processor"
 download_dir=$(mktemp -d)
 cd "$download_dir"
-release_url="https://github.com/hieutran21198/software-engineering/releases/download/$release"
+release_url="$repo_url/releases/download/$release"
 curl -fL "$release_url/$asset" -o "$asset"
 curl -fL "$release_url/SHA256SUMS" -o SHA256SUMS
 awk -v asset="$asset" '$2 == asset' SHA256SUMS > selected.sha256
@@ -58,9 +69,17 @@ Continue only when checksum verification succeeds. Run `./se-adopt --list` from 
 In a new download directory, use PowerShell. Choose the asset from the table for your processor:
 
 ```powershell
-$release = 'v1.1.0'
+$release = ''
+$repoUrl = 'https://github.com/hieutran21198/software-engineering'
+if (-not $release) {
+  $response = (Invoke-WebRequest "$repoUrl/releases/latest" -Method Head -UseBasicParsing).BaseResponse
+  $latestUrl = if ($response.ResponseUri) { $response.ResponseUri } else { $response.RequestMessage.RequestUri }
+  $release = $latestUrl.AbsoluteUri.Split('/')[-1]
+}
+if ($release -notlike 'v*') { throw 'Could not resolve a release tag.' }
+"Using release $release"
 $asset = 'se-adopt-windows-amd64.exe'
-$releaseUrl = "https://github.com/hieutran21198/software-engineering/releases/download/$release"
+$releaseUrl = "$repoUrl/releases/download/$release"
 Invoke-WebRequest "$releaseUrl/$asset" -OutFile $asset
 Invoke-WebRequest "$releaseUrl/SHA256SUMS" -OutFile SHA256SUMS
 $line = Get-Content SHA256SUMS | Where-Object { ($_ -split '\s+')[1] -eq $asset }
@@ -104,11 +123,7 @@ The consumer workspace must already exist. Output paths must remain inside it. D
 
 The destination contains the ADD overview, foundation, methodology, execution guidance and role skills, reusable patterns, adoption guide, and end-user guidelines. Relative documentation links remain usable within the copied bundle.
 
-This destination holds ADD guidance. Project-specific artifacts can use the documented `docs/artifacts/` structure; adoption does not invent domain artifacts, tasks, or versions.
-
-Read the copied overview, then use the coordinator skill in `03-execution/skills/add-coordinator/SKILL.md` with your agent. Skills are supplied as files; this command does not register them in a particular agent tool or modify consumer `AGENTS.md` files.
-
-For AI-assisted adoption, the consumer agent handles project-local skill/team setup and focused additions to its applicable `AGENTS.md` or `CLAUDE.md`. The bundled end-user guidelines specify required capabilities; the agent chooses the native configuration appropriate to its harness.
+This destination holds ADD guidance. Project-specific artifacts can use the documented `docs/artifacts/` structure; adoption does not invent domain artifacts, tasks, or versions. Skills are supplied as files; the command does not register them in an agent tool or modify consumer `AGENTS.md` or `CLAUDE.md` files.
 
 ## Existing Files
 
@@ -129,3 +144,15 @@ The ADD bundle includes `kiss` and `asd-ste-100` under `required-skills/`. Both 
 ## Flow knowledge after adoption
 
 The bundle includes the [system-flow format](../06-guidelines/system-flows.md) and phase maintenance instructions. Adoption copies guidance; it does not invent project flows, evidence, or unit membership. After adoption, the coordinator investigates existing knowledge and implementation, records applicable flow impact in each new unit, and keeps detailed flow definitions in their owning specifications. Configure available flow retrieval for source-backed discovery and retain targeted repository inspection when indexes are incomplete or stale.
+
+## After Adoption
+
+Do these steps in order after a successful copy:
+
+1. Check the result. Run the same `se-adopt` command again with `--dry-run`. A complete adoption reports `0 new files`. Confirm that the destination contains `README.md`, `required-skills/kiss/SKILL.md` and `required-skills/asd-ste-100/SKILL.md`.
+2. Configure your harness to load the coordinator, PO, TL and implementer skills, and make both [required skills](../06-guidelines/working-with-ai.md#required-skills) available to every role. The [required capabilities](../06-guidelines/working-with-ai.md#required-capabilities) describe the role setup and the fallback when a capability is unavailable.
+3. Add focused ADD instructions to the applicable existing `AGENTS.md` or `CLAUDE.md`, as the [required capabilities](../06-guidelines/working-with-ai.md#required-capabilities) describe. Preserve unrelated instructions.
+4. Put the adopted bundle and the setup changes on a dedicated branch. Record the release tag in the PR description, then use your normal review and merge process. `se-adopt` does not commit, push or open PRs.
+5. Start the first change. [Getting started](../06-guidelines/getting-started.md) explains the first artifact and its `change-initial`, the [minimal change scaffold](../06-guidelines/minimal-change.md) covers a one-artifact outcome, and [Start a change](../06-guidelines/working-with-ai.md#start-a-change) gives a request for your agent.
+
+Adoption and setup do not authorize a domain change, implementation, commits, pushes or merges. Each of these needs its own request, and implementation still needs the ADD interview and plan approval.

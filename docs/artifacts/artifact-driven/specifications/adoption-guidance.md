@@ -26,7 +26,9 @@ The release paragraph in Download the Binary states:
 
 The Linux and macOS script starts with `release=` (empty) and the repository URL. When `release` is empty, the script resolves the tag from the final URL of `<repository>/releases/latest` with `curl -fsSLI -o /dev/null -w '%{url_effective}'` and keeps the last path segment. The script stops with a message unless the tag starts with `v`; when no release exists, the final URL ends in `releases` and fails this check. The script prints `Using release <tag>` before download. The remaining steps stay as they are: platform and processor selection, download into a new temporary directory, checksum selection and verification, and rename with chmod only after verification.
 
-The Windows script starts with `$release = ''`. When it is empty, the script reads `tag_name` from `https://api.github.com/repos/hieutran21198/software-engineering/releases/latest` with Invoke-RestMethod. It throws unless the tag starts with `v`, writes `Using release <tag>`, and then keeps the existing download, single-line checksum match and hash comparison.
+The Windows script starts with `$release = ''` and the repository URL. When the tag is empty, the script sends a HEAD request to `<repository>/releases/latest` with Invoke-WebRequest and keeps the last path segment of the final URL. It reads that URL from ResponseUri in Windows PowerShell 5.1 and from RequestMessage.RequestUri in PowerShell 7. It throws unless the tag starts with `v`, writes `Using release <tag>`, and then keeps the existing download, single-line checksum match and hash comparison.
+
+Neither script uses the GitHub REST API. Its unauthenticated limit of 60 requests per hour applies per IP address, so a shared address can exhaust it. Validation of the first contract, which read `tag_name` from that API, failed for this reason.
 
 No bundle page names a specific past tag as an example default. Prose that needs a tag uses `<tag>`.
 

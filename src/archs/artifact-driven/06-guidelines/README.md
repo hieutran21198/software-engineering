@@ -10,7 +10,7 @@ Use these guides to adopt ADD and carry out the first artifact change. They supp
 | [Units of work](units-of-work.md) | Group artifact changes around one outcome and record shared validation knowledge. |
 | [Evidence records](evidence-records.md) | Record checks and publication assertions with explicit sources and verification limits. |
 | [Writing artifacts](writing-artifacts.md) | Write identity, change and version records, requirements, specifications, decisions, and task plans. |
-| [Adopting from a release](adopting-from-git.md) | Download a verified binary, copy ADD, and let the consumer AI set up its harness. Includes an agent-ready request. |
+| [Adopting from a release](adopting-from-git.md) | Follow the adoption guide by hand, or give an AI agent the ready request to adopt a verified release and set up its harness. |
 | [Working with AI](working-with-ai.md) | Required role capabilities, focused project instructions, plan approval, and team merge review. |
 
 ADD guidance is installed under `docs/artifact-driven` by default. Project artifacts live separately under `docs/artifacts`. The first holds reusable knowledge about the approach; the second holds your project's governed knowledge.

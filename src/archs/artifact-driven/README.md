@@ -18,8 +18,8 @@ This directory documents the approach.
 | [02 — Methodology](02-methodology/README.md) | Workflow ownership, dependency coordination, and validation. | Documented from agreed design decisions. |
 | [03 — Execution](03-execution/README.md) | Coordinator and role skills, plan approval, worktrees, and PR handoff. | Documented with self-contained skills. |
 | [04 — Patterns](04-patterns/README.md) | Reusable domain design, interface, behavior, architecture, testing, integration, and policy practices. | Pattern library available. |
-| [05 — Adoption](05-adoption/README.md) | Install the self-contained ADD bundle in a consumer workspace with `se-adopt`. | Go command available. |
-| [06 — Guidelines](06-guidelines/README.md) | Human and AI-assisted getting started, artifact writing, and Git-based adoption. | End-user guides available. |
+| [05 — Adoption](05-adoption/README.md) | Download a verified release binary, install the self-contained ADD bundle with `se-adopt`, and take the next steps. | Release binaries available; Go not required. |
+| [06 — Guidelines](06-guidelines/README.md) | Human and AI-assisted getting started, artifact writing, and release-based adoption. | End-user guides available. |
 
 ## Responsibilities
 

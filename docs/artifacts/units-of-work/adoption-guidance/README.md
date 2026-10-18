@@ -25,7 +25,23 @@ acceptance:
     criterion: Both bundle copies are identical for changed files, links and the
       documentation hierarchy are valid, Go tests pass and the website builds.
     integration: true
-evidence: []
+evidence:
+  - criterion: one-procedure
+    method: Search of fenced blocks, request text and setup rule in both bundle copies.
+    result: passed
+    source: docs/artifacts/artifact-driven/changes/change-adoption-guidance/tasks/02-validation.md#evidence
+  - criterion: release-selection
+    method: Live runs of the Linux script and of the PowerShell script (pwsh 7.6.6) with empty, chosen and invalid tags.
+    result: passed
+    source: docs/artifacts/artifact-driven/changes/change-adoption-guidance/tasks/02-validation.md#evidence
+  - criterion: next-steps
+    method: Contract review of After Adoption and the link check.
+    result: passed
+    source: docs/artifacts/artifact-driven/changes/change-adoption-guidance/tasks/02-validation.md#evidence
+  - criterion: integration
+    method: Bundle diff, link and hierarchy check, Go tests and vet, website build and validate-knowledge.
+    result: passed
+    source: docs/artifacts/artifact-driven/changes/change-adoption-guidance/tasks/02-validation.md#evidence
 ---
 
 # Improve the ADD adoption guidance
@@ -40,4 +56,4 @@ se-adopt code and behavior, an upgrade procedure, a new release tag, renamed fil
 
 ## Validation evidence
 
-No checks have run.
+All four criteria passed on 18 October 2026. The check details are in the [validation task evidence](../../artifact-driven/changes/change-adoption-guidance/tasks/02-validation.md#evidence). Windows PowerShell 5.1 was reviewed statically only.
