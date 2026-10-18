@@ -43,7 +43,7 @@ Validate version, object shape, absolute path strings, uniqueness, and active me
 
 Restored inactive tabs load when first selected. The restored active tab opens through existing APIs and establishes fresh observation. A missing or unreadable project keeps its tab and path with an error and retry/open controls. Successful opens in another tab remain usable. Stored paths persist for retry until the user closes or replaces the tab. Separate browser windows read at startup and save their own workspace; live cross-window synchronization is excluded. Persistence is scoped to browser profile and origin, so port changes have separate workspaces.
 
-The state diagram shows the states of one project tab, as the sections Workspace and identity, Explorer isolation and lifecycle and Browser persistence describe them. Each arrow is an event that changes the state of one tab. Active is the active tab with the active explorer. Inactive is hidden, keeps its session state, and its loaded data is stale until reconciled. Error keeps the tab and path with an error and retry and open controls. The end marker means that the tab is closed or removed: close unmounts the explorer and releases its resources, and the next tab at the closed index is selected, otherwise the preceding tab.
+The state diagram shows the states of one project tab, as the sections Workspace and identity, Explorer isolation and lifecycle and Browser persistence describe them. Each arrow is an event that changes the state of one tab. Active is the active tab with the active explorer. Inactive is a tab that is not selected and not shown; it keeps its session state, and its loaded data is stale until reconciled. Error keeps the tab and path with an error and retry and open controls. The end marker means that the tab is closed or removed: close unmounts the explorer and releases its resources, and the next tab at the closed index is selected, otherwise the preceding tab.
 
 ```mermaid
 stateDiagram-v2
@@ -73,6 +73,8 @@ Gaps, as the source states them. The text does not name the state "Restored, not
 - whether an Empty tab becomes inactive when another tab is selected;
 - an open failure from Empty;
 - the meaning of "replaces the tab".
+
+A hidden browser page, as Hidden browser tab defines it, closes the event streams of the active explorer but does not change the state of any tab, so the diagram has no state for it.
 
 ## Validation and impact
 
