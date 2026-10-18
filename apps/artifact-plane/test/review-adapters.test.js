@@ -1,7 +1,8 @@
 import test from 'node:test';
 import {request} from 'node:http';
 import assert from 'node:assert/strict';
-import {writeFile,utimes,symlink,rm} from 'node:fs/promises';
+import {writeFile,utimes,symlink,rm,mkdtemp} from 'node:fs/promises';
+import {tmpdir} from 'node:os';
 import {join} from 'node:path';
 import {fileURLToPath} from 'node:url';
 import {Client} from '@modelcontextprotocol/sdk/client/index.js';
@@ -16,14 +17,16 @@ function files(){
  return new Map([[base+'README.md','---\ncurrent_version: 1.0.0\ndepends_on: []\n---\n# Demo'],[version+'README.md','# Baseline'],[version+'requirements/contract.md','Before\n'],[change+'README.md','# Scope'],[change+'requirements/contract.md','After\n'],[change+'requirements/added.md','Added\n'],[change+'tasks/README.md','---\ntasks: []\n---\n# Plan'],[change+'specifications/flows/behavior.md','---\n'+JSON.stringify({flow})+'\n---\n# Behavior'],['src/check.js',content]]);
 }
 async function setup(t,{roots}={}){
- const fixture=await fixtureRepository(files()),other=await fixtureRepository(files()),reviewService=createReviewService({roots:[fixture.root]});
+ // A private state directory: the stdio child does not inherit ARTIFACT_PLANE_STATE_DIR.
+ const stateDir=await mkdtemp(join(tmpdir(),'plane-review-state-'));
+ const fixture=await fixtureRepository(files()),other=await fixtureRepository(files()),reviewService=createReviewService({roots:[fixture.root],stateDir});
  const server=createAppServer({reviewService,repositoryObservation:{intervalMs:20,debounceMs:5}});
  await new Promise(resolve=>server.listen(0,'127.0.0.1',resolve));
  const client=new Client({name:'review-stdio-test',version:'1'}),configured=roots?roots(fixture,other):[fixture.root];
- const transport=new StdioClientTransport({command:process.execPath,args:[fileURLToPath(new URL('../server/flow-mcp-stdio.js',import.meta.url)),...configured.flatMap(root=>['--repository',root])],stderr:'pipe'});
+ const transport=new StdioClientTransport({command:process.execPath,args:[fileURLToPath(new URL('../server/flow-mcp-stdio.js',import.meta.url)),...configured.flatMap(root=>['--repository',root]),'--state-dir',stateDir],stderr:'pipe'});
  let stderr='';transport.stderr?.on('data',chunk=>stderr+=chunk);
  await client.connect(transport);
- t.after(async()=>{await client.close();server.closeAllConnections();if(server.listening)await new Promise(resolve=>server.close(resolve));await fixture.cleanup();await other.cleanup();});
+ t.after(async()=>{await client.close();server.closeAllConnections();if(server.listening)await new Promise(resolve=>server.close(resolve));await fixture.cleanup();await other.cleanup();await reviewService.close();await rm(stateDir,{recursive:true,force:true});});
  const url='http://127.0.0.1:'+server.address().port;
  const selectors={path:fixture.root,artifact:'demo',change:'change-review'};
  const http=async(body,headers={})=>{const response=await fetch(url+'/api/review/query',{method:'POST',headers:{'Content-Type':'application/json',...headers},body:JSON.stringify(body)});return {status:response.status,body:await response.json()};};
