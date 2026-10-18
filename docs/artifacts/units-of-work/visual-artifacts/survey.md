@@ -4,7 +4,7 @@ Read-only survey of the working knowledge of artifact-driven, artifact-plane and
 
 ## Candidates
 
-41 proposed representations in 26 files: 34 tables or listings and 7 diagrams (4 state diagrams, 2 sequence diagrams, 1 directed graph). Priority: 18 high, 15 medium, 8 low.
+41 proposed representations in 26 files at 3c47a48, and 3 more in 1 file at the recheck below: 34 tables or listings and 7 diagrams (4 state diagrams, 2 sequence diagrams, 1 directed graph). Priority: 18 high, 15 medium, 8 low.
 
 | File | Section | Information type | Proposed form | Fact source | Estimated size | Reason | Priority |
 | --- | --- | --- | --- | --- | --- | --- | --- |
@@ -228,6 +228,18 @@ Checked and consistent: authoring-workbench.md self-check contrast values (1.56 
 4. flows/unit-inspection.md, Coverage: the same sentence. Conflicts with front matter `support`: `ux-browser-checks`, `change-unit-tests` and `scenario-tests` have `basis: observed`.
 5. flows/repository-refresh.md, front matter `gaps`: "The evidence-and-usability extension is specified; implementation and current integrated validation remain pending." Conflicting fact: in this record the support `evidence-usability-contract` targets `specifications/incremental-observation.md` (requires "Invalidate safe changed sources and periodically reconcile missed filesystem events"), and no support in the record targets `specifications/evidence-and-comparison.md`. In the other flows of this group (repository-exploration, unit-inspection) and in change-review.md and context-handoff.md, the same support ID targets `specifications/evidence-and-comparison.md`. Either the support ID or the gap is wrong for this record.
 6. knowledge-layout-reading.md, front matter `references[0]`: `status: proposed`, `change: change-agent-efficiency`; body: "Implementation waits for the referenced ADD contract to establish and be rechecked." Conflicting fact: docs/artifacts/artifact-driven/versions/2.4.0/README.md has `source_change: change-agent-efficiency` and landed on main in b530581 (PR #29); artifact-driven README front matter has `current_version: 2.7.0`. The referenced contract is established, so the reference status and the waiting sentence are stale.
+
+## Recheck after the change-impact merge
+
+Rechecked on 18 October 2026 at revision 89ed23a (ADD 2.8.0, Artifact Plane 1.18.0). The merge added six knowledge documents and amended flows.md, context-packets.md and five flow records. The verified defects above are still present.
+
+| File | Section | Information type | Proposed form | Fact source | Estimated size | Reason | Priority |
+| --- | --- | --- | --- | --- | --- | --- | --- |
+| artifact-plane/specifications/change-impact.md | Query | Exact values, attributes | Table: input, values, default, limit | Query paragraph 1 (path, worktree, origins, commit, range, diff, depth, budget, format, limit, unit) | About 11 rows × 4 cols | More than ten inputs with defaults and limits in one sentence; contract table for inputs | high |
+| artifact-plane/specifications/change-impact.md | Index | Exact values, attributes | Table: table name, columns, source | Index paragraph 1 (nine tables) and paragraph 2 | 9 rows × 3 cols | Nine table definitions in one sentence; reader must hold more than four items | medium |
+| artifact-plane/specifications/change-impact.md | Query | Containment and hierarchy | Tree listing of the response envelope and data sections | Query paragraph 3 (envelope fields, data fields, compact text sections) | About 20 lines | Nested response structure spread across one long paragraph | medium |
+
+Kept: artifact-driven:requirements/change-impact.md, artifact-driven:specifications/change-impact.md (its propagation rules are already a table and its tiers a defined list), artifact-driven:decisions/012-typed-change-impact.md and artifact-plane:decisions/016-typed-impact-ledger.md (alternatives tables), artifact-plane:requirements/change-impact.md, the new flow record artifact-plane:change-impact (reader-derived view), and the two amendments.
 
 ## Planned unit
 
