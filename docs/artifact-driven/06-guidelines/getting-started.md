@@ -4,7 +4,7 @@
 
 Use a dedicated knowledge repository with separate implementation repositories, or one repository containing knowledge and multiple apps/services. Choose the knowledge workspace explicitly.
 
-Adopt the ADD bundle there with `se-adopt --arch artifact-driven --project /path/to/knowledge-workspace`. The command supplies guidance and skills; it does not create project artifacts, register agents, or publish changes. Refer to the adoption guide supplied with the bundle for binary download and checksum instructions.
+Adopt the ADD bundle there with the [adoption guide](../05-adoption/README.md). Adoption supplies guidance and skills; it does not create project artifacts, register agents, or publish changes.
 
 ## Start with One Capability
 
