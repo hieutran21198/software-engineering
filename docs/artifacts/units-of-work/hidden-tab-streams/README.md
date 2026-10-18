@@ -30,7 +30,23 @@ acceptance:
   - id: preserved
     criterion: Existing node and browser tests pass.
     integration: true
-evidence: []
+evidence:
+  - criterion: hidden-tabs
+    method: Browser test with two hidden pages and the three-tab probe on a private server copy of this repository.
+    result: passed
+    source: docs/artifacts/artifact-plane/changes/change-hidden-tab-streams/tasks/01-hidden-tab-streams.md#evidence
+  - criterion: return
+    method: Browser test that hides and shows a page.
+    result: passed
+    source: docs/artifacts/artifact-plane/changes/change-hidden-tab-streams/tasks/01-hidden-tab-streams.md#evidence
+  - criterion: reply-guard
+    method: Node test with an unserializable reply and /api/explore on a private server copy.
+    result: passed
+    source: docs/artifacts/artifact-plane/changes/change-hidden-tab-streams/tasks/02-reply-guard.md#evidence
+  - criterion: preserved
+    method: npm test, build and two full browser runs.
+    result: passed
+    source: docs/artifacts/artifact-plane/changes/change-hidden-tab-streams/tasks/03-validation.md#evidence
 ---
 
 # Keep document reads working with several Plane tabs open
@@ -45,4 +61,4 @@ One shared event stream for all tabs, HTTP/2, the size of the `/api/explore` rep
 
 ## Validation evidence
 
-No checks have run.
+All four criteria passed on 18 October 2026. The check details are in the [hidden-tab-streams](../../artifact-plane/changes/change-hidden-tab-streams/tasks/01-hidden-tab-streams.md#evidence), [reply-guard](../../artifact-plane/changes/change-hidden-tab-streams/tasks/02-reply-guard.md#evidence) and [validation](../../artifact-plane/changes/change-hidden-tab-streams/tasks/03-validation.md#evidence) task evidence. Three or more Plane windows visible at the same time can still use all connections; this limit is recorded in the validation task.

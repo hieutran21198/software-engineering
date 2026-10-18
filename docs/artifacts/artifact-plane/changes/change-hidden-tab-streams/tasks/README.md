@@ -18,7 +18,7 @@ Tasks hidden-tab-streams and reply-guard change different files and can run in e
 
 ## Approval and prerequisites
 
-Present this plan for explicit user approval before implementation. ADD 2.8.0 and Artifact Plane 1.18.0 are established on main; no upstream contract is proposed. A material change to the hidden-tab rules or the reply guard requires renewed approval.
+Present this plan for explicit user approval before implementation. The owner approved it on 18 October 2026. ADD 2.8.0 and Artifact Plane 1.18.0 are established on main; no upstream contract is proposed. A material change to the hidden-tab rules or the reply guard requires renewed approval.
 
 After all tasks pass, the coordinator suggests version 1.18.1 (compatible patch: no API, route or contract consumer changes), adds the version record and the unit evidence, and opens one PR.
 
