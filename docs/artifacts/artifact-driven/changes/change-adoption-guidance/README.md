@@ -9,3 +9,4 @@ The change edits the adoption guide, the affected end-user guidelines and the bu
 Excluded: se-adopt code, an upgrade procedure, a new release tag, a renamed guideline file, the story-driven guide and Artifact Plane.
 
 - [Requirements](../../requirements/adoption-guidance.md) (G1–G4)
+- [Contract](../../specifications/adoption-guidance.md) (page ownership, release selection, After Adoption)
