@@ -15,3 +15,4 @@ The baseline is established ADD 2.6.0 on main at 126990d. Knowledge is edited in
 - [Requirements](../../requirements/visual-knowledge.md) (V1–V10)
 - [Contract](../../specifications/visual-knowledge.md) (research basis, principles, categories, selection guide, agent procedure, page ownership, examples, reader directions)
 - [Decision 013](../../decisions/013-text-defined-representations.md)
+- [Plan](tasks/README.md)
