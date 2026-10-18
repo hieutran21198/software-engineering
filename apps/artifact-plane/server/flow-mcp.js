@@ -3,15 +3,17 @@ import {realpath} from 'node:fs/promises';
 import {z} from 'zod/v4';
 import {createFlowService} from './flow-index.js';
 import {createReviewService} from './change-review.js';
+import {createImpactService} from './impact.js';
 import {createKnowledgeService, OPERATION_NAMES} from './knowledge-operations.js';
 import {errorBody as editError} from './knowledge-writer.js';
 
 // Both adapters pass selectors through the same read-only query service.
-export function createFlowMcpServer({service,reviewService,knowledgeService,roots=[],stateDir,allowWrites=false}={}){
+export function createFlowMcpServer({service,reviewService,impactService,knowledgeService,roots=[],stateDir,allowWrites=false}={}){
  if(!service&&!roots.length)throw Error('Configure at least one repository root.');
- let flows=service,reviews=reviewService;
- const getService=()=>flows??=createFlowService({roots,stateDir});
- const getReviews=()=>reviews??=createReviewService({roots});
+ let flows=service,reviews=reviewService,impact=impactService;
+ const getImpact=()=>impact??=createImpactService({roots,stateDir});
+ const getService=()=>flows??=createFlowService({roots,stateDir,impactService:getImpact()});
+ const getReviews=()=>reviews??=createReviewService({roots,impactService:getImpact()});
  const server=new McpServer({name:'artifact-plane-flows',version:'1.12.2'});
  const common={path:z.string().optional(),worktree:z.string().optional(),knowledge:z.enum(['planning','established','all']).optional(),limit:z.number().int().min(1).max(100).optional(),budget:z.number().int().min(0).max(100000).optional(),cursor:z.string().max(10000).optional()};
  const tools=[
@@ -39,6 +41,17 @@ export function createFlowMcpServer({service,reviewService,knowledgeService,root
    return {content:[{type:'text',text:JSON.stringify(result)}],structuredContent:result};
   }catch(error){return {isError:true,content:[{type:'text',text:JSON.stringify({error:error.status?error.message:'Change retrieval failed.',status:error.status||500})}]};}
  });
+ // get_change_impact shares the impact service with HTTP; the text content is the compact answer.
+ const origin=z.strictObject({path:z.string().min(1).max(2000).optional(),element:z.string().min(1).max(2000).optional(),flow:z.string().min(1).max(2000).optional(),step:z.string().min(1).max(2000).optional(),model:z.string().min(1).max(2000).optional(),symbols:z.array(z.string().max(200)).optional(),commit:z.string().max(200).optional()});
+ const impactInput={path:common.path,worktree:common.worktree,knowledge:common.knowledge,origins:z.array(origin).min(1).max(100).optional(),commit:z.string().max(200).optional(),range:z.string().max(200).optional(),diff:z.strictObject({base:z.string().max(200).optional()}).optional(),depth:z.number().int().min(1).max(4).optional(),budget:common.budget,format:z.enum(['json','text']).optional(),limit:z.number().int().min(1).max(200).optional(),unit:z.string().max(200).optional()};
+ server.registerTool('get_change_impact',{description:'Explain what a change affects: direct, transitive, potential and unresolved entities with typed paths, the tests to run, the places to look and the coverage of the analysis. Select one of origins, commit, range or diff.',inputSchema:z.strictObject(impactInput),annotations:{readOnlyHint:true,destructiveHint:false,idempotentHint:true,openWorldHint:false}},async args=>{
+  try{
+   const path=args.path??(roots.length===1?roots[0]:undefined);
+   if(!path)return {isError:true,content:[{type:'text',text:JSON.stringify({error:'Select one configured repository path.',status:400})}]};
+   const result=await getImpact().query({...args,path,format:args.format??'text'});
+   return {content:[{type:'text',text:result.text??JSON.stringify(result)}],structuredContent:result};
+  }catch(error){return {isError:true,content:[{type:'text',text:JSON.stringify({error:error.status?error.message:'Impact retrieval failed.',status:error.status||500})}]};}
+ });
  // Write tools exist only with --allow-writes. They share the HTTP operation service.
  if(allowWrites){
   let knowledge=knowledgeService;const getKnowledge=async()=>knowledge??=createKnowledgeService({roots:await Promise.all(roots.map(r=>realpath(r).catch(()=>r)))});
@@ -55,5 +68,5 @@ export function createFlowMcpServer({service,reviewService,knowledgeService,root
    }catch(error){const {status,body}=editError(error);return {isError:true,content:[{type:'text',text:JSON.stringify({...body,status})}]};}
   });
  }
- return {server,get service(){return flows;},async close(){await server.close();await flows?.close();}};
+ return {server,get service(){return flows;},get impactService(){return impact;},async close(){await server.close();await flows?.close();if(!impactService)await impact?.close();}};
 }
