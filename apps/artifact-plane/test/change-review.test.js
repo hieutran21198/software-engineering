@@ -65,3 +65,12 @@ test('L2: an in-place review without a protected ref reports an unavailable base
  const e=await createReviewService().query(f.request);
  assert.equal(e.data.baseline.state,'unavailable');assert.deepEqual(e.data.records,[]);assert.ok(e.diagnostics.some(d=>d.code==='missing-protected-ref'));
 });
+test('packet adds tiered change impact without changing the recorded candidates',async t=>{const f=await fixture(t);await f.put(f.change+'specifications/flows/uses.md',flow('uses','requirements/README.md'));f.git('add','-A');f.git('commit','-qm','flow');
+ const stateDir=await mkdtemp(join(tmpdir(),'plane-review-impact-'));t.after(()=>rm(stateDir,{recursive:true,force:true}));const service=createReviewService({roots:[f.root],stateDir});t.after(()=>service.close());
+ const e=await service.query(f.request);const impact=e.data.impact;
+ assert.equal(e.data.schema,'artifact-plane.change-context.v1');assert.equal(typeof impact.coverage,'string');assert.ok(Array.isArray(impact.candidates));assert.ok('declaredAssessment' in impact);
+ const tiers=impact.tiers;assert.ok(tiers&&tiers.counts,JSON.stringify(tiers?.coverage));
+ for(const tier of ['direct','transitive','verify','investigate','unresolved'])assert.equal(tiers.counts[tier],tiers[tier].length,tier);
+ assert.ok(tiers.potential.length<=tiers.counts.potential);assert.ok(tiers.coverage.origins>0);assert.ok(tiers.coverage.not_analyzed.length);
+ const review=await service.query({...f.request,operation:'review'});assert.deepEqual(review.data.impact.tiers,tiers);
+});

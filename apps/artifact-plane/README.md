@@ -264,6 +264,19 @@ Search also accepts optional match (title or discovery). Omission preserves rank
 
 Search and impact accept optional artifact, a safe artifact ID in the selected snapshot. The scope includes owned flows and flows owned elsewhere that participate through recorded relationships. Apply this complete eligibility set before ranking or paging. Impact with ids intersects both sets and retains the requested impact reasons. Responses add data.artifactOptions with id/title summaries, including artifacts with no flows. These options do not prove participation. Unknown artifacts and selectors on other operations are rejected. Cursors bind the normalized query, match, artifact, worktree, knowledge and revision; start a new query when any selector changes. search_flows and get_impact_context expose the same optional selectors through MCP.
 
+### Change impact
+
+POST /api/impact/query explains what a change affects. It accepts path, optional worktree and knowledge (planning, established, all), and exactly one of:
+
+- origins: up to 100 entries, each with one of path, element (`artifact:path`), flow (`artifact:flow`), step (`artifact:flow:step`) or model (`artifact:model`). A path origin can add symbols (changed top-level declarations) or commit (take the path's change from that commit).
+- commit: one commit; range: `a..b`; diff: {base: protected or a ref}, the working tree compared with that base.
+
+depth is 1–4 (default 2), limit is 1–200 entities per section (default 25), budget is 0–100000 characters of compact text (default 8000), format is json or text, and unit optionally selects the unit whose declared affected flows are compared. Unknown fields return 400; invalid selectors and unregistered worktrees return 422.
+
+The response has repository, worktree, context, revision, generation, freshness, completeness, data, diagnostics, omissions and metrics. data has changed, direct, transitive, steps, verify, investigate, potential, potential_total, unresolved, declared and coverage. Each entity has its kind, tier, hops, strength, origins and typed paths with the evidence of each edge. coverage names the analyzed sources, what was not analyzed, the depth and the relationships beyond it (frontier). Sections longer than limit are cut and listed in omissions. format text adds the compact answer as text. An empty answer means only that no consumer was found in the analyzed relationships.
+
+The derived index is impact-index.sqlite in the same private state directory as the flow index. The flow query operation impact and the MCP tool get_impact_context use the same service: their ids become origins (flow, step and model IDs, element IDs and files of known nodes, `artifact:<id>`, or repository paths), traversal uses depth 4, and the result keeps its shape: reached flows with paths from the first explanation path, unresolved IDs, artifactOptions, the artifact scope, newest-first ordering and cursors.
+
 
 Use stdio MCP from an explicitly configured client. Example registration (replace both absolute paths):
 
@@ -281,7 +294,7 @@ Use stdio MCP from an explicitly configured client. Example registration (replac
 }
 ```
 
-Repeat --repository for multiple roots; pass --state-dir for a private cache directory. With one configured root, tools can omit path. With several roots, select path explicitly. The existing flow tools are search_flows, get_flow, get_impact_context and read_flow_source. The same server also supplies get_change_review, get_change_context and read_change_context_source. They use the same query service as HTTP, carry read-only annotations, and write only protocol traffic to stdout. Diagnostics go to stderr. Client registration does not grant ADD approval, launch agents or establish versions. Only a server started with `--allow-writes` can edit knowledge; see [Edit knowledge](#edit-knowledge).
+Repeat --repository for multiple roots; pass --state-dir for a private cache directory. With one configured root, tools can omit path. With several roots, select path explicitly. The existing flow tools are search_flows, get_flow, get_impact_context and read_flow_source. get_change_impact takes the inputs of POST /api/impact/query; it returns the envelope as structured content and, unless format is json, the compact answer as text. The same server also supplies get_change_review, get_change_context and read_change_context_source. They use the same query service as HTTP, carry read-only annotations, and write only protocol traffic to stdout. Diagnostics go to stderr. Client registration does not grant ADD approval, launch agents or establish versions. Only a server started with `--allow-writes` can edit knowledge; see [Edit knowledge](#edit-knowledge).
 
 Run node scripts/benchmark-flows.mjs /absolute/repository to measure retrieval against the initial inventory. The benchmark reports hardware, dataset size, latency, response bytes and expected-query ranks. These measurements do not estimate hidden reasoning or token savings.
 
@@ -294,6 +307,8 @@ The additive MCP tools use the same review service and envelopes as HTTP:
 - get_change_review: artifact and change, plus optional path, worktree, limit, budget and cursor.
 - get_change_context: the same inputs, returning a captured packet with schema artifact-plane.change-context.v1.
 - read_change_context_source: the same context selectors and a source ID returned by review or packet. Use budget and cursor to read bounded pages; arbitrary file paths are rejected.
+
+Review and packet responses add data.impact.tiers: the change impact of the changed knowledge records (added and modified files, and removed files as unresolved origins) at the default depth and limit. tiers has counts per tier, the first entities of direct, transitive, potential, verify, investigate and unresolved with their paths, and coverage. The existing data.impact fields (coverage, candidates, declaredAssessment) do not change, and the schema stays artifact-plane.change-context.v1. The Markdown export shows tiers in a Change impact section after Recorded flow impact.
 
 For example, call get_change_context with {"artifact":"artifact-plane","change":"change-evidence-review-context","budget":12000}. limit defaults to 20 records (maximum 100); budget defaults to 12000 excerpt characters (maximum 100000). The character budget does not cap the full response or token count. A zero budget returns source pointers without text. Follow pagination.nextCursor for remaining records, or a source's nextCursor with read_change_context_source to continue its excerpt. Keep the same selectors and revision; changed source bytes reject old cursors and source IDs, so capture a new packet after edits.
 

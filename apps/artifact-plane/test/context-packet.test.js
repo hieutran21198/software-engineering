@@ -28,3 +28,11 @@ test('metadata cannot inject Markdown or HTML; variable fences contain hostile s
  const code=tokens.filter(t=>t.type==='code');assert.equal(code.length,1);assert.equal(code[0].text,input.data.sources[0].text);assert.ok(md.includes('```````text'));
  assert.ok(!tokens.some(t=>t.type==='heading'&&t.text==='Injected'));assert.ok(!tokens.some(t=>t.type==='heading'&&t.text==='Source heading'));
 });
+test('change impact tiers get their own section after the recorded flow impact',()=>{
+ const input=packet();input.data.impact.tiers={counts:{direct:1,transitive:0,potential:0,verify:0,investigate:0,unresolved:0},direct:[{entity:'flow:a:login',kind:'flow',tier:'direct',hops:1,strength:'declared+documented',paths:[[{via:'supports',to:'step:a:login:check'}]]}],transitive:[],potential:[],verify:[],investigate:[],unresolved:[],coverage:{depth:2,not_analyzed:['dynamic calls']}};
+ const md=formatContextMarkdown(input),headings=marked.lexer(md).filter(t=>t.type==='heading'&&t.depth===2).map(t=>t.text);
+ assert.equal(headings.indexOf('Change impact'),headings.indexOf('Recorded flow impact')+1);
+ const recorded=md.slice(md.indexOf('## Recorded flow impact'),md.indexOf('## Change impact'));assert.ok(!recorded.includes('login'));
+ for(const fact of ['flow&#58;a&#58;login','declared+documented','dynamic calls'])assert.ok(md.includes(fact),fact);
+ delete input.data.impact.tiers;assert.ok(!formatContextMarkdown(input).includes('## Change impact'));
+});

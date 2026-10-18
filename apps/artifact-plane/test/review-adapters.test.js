@@ -31,7 +31,7 @@ async function setup(t,{roots}={}){
 }
 test('real stdio MCP and HTTP return identical review/packet facts, pages and omissions without writes',async t=>{
  const {fixture,client,http,selectors,stderr}=await setup(t),before=await fingerprint(fixture.root);
- assert.equal((await client.listTools()).tools.length,7);
+ assert.equal((await client.listTools()).tools.length,8);
  const implicit=await client.callTool({name:'get_change_context',arguments:{artifact:'demo',change:'change-review',budget:0}});assert.equal(implicit.structuredContent.repository.path,fixture.root);assert.ok(implicit.structuredContent.data.sources.every(s=>s.text===''&&s.nextCursor===null));
  for(const [operation,name]of [['review','get_change_review'],['packet','get_change_context']]){
   const args={...selectors,budget:7,limit:1};let cursor;const records=[];
@@ -91,4 +91,11 @@ test('unexpected review failures are sanitized across HTTP and MCP',async t=>{
  t.after(async()=>{await client.close();await app.close();await new Promise(resolve=>server.close(resolve));await fixture.cleanup();});
  const selectors={path:fixture.root,artifact:'demo',change:'change-review'},response=await fetch('http://127.0.0.1:'+server.address().port+'/api/review/query',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({...selectors,operation:'packet'})});assert.equal(response.status,500);assert.ok(!(await response.text()).includes('private failure'));
  const result=await client.callTool({name:'get_change_context',arguments:selectors});assert.equal(result.isError,true);assert.equal(JSON.parse(result.content[0].text).status,500);assert.ok(!result.content[0].text.includes('private failure'));
+});
+test('HTTP and stdio MCP return the same tiered change impact in the packet',async t=>{
+ const {client,http,selectors}=await setup(t);
+ const response=await http({...selectors,operation:'packet'}),mcp=await client.callTool({name:'get_change_context',arguments:selectors});
+ assert.equal(response.status,200);assert.ok(response.body.data.impact.tiers?.counts,JSON.stringify(response.body.data.impact.tiers?.coverage));
+ assert.deepEqual(mcp.structuredContent.data.impact.tiers,response.body.data.impact.tiers);
+ assert.ok(response.body.data.impact.tiers.direct.some(i=>i.entity==='flow:demo:behavior'));
 });
