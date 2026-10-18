@@ -24,6 +24,26 @@ docs/artifacts/units-of-work/<unit>/README.md   unchanged
 
 An artifact uses the in-place layout when at least one of requirements, specifications or decisions exists directly under the artifact directory. Otherwise it uses the legacy layout. Readers detect the layout per artifact. A repository can contain both layouts.
 
+The listing below shows the legacy layout for comparison. Its lines follow the order of the in-place listing above, so that each legacy line faces the matching in-place line. It shows only the directories and records that this contract names for the legacy layout.
+
+```text
+docs/artifacts/<artifact>/
+  README.md                       Markdown sections such as Current established version,
+                                  Established dependencies or Active change
+  (no requirements/, specifications/ or decisions/ directly under the artifact)
+  changes/<change>/README.md      change README
+  changes/<change>/requirements/  copied knowledge; also specifications/ and decisions/
+  changes/<change>/dependencies.yaml   dependency edges
+  changes/<change>/tasks/         plan, tasks, DoD and evidence
+  versions/<version>/README.md    version README; can carry a delivery_tasks marker
+  versions/<version>/requirements/   version knowledge; also specifications/ and decisions/
+  versions/<version>/tasks/       version-owned tasks, where present
+docs/artifacts/dag.yaml           legacy-only; deleted when no legacy artifact remains
+docs/artifacts/units-of-work/<unit>/README.md   unchanged
+```
+
+Source: artifact-driven:specifications/knowledge-layout.md, sections Layout, Records and Derived facts and Migration steps 2 to 5; derived one line per directory or record that these sections name for the legacy layout, in the order of the in-place listing; current snapshot.
+
 Nested directories under the three knowledge directories are allowed. System flows stay under specifications/flows. Tasks keep the existing plan and task format: tasks/README.md lists task paths; each task declares id, depends_on and optional evidence_records.
 
 ## Records
@@ -116,7 +136,23 @@ Migrate one artifact at a time on a change branch. The procedure is repeatable b
 2. Copy versions/<current_version>/requirements, specifications and decisions to the artifact directory. If the artifact has an open change that carries copied knowledge, copy the open change's knowledge instead, because it already contains the proposal, and delete the change's copied knowledge directories; the change keeps README.md and tasks/.
 3. Replace the Markdown declarations in the artifact README with the identity record. Remove prose that describes proposed or established state; that state is now derived.
 4. Delete dependencies.yaml from the open change after applying its edges to depends_on. Delete docs/artifacts/dag.yaml when no legacy artifact remains.
-5. Optionally convert the retained legacy records, in the same or a later change. Delete the knowledge directories of versions/<version>/ and the copied knowledge directories and dependencies.yaml of delivered changes. Delete version-owned tasks that are byte-identical to the originating change's tasks, and keep task sets that have no such copy. Keep the copied knowledge of a change that no version names; it remains a retained legacy record. Remove delivery_tasks markers. Point unit evidence and links at the retained change tasks, or name the Git snapshot in plain text. Restate affirmative prose publication reviews as publication_reviews after verifying the merged PRs. Every deleted file must exist unchanged in the commit that introduced its version. Without conversion, leave these directories untouched.
+5. Optionally convert the retained legacy records, in the same or a later change. The table gives the action on conversion for each retained legacy record. A dash means that the action has no condition.
+
+   | Record | Condition | Action on conversion |
+   | --- | --- | --- |
+   | Knowledge directories of `versions/<version>/` | — | Delete |
+   | Copied knowledge directories of a change | The change is delivered | Delete |
+   | dependencies.yaml of a change | The change is delivered | Delete |
+   | Version-owned tasks | Byte-identical to the originating change's tasks | Delete |
+   | Version-owned task set | No such byte-identical copy | Keep |
+   | Copied knowledge of a change | No version names the change | Keep; it remains a retained legacy record |
+   | delivery_tasks markers | — | Remove |
+   | Unit evidence and links | — | Point at the retained change tasks, or name the Git snapshot in plain text |
+   | Affirmative prose publication reviews | After verifying the merged PRs | Restate as publication_reviews |
+
+   Source: artifact-driven:specifications/knowledge-layout.md, Migration step 5; derived one row per record and condition that the step names; current snapshot.
+
+   Every deleted file must exist unchanged in the commit that introduced its version. Without conversion, leave these directories untouched.
 6. Verify byte equality between the new working knowledge and its source, an unchanged dependency graph, resolved flows and units, and the layout detection.
 
 A migration that changes no knowledge bytes keeps the current version number and adds no version record. A migration inside a change that also changes knowledge follows the normal version rule.

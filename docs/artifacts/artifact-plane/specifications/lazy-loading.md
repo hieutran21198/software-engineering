@@ -28,6 +28,22 @@ Add POST /api/repository/query with application/json. Request: {path, section, w
 
 For overview, selectors other than worktree are invalid. For artifacts, workflow, implementation, and completion, supply unit; artifacts/workflow/implementation also allow artifact plus change for ungrouped exploration instead of unit. Artifact metadata and Markdown inspection allow artifact without change so established artifacts without an active change remain inspectable. completion requires unit. history requires artifact and change. markdown requires source, a safe repository-relative path belonging to the selected discovered knowledge/evidence scope, plus unit or artifact/change context (artifact alone is sufficient for its root/current knowledge). Reject ambiguous selector combinations, unknown keys, and invalid section/selector types with 400. Missing discovered records return 404, unavailable worktrees/invalid roots 422, and sanitized unexpected failures 500. Existing body size, Host/origin/fetch-site, symlink, task-directory, and UTF-8 checks remain. This endpoint is not arbitrary filesystem access.
 
+The table gives, for each section value, the selectors that the section requires and the other selectors that the two paragraphs above allow. Every request has path, and every section allows worktree; the rows after overview do not repeat them. "None stated" means that the paragraphs name no other selector for that section. The paragraphs state the full rules and the status codes.
+
+| Section | Required context | Other allowed selectors |
+| --- | --- | --- |
+| overview | none | worktree only; every other selector is invalid |
+| artifacts | unit, or artifact and change for ungrouped exploration instead of unit | dependencyMode: established or planning, default established |
+| workflow | unit, or artifact and change for ungrouped exploration instead of unit | None stated |
+| implementation | unit, or artifact and change for ungrouped exploration instead of unit | None stated |
+| completion | unit | None stated |
+| history | artifact and change | None stated |
+| markdown | source (a safe repository-relative path in the selected discovered knowledge or evidence scope), plus unit or artifact and change | artifact alone instead of that context, for its root or current knowledge |
+
+Source: artifact-plane:specifications/lazy-loading.md, Scoped API paragraphs 1 and 2; derived one row per section value; current snapshot.
+
+Gap: the text lets artifact metadata and Markdown inspection use artifact without change, so that established artifacts without an active change remain inspectable. It does not name the section that serves artifact metadata.
+
 Response: {repository, worktree, section, context, revision, completeness, data, diagnostics}. context echoes normalized selectors. revision is a hash of freshly sampled content/ref/worktree inputs for the requested scope; it is freshness evidence, not workflow state. completeness is complete for a fully derived requested section, partial only when required component data is unavailable and explained by diagnostics. data uses existing graph/evidence shapes for that section, with summary records stripping Markdown and detailed history. Error responses never return a fabricated complete section. Every declared but deferred section includes loadState:not-loaded; the browser owns loading/loaded/stale/error transitions. Exact section projections must be checked against the complete legacy response, including resolved sources and diagnostics.
 
 Coalesce identical in-flight section requests using root, worktree and normalized selectors. Never coalesce different view scopes as one response. Read current mutable inputs for each request. If scoped inputs change during derivation, return a stale diagnostic and enqueue a trailing read; never label that response Current. Older generation/revision responses cannot overwrite a newer active context.

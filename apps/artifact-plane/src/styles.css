@@ -287,6 +287,10 @@ fieldset.checks legend { font-size: 13px; font-weight: 500; margin-bottom: 6px; 
 .code-panel-label { padding: 4px 12px; border-bottom: 1px solid var(--border); font: 500 12px var(--sans); color: var(--muted); }
 .code-panel pre { margin: 0; padding: 12px 14px; overflow: auto; font: 12px/1.55 var(--mono); border: 0; border-radius: 0; background: none; }
 .prose .code-panel pre code { font-size: 12px; }
+.diagram-block { margin: 0 0 16px; max-width: 100%; overflow-x: auto; }
+.diagram-block > svg { display: block; height: auto; }
+.diagram-block .code-panel { margin-bottom: 6px; }
+.diagram-note { margin: 0; font: 13px/1.45 var(--sans); color: var(--muted); }
 .unavailable-link { color: var(--muted); text-decoration: underline dotted; }
 .hljs-keyword, .hljs-selector-tag, .hljs-built_in { color: #8a2c9e; }
 .hljs-string, .hljs-attr { color: #1f6f43; }

@@ -20,6 +20,23 @@ scanRepository and parseArtifact detect the layout per artifact: in-place when r
 
 Version records are versions/<version>/README.md with source_change. On the in-place path a version directory with knowledge subdirectories is a diagnostic. Change records are changes/<change>/README.md. An open change is one that no version record names and that has no knowledge directories; a change directory with copied knowledge directories is read as a retained legacy change with an informational diagnostic. The declared active-change link and delivery_tasks marker are not read for in-place artifacts.
 
+The table summarizes the in-place and legacy rules of this section and of the sections Baseline and comparison through Git, Declared evidence instead of history, and Version snapshots and unit completion. Those sections state the full rules. "Not stated in this contract" means that this contract gives only the in-place rule for that concern.
+
+| Concern | In-place artifact | Legacy artifact |
+| --- | --- | --- |
+| Layout detection | requirements, specifications or decisions exists directly under the artifact directory | none of them exists there (the text says "otherwise legacy") |
+| Identity declarations | current_version, depends_on and publication_reviews from front matter only; Markdown declaration sections ignored; a missing or malformed identity record is an invalid-identity diagnostic, with no prose fallback | the existing parser, including Markdown sections, dag.yaml checks and dependencies.yaml proposals |
+| Version directory | a version directory with knowledge subdirectories is a diagnostic | Not stated in this contract |
+| Change directory | open when no version record names it and it has no knowledge directories; copied knowledge directories: read as a retained legacy change, with an informational diagnostic | Not stated in this contract |
+| Active-change link and delivery_tasks marker | not read | Not stated in this contract |
+| Established baseline on main or master | the artifact directory tree, when that ref holds the in-place layout | versions/<current_version on that ref>/, otherwise |
+| Comparison with the baseline | `git diff --name-status <ref> -- docs/artifacts/<artifact>/{README.md,requirements,specifications,decisions}` and blob reads; each file classified as added, modified, removed or unchanged; version and change selectors rejected with 422 | the comparison selectors of evidence-and-comparison.md |
+| Displayed steps | from declared fields; a step without a declaration is "not declared"; Git history is not replayed | the existing inference |
+| Version snapshot | the tree of the first-parent protected-branch commit that introduced the version record, or the optional tag `<artifact>/<version>` when both agree | Not stated in this contract |
+| Publication | compares the version record, the identity record and the retained tasks on that ref; publication_reviews available | prose publication-review parsing; publication_reviews available |
+
+Source: artifact-plane:specifications/knowledge-layout-reading.md, sections Layout detection and records, Baseline and comparison through Git, Declared evidence instead of history, and Version snapshots and unit completion; derived one row per concern that the sections name for the in-place path; current snapshot.
+
 ## Baseline and comparison through Git
 
 Resolve the established baseline for an artifact from refs/heads/main or refs/heads/master: the artifact directory tree when that ref holds the in-place layout, otherwise versions/<current_version on that ref>/. Keep the existing rule that both refs must agree. Missing refs, shallow history and disagreement produce the existing unknown diagnostics.

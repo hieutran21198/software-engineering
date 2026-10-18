@@ -26,14 +26,37 @@ supported flags and exit codes. The human error prefix remains se-adopt:.
 
 Add --json to the existing CLI. Emit exactly one JSON object on stdout without
 human success text or error prefixes. Keep stderr free of duplicate human errors
-in JSON mode. Schema se-adopt.result.v1 has operation (list, preview, adopt),
-ok (boolean), architecture (string or null), destination (absolute string or null),
-created and unchanged (integers), diagnostics (array), complete (boolean), and
-error (null or {code,message,action}). List adds architectures with name and
-description. Preview created means would-create. A failed operation never claims
-files were created from a preflight count: created is zero; optionally report
-pending separately. On a write failure, zero created does not prove rollback
-succeeded; retain the documented rollback limitation in error.action.
+in JSON mode.
+
+Schema se-adopt.result.v1 has these fields; diagnostic and error objects follow.
+The Object column names the object that has the field: result is the top-level
+JSON object, diagnostic is the diagnostic of the first paragraph, and error is
+the object in the error field.
+A dash means that the text states no type or no further rule.
+
+| Object | Field | Type or values | Rule |
+| --- | --- | --- | --- |
+| result | operation | list, preview or adopt | — |
+| result | ok | boolean | — |
+| result | architecture | string or null | — |
+| result | destination | absolute string or null | — |
+| result | created | integer | Preview created means would-create. A failed operation never claims files were created from a preflight count: created is zero; optionally report pending separately. On a write failure, zero created does not prove rollback succeeded. Counts refer only to safely checked identical and missing files. |
+| result | unchanged | integer | Counts refer only to safely checked identical and missing files. |
+| result | diagnostics | array | — |
+| result | complete | boolean | — |
+| result | error | null or {code, message, action} | — |
+| result | architectures | entries with name and description | List operation only. |
+| diagnostic | code | string: content-conflict, destination-type or parent-type | — |
+| diagnostic | path | string | Workspace-relative, with forward slashes. |
+| diagnostic | message | string | — |
+| diagnostic | action | string | — |
+| error | code | — | — |
+| error | message | — | — |
+| error | action | — | On a write failure, retain the documented rollback limitation. |
+
+Source: artifact-driven:specifications/agent-efficiency.md, Adoption diagnostics
+paragraphs 1, 2 and 4; derived one row per field of the result, diagnostic and
+error objects; current snapshot.
 
 The CLI must select JSON error rendering for --json and --json=true regardless of
 flag order, including parse errors. --json=false selects human output. Reject

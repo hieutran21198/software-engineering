@@ -31,6 +31,24 @@ An ID is a nonempty string matching [a-z0-9][a-z0-9-]* and is unique among this 
 
 A graph edge goes from prerequisite to dependent task. The graph must be acyclic. Validate plan membership before resolving edges, then check cycles. Invalid plans are not executable. Human/agent Plan self-checks enforce this contract; the visualizer provides diagnostics and does not authorize execution. This change does not add a standalone runner or CLI validator.
 
+The table lists the conditions of Plan membership and Task declarations and their outcomes. The text above stays the contract; invalid plans are not executable.
+
+| Condition | Outcome |
+| --- | --- |
+| A listed path is a unique string relative to tasks/, uses forward slashes, ends in .md and identifies a readable Markdown task file within the change; nested paths are allowed | Member of the plan |
+| A file is in tasks/ but not listed | Excluded; remains historical or context knowledge |
+| README.md is listed | Cannot be a task |
+| A listed path is absolute, has dot segments, backslashes or NUL, or is outside tasks/ | Invalid |
+| tasks is an explicit empty list | Valid empty plan |
+| tasks front matter is missing | Graph unavailable for a legacy plan; historical knowledge stays valid |
+| tasks has the wrong type | Invalid |
+| depends_on is [] | No internal prerequisite |
+| Self-dependency, missing IDs, malformed metadata, duplicate IDs, duplicate prerequisite entries or a cycle | Graph invalid |
+| YAML duplicate mapping keys | Invalid |
+| Unknown metadata keys, prose or filenames | No edge |
+
+Source: artifact-driven:specifications/task-dag.md, Plan membership paragraph 2 and Task declarations paragraph 2; derived one row per stated condition and outcome; current snapshot.
+
 ## External gates and lifecycle
 
 The artifact DAG retains artifact nodes. Required upstream establishment gates the change's implementation independently of internal task readiness. Detailed external references and reasons remain in specifications and task prerequisites. Do not put cross-artifact task IDs in depends_on. A task without internal dependencies can still have an unmet external gate or lack user approval.

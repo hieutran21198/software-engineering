@@ -2,7 +2,22 @@
 
 ## Knowledge contract
 
-The bundle defines eight Core domains: Creative Direction, World Foundation, Setting Rules, Lore Foundation, Narrative Foundation, Game Design Foundation, Art Direction, and Level Design Foundation. The first five are shared; Game Design applies to games, Art when visual work needs it, and Level Design when spatial/encounter design needs it. Narrative owns prose conventions and applicable interactive delivery conventions.
+The bundle defines eight Core domains. The table names them in source order and says whether each domain is shared or conditional. The section names a condition only for the last three domains; a dash means that the text states no condition.
+
+| Core domain | Shared or conditional | Applies when |
+| --- | --- | --- |
+| Creative Direction | Shared | — |
+| World Foundation | Shared | — |
+| Setting Rules | Shared | — |
+| Lore Foundation | Shared | — |
+| Narrative Foundation | Shared | — |
+| Game Design Foundation | Conditional | games |
+| Art Direction | Conditional | visual work needs it |
+| Level Design Foundation | Conditional | spatial or encounter design needs it |
+
+Source: story-driven:specifications/framework.md, Knowledge contract paragraph 1; derived one row per Core domain, in source order; current snapshot.
+
+Narrative owns prose conventions and applicable interactive delivery conventions.
 
 Five Content families own particular instances: World, Narrative, Gameplay, Visual, and Level. World owns fictional identity, including objects and powers; Gameplay owns their playable treatment. Lore Core owns canon policy, while particular historical facts belong to World and in-world accounts to Narrative. Each record links to authoritative facts rather than copying them.
 
@@ -13,6 +28,40 @@ Work skeletons are Narrative Content. They link a specific premise, conflict, pa
 ## Dependency and change behavior
 
 Prerequisites mean sufficiently defined applicable contracts, not completed encyclopedias. Cross-references and feedback are not execution edges. Creative Direction informs all domains; World informs Setting, which informs Lore. Narrative uses relevant shared rules. Game Design reconciles applicable actions with Setting and Narrative. Art and Level use relevant narrative, fiction and gameplay inputs. Concepts can start provisionally; final content requires its actual prerequisites.
+
+The graph shows the stated relations between the eight Core domains. Each arrow goes from the domain that supplies input to the domain that receives it. An unlabelled arrow means "informs". The label "reconciles with" means that Game Design reconciles its applicable actions with the domain at the start of the arrow. Cross-references and feedback are not execution edges, and the graph does not show them.
+
+```mermaid
+flowchart LR
+    accTitle: Core domain relations of Story-Driven
+    accDescr: Creative Direction informs the seven other Core domains. World Foundation informs Setting Rules, and Setting Rules informs Lore Foundation. Game Design Foundation reconciles its applicable actions with Setting Rules and with Narrative Foundation.
+    creative_direction["Creative Direction"]
+    world_foundation["World Foundation"]
+    setting_rules["Setting Rules"]
+    lore_foundation["Lore Foundation"]
+    narrative_foundation["Narrative Foundation"]
+    game_design_foundation["Game Design Foundation"]
+    art_direction["Art Direction"]
+    level_design_foundation["Level Design Foundation"]
+    creative_direction --> world_foundation
+    creative_direction --> setting_rules
+    creative_direction --> lore_foundation
+    creative_direction --> narrative_foundation
+    creative_direction --> game_design_foundation
+    creative_direction --> art_direction
+    creative_direction --> level_design_foundation
+    world_foundation --> setting_rules
+    setting_rules --> lore_foundation
+    setting_rules -->|"reconciles with"| game_design_foundation
+    narrative_foundation -->|"reconciles with"| game_design_foundation
+```
+
+Source: story-driven:specifications/framework.md, Knowledge contract (domain names) and Dependency and change behavior paragraph 1; derived one node per Core domain and one edge per stated informs or reconciles relation; current snapshot.
+
+The text does not name the supplying domains of two relations, so the graph does not draw them:
+
+- "Narrative uses relevant shared rules."
+- "Art and Level use relevant narrative, fiction and gameplay inputs."
 
 Objective truth, testimony, character belief, audience knowledge, and game state are separate. Review maturity is not truth. A rule conflict returns to its Core owner, followed by review of referenced dependents. Unknowns stay explicit; approvals remain available in conversation or Git rather than a status database.
 

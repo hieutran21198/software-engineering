@@ -14,7 +14,17 @@ Accepted evidence identifies kind: documented-merge-review, path, heading: publi
 
 ## Flow ordering
 
-Trim whitespace. Empty queries browse by creation date descending, opaque ID ties and unknown dates last. Nonempty queries put unique exact opaque/logical/local ID matches first, then existing reciprocal-rank-fusion score descending and opaque ID ties. Ambiguous local IDs remain multiple candidates; detail still needs an unambiguous selector. Recency never overrides search relevance. Impact output retains deterministic newest-first order independently of search scoring.
+Trim whitespace. Ambiguous local IDs remain multiple candidates; detail still needs an unambiguous selector. Recency never overrides search relevance.
+
+The table gives the order of flow records for each request kind. This order applies before paging. "—" means that no other key comes before the tie breaker.
+
+| Request (query after trimming) | First order | Then | Tie breaker | Unknown creation dates |
+| --- | --- | --- | --- | --- |
+| Nonempty search | Unique exact opaque, logical or local ID matches | Existing reciprocal-rank-fusion score of the FTS5 and exact cosine vector ranks, descending | Opaque ID | Not used; creation dates never override this order |
+| Empty query (browse) | Creation date (createdAt), descending | — | Opaque ID | Last |
+| Impact | Creation date (createdAt), descending, deterministic and independent of search scoring | — | Opaque ID | Last |
+
+Source: artifact-plane:specifications/evidence-correctness.md, Flow ordering paragraph 1; artifact-plane:specifications/flow-readability.md, Lazy pages and creation-date order paragraph 3; artifact-plane:specifications/flows.md, Index and freshness paragraph 3; derived one row per request kind; current snapshot.
 
 Sort before paging; preserve existing revision/context/operation/query cursor safety, source budgets, model fallback and HTTP/MCP parity. UI labels search Relevance first and browsing/impact Newest records first. Test older exact matches, weak newer candidates, ties/unknown dates, whitespace queries and changed cursors. Real-model checks require unique exact rank 1 and all five existing semantic benchmark cases in the top ten, without network calls.
 

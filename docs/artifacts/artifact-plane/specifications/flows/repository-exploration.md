@@ -82,6 +82,9 @@ flow:
         - evidence-usability-contract
         - model-presentation
         - layout-reading
+        - diagram-rendering-contract
+        - diagram-renderer
+        - diagram-browser
       interactions:
         - from: snapshot
           to: change
@@ -256,6 +259,28 @@ flow:
       basis: observed
       evidence:
         - docs/artifacts/artifact-plane/changes/change-workbench-redesign/tasks/07-browser-suites.md
+    - id: diagram-renderer
+      kind: implementation
+      path: apps/artifact-plane/src/diagram-render.js
+      symbol: renderDiagrams
+      requires: Render the diagram blocks of a Markdown container as sanitized SVG
+        and add the fallback note when a block does not render.
+      basis: static
+    - id: diagram-browser
+      kind: test
+      path: apps/artifact-plane/test/browser/diagram-rendering.spec.js
+      requires: Check rendering, fallback notes, sanitizing, local loading and
+        width at 1440 and 390 pixels.
+      basis: observed
+      evidence:
+        - docs/artifacts/artifact-plane/changes/change-visual-artifacts/tasks/01-renderer.md
+    - id: diagram-rendering-contract
+      kind: element
+      artifact: artifact-plane
+      element: specifications/diagram-rendering.md
+      requires: Render fenced Mermaid blocks of knowledge as sanitized SVG with
+        bundled code, and keep the code panel when a block does not render.
+      basis: documented
   gaps:
     - The flow documents discovery behavior, not complete knowledge coverage or
       artifact establishment.
