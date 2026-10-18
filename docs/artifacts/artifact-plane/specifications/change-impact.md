@@ -39,7 +39,7 @@ A flow page opened from the impact view highlights the affected steps and dims t
 
 ## Discovery and flow reads
 
-The semantic rank keeps only chunks whose cosine score reaches a cutoff measured on this repository's inventory, so that the research distractor case ranks below the cutoff while the expected flows of P9 stay in the top ten; record the value and the measurement in the task evidence and the README. The detail, source and impact operations never initialize the embedder. The flow page renders the diagram from the document front matter; the detail request adds resolution and sources. A flow query reads the repository once; the freshness check compares fingerprints.
+The semantic rank keeps only chunks whose cosine score reaches a cutoff measured on this repository's inventory, so that a query returns the flows above it instead of every flow while the expected flows of P9 stay in the top ten; a lexically and semantically close flow, such as the Story-Driven revision flow for a review query, remains a legitimate search result. Record the value and the measurement in the task evidence and the README. The detail, source and impact operations never initialize the embedder. The flow page renders the diagram from the document front matter; the detail request adds resolution and sources. A flow query reads the repository once; the freshness check compares fingerprints.
 
 ## Validation
 

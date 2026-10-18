@@ -19,7 +19,7 @@ Explicit plan approval. No internal prerequisite. The owner may defer this task 
 
 ## Definition of Done
 
-- [ ] The semantic cutoff is measured on this repository's inventory and recorded with its value: the query "review a change and assess its impact" no longer lists story-driven:revision-impact, and the expected flows of P9 stay in the top ten.
+- [ ] The semantic cutoff is measured on this repository's inventory and recorded with its value: an unrelated query returns no flow or few flows instead of all 17, a related query no longer returns every flow, and the expected flows of P9 stay in the top ten.
 - [ ] The detail, source and impact operations never initialize the embedder; a test asserts that the embedder's embed function is not called for them.
 - [ ] The flow page renders the diagram from the document front matter before the detail reply arrives; the detail reply adds resolution and sources.
 - [ ] A flow query reads the repository once; the end-of-request check compares HEAD, the worktree status and the observation fingerprint; a warm detail request on this repository answers within 300 milliseconds, measured.
