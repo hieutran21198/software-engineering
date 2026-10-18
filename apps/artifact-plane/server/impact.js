@@ -207,7 +207,7 @@ export function createImpactService({stateDir=defaultStateDir(),roots=[],loader=
   }
 
   const strength=edge=>edge.kind==='supports'?`declared+${edge.evidence.basis}`:['references','participates','describes','declares'].includes(edge.kind)?'declared':edge.kind==='imports'?(edge.evidence.symbolMatch?'static+symbol':'static'):'static';
-  const describe=p=>p.map(x=>({via:x.kind,to:x.to,...(x.evidence.requires?{reason:x.evidence.requires}:{}),...(x.evidence.basis?{basis:x.evidence.basis}:{}),...(x.evidence.matched?{symbols:x.evidence.matched}:x.evidence.names?{imports:x.evidence.names}:{}),...(x.evidence.reason?{reason:x.evidence.reason}:{}),...(x.kind==='mirror'?{sameBytes:x.evidence.same!==false}:{}),...(x.evidence.pattern?{pattern:x.evidence.pattern}:{}),...(x.evidence.status?{status:x.evidence.status}:{})}));
+  const describe=p=>p.map(x=>({via:x.kind,from:x.from,to:x.to,...(x.evidence.requires?{reason:x.evidence.requires}:{}),...(x.evidence.basis?{basis:x.evidence.basis}:{}),...(x.evidence.matched?{symbols:x.evidence.matched}:x.evidence.names?{imports:x.evidence.names}:{}),...(x.evidence.reason?{reason:x.evidence.reason}:{}),...(x.kind==='mirror'?{sameBytes:x.evidence.same!==false}:{}),...(x.evidence.pattern?{pattern:x.evidence.pattern}:{}),...(x.evidence.status?{status:x.evidence.status}:{})}));
 
   async function execute(raw){
     const body=validateQuery(raw);const started=performance.now();const phases={};let phase=started;const mark=k=>{phases[k]=+(performance.now()-phase).toFixed(1);phase=performance.now();};
