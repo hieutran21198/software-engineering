@@ -64,7 +64,7 @@ These rules govern N1–N5 in [navigation hierarchy requirements](../requirement
 | Rule | Value |
 | --- | --- |
 | Indent step | 20 pixels: the 14-pixel chevron column plus its 6-pixel gap, so a child's chevron starts under its parent's label. A row's left padding is 8 pixels plus one step per level: 8, 28 and 48 pixels for levels 0, 1 and 2. |
-| Guide lines | A row at level 1 or 2 draws one 1-pixel vertical line in the `--control` color (#D9D8D3) per ancestor level. The first line is 15 pixels from the row's left edge, under the center of the level-0 chevron; each further line is 20 pixels to the right. The lines extend 1 pixel above and below the row, across the 2-pixel row gap, so that the lines of adjacent rows join. They are drawn above the row background, ignore the pointer and do not change the row's size. |
+| Guide lines | A row at level 1 or 2 draws one 1-pixel vertical line in the `--guide` color (#C8C7C1) per ancestor level. The first line is 15 pixels from the row's left edge, under the center of the level-0 chevron; each further line is 20 pixels to the right. The lines extend 1 pixel above and below the row, across the 2-pixel row gap, so that the lines of adjacent rows join. They are drawn above the row background, ignore the pointer and do not change the row's size. The tree's Show all row has no added top margin, so the lines stay joined above it. |
 | Group space | A level-0 row has an 8-pixel top margin in addition to the 2-pixel row gap. The first row of the tree and the first row after a section heading have no added margin. |
 | Parent weight | An artifact row (a level-0 row with aria-expanded) uses weight 500. Kind, document, change and history rows keep weight 400; a selected row keeps the selected style. Sizes stay 14 pixels for levels 0 and 1 and 13 pixels for level 2. |
 
@@ -257,7 +257,7 @@ The steps of knowledge-authoring, repository-exploration, source-retrieval, unit
 - D1–D11 map to the layout, top bar, sidebar, pages, graph panel, visual style and labels sections.
 - B1 is the owner's approval of 17 October 2026. B2, B3, B5, B6 and B8 map to the browser tests and the screenshot script. B4 maps to the sidebar, and B7 to the code structure and read data additions.
 - Decision 015 records the choice to rebuild the pages.
-- N1–N5 map to Tree presentation. The owner chose the treatment on 18 October 2026; the `--control` color keeps the guide lines visible on the sidebar, hover and selected backgrounds, where `--border` almost matches the selected background. The rules reuse the row classes, so the tree logic does not change.
+- N1–N5 map to Tree presentation. The owner chose the treatment on 18 October 2026; the `--guide` color (#C8C7C1) has a contrast of 1.56, 1.43 and 1.41 with the sidebar, hover and selected backgrounds. The first contract used `--control` (#D9D8D3); its 1.18 on the selected background made the line disappear in the screenshot review, and the shared 8-pixel margin of `.show-all` broke the lines above the tree's Show all row. Both were corrected during validation. The rules reuse the row classes, so the tree logic does not change.
 - KISS:
   - the server operations are reused without change;
   - the read data gains two optional fields;
