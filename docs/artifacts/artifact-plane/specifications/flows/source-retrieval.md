@@ -49,6 +49,7 @@ flow:
         - reader-tests
         - document-page
         - document-tests
+        - diagram-rendering-contract
     - id: freshness
       title: Validate source bytes and disclose stale or partial results
       supports:
@@ -247,6 +248,13 @@ flow:
       basis: observed
       evidence:
         - docs/artifacts/artifact-plane/changes/change-workbench-redesign/tasks/07-browser-suites.md
+    - id: diagram-rendering-contract
+      kind: element
+      artifact: artifact-plane
+      element: specifications/diagram-rendering.md
+      requires: Render fenced Mermaid blocks of knowledge as sanitized SVG with
+        bundled code, and keep the code panel when a block does not render.
+      basis: documented
   gaps:
     - Retrieval ranks candidates; it does not prove compatibility or complete
       system discovery.

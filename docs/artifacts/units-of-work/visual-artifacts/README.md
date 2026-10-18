@@ -11,15 +11,19 @@ affected_flows:
   - artifact: artifact-plane
     flow: repository-exploration
     effect: modify
+  - artifact: artifact-plane
+    flow: source-retrieval
+    effect: modify
 flow_assessment: Surveyed all 117 requirement, specification, decision and flow
   files of the three artifacts at 3c47a48 and rechecked the merge at 89ed23a.
   Inspected the Plane Markdown component and its four page users, the website
   document scope and the flow records. Tables, listings and diagrams in working
   knowledge change no system behavior, so no ADD or story-driven flow changes.
   Rendering fenced Mermaid in Plane pages modifies the inspect step of
-  repository-exploration. Other Plane flows that show documents (source-retrieval,
-  change-review) reuse the same component; Specification confirms whether their
-  supports change. The website is excluded because it publishes only the bundle and the
+  repository-exploration and the read step of source-retrieval, which show
+  documents through the shared Markdown component; both gain the support
+  diagram-rendering-contract. knowledge-authoring and repository-refresh use the
+  document page for editing and refresh, whose behavior does not change. The website is excluded because it publishes only the bundle and the
   repository overview, and retained changes and versions.
 acceptance:
   - id: representations

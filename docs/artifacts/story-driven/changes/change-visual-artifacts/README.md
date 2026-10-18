@@ -9,3 +9,4 @@ On 18 October 2026 the user asked to improve the current artifacts with the repr
 The baseline is established Story-Driven 1.1.0 on main at 89ed23a. Knowledge is edited in place on branch claude/visual-artifacts. This is the artifact's single active change.
 
 - [Requirements](../../requirements/visual-artifacts.md)
+- [Representation contract](../../specifications/visual-artifacts.md)

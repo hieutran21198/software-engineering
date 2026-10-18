@@ -241,6 +241,19 @@ Rechecked on 18 October 2026 at revision 89ed23a (ADD 2.8.0, Artifact Plane 1.18
 
 Kept: artifact-driven:requirements/change-impact.md, artifact-driven:specifications/change-impact.md (its propagation rules are already a table and its tiers a defined list), artifact-driven:decisions/012-typed-change-impact.md and artifact-plane:decisions/016-typed-impact-ledger.md (alternatives tables), artifact-plane:requirements/change-impact.md, the new flow record artifact-plane:change-impact (reader-derived view), and the two amendments.
 
+## Findings of the Specification phase
+
+Verified on 18 October 2026 at 5d7935a while the row specifications were checked against the text, the current workbench contract and the code. The representation contracts name the defects that this unit corrects: D3, D8 and the inspector clause of codex-execution.md. The others stay recorded for a later change.
+
+- D8 — artifact-driven/specifications/system-flows.md, Document contract, support kinds element and flow: "optional status and change follow the established/proposed reference contract … cross-artifact references default to the current established snapshot". knowledge-layout.md, Structural facts and identity, says that a reference resolves in the same checked-out tree, that the status and change selectors are unnecessary for in-place artifacts, and that flow support of kind element and kind flow follows the same rule.
+- artifact-plane/specifications/codex-execution.md: the Unknown item of Derived states retains the state "in the inspector", which the 1.17.0 redesign removed. The UI section names state colors, a "execution returned / DoD pending" label and a tool label and event time that the code does not show, and the UI and Visualization correction sections refer to the inspector.
+- artifact-plane/specifications/evidence-correctness.md: the sentence "UI labels search Relevance first …" describes a flow browse view that no longer exists; the Discover page runs only nonempty searches and says "most relevant first".
+- artifact-plane/specifications/explorer.md: several sections still describe canvas expansion, the details panel, the inspector and the view switcher.
+- artifact-plane/specifications/change-impact.md: line 10 calls the artifact-driven contract proposed, which ADD 2.8.0 established. The Index paragraph names tables and columns that differ from server/impact-index.js. The Query paragraph omits the `knowledge` origin field and the limit of 100 origins that the code applies.
+- artifact-plane/specifications/change-review.md: "cursor and source for source operations" does not say whether a cursor applies to other operations; the code accepts a cursor for every operation.
+- artifact-plane/specifications/live-reload.md, Browser behavior paragraphs 1, 3 and 4; reading-controls.md, Left navigation resizing paragraphs 2 and 3; search-label-usability.md, UI interaction and Artifact scope paragraphs 4 and 5; ux-simplification.md, Honest loading paragraph 1, Reading and return, the Source identity banner and Lower-noise browsing paragraphs 1 and 3; knowledge-layout-reading.md, Navigation and presentation; lazy-loading.md, the "Artifacts/Workflow/Implementation view" wording: each describes UI that the 1.17.0 redesign removed.
+- artifact-plane/specifications/lazy-loading.md: the Request list omits the `revision: established` key that the server accepts for markdown requests.
+
 ## Planned unit
 
 The unit brief is written when its changes open. ADD keeps one active change per artifact, and changes change-impact-semantics (artifact-driven) and change-impact-intelligence (artifact-plane) are active on branch claude/impact-intelligence. After they merge, the coordinator rebases this branch, rechecks this survey against the new main and starts Requirement.
