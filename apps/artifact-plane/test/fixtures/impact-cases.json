@@ -1,0 +1,422 @@
+{
+ "repository": "hieutran21198/software-engineering",
+ "builtFrom": "research prototype evaluation of 18 October 2026 at 5680b52",
+ "cases": [
+  {
+   "id": "C1",
+   "name": "One-artifact code fix (runtime-store startup lock, a4fb88c)",
+   "origins": [
+    {
+     "path": "apps/artifact-plane/server/runtime-store.js",
+     "commit": "a4fb88c"
+    }
+   ],
+   "expect": {
+    "direct": [
+     "apps/artifact-plane/server/runtime-api.js",
+     "apps/artifact-plane/server/runtime-cli.js",
+     "apps/artifact-plane/test/runtime-store.test.js",
+     "apps/artifact-plane/test/runtime-hooks.test.js",
+     "apps/artifact-plane/test/runtime-api.test.js",
+     "apps/artifact-plane/test/browser/change-page.spec.js",
+     "apps/artifact-plane/test/browser/discovery-recorded.spec.js",
+     "flow:artifact-plane:execution-observation"
+    ],
+    "transitive": [
+     "apps/artifact-plane/server/http.js"
+    ]
+   },
+   "negatives": [
+    "apps/artifact-plane/server/flow-index.js",
+    "apps/artifact-plane/server/flow-mcp.js",
+    "apps/artifact-plane/scripts/benchmark-flows.mjs",
+    "apps/artifact-plane/scripts/install-flow-model.mjs",
+    "flow:story-driven:adoption",
+    "flow:artifact-driven:change-delivery"
+   ],
+   "notes": [
+    "Only the RuntimeStore class changed (constructor PRAGMA order); the changed declaration is derived from the commit. Importers of defaultStateDir/repositoryIdentity only are not affected.",
+    "lazy-reload.spec.js also changed in the commit but has no runtime reference: not impact.",
+    "Flows that cite the affected browser specs appear in Verify, not as affected."
+   ]
+  },
+  {
+   "id": "C2",
+   "name": "Shared ADD contract with several consumers (knowledge-layout.md)",
+   "origins": [
+    {
+     "path": "docs/artifacts/artifact-driven/specifications/knowledge-layout.md"
+    }
+   ],
+   "expect": {
+    "direct": [
+     "docs/artifacts/artifact-plane/specifications/knowledge-editing.md",
+     "docs/artifacts/artifact-plane/specifications/knowledge-layout-reading.md",
+     "flow:artifact-driven:change-delivery",
+     "flow:artifact-driven:dependency-gates",
+     "flow:artifact-driven:unit-validation",
+     "flow:artifact-driven:version-publication",
+     "flow:artifact-plane:knowledge-authoring"
+    ],
+    "transitive": [
+     "flow:artifact-plane:change-review",
+     "flow:artifact-plane:context-handoff",
+     "flow:artifact-plane:repository-exploration",
+     "flow:artifact-plane:repository-refresh",
+     "flow:artifact-plane:unit-inspection"
+    ],
+    "investigate": [
+     "apps/artifact-plane/server/reader.js",
+     "apps/artifact-plane/src/model.js",
+     "apps/artifact-plane/server/knowledge-baseline.js",
+     "apps/artifact-plane/server/change-review.js",
+     "apps/artifact-plane/server/flow-model.js",
+     "apps/artifact-plane/server/flow-reader.js",
+     "apps/artifact-plane/server/repository-query.js",
+     "apps/artifact-plane/server/units-of-work.js",
+     "apps/artifact-plane/server/workflow.js",
+     "apps/artifact-plane/src/elements.js",
+     "apps/artifact-plane/src/main.jsx"
+    ]
+   },
+   "steps": {
+    "flow:artifact-driven:change-delivery": [
+     "requirement",
+     "plan",
+     "publication"
+    ],
+    "flow:artifact-driven:dependency-gates": [
+     "resolve",
+     "recheck"
+    ],
+    "flow:artifact-driven:unit-validation": [
+     "delivery",
+     "publication"
+    ],
+    "flow:artifact-driven:version-publication": [
+     "snapshot",
+     "establish"
+    ],
+    "flow:artifact-plane:knowledge-authoring": [
+     "validate",
+     "version"
+    ]
+   },
+   "negatives": [
+    "flow:story-driven:adoption",
+    "flow:story-driven:authoring",
+    "flow:story-driven:revision-impact"
+   ],
+   "unresolved": [
+    "artifact:story-driven"
+   ],
+   "notes": [
+    "Two Plane specs declare references with reasons; five flows cite the spec at named steps.",
+    "story-driven depends on artifact-driven with no reference: reported as unresolved, not affected."
+   ]
+  },
+  {
+   "id": "C3",
+   "name": "Flow with branches: step-scoped impact (task-dag.md)",
+   "origins": [
+    {
+     "path": "docs/artifacts/artifact-driven/specifications/task-dag.md"
+    }
+   ],
+   "expect": {
+    "direct": [
+     "flow:artifact-driven:change-delivery",
+     "flow:artifact-driven:dependency-gates",
+     "docs/artifacts/artifact-plane/specifications/knowledge-editing.md"
+    ],
+    "transitive": [
+     "flow:artifact-plane:knowledge-authoring"
+    ],
+    "potential": [
+     "apps/artifact-plane/server/task-graph.js",
+     "apps/artifact-plane/server/knowledge-operations.js",
+     "apps/artifact-plane/server/workflow.js",
+     "apps/artifact-plane/test/task-graph.test.js",
+     "apps/artifact-plane/test/knowledge-operations.test.js"
+    ]
+   },
+   "steps": {
+    "flow:artifact-driven:change-delivery": [
+     "plan"
+    ],
+    "flow:artifact-driven:dependency-gates": [
+     "dispatch"
+    ]
+   },
+   "negatives": [
+    "flow:artifact-plane:execution-observation",
+    "flow:story-driven:adoption"
+   ],
+   "notes": [
+    "Only the plan step of change-delivery and the dispatch step of dependency-gates cite task-dag.md at one hop."
+   ]
+  },
+  {
+   "id": "C4",
+   "name": "Semantic contract change without a code dependency (system-flows, d37ebae)",
+   "origins": [
+    {
+     "path": "docs/artifacts/artifact-driven/specifications/system-flows.md"
+    },
+    {
+     "path": "docs/artifact-driven/06-guidelines/system-flows.md",
+     "commit": "d37ebae"
+    }
+   ],
+   "expect": {
+    "direct": [
+     "flow:artifact-driven:change-delivery",
+     "flow:artifact-driven:dependency-gates",
+     "flow:artifact-driven:unit-validation",
+     "docs/artifacts/artifact-plane/specifications/knowledge-editing.md",
+     "src/archs/artifact-driven/06-guidelines/system-flows.md"
+    ],
+    "transitive": [
+     "flow:artifact-plane:knowledge-authoring",
+     "src/archs/artifact-driven/bundle.go"
+    ],
+    "potential": [
+     "apps/artifact-plane/server/flow-model.js",
+     "apps/artifact-plane/server/knowledge-operations.js",
+     "apps/artifact-plane/test/flows.test.js",
+     "apps/artifact-plane/test/flow-model-integrity.test.js",
+     "apps/artifact-plane/test/model-explanations.test.js"
+    ]
+   },
+   "steps": {
+    "flow:artifact-driven:change-delivery": [
+     "specification"
+    ],
+    "flow:artifact-driven:dependency-gates": [
+     "revise"
+    ],
+    "flow:artifact-driven:unit-validation": [
+     "membership"
+    ]
+   },
+   "negatives": [
+    "flow:story-driven:revision-impact",
+    "flow:artifact-plane:execution-observation",
+    "flow:artifact-plane:project-tabs"
+   ],
+   "notes": [
+    "#27 changed the guideline; the parser (flow-model.js) changed in #29. No flow cites flow-model.js and no reference links it: only shared vocabulary can surface it.",
+    "The guideline mirrors into src/archs (same bytes), which bundle.go embeds."
+   ]
+  },
+  {
+   "id": "C5",
+   "name": "Undocumented root module (git-process.js gitSlot)",
+   "origins": [
+    {
+     "path": "apps/artifact-plane/server/git-process.js",
+     "symbols": [
+      "gitSlot"
+     ]
+    }
+   ],
+   "depth": 3,
+   "expect": {
+    "direct": [
+     "apps/artifact-plane/server/reader.js",
+     "apps/artifact-plane/server/git-reads.js",
+     "apps/artifact-plane/server/impact-index.js"
+    ],
+    "transitive": [
+     "apps/artifact-plane/server/change-review.js",
+     "apps/artifact-plane/server/flow-reader.js",
+     "apps/artifact-plane/server/knowledge-git.js",
+     "apps/artifact-plane/server/knowledge-operations.js",
+     "apps/artifact-plane/server/repository-events.js",
+     "apps/artifact-plane/server/repository-query.js",
+     "apps/artifact-plane/server/runtime-store.js",
+     "apps/artifact-plane/server/http.js",
+     "apps/artifact-plane/server/flow-index.js",
+     "apps/artifact-plane/server/workflow.js",
+     "apps/artifact-plane/server/units-of-work.js",
+     "apps/artifact-plane/server/knowledge-baseline.js",
+     "apps/artifact-plane/server/knowledge-writer.js",
+     "apps/artifact-plane/test/git-reads.test.js",
+     "apps/artifact-plane/test/reader.test.js",
+     "apps/artifact-plane/test/repository-query.test.js",
+     "apps/artifact-plane/test/workflow.test.js",
+     "apps/artifact-plane/test/units-of-work.test.js",
+     "apps/artifact-plane/test/knowledge-operations.test.js",
+     "apps/artifact-plane/test/knowledge-writer.test.js",
+     "apps/artifact-plane/test/publication-review.test.js",
+     "apps/artifact-plane/test/task-graph.test.js",
+     "flow:artifact-plane:repository-exploration",
+     "flow:artifact-plane:source-retrieval",
+     "flow:artifact-plane:change-review",
+     "flow:artifact-plane:context-handoff",
+     "flow:artifact-plane:knowledge-authoring",
+     "flow:artifact-plane:repository-refresh",
+     "flow:artifact-plane:execution-observation"
+    ]
+   },
+   "negatives": [
+    "flow:story-driven:adoption",
+    "flow:artifact-driven:adoption"
+   ],
+   "notes": [
+    "gitSlot gates every git command through reader.git; every module that runs git is affected. Depth 3 is needed to reach the flows.",
+    "workflow.js, units-of-work.js, knowledge-baseline.js and knowledge-writer.js receive git as a parameter: a static blind spot, expected to be missed.",
+    "Since the impact index exists, server/impact-index.js imports gitSlot as well: a third direct importer at this revision."
+   ]
+  },
+  {
+   "id": "C6",
+   "name": "Misleading semantic neighbour (change-review.js vs story-driven revision-impact)",
+   "origins": [
+    {
+     "path": "apps/artifact-plane/server/change-review.js",
+     "symbols": [
+      "createReviewService"
+     ]
+    }
+   ],
+   "expect": {
+    "direct": [
+     "apps/artifact-plane/server/http.js",
+     "apps/artifact-plane/server/flow-mcp.js",
+     "apps/artifact-plane/scripts/layout-benchmark.mjs",
+     "apps/artifact-plane/test/change-review.test.js",
+     "apps/artifact-plane/test/review-adapters.test.js",
+     "flow:artifact-plane:change-review",
+     "flow:artifact-plane:context-handoff",
+     "flow:artifact-plane:change-impact"
+    ],
+    "transitive": [
+     "apps/artifact-plane/server/flow-mcp-stdio.js",
+     "apps/artifact-plane/server/index.js"
+    ],
+    "potential": [
+     "apps/artifact-plane/src/context-packet.js"
+    ]
+   },
+   "negatives": [
+    "flow:story-driven:revision-impact",
+    "flow:story-driven:authoring",
+    "flow:artifact-driven:change-delivery",
+    "apps/artifact-plane/test/publication-review.test.js"
+   ],
+   "notes": [
+    "layout-benchmark.mjs imports queryChangeReview, which calls createReviewService: affected through the in-file closure.",
+    "context-packet.js formats the packet schema that change-review.js produces; no import links them: a coupling visible only in history.",
+    "story-driven:revision-impact shares words, not code or contracts.",
+    "Since this change, the change-impact flow cites change-review.js at its handoff step (support packet), so it is a true direct consumer."
+   ]
+  },
+  {
+   "id": "C7",
+   "name": "Multi-hop prerequisite without behavioral propagation (ADD docs-only, 5680b52)",
+   "commit": "5680b52",
+   "originFilter": "^docs/",
+   "expect": {
+    "direct": [
+     "src/archs/artifact-driven/05-adoption/README.md",
+     "src/archs/artifact-driven/06-guidelines/README.md",
+     "src/archs/artifact-driven/06-guidelines/adopting-from-git.md",
+     "src/archs/artifact-driven/06-guidelines/getting-started.md",
+     "src/archs/artifact-driven/06-guidelines/working-with-ai.md",
+     "src/archs/artifact-driven/README.md"
+    ],
+    "transitive": [
+     "src/archs/artifact-driven/bundle.go"
+    ]
+   },
+   "negativesPattern": "^flow:(artifact-plane|story-driven):",
+   "negatives": [
+    "apps/artifact-plane/server/reader.js",
+    "apps/artifact-plane/server/knowledge-operations.js"
+   ],
+   "unresolved": [
+    "artifact:artifact-plane",
+    "artifact:story-driven"
+   ],
+   "notes": [
+    "The commit changed only ADD guidance and two ADD specs. artifact-plane and story-driven depend on artifact-driven but reference none of the changed elements: unknown, not affected.",
+    "Mirrors in src/archs are the direct consumers; bundle.go embeds them."
+   ]
+  },
+  {
+   "id": "C8",
+   "name": "Renamed support file (style.css to styles.css, 7a80907)",
+   "origins": [
+    {
+     "path": "apps/artifact-plane/src/styles.css"
+    },
+    {
+     "path": "apps/artifact-plane/src/style.css"
+    }
+   ],
+   "expect": {
+    "direct": [
+     "flow:artifact-plane:change-review",
+     "flow:artifact-plane:execution-observation",
+     "flow:artifact-plane:repository-exploration",
+     "flow:artifact-plane:source-retrieval",
+     "flow:artifact-plane:unit-inspection",
+     "apps/artifact-plane/src/main.jsx"
+    ],
+    "transitive": []
+   },
+   "steps": {
+    "flow:artifact-plane:change-review": [
+     "return"
+    ],
+    "flow:artifact-plane:execution-observation": [
+     "retain"
+    ],
+    "flow:artifact-plane:repository-exploration": [
+     "inspect"
+    ],
+    "flow:artifact-plane:source-retrieval": [
+     "return"
+    ],
+    "flow:artifact-plane:unit-inspection": [
+     "conclusion"
+    ]
+   },
+   "negatives": [
+    "flow:artifact-plane:project-tabs"
+   ],
+   "unresolved": [
+    "apps/artifact-plane/src/style.css"
+   ],
+   "notes": [
+    "Each citing flow names the stylesheet at exactly one step at one hop; main.jsx imports it.",
+    "The old path no longer exists: reported as unresolved, not silently dropped."
+   ]
+  },
+  {
+   "id": "C9",
+   "name": "Change introducing new relationships (reader.js importers at 8327cd8)",
+   "origins": [
+    {
+     "path": "apps/artifact-plane/server/reader.js"
+    }
+   ],
+   "recallOnly": true,
+   "expect": {
+    "direct": [
+     "apps/artifact-plane/server/flow-index.js",
+     "apps/artifact-plane/server/flow-reader.js",
+     "flow:artifact-plane:repository-exploration"
+    ],
+    "transitive": []
+   },
+   "negatives": [
+    "flow:story-driven:adoption"
+   ],
+   "notes": [
+    "At 8327cd8 two new modules started importing reader.js. The derived import index sees them without any declaration; recall is the measure, the file-level origin makes precision meaningless."
+   ]
+  }
+ ]
+}

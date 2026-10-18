@@ -8,6 +8,7 @@ import {sha256} from '../knowledge-api.js';
 import {headingTitle} from '../model.js';
 import {knowledgeTargets} from '../knowledge-navigation.js';
 import {artifactTitle, changeTitle, isFlow, memberUnit} from '../work-model.js';
+import {impactPage} from '../impact-model.js';
 import {ConflictDialog, FrontMatterEditor, bodyWithoutTitle, linkPage, useMedia} from './DocumentPageParts.jsx';
 import './DocumentPage.css';
 
@@ -278,6 +279,7 @@ function UsedBy({element, source, snapshot, worktree, go}) {
   }
   return <Prop label="Used by">
     {items.length ? <ul className="used-by">{items.map(i => <li key={i.key}><span className="used-kind">{i.kind}</span><button className="link" aria-label={`${i.label} (${i.kind.toLowerCase()})`} onClick={() => go(i.page)}>{i.label}</button></li>)}</ul> : <span className="muted small">Nothing names this document.</span>}
+    <div><button className="link small" onClick={() => go(impactPage({origins: [{path: source}], title: element.title}))}>Where is this used?</button></div>
   </Prop>;
 }
 

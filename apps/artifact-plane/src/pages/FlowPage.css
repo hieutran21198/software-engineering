@@ -64,3 +64,10 @@ button.flow-box:hover { border-color: var(--control); background: var(--soft); }
 }
 .flow-diagram { margin-top: var(--s5); }
 .step-node strong { white-space: normal; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; line-height: 1.3; }
+
+/* Steps highlighted from the Impact page. */
+.flow-step.dimmed .step-card { opacity: .55; }
+.flow-step.affected .step-number { border-color: var(--accent); color: var(--accent-text); }
+.flow-step.affected .step-card { border-color: #9db5ec; }
+.react-flow__node.dimmed { opacity: .45; }
+.react-flow__node.affected .graph-node { border-color: var(--accent); box-shadow: 0 0 0 3px var(--accent-ring); }

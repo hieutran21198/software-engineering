@@ -37,3 +37,7 @@ P1–P9 map to reader/view, ownership, search, index, embeddings, freshness, int
 ## Named-search amendment
 
 The search-label-usability contract governs the new explicit title/ID mode and shared normal search UI. Existing exact/keyword/semantic discovery and ranking remain the default for omitted external match selectors. Graph identity and evidence semantics remain unchanged.
+
+## Change-impact amendment
+
+The change-impact contract (change-impact.md) governs impact. Semantic ranking stays a discovery entry point above a measured score cutoff and never contributes to impact. The impact operation delegates to the impact service and keeps its result shape. The detail, source and impact operations never initialize the embedding model, and a query reads the repository once.

@@ -1,5 +1,5 @@
 ---
-current_version: 1.17.1
+current_version: 1.18.0
 depends_on: [artifact-driven]
 ---
 
@@ -22,6 +22,7 @@ This artifact uses the in-place layout. Working knowledge is in requirements, sp
 - [Explorer requirements](requirements/explorer.md) and [explorer contract](specifications/explorer.md)
 - [Authoring requirements](requirements/authoring-workbench.md), [workbench redesign requirements](requirements/workbench-redesign.md), [workbench contract](specifications/authoring-workbench.md) and [knowledge editing contract](specifications/knowledge-editing.md)
 - [In-place layout reading](specifications/knowledge-layout-reading.md)
+- [Change impact requirements](requirements/change-impact.md), [change impact service contract](specifications/change-impact.md) and [typed impact ledger decision](decisions/016-typed-impact-ledger.md)
 - [Local server decision](decisions/001-local-server.md) and [derived workflow decision](decisions/002-derived-workflow.md)
 
 Version records are in versions. Records 1.5.0 to 1.13.0 were converted from complete legacy snapshots; each one gives the Git command that finds its knowledge. Change records and retained delivery plans are in changes.

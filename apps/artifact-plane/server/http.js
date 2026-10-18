@@ -6,6 +6,8 @@ import { exploreRepository } from "./reader.js";
 import {repositoryService, registeredSourceFingerprint} from './repository-events.js';
 import {createFlowService} from './flow-index.js';
 import {createReviewService} from './change-review.js';
+import {createImpactService} from './impact.js';
+import {readFlowRepository} from './flow-reader.js';
 import {queryRepository} from './repository-query.js';
 import { runtimeService } from "./runtime-api.js";
 import {createKnowledgeService} from './knowledge-operations.js';
@@ -35,10 +37,15 @@ function json(res, status, data) {
 }
 export function createAppServer(options = {}) {
   const runtime = runtimeService(options);
+  // One impact service answers /api/impact/query, the delegated flow impact operation and the packet field.
+  let impact=options.impactService;
+  // The impact service reads knowledge through the flow service's fingerprint-cached load.
+  const sharedLoad=(path,settings)=>{const service=getFlows();return service.load?service.load(path,settings):readFlowRepository(path,settings);};
+  const getImpact=()=>impact??=createImpactService({stateDir:options.stateDir,roots:options.flowRoots||[],loader:sharedLoad});
   let flows=options.flowService;
-  const getFlows=()=>flows??=(createFlowService({stateDir:options.stateDir,roots:options.flowRoots||[]}));
+  const getFlows=()=>flows??=(createFlowService({stateDir:options.stateDir,roots:options.flowRoots||[],impactService:getImpact()}));
   let reviews=options.reviewService;
-  const getReviews=()=>reviews??=createReviewService({roots:options.reviewRoots||options.flowRoots||[]});
+  const getReviews=()=>reviews??=createReviewService({roots:options.reviewRoots||options.flowRoots||[],impactService:getImpact()});
   let knowledge=options.knowledgeService;
   const getKnowledge=()=>knowledge??=createKnowledgeService();
   const observation=options.repositoryObservation||{};
@@ -73,7 +80,7 @@ export function createAppServer(options = {}) {
         try {return json(res, 200, url.pathname === "/api/knowledge/edit" ? await getKnowledge().apply(body) : await knowledgeGit(body));}
         catch (error) {const {status, body: payload} = editError(error);return json(res, status, payload);}
       }
-      if (["/api/explore", "/api/runtime/query", "/api/repository/query", "/api/flows/query", "/api/review/query"].includes(url.pathname)) {
+      if (["/api/explore", "/api/runtime/query", "/api/repository/query", "/api/flows/query", "/api/review/query", "/api/impact/query"].includes(url.pathname)) {
         if (req.method !== "POST")
           return json(res, 405, { error: "Use POST to explore a repository." });
         if (
@@ -100,6 +107,7 @@ export function createAppServer(options = {}) {
           return json(res, 200, runtime.query(body.path, body.context));
         }
         if(url.pathname==='/api/review/query')return json(res,200,await getReviews().query(body));
+        if(url.pathname==='/api/impact/query')return json(res,200,await getImpact().query(body));
         if(url.pathname==='/api/flows/query')return json(res,200,await getFlows().query(body));
         if(url.pathname==='/api/repository/query')return json(res,200,await queryRepository(body));
         return json(res, 200, await exploreRepository(body?.path));
@@ -147,7 +155,7 @@ export function createAppServer(options = {}) {
     }
   });
   const close=server.close.bind(server);
-  server.close=(...args)=>{runtime.close();repositories.close();flows?.close();return close(...args);};
+  server.close=(...args)=>{runtime.close();repositories.close();flows?.close();if(!options.impactService)impact?.close();return close(...args);};
   server.runtime = runtime;
   server.repositories=repositories;
   return server;

@@ -36,6 +36,7 @@ flow:
     - id: impact
       title: Trace recorded relationships on both comparison sides
       supports:
+        - impact-contract
         - contract
         - review-service
         - review-interface
@@ -81,6 +82,12 @@ flow:
       to: select
       condition: The source selection changes or a stale/error reply requires a new read.
   support:
+    - id: impact-contract
+      kind: element
+      artifact: artifact-plane
+      element: specifications/change-impact.md
+      requires: Derive the tiered, explained impact of the changed knowledge records instead of a flow-only reverse closure.
+      basis: documented
     - id: authoring-contract
       kind: element
       artifact: artifact-plane

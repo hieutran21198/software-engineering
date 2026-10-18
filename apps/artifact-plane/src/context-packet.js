@@ -41,7 +41,10 @@ export function formatContextMarkdown(envelope) {
   section('Context', {repository: envelope.repository, worktree: envelope.worktree, ...envelope.context});
   section('Scope', data.scope);
   section('Knowledge changes', {records: data.records, governingSources: data.governingSources, pagination: envelope.pagination});
-  section('Recorded flow impact', data.impact);
+  // The tiered impact answer is additive: it has its own section after the recorded candidates.
+  const {tiers, ...recorded} = data.impact || {};
+  section('Recorded flow impact', data.impact ? recorded : data.impact);
+  if (tiers) section('Change impact', tiers);
   section('Evidence and unresolved facts', {evidence: data.evidence, unresolvedFacts: data.unresolvedFacts, diagnostics: envelope.diagnostics});
   lines.push('', '## Sources', '');
   if (!data.sources?.length) lines.push('No source excerpts recorded.');

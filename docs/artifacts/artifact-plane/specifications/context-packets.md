@@ -35,3 +35,7 @@ Check UI/HTTP/MCP parity, source reconstruction/stale cursors, empty/shortened t
 ## Evidence and comparison extension
 
 [evidence-and-comparison.md](evidence-and-comparison.md) defines optional structured evidence and explicit comparison selectors. It refines baseline selection while preserving the omitted-selector contract and source safety.
+
+## Change-impact amendment
+
+[change-impact.md](change-impact.md) adds data.impact.tiers, with the impact coverage statement under tiers.coverage, as an additive field of the same schema and a Change impact section in the Markdown export after Recorded flow impact. The existing candidates and declared assessment fields stay.

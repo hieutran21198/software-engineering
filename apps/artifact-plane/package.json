@@ -1,6 +1,6 @@
 {
   "name": "artifact-plane",
-  "version": "1.17.0",
+  "version": "1.18.0",
   "private": true,
   "type": "module",
   "engines": {
@@ -9,7 +9,7 @@
   "scripts": {
     "start": "node server/index.js",
     "build": "vite build",
-    "test": "node --test test/*.test.js",
+    "test": "state=$(mktemp -d) && ARTIFACT_PLANE_STATE_DIR=$state node --test test/*.test.js; status=$?; rm -rf \"$state\"; exit $status",
     "test:browser": "playwright test",
     "flow:model-install": "node scripts/install-flow-model.mjs",
     "mcp": "node server/flow-mcp-stdio.js"
@@ -22,6 +22,8 @@
     "@huggingface/transformers": "3.8.1",
     "@modelcontextprotocol/sdk": "1.32.1",
     "@xyflow/react": "^12.12.0",
+    "acorn": "^8.15.0",
+    "acorn-jsx": "^5.3.2",
     "dompurify": "^3.4.17",
     "highlight.js": "11.12.0",
     "marked": "^18.1.1",

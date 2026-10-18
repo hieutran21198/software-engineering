@@ -35,6 +35,13 @@ const PAGES = [
   ['Unit page', page => openUnit(page, 'Propose identity rules', 'Member identity outcome')],
   ['Flow page', page => openFlow(page, 'Tenant', 'Member login')],
   ['Discover behavior', async page => {await page.getByRole('button', {name: 'More', exact: true}).click();await page.getByRole('menuitem', {name: /^Discover behavior/}).click();await expect(region(page, 'Discover behavior')).toBeVisible();}],
+  ['Impact page', async page => {
+    await page.getByRole('button', {name: 'More', exact: true}).click();await page.getByRole('menuitem', {name: /^Impact/}).click();
+    const form = region(page, 'Impact page').getByRole('form', {name: 'Ask what a change affects'});
+    await form.getByLabel('File or document path', {exact: true}).fill(base + 'specifications/identity.md');
+    await form.getByRole('button', {name: 'Show impact', exact: true}).click();
+    await expect(region(page, 'Impact page').getByRole('group', {name: 'Show tiers'})).toBeVisible({timeout: 30000});
+  }],
 ];
 
 test('every page has one title, one navigation outside main, unique control names and no mode control', async ({page}) => {

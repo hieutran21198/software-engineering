@@ -8,6 +8,7 @@ import {edit as previewEdit} from '../knowledge-api.js';
 import {postJSON} from '../request.js';
 import {compareLines, comparisonBlocks} from '../line-comparison.js';
 import {formatContextMarkdown} from '../context-packet.js';
+import {impactPage} from '../impact-model.js';
 import {changedKnowledge, readiness} from './ChangePageModel.js';
 import {detailField} from './ChangePagePlan.jsx';
 import {isError} from '../work-model.js';
@@ -95,7 +96,7 @@ export function ChangedKnowledge({change, artifact, review, onLoadReview}) {
   const {go} = useShell(), [open, setOpen] = useState(null), [all, setAll] = useState(false);
   const docs = changedKnowledge(artifact), shown = all ? docs : docs.slice(0, 6);
   return <Section title="Changed knowledge" label="Changed knowledge" summary="· compared with main"
-    actions={<ExportContext artifact={change.artifact} change={change.name} review={review} onLoad={onLoadReview}/>}>
+    actions={<span className="section-actions"><button className="quiet" onClick={() => go(impactPage({diff: {base: 'protected'}, title: 'this change'}))}>What does this change affect?</button><ExportContext artifact={change.artifact} change={change.name} review={review} onLoad={onLoadReview}/></span>}>
     {docs.length ? <><div className="rows">{shown.map(doc => <React.Fragment key={doc.file}>
       <div className={`row ${open === doc.file ? 'selected' : ''}`}>
         <div className="grow">{doc.removed ? <span className="row-title">{doc.title}</span> : <button className="link doc-link" onClick={() => go({kind: 'document', artifact: change.artifact, source: doc.file})}>{doc.title}</button>} <span className="muted">· {doc.kind}</span></div>
