@@ -24,3 +24,10 @@ export function flowDiagram(flow) {
   .map((t,i)=>({id:`${t.from}->${t.to}:${i}`,source:String(t.from),target:String(t.to),type:'readable',label:typeof t.condition==='string'?t.condition:'',markerEnd:{type:'arrowclosed',color:'#8a8f96'},style:{stroke:'#8a8f96',strokeWidth:1.5}}));
  return {nodes,edges};
 }
+// Marks the steps an impact answer reached and dims the others. Without
+// affected steps the diagram is returned unchanged.
+export function highlightDiagram(diagram, stepIds) {
+ if (!diagram || !stepIds?.length) return diagram;
+ const affected=new Set(stepIds.map(String));
+ return {...diagram,nodes:diagram.nodes.map(n=>({...n,className:affected.has(n.id)?'affected':'dimmed',data:{...n.data,affected:affected.has(n.id)}}))};
+}

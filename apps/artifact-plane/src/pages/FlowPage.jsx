@@ -3,7 +3,8 @@ import {useShell, useDocument} from '../page-data.js';
 import {PageHeader, Section, Notice} from '../ui.jsx';
 import {ActionForm, OperationError, useEdit, frontValue, splitFront, lines} from '../editing.jsx';
 import {GraphPanel} from '../GraphPanel.jsx';
-import {flowDiagram} from '../flow-canvas.js';
+import {flowDiagram, highlightDiagram} from '../flow-canvas.js';
+import {impactPage} from '../impact-model.js';
 import {sha256} from '../knowledge-api.js';
 import {artifactDocuments} from '../work-model.js';
 import {useFlowDetail, useTrackedFiles, SUPPORT_GROUPS, supportGroup, supportTarget, supportFields, supportOperation, TextEditor, FrontMatterEditor, flowNodeTypes} from './FlowPageParts.jsx';
@@ -21,7 +22,10 @@ const plural = (n, word, many = word) => `${n} ${n === 1 ? word : many}`;
 const list = value => Array.isArray(value) ? value : [];
 
 // One expanded step: grouped supports and the six step actions, one form at a time.
-function StepDetail({step, index, steps, support, resolved, editable, run, snapshot, owner, self, go, tracked, action, onAction, sources, flowId}) {
+// The file a support names: its knowledge element, its flow document or its source path.
+const supportFile = s => s.kind === 'element' ? `docs/artifacts/${s.artifact}/${s.element}` : s.kind === 'flow' ? `docs/artifacts/${s.artifact}/specifications/flows/${s.flow}.md` : s.path;
+
+function StepDetail({step, index, steps, support, resolved, editable, run, snapshot, owner, self, go, tracked, action, onAction, sources, flowId, affected = []}) {
   const [error, setError] = useState(null), quick = (operation, input) => {setError(null);run(operation, input).catch(setError);};
   const supports = list(step.supports).map(id => support.find(s => s.id === id) || {id, missing: true});
   const close = () => onAction(null);
@@ -42,12 +46,14 @@ function StepDetail({step, index, steps, support, resolved, editable, run, snaps
         <ul>{items.map(s => {const t = supportTarget(snapshot, s), unresolved = resolved.get(s.id) === false;return <li key={s.id}>
           {t.page ? <button className="link" onClick={() => go(t.page)}>{t.title}</button> : readable(t.path) ? <button className="link mono" onClick={() => go({kind: 'source', artifact: owner, flow: self, flowId, sourceId: readable(t.path).id, path: t.path})}>{t.path}</button> : t.title ? <span>{t.title}</span> : <span className="mono">{t.path}</span>}
           <span className={`basis ${unresolved ? 'unresolved' : ''}`}>{s.basis || 'basis unknown'}{s.basis === 'observed' && list(s.evidence).length ? ` · ${plural(s.evidence.length, 'evidence file', 'evidence files')}` : ''}{unresolved ? ' · unresolved' : ''}</span>
+          {affected.includes(supportFile(s)) && <span className="badge small new">affected</span>}
           {editable && <button className="icon support-remove" aria-label={`Remove ${t.title || t.path || s.id} from this step`} title="Remove from this step" onClick={() => removeSupport(s.id)}>×</button>}
         </li>;})}</ul>
       </div>;
     })}
     {supports.some(s => s.missing) && <p className="tiny">Missing support: {supports.filter(s => s.missing).map(s => s.id).join(', ')}</p>}
     {!supports.length && <p className="muted small">This step has no support yet.</p>}
+    {supports.some(s => !s.missing) && <div><button className="link small" onClick={() => go(impactPage({origins: [...new Set(supports.filter(s => !s.missing).map(supportFile).filter(Boolean))].slice(0, 100).map(path => ({path})), title: `step “${step.title}”`}))}>What do this step's sources affect?</button></div>}
     {editable && !action && <div className="step-actions">
       <button className="quiet" onClick={() => onAction('support')}>+ Add support</button>
       <button className="quiet" onClick={() => onAction('rename')}>Rename step</button>
@@ -95,6 +101,8 @@ export default function FlowPage({page}) {
     const front = frontValue(doc.markdown).flow, source = front && typeof front === 'object' && !Array.isArray(front) ? front : detail.data?.flow;
     return source ? flowDiagram(source) : null;
   }, [doc.markdown, valid ? null : detail.data]);
+  // An Impact page link highlights the affected steps and their affected supports.
+  const affectedSteps = list(page.highlight?.steps).map(String), highlighted = useMemo(() => highlightDiagram(diagram, affectedSteps), [diagram, page.highlight]);
 
   const title = flow?.title || entry?.title || page.flow;
   const eyebrow = <>{artifact ? <button className="link" onClick={() => go({kind: 'artifact', artifact: artifact.id, section: 'flows'})}>{artifact.title}</button> : page.artifact} / Flows</>;
@@ -138,15 +146,16 @@ export default function FlowPage({page}) {
       {box('outcome', 'Ends with', flow.outcome)}
     </div>
 
+    {affectedSteps.length > 0 && <Notice>The change affects {plural(affectedSteps.length, 'step', 'steps')} of this flow; they are highlighted.</Notice>}
     {view === 'diagram' ? <div className="flow-diagram">
       {detail.status === 'error' && <Notice tone="warning">{detail.error}</Notice>}
-      <GraphPanel label="Flow diagram" nodes={diagram?.nodes || []} edges={diagram?.edges || []} nodeTypes={flowNodeTypes} labelled flowKey={`${page.flow}:${epoch}`}
+      <GraphPanel label="Flow diagram" nodes={highlighted?.nodes || []} edges={highlighted?.edges || []} nodeTypes={flowNodeTypes} labelled flowKey={`${page.flow}:${epoch}`}
         message={!diagram ? 'Reading the diagram…' : diagram.nodes.length ? null : 'This flow has no steps.'}
         onNodeClick={(_, node) => {const step = steps.find(s => String(s.id) === node.id);if (step) {setView('steps');setOpen(step.id);setAction(null);}}}
         legend={<><span><i/>Transition</span><span>Select a step to open it.</span></>}/>
     </div> : <Section title="Steps" summary={steps.length} actions={editable && <span className="muted small">Select a step to edit it.</span>}>
       <ol className="flow-steps">
-        {steps.map((step, i) => {const expanded = open === step.id, meta = counts(step), out = paths(step, i);return <li key={step.id} className={`flow-step ${expanded ? 'open' : ''}`}>
+        {steps.map((step, i) => {const expanded = open === step.id, meta = counts(step), out = paths(step, i);return <li key={step.id} className={`flow-step ${expanded ? 'open' : ''} ${affectedSteps.length ? affectedSteps.includes(String(step.id)) ? 'affected' : 'dimmed' : ''}`}>
           <span className="step-number" aria-hidden="true">{i + 1}</span>
           <div className="step-card">
             <button className="unstyled step-head" aria-expanded={expanded} onClick={() => toggle(step.id)}>
@@ -155,7 +164,8 @@ export default function FlowPage({page}) {
               {out.length > 0 && <span className="step-paths">{out.map(p => <span key={p.key}>{p.back ? '↩' : '→'} <b>{p.label}</b>{p.condition ? ` when ${sentence(p.condition)}.` : ''}</span>)}</span>}
             </button>
             {expanded && <StepDetail step={step} index={i} steps={steps} support={support} resolved={resolved} editable={editable} run={run} snapshot={snapshot}
-              owner={artifact.id} self={page.flow} go={go} tracked={tracked} action={action} onAction={setAction} sources={detail.data?.sources} flowId={detail.data?.flow?.id}/>}
+              owner={artifact.id} self={page.flow} go={go} tracked={tracked} action={action} onAction={setAction} sources={detail.data?.sources} flowId={detail.data?.flow?.id}
+              affected={list(page.highlight?.supports?.[step.id])}/>}
           </div>
         </li>;})}
       </ol>

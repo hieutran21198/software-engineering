@@ -205,6 +205,7 @@ fieldset.checks legend { font-size: 13px; font-weight: 500; margin-bottom: 6px; 
 /* Sections, rows, lists, cards. */
 .section { margin-top: 36px; }
 .section-head { display: flex; align-items: center; justify-content: space-between; gap: 12px; margin-bottom: 12px; flex-wrap: wrap; min-height: 36px; }
+.section-actions { display: inline-flex; flex-wrap: wrap; align-items: center; gap: 4px; }
 .section-title { font-size: 15px; font-weight: 600; }
 .section-title .summary { color: var(--muted); font-weight: 400; }
 .card { border: 1px solid var(--border); border-radius: var(--r-card); padding: 22px 24px; background: var(--bg); }
