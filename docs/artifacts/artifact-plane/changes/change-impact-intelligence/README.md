@@ -10,7 +10,7 @@ Excluded: a graph database, a second vector store, generated answers, numeric co
 
 ## Baseline and ownership
 
-Artifact Plane owns this change. The established baseline is Artifact Plane 1.17.0 on main. ADD 2.6.0 supplies the established contracts; the proposed artifact-driven change-impact-semantics supplies the change-impact contract on the same branch, and dependent implementation waits for its establishment. Knowledge is edited in place on branch claude/impact-intelligence. This change belongs to the change-impact-intelligence unit.
+Artifact Plane owns this change. The established baseline is Artifact Plane 1.17.1 on main; the measurements in the requirements were taken on 1.17.0, whose readers 1.17.1 did not change. ADD 2.6.0 supplies the established contracts; the proposed artifact-driven change-impact-semantics supplies the change-impact contract on the same branch, and dependent implementation waits for its establishment. Knowledge is edited in place on branch claude/impact-intelligence. This change belongs to the change-impact-intelligence unit.
 
 - [Requirements](../../requirements/change-impact.md)
 - [Contract](../../specifications/change-impact.md)

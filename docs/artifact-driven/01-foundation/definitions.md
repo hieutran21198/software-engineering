@@ -30,6 +30,6 @@
 | Artifact dependency | A relationship in which an artifact requires an upstream artifact's established knowledge or completed change to proceed. Detailed contracts belong in specifications. |
 | Dependency DAG | The artifact-level directed acyclic graph, derived from `depends_on` in identity records. Its nodes are artifacts and its edges identify dependencies and execution order. Changes, versions, and tasks are not nodes in this graph. |
 | Implementation task DAG | A directed acyclic graph within one change. The plan lists current tasks; each task declares its ID and prerequisite task IDs. Edges point from prerequisite to dependent task. |
-| Impact analysis | Assessment of which knowledge, artifacts, contracts, and tasks a proposed change affects. It occurs throughout Requirement and Specification, including applicable ADRs. |
+| Impact analysis | Assessment of which knowledge, artifacts, contracts, and tasks a proposed change affects. It occurs throughout Requirement and Specification, including applicable ADRs. A reader reports each affected entity in one tier (changed, direct, transitive, potential or unresolved) with the relationship path, its evidence and the coverage of the analysis. |
 
 Artifacts can represent business capabilities, such as tenant management, or technical capabilities, such as deployment infrastructure, observability, and CI/CD. Both follow the same workflow.
