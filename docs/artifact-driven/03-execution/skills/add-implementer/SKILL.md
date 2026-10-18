@@ -40,3 +40,7 @@ For a member change, read the [unit brief](../../../06-guidelines/units-of-work.
 ## System-flow checks
 
 Read the [system-flow format](../../../06-guidelines/system-flows.md) when the change affects system journeys. During the existing task self-check, compare affected behavior with the approved flow knowledge and validate the task’s supporting references and evidence. A test source is static support unless recorded execution evidence supports an observed claim. Return new requirement or contract facts to their owning phase; do not amend governing flow contracts independently or bypass approval and establishment gates.
+
+## Representations
+
+Read the [visual representation guide](../../../06-guidelines/visual-representations.md) when a task changes behavior that a diagram of the governing specification shows. During the existing task self-check, record evidence as a table of DoD item, check, result and source. Recheck the behavior diagrams of the governing specification against the implemented behavior, and report a stale diagram to the coordinator. Do not edit a governing diagram to match the code; return the contract change to its owning phase.

@@ -55,6 +55,10 @@ Consume the [unit brief](../../../06-guidelines/units-of-work.md) when the chang
 
 Read the [system-flow format](../../../06-guidelines/system-flows.md) when the change affects system journeys. During the existing Specification self-check, assess compatibility and update affected flow steps, branches, supporting references, evidence basis, and gaps. During the existing Plan self-check, supply fresh tasks and concrete flow checks. Keep detailed behavior with its owning artifact; flow participation alone creates no dependency or unit membership. Proposed knowledge can support preparation, but dependent Implementation still waits for upstream establishment and plan approval.
 
+## Representations
+
+Read the [visual representation guide](../../../06-guidelines/visual-representations.md) when a contract, decision or plan has structure that prose spreads apart. During the existing Specification self-check, apply the agent procedure: write contract tables, sequence diagrams for interactions, state diagrams for lifecycles, containment diagrams for boundaries and alternatives tables in ADRs. Derive flow diagrams from flow records. During the existing Plan self-check, rely on the task graph that readers derive from the task list; do not draw task order by hand. Perform procedure step 9 for each changed representation and record its result in the self-check.
+
 ## Small-change authoring
 
 Use the [minimal change scaffold](../../../06-guidelines/minimal-change.md) when one artifact and a small task plan cover the outcome. Edit the knowledge in place without baseline copies and replace all placeholders with verified facts. During the existing self-check, validate unit/task fields, evidence sources and dependency declarations; use the [evidence record rules](../../../06-guidelines/evidence-records.md) for optional explicit check and publication facts. Keep phase commits, plan approval and upstream establishment. Do not add another review step or copy old task evidence as current proof.

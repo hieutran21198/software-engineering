@@ -2,7 +2,7 @@
 
 ## Phase Self-Checks
 
-The PO validates Requirement output. The TL validates Specification and Plan output in sequence. Each owner checks the phase completion criteria before committing and handing off.
+The PO validates Requirement output. The TL validates Specification and Plan output in sequence. Each owner checks the phase completion criteria before committing and handing off. The same self-check validates the tables and diagrams of the changed documents under the [visual representation guide](../06-guidelines/visual-representations.md#traceability-and-maintenance).
 
 Discovery of a blocker returns the active change to the phase that owns the correction. The user must approve the completed implementation plan. A new plan or material amendment requires renewed approval. No mandatory extra agent review is required.
 

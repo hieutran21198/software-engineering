@@ -65,6 +65,10 @@ To recover, identify the repository, worktree, change, captured revision, task, 
 
 Verify user approval and upstream establishment separately. If approval is not available in the current context, the coordinator asks before implementing. Knowledge that is not merged is proposed; dependent Implementation waits until the required knowledge and code land on `main` or `master`. If a required proof is missing, name the exact proof and wait for it. Use an ordinary handoff message and the existing files; do not create a recovery ledger or approval registry.
 
+## Representations
+
+Agents apply the [representation procedure](visual-representations.md#agent-procedure) in their existing self-checks: analyze, decide, model a fact list, generate, explain, link, validate and maintain. Ask for a representation by its subject and reader task, for example "a sequence diagram of the write path for reviewers", not for "a diagram". Treat a generated diagram as a proposal until its count check against the source is recorded. A reader that does not render Mermaid shows the block as source text; the introduction, the body text and the source line still carry the facts.
+
 ## Discover affected flows
 
 Use [system-flow knowledge](system-flows.md) to find candidate journeys and supporting elements before asking the user for repository facts. If a flow reader is available, search by behavior or identifiers, inspect its source-backed relationships, and follow reverse references to candidate consumers. Inspect relevant current contracts, implementation, and tests to assess actual impact. Use targeted repository search when the map is missing, incomplete, or stale; do not treat absence from the map as absence from the system.
