@@ -38,6 +38,15 @@ flow_assessment: Discovery on 18 October 2026 read the 17 flow records, the
   the Story-Driven flows are excluded; their steps and supports do not change.
   Gap - dynamic calls, injected functions and process boundaries are not
   analyzed by any planned reader; the contract reports them as not analyzed.
+  Reconciliation on the delivery branch - the impact service on the difference
+  against main reached all six declared flows and six more that are not
+  declared - repository-exploration and repository-refresh through
+  src/main.jsx (a new page kind), unit-inspection and execution-observation
+  through src/styles.css (the step highlight), knowledge-authoring through
+  server/http.js (a new route), and project-tabs through src/TopBar.jsx (a new
+  More menu entry). Each edit only adds an entry; the steps of those journeys
+  do not change and their browser suites pass, so they are not declared as
+  modified.
 acceptance:
   - id: semantics
     criterion: The ADD change-impact contract defines the tiers changed, direct,
