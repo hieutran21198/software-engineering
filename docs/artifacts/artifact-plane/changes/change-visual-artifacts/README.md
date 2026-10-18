@@ -12,3 +12,4 @@ The baseline is established Artifact Plane 1.18.0 on main at 89ed23a, which depe
 - [Representation contract](../../specifications/visual-artifacts.md)
 - [Rendering contract](../../specifications/diagram-rendering.md)
 - [Decision 017](../../decisions/017-bundled-mermaid-rendering.md)
+- [Plan](tasks/README.md)

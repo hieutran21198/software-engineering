@@ -10,3 +10,4 @@ The baseline is established ADD 2.8.0 on main at 89ed23a. Knowledge is edited in
 
 - [Requirements](../../requirements/visual-artifacts.md)
 - [Representation contract](../../specifications/visual-artifacts.md)
+- [Plan](tasks/README.md)

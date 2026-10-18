@@ -10,3 +10,4 @@ The baseline is established Story-Driven 1.1.0 on main at 89ed23a. Knowledge is 
 
 - [Requirements](../../requirements/visual-artifacts.md)
 - [Representation contract](../../specifications/visual-artifacts.md)
+- [Plan](tasks/README.md)
