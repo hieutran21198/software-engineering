@@ -11,11 +11,16 @@ import { resolve, relative, isAbsolute, dirname, join } from "node:path";
 import { execFileSync } from "node:child_process";
 import { createHash } from "node:crypto";
 import { defaultStateDir, repositoryIdentity } from "./runtime-store.js";
-import { readFlowRepository } from "./flow-reader.js";
+import { readFlowRepository, flowFingerprint } from "./flow-reader.js";
 import { flowImpact, safeFlowID } from "./flow-model.js";
 import { ExploreError } from "./reader.js";
 import { createLocalEmbedder, normalizeVector } from "./flow-embeddings.js";
 const digest = (x) => createHash("sha256").update(x).digest("hex");
+// Discovery keeps only chunks whose cosine similarity to the query reaches this value, so a
+// query returns the flows it resembles instead of every flow. Measured on this repository's
+// 18 flows with the pinned model on 18 October 2026: unrelated sentences score at most 0.26,
+// the expected flows of the benchmark queries score at least 0.59; see README, Flow discovery.
+export const SEMANTIC_CUTOFF = 0.5;
 const normalizedName = value => String(value || "").trim().normalize("NFC").toLowerCase();
 const inside = (root, path) => {
   const r = relative(root, path);
@@ -194,6 +199,7 @@ export function createFlowService({
   roots = [],
   embedder,
   loader = readFlowRepository,
+  fingerprint = loader === readFlowRepository ? flowFingerprint : null,
 } = {}) {
   const dir = guardFlowDirectory(stateDir, roots),
     path = join(dir, "flow-index.sqlite");
@@ -222,6 +228,9 @@ export function createFlowService({
   let encoder = embedder;
   const getEncoder = () => encoder ??= createLocalEmbedder(dir);
   let serial = Promise.resolve(), closing=false, closePromise;
+  // Loaded repositories by fingerprint: consecutive reads of an unchanged repository reuse one load.
+  const loaded = new Map();
+  const remember = (key, record) => {loaded.delete(key);loaded.set(key, record);while (loaded.size > 4) loaded.delete(loaded.keys().next().value);};
   async function execute(raw) {
     const started = performance.now(),
       timings = {};
@@ -235,11 +244,14 @@ export function createFlowService({
       const identity = repositoryIdentity(body.path);
       guardFlowDirectory(dir, [identity.common, ...identity.roots]);
     }
-    let record = await loader(body.path, {
-      worktree: body.worktree,
-      knowledge: body.knowledge,
-      roots,
-    });
+    const load = () => loader(body.path, { worktree: body.worktree, knowledge: body.knowledge, roots });
+    const probe = fingerprint ? () => fingerprint(body.path, body.worktree) : null;
+    const initialFingerprint = probe ? await probe() : null;
+    const loadKey = JSON.stringify([body.path, body.worktree ?? null, body.knowledge, initialFingerprint]);
+    let record = probe ? loaded.get(loadKey) : null;
+    if (!record) {record = await load();if (probe) remember(loadKey, record);}
+    // Freshness compares the cheap fingerprint; without one, a second load compares revisions.
+    const unchanged = async () => probe ? (await probe()) === initialFingerprint : (await load()).revision === record.revision;
     mark("loadMs");
     const artifactOptions = (record.snapshot?.artifacts || [])
       .filter(a => safeFlowID(a.id))
@@ -251,13 +263,17 @@ export function createFlowService({
     const eligibleFlows = record.graph.flows.filter(f => !eligible || eligible.has(f.id));
     const scopedRecord = {...record, graph: {...record.graph, flows: eligibleFlows}};
     const titleMode = body.operation === 'search' && body.match === 'title';
+    // Only discovery search chunks sources and prepares embeddings. Title search, detail,
+    // impact and source never load the model and never rebuild documents for an unchanged revision.
+    const discovery = body.operation === 'search' && !titleMode;
     const context = digest(
       JSON.stringify([record.repository.path, record.worktree, body.knowledge, body.match, body.artifact]),
     );
-    const model = titleMode ? "metadata-title-v1" : getEncoder().signature || "injected";
+    const model = discovery ? getEncoder().signature || "injected" : "metadata-only-v1";
     let cached = db.prepare("SELECT * FROM contexts WHERE id=?").get(context),
       diagnostics = [...record.graph.diagnostics];
     const reusableChunks =
+      discovery &&
       cached?.revision === record.revision &&
       cached.model === model &&
       JSON.parse(cached.json).semantic &&
@@ -267,10 +283,10 @@ export function createFlowService({
           .prepare("SELECT id,flow,text FROM documents WHERE context=?")
           .all(context)
           .map((doc) => ({ ...doc, hash: digest(doc.text) }))
-      : titleMode ? [] : chunks(scopedRecord);
+      : discovery ? chunks(scopedRecord) : [];
     const vectors = new Map();
     let semantic = false;
-    if (!titleMode) try {
+    if (discovery) try {
       await encoder.embed([]);
       if (encoder.split && !reusableChunks)
         docs = chunks(scopedRecord, (text) => encoder.split(text));
@@ -302,23 +318,17 @@ export function createFlowService({
       });
     }
     mark("embeddingPreparationMs");
-    const chunkRevision = digest(JSON.stringify(docs.map((d) => d.id).sort()));
+    const chunkRevision = discovery ? digest(JSON.stringify(docs.map((d) => d.id).sort())) : null;
     const needsRebuild =
       !cached ||
       cached.revision !== record.revision ||
-      cached.model !== model ||
-      JSON.parse(cached.json).chunker !== "token128-v1" ||
-      JSON.parse(cached.json).chunkRevision !== chunkRevision ||
-      (semantic && !JSON.parse(cached.json).semantic);
+      (discovery &&
+        (cached.model !== model ||
+          JSON.parse(cached.json).chunker !== "token128-v1" ||
+          JSON.parse(cached.json).chunkRevision !== chunkRevision ||
+          (semantic && !JSON.parse(cached.json).semantic)));
     let fresh = true;
-    if (needsRebuild) {
-      const checked = await loader(body.path, {
-        worktree: body.worktree,
-        knowledge: body.knowledge,
-        roots,
-      });
-      fresh = checked.revision === record.revision;
-    }
+    if (needsRebuild) fresh = await unchanged();
     if (fresh && needsRebuild) {
       db.exec("BEGIN IMMEDIATE");
       try {
@@ -381,7 +391,7 @@ export function createFlowService({
           generation,
           JSON.stringify({
             semantic,
-            chunker: "token128-v1",
+            chunker: discovery ? "token128-v1" : "none",
             chunkRevision,
             repository: record.repository.path,
             worktree: record.worktree,
@@ -505,6 +515,7 @@ export function createFlowService({
           }
           ranks.push(
             [...scores]
+              .filter(([, score]) => score >= SEMANTIC_CUTOFF)
               .sort((a, b) => b[1] - a[1] || a[0].localeCompare(b[0]))
               .map(([id]) => id),
           );
@@ -657,12 +668,7 @@ export function createFlowService({
           : null;
     }
     mark("rankingMs");
-    const final = await loader(body.path, {
-      worktree: body.worktree,
-      knowledge: body.knowledge,
-      roots,
-    });
-    fresh &&= final.revision === record.revision;
+    fresh &&= await unchanged();
     const published = db
       .prepare("SELECT generation FROM contexts WHERE id=?")
       .get(context);

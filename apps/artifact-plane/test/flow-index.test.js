@@ -4,7 +4,7 @@ import { mkdtemp, rm, writeFile, readFile, mkdir } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { DatabaseSync } from "node:sqlite";
-import { createFlowService, guardFlowDirectory } from "../server/flow-index.js";
+import { createFlowService, guardFlowDirectory, SEMANTIC_CUTOFF } from "../server/flow-index.js";
 import {
   createLocalEmbedder,
   normalizeVector,
@@ -471,6 +471,54 @@ test('artifact scope intersects impact reasons and scopes discovery before ranki
   for(const args of [{artifact:'missing'},{artifact:'../owner'},{match:'unknown'},{operation:'impact',ids:['specific'],match:'title'},{operation:'detail',flow:base.id,artifact:'owner'},{operation:'source',flow:base.id,source:'doc',match:'discovery'}])await assert.rejects(service.query({...request,...args}),{status:422});
 });
 
+test('detail, impact and source never initialize the embedder and keep a later discovery search cheap', async t => {
+  const calls=[];
+  const embedder={signature:'inert',embed:async texts=>{calls.push([...texts]);return texts.map(()=>[1,0]);}};
+  const {service,stateDir}=await setup(t,{embedder});
+  const detail=await service.query({path:'/repo',operation:'detail',flow:'owner:login'});
+  assert.equal(detail.freshness,'fresh');assert.equal(detail.data.flow.logicalId,'owner:login');assert.equal(detail.data.sources.length,2);
+  const impact=await service.query({path:'/repo',operation:'impact',ids:['source']});
+  assert.equal(impact.data.flows.length,1);
+  const source=await service.query({path:'/repo',operation:'source',flow:'owner:login',source:'source'});
+  assert.equal(source.data.text,'Membership validation');
+  assert.deepEqual(calls,[],'detail, impact and source must not call the embedder');
+  // The context exists without documents; the first discovery search adds chunks and vectors once.
+  const db=new DatabaseSync(join(stateDir,'flow-index.sqlite'));t.after(()=>db.close());
+  assert.equal(db.prepare('SELECT count(*) n FROM contexts').get().n,1);
+  assert.equal(db.prepare('SELECT count(*) n FROM documents').get().n,0);
+  const searched=await service.query({...query});
+  assert.equal(searched.data.semantic,true);assert.ok(calls.some(texts=>texts.length>0));
+  assert.ok(db.prepare('SELECT count(*) n FROM documents').get().n>0);
+  const embedded=calls.length;
+  await service.query({path:'/repo',operation:'detail',flow:'owner:login'});
+  const again=await service.query({...query});
+  assert.equal(again.data.semantic,true);
+  assert.deepEqual(calls.slice(embedded),[[],['membership']],'a detail read between two searches must not drop the indexed documents: only the model check and the query text are embedded');
+  assert.equal(again.generation,searched.generation);
+});
+test('a repository fingerprint replaces repeated loads and detects a change during the query', async t => {
+  // Query 1 probes at start, before the rebuild and at the end; query 2 at start and end; query 3 starts on b and ends on c.
+  let loads=0,probes=[];const values=['a','a','a','a','a','b'];
+  const {service}=await setup(t,{loader:async()=>{loads++;return fixture();},fingerprint:async()=>{const v=values[probes.length]??'c';probes.push(v);return v;},embedder:{signature:'fp',embed:async texts=>texts.map(()=>[1,0])}});
+  const first=await service.query({path:'/repo',operation:'detail',flow:'owner:login'});
+  assert.equal(first.freshness,'fresh');assert.equal(loads,1);
+  const second=await service.query({path:'/repo',operation:'detail',flow:'owner:login'});
+  assert.equal(second.freshness,'fresh');assert.equal(loads,1,'an unchanged fingerprint reuses the loaded repository');
+  const third=await service.query({path:'/repo',operation:'detail',flow:'owner:login'});
+  assert.equal(loads,2,'a new fingerprint loads again');
+  assert.equal(third.freshness,'stale');assert.equal(third.completeness,'partial');
+  assert.ok(third.diagnostics.some(d=>d.code==='stale-flow-context'));
+});
+test('discovery drops chunks below the semantic cutoff instead of returning every flow', async t => {
+  const record=fixture();
+  // The far flow shares no source with the login flow and its summary fits one chunk, so every chunk of it carries the marker word.
+  record.graph.flows.push({...record.graph.flows[0],id:'/repo:far',localId:'far',logicalId:'owner:far',title:'Unrelated far away journey',trigger:'Far away.',outcome:'Far away.',file:'far.md',steps:[],support:[],createdAt:'2025-01-01T00:00:00.000Z'});
+  const {service}=await setup(t,{loader:async()=>structuredClone(record),embedder:{signature:'cutoff',embed:async texts=>texts.map(text=>text.includes('Unrelated far')?[0,1]:[1,0])}});
+  const near=await service.query({...query,query:'zzqqx'});
+  assert.equal(near.data.semantic,true);
+  assert.deepEqual(near.data.flows.map(f=>f.id),['/repo:flow'],'the orthogonal flow scores 0 and stays out');
+  assert.ok(SEMANTIC_CUTOFF>0&&SEMANTIC_CUTOFF<1);
+});
 test('switching title and discovery preserves cached document vectors', async t => {
   const calls=[];
   const {service,stateDir}=await setup(t,{embedder:{signature:'switch-cache',embed:async texts=>{calls.push([...texts]);return texts.map(()=>[1,0]);}}});
