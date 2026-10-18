@@ -66,3 +66,7 @@ Specifications/system-flows.md defines owned runtime/method journeys and unit fl
 ## Explicit evidence and authoring
 
 [evidence-records.md](evidence-records.md) defines optional source-backed check and publication records, legacy compatibility and declaration reconciliation. [minimal-authoring.md](minimal-authoring.md) defines the copyable small-change guide and its validation. These additions preserve phase gates, artifact ownership and the absence of workflow state.
+
+## Visual knowledge extension
+
+[visual-knowledge.md](visual-knowledge.md) defines how representations of knowledge (tables, diagrams and reader-derived views) are selected, authored, checked and maintained inside the existing phases. Structural facts stay in front matter; a diagram is derived from them or from the body text and never becomes a second source.

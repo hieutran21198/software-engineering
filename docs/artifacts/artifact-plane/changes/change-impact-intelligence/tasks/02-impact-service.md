@@ -21,7 +21,7 @@ specifications/change-impact.md, sections Query and Validation. artifact-driven 
 
 ## Prerequisites
 
-Task impact-index satisfies its DoD. artifact-driven 2.7.0 is established or merges in the same pull request.
+Task impact-index satisfies its DoD. artifact-driven 2.8.0 is established or merges in the same pull request.
 
 ## Definition of Done
 

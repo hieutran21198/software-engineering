@@ -17,6 +17,7 @@ flow:
         - evidence-usability-contract
         - explicit-evidence-guide
         - layout-contract
+        - visual-contract
     - id: specification
       title: Define contracts and assess affected flow support
       supports:
@@ -25,6 +26,7 @@ flow:
         - flow-contract
         - evidence-usability-contract
         - explicit-evidence-guide
+        - visual-contract
     - id: plan
       title: Create fresh dependency-ordered tasks and DoD
       supports:
@@ -33,6 +35,7 @@ flow:
         - explicit-evidence-guide
         - minimal-scaffold-check
         - layout-contract
+        - visual-contract
     - id: approval
       title: Obtain explicit approval for the concrete plan
       supports:
@@ -51,6 +54,7 @@ flow:
         - knowledge
         - evidence-usability-contract
         - explicit-evidence-guide
+        - visual-contract
     - id: publication
       title: Prepare version and team review
       supports:
@@ -151,6 +155,12 @@ flow:
       artifact: artifact-driven
       element: specifications/knowledge-layout.md
       requires: Edit working knowledge in place, record versions and changes without copies, and derive established and proposed knowledge from the protected branch.
+      basis: documented
+    - id: visual-contract
+      kind: element
+      artifact: artifact-driven
+      element: specifications/visual-knowledge.md
+      requires: Select, check and maintain representations of knowledge inside the existing phase self-checks.
       basis: documented
   gaps:
     - Approval is available conversation/Git evidence, not a field in this map.

@@ -30,7 +30,7 @@ Eight fresh tasks implement the change impact service contract in apps/artifact-
 
 Task 1 comes first; task 2 follows. Tasks 3 and 6 then run in parallel in separate worktrees; task 6 can start at any time because it touches flow-index.js, flow-reader.js and the flow page only. Task 4 follows task 3, task 5 follows task 4, task 7 joins tasks 5 and 6, and task 8 closes. The coordinator integrates the worker branches onto the change branch and keeps all knowledge updates.
 
-Implementation of tasks 2 to 8 waits for artifact-driven 2.7.0 to establish, or merges in one pull request with it as earlier combined deliveries did. Task 4 includes a screenshot review against the research mockup at 1440 and 390 pixels before its DoD is checked.
+Implementation of tasks 2 to 8 waits for artifact-driven 2.8.0 to establish, or merges in one pull request with it as earlier combined deliveries did. Task 4 includes a screenshot review against the research mockup at 1440 and 390 pixels before its DoD is checked.
 
 ## Plan self-check
 

@@ -15,3 +15,4 @@ ADD provides a common knowledge baseline. Contributors record new findings throu
 1. [Definitions](definitions.md): Shared terms and their meanings.
 2. [Principles](principles.md): Rules that guide knowledge, change, and coordination.
 3. [Artifact model](artifact-model.md): Artifact layout, records, identities, derived state, dependencies, versions, and the legacy layout.
+4. [Visual knowledge](visual-knowledge.md): Principles and research basis for tables, diagrams and derived views.

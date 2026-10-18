@@ -44,6 +44,10 @@ Validate implementation against task DoD checklists and the governing requiremen
 
 Requirement, Specification, and Plan can prepare against proposed upstream contracts while keeping their proposed status explicit. Dependent Implementation waits until required upstream changes are complete and their versions are established. Before Implementation begins, recheck the prepared specifications and plan against those established contracts. Independent artifacts can proceed in parallel. The DAG must remain acyclic.
 
+## Present Knowledge in the Form That Fits It
+
+Select a table, listing, diagram or derived view from the structure of the information and the task of the reader, and keep the text authoritative. Each semantic diagram shows only stated facts, names its sources and has a text alternative; see [visual knowledge](visual-knowledge.md).
+
 ## Keep Complete, Recoverable Snapshots
 
 Git holds the complete knowledge snapshot of every version. Current knowledge is readable in place, so actors do not reconstruct it by replaying old changes.

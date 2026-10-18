@@ -73,7 +73,7 @@ Before establishment, validate that referenced elements exist and required contr
 
 Generate Mermaid `flowchart TD` diagrams from the graph for reading. Draw arrows from upstream artifact to dependent artifact, and dashed arrows for proposed dependencies. Group element-level views by artifact to explain specific references without changing the execution DAG's node model.
 
-The identity records remain the machine-readable artifact graph. Derive task diagrams from the plan task list and task declarations. Include single and disconnected tasks. A reader must show diagnostics for invalid plans and must not present them as valid execution order. Show graph unavailable for legacy plans and no planned tasks for an explicit empty list. Task diagram arrows mean task prerequisites; phase sequence and external artifact gates have different meanings. Diagrams are derived views, not competing sources of truth.
+The identity records remain the machine-readable artifact graph. Derive task diagrams from the plan task list and task declarations. Include single and disconnected tasks. A reader must show diagnostics for invalid plans and must not present them as valid execution order. Show graph unavailable for legacy plans and no planned tasks for an explicit empty list. Task diagram arrows mean task prerequisites; phase sequence and external artifact gates have different meanings. Diagrams are derived views, not competing sources of truth. Diagrams that authors embed in knowledge follow the [visual representation guide](../06-guidelines/visual-representations.md).
 
 ## Flow participation and discovery
 

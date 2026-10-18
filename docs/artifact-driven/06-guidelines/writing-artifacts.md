@@ -31,6 +31,10 @@ Under `specifications/`, the TL defines precise behavior, owned domain terms/mod
 
 Create an ADR in `decisions/` only for a necessary architectural choice involving multiple options. Record the context, alternatives, chosen option, reasoning, and consequences. A routine specification statement does not need an ADR.
 
+## Representations
+
+Write the knowledge as text first. Add a table, listing or diagram only when the [visual representation guide](visual-representations.md) selects one for the structure of the information. Requirements use example scenarios, comparisons and measurement tables. Specifications use contract tables and sequence, state, containment and flow diagrams. Decisions use an alternatives table. Plans rely on the task graph that readers derive from the task list. Tasks record evidence tables. Each semantic diagram has an introduction, an accessible title and description, and a source line, and the owning self-check validates it.
+
 ## References and Dependencies
 
 Declare detailed references in the front matter of the referring document. Each reference names the owning artifact, the element path relative to that artifact directory, and the reason:

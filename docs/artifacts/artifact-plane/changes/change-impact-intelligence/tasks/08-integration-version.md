@@ -17,7 +17,7 @@ The unit brief docs/artifacts/units-of-work/change-impact-intelligence/README.md
 
 ## Prerequisites
 
-Tasks browser-suites and interfaces satisfy their DoD. artifact-driven 2.7.0 is established or merges in the same pull request.
+Tasks browser-suites and interfaces satisfy their DoD. artifact-driven 2.8.0 is established or merges in the same pull request.
 
 ## Definition of Done
 
