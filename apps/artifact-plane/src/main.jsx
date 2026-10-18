@@ -14,6 +14,7 @@ import Sidebar from './Sidebar.jsx';
 import TopBar, {CreateBranchForm} from './TopBar.jsx';
 import {refreshQueue, repositoryQuery, mergeChange} from './reload.js';
 import {RuntimeProvider, useRuntime} from './Runtime.jsx';
+import {usePageVisible} from './page-visible.js';
 import {taskSelection} from './task-canvas.js';
 import {gitAction, unavailable, knowledgeStatus, operate, protectedBranch} from './knowledge-api.js';
 import {EditContext, OperationStatus} from './editing.jsx';
@@ -56,6 +57,8 @@ export function ProjectExplorer({active: isActive = true, initialPath = '', onOp
   const [gitState, setGitState] = useState(null), [opStatus, setOpStatus] = useState(null), [unsaved, setUnsavedState] = useState(() => new Set());
   const [loadedSession, setLoadedSession] = useState(0), [overviewEpoch, setOverviewEpoch] = useState(0), [disconnected, setDisconnected] = useState(false);
   const workspaceRef = useRef(null), returnFocus = useRef([]), mainRef = useRef(null);
+  // Event streams stay open only while this project is active and its browser tab is visible.
+  const visible = usePageVisible(), observing = isActive && visible;
   useEffect(() => {const measure = () => setNarrow(window.innerWidth <= 800);window.addEventListener('resize', measure);return () => window.removeEventListener('resize', measure);}, []);
   useEffect(() => {if (projectRoot) remember('plane-sidebar:' + projectRoot, [...expanded]);}, [expanded, projectRoot]);
   useEffect(() => {if (projectRoot) remember('plane-history:' + projectRoot, history);}, [history, projectRoot]);
@@ -136,8 +139,9 @@ export function ProjectExplorer({active: isActive = true, initialPath = '', onOp
     if (isActive) {const root = queueRoot.current || initialPath;if (root) open(root, Boolean(snapshotRef.current));}
     else {generation.current++;queueRef.current?.close();queueRef.current = null;eventsRef.current?.close();setBusy(false);}
   }, [isActive]);
+  useEffect(() => {if (isActive && !visible) setDisconnected(true);}, [isActive, visible]);
   useEffect(() => {
-    const root = projectRoot;if (!isActive || !root || !snapshot) return;const sessionId = generation.current;
+    const root = projectRoot;if (!observing || !root || !snapshot) return;const sessionId = generation.current;
     const refresh = () => {if (sessionId === generation.current) queueRef.current?.request();};
     const connect = () => {
       eventsRef.current?.close();const source = new EventSource('/api/repository/events?path=' + encodeURIComponent(root));eventsRef.current = source;
@@ -147,7 +151,7 @@ export function ProjectExplorer({active: isActive = true, initialPath = '', onOp
     const offline = () => {eventsRef.current?.close();setDisconnected(true);};const online = () => {connect();refresh();};
     if (navigator.onLine) connect();window.addEventListener('focus', refresh);window.addEventListener('online', online);window.addEventListener('offline', offline);
     return () => {eventsRef.current?.close();window.removeEventListener('focus', refresh);window.removeEventListener('online', online);window.removeEventListener('offline', offline);};
-  }, [isActive, projectRoot, snapshot?.repository.path, loadedSession]);
+  }, [observing, projectRoot, snapshot?.repository.path, loadedSession]);
   useEffect(() => () => {generation.current++;queueRef.current?.close();eventsRef.current?.close();}, []);
   function activateWorktree(target) {
     if (target === worktreePath && !openingWorktree || !leave()) return;
@@ -243,7 +247,7 @@ export function ProjectExplorer({active: isActive = true, initialPath = '', onOp
   function dividerKeys(event) {const widths = {ArrowRight: sidebarWidth + 20, ArrowLeft: sidebarWidth - 20, Home: 200, End: sidebarMax};if (Object.hasOwn(widths, event.key)) {event.preventDefault();resize(widths[event.key]);}}
   const drawerId = `navigation-${tabId}`;
 
-  return <EditContext.Provider value={editing}><ShellContext.Provider value={shell}><RuntimeProvider snapshot={snapshot} active={isActive}>
+  return <EditContext.Provider value={editing}><ShellContext.Provider value={shell}><RuntimeProvider snapshot={snapshot} active={observing}>
     {isActive && slot && snapshot && !editingRepo && createPortal(<RecordedAvailable>{recorded => <TopBar snapshot={snapshot} worktreePath={worktreePath} onWorktree={activateWorktree} opening={openingWorktree} busy={busy}
       stale={disconnected || Boolean(error)} uncommitted={uncommitted} onUncommitted={() => go({kind: 'work', focus: 'uncommitted', at: Date.now()})} onRefresh={() => open(projectRoot, true)}
       onCreateBranch={createBranch} drawer={{open: drawerOpen, id: drawerId, toggle: () => setDrawerOpen(value => !value)}} recorded={recorded} onOpen={go}

@@ -1,3 +1,9 @@
+---
+self_check:
+  result: passed
+  source: docs/artifacts/artifact-plane/specifications/project-tabs.md#hidden-tab-specification-self-check
+---
+
 # Project tab contract
 
 ## Governing knowledge
@@ -16,6 +22,17 @@ Extract the existing explorer into a project-scoped component beneath a workspac
 
 Only the active explorer performs automatic observation and deferred reads. Deactivation closes its event stream, cancels queued reads and detail/runtime requests, and invalidates asynchronous generations. Previously loaded data remains session-local and is stale until reconciled. Reactivation reconciles the overview through existing refresh behavior, retains valid selections, and reloads selected detail. It does not invoke initial-open resets. Existing lazy detail retention rules apply within each project. Inactive projects must not accumulate fresh detail or polling work.
 
+### Hidden browser tab
+
+A browser opens at most 6 HTTP/1.1 connections to one host, and each observing explorer keeps 2 event streams open: /api/repository/events and /api/runtime/events. A hidden browser tab must not keep them. The page is hidden when `document.visibilityState` is `hidden`.
+
+- When the page becomes hidden, the active explorer closes both event streams and marks its observation disconnected. The top bar shows Stale with the existing reason.
+- When the page becomes visible, the active explorer opens both streams again. The initial repository event requests a fresh overview and active section under live-reload.md, so the existing rule applies: Current shows only after that read succeeds with observation connected.
+- Visibility changes only observation. Queued and running reads, edits, the route, selections and the top bar stay as they are. Requests that a hidden page starts still run.
+- An inactive project tab stays closed whether the page is visible or hidden.
+
+The server API does not change. Two visible windows keep 4 of the 6 connections; one shared stream for all tabs is out of scope.
+
 Close unmounts the explorer and releases subscriptions, listeners, queued reads, runtime connections, and controllers. Late responses cannot affect another tab or a replacement tab. All request callbacks check owner generation and cancellation. Errors and freshness belong to the owning tab. No server API change or workflow registry is needed.
 
 ## Browser persistence
@@ -33,3 +50,7 @@ Exercise two independent repositories with equal artifact/task IDs, rapid switch
 ## Specification self-check
 
 Requirements map to workspace actions, lifecycle isolation, and persistence behavior. Current APIs remain compatible. Resource cleanup and stale response ownership are explicit. KISS and STE checks passed. No unresolved upstream gate or architectural ADR is required: the existing explorer remains the project boundary and browser storage carries only workspace preferences.
+
+## Hidden-tab specification self-check
+
+R11 maps to the Hidden browser tab rules: hidden pages close both streams, and the existing initial-event reload reconciles evidence before Current shows. R12 maps to the reply guard in explorer.md (Runtime and opening). The event API, routes and successful replies do not change, so no consumer artifact is affected and no ADR is needed. Flow repository-refresh gains the hidden-tab rule in its observe step and the new browser check; the other flows that name main.jsx, Runtime.jsx or http.js keep their steps. KISS: one visibility hook and a stringify-before-headers guard; no shared worker, leader election or HTTP/2. STE: each rule states one condition and one result. Representations: none added. No Specification blocker remains.

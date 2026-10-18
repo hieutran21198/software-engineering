@@ -28,12 +28,14 @@ const security = {
   "Referrer-Policy": "no-referrer",
   "Cache-Control": "no-store",
 };
+// Serialize first: a reply that cannot be serialized fails before its headers are sent.
 function json(res, status, data) {
+  const body = JSON.stringify(data);
   res.writeHead(status, {
     ...security,
     "Content-Type": "application/json; charset=utf-8",
   });
-  res.end(JSON.stringify(data));
+  res.end(body);
 }
 export function createAppServer(options = {}) {
   const runtime = runtimeService(options);
@@ -149,6 +151,8 @@ export function createAppServer(options = {}) {
       });
       res.end(req.method === "HEAD" ? undefined : content);
     } catch (e) {
+      // After the headers are sent, only this connection can fail; the server keeps running.
+      if (res.headersSent) return void res.destroy();
       json(res, e.status || 500, {
         error: e.status ? e.message : "The repository could not be explored.",
       });
