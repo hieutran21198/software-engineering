@@ -29,9 +29,26 @@ Scan all readable briefs to detect duplicate membership, including retained hist
 
 ## Version provenance
 
-A newly prepared version README declares its originating artifact-local change with YAML front matter: source_change: change-tenant-login and delivery_tasks: change. The directory's semantic version identifies the delivered version. A version is the complete result of one change. At most one established version claims a given artifact/change pair. Write provenance during Version preparation, not into existing established snapshots. Do not update brief membership to a newer change or replace it with an artifact-only reference.
+A newly prepared version record declares its originating artifact-local change with YAML front matter: source_change: change-tenant-login. In the in-place layout of knowledge-layout.md, delivery_tasks is not written, and delivery always resolves to changes/<source_change>/tasks/. In the legacy layout, a version prepared with provenance also declares delivery_tasks: change. The directory's semantic version identifies the delivered version. A version is the complete result of one change. At most one established version claims a given artifact/change pair. Write provenance during Version preparation, not into existing established snapshots. Do not update brief membership to a newer change or replace it with an artifact-only reference.
 
-Resolve a member from its retained change directory and version provenance. Inspect safe immediate version directories' README metadata, including historical versions; read detailed knowledge for the resolved delivered versions and their retained originating plans. The delivery_tasks marker is the literal change; invalid values are diagnosed. Its absence preserves legacy version-owned plans. New-layout deliveries require the exact retained originating change. If no originating version exists, retained change knowledge is preparatory. If neither exists, report missing-member. Several version claims are ambiguous. Legacy versions without provenance remain readable; do not guess their source by name, timestamp, or matching bytes.
+Resolve a member from its retained change directory and version provenance. Inspect safe immediate version directories' README metadata, including historical versions; read detailed knowledge for the resolved delivered versions and their retained originating plans.
+
+The table gives the resolution result for each condition of a member's version provenance. A row that starts with "In-place layout" or "Legacy layout" applies only to a version in that layout. In the in-place layout, a version record has no delivery_tasks marker.
+
+| Member condition | Resolution result |
+| --- | --- |
+| In-place layout: a version record names the change in source_change | Delivery resolves to `changes/<source_change>/tasks/` of the exact retained originating change |
+| Legacy layout: the version declares delivery_tasks: change | Requires the exact retained originating change |
+| Legacy layout: the version has no delivery_tasks marker | The legacy version-owned plan is preserved |
+| Legacy layout: delivery_tasks has a value other than the literal change | Diagnosed as invalid |
+| No originating version exists | Retained change knowledge is preparatory |
+| Neither a version nor a retained change exists | Report missing-member |
+| Several versions claim the change | Ambiguous |
+| Legacy version without provenance | Readable; its source is not guessed by name, timestamp or matching bytes |
+
+Source: artifact-driven:specifications/units-of-work.md, Version provenance paragraphs 1 and 2; derived one row per stated member condition; current snapshot.
+
+Legacy versions without provenance remain readable; do not guess their source by name, timestamp, or matching bytes.
 
 ## Shared evidence
 
@@ -47,7 +64,7 @@ When all member versions are established and shared evidence meets all criteria,
 
 ## Guidance and delivery
 
-Update definitions, artifact model, author/getting-started guidance, and coordinator/PO/TL/implementer guidance in the canonical bundle and matching packaged sources. A coordinator records cross-artifact scope in a brief; roles keep detailed knowledge under its owner. Add source_change and delivery_tasks: change during new version preparation. Snapshot layout changes for new deliveries; legacy knowledge remains readable without migration. Avoid a required migration or second DAG store.
+Update definitions, artifact model, author/getting-started guidance, and coordinator/PO/TL/implementer guidance in the canonical bundle and matching packaged sources. A coordinator records cross-artifact scope in a brief; roles keep detailed knowledge under its owner. Add source_change during new version preparation. In the in-place layout, do not write delivery_tasks; add delivery_tasks: change only to a new version of an artifact that uses the legacy layout. Snapshot layout changes for new deliveries; legacy knowledge remains readable without migration. Avoid a required migration or second DAG store.
 
 ## Impact and self-check
 

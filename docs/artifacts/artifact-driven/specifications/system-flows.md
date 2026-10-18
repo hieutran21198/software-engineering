@@ -8,13 +8,48 @@ A system flow describes a named behavior journey, not a unit of work or implemen
 
 ## Document contract
 
-Use Markdown with YAML front matter. The flow key is an object with id, artifact, title, trigger, outcome, entry_steps, steps, transitions and support. title, trigger and outcome are nonempty strings. artifact must match the owning directory. entry_steps is a nonempty list of unique declared step IDs. steps is a nonempty list; each step has unique id, nonempty title and supports (a list of unique declared support IDs). transitions is a list of from/to step IDs with optional nonempty condition text. Support-free steps are readable but produce an evidence-gap diagnostic unless their gap is explained. Optional gaps and exclusions are lists of nonempty strings. Markdown records purpose, branch explanations, coverage and evidence detail without duplicating a second authority.
+Use Markdown with YAML front matter. The flow key is an object with id, artifact, title, trigger, outcome, entry_steps, steps, transitions and support.
 
-A support record has unique id, kind, nonempty requires and basis. basis is documented, static, observed or inferred. It describes the evidence basis, not an approval or verified-execution state. observed requires nonempty evidence paths to recorded check/trace details. A test file's existence alone is static evidence. Inferred support remains visible as a candidate; it cannot prove compatibility or establishment.
+The table gives the fields of the flow key and of its step, transition and support records. The Record column names the record that has the field. A dash means that the text states no type or no further rule.
 
-- kind: element uses artifact and element (the existing safe knowledge element path); optional status and change follow the established/proposed reference contract. Same-owner references with no explicit selector resolve in the flow's own snapshot; cross-artifact references default to the current established snapshot. Explicit proposed references identify status: proposed and their supplying change. Do not pin an old version in an element path.
-- kind: flow uses artifact and flow (the target's local flow ID), with the same source-selection rules. It links a named subjourney; it does not turn step transitions into execution prerequisites.
-- kind: implementation or test uses a safe repository-relative path and optional symbol (a nonempty advisory location). Sources must be readable tracked files within the selected worktree; never follow escaping symlinks or permit .git, credential files or arbitrary file access. Renames preserve flow IDs but require source references to be updated. A symbol match alone does not prove runtime behavior.
+| Record | Field | Type or values | Rule |
+| --- | --- | --- | --- |
+| flow | id | string | Follows the ID rules in Ownership and identity |
+| flow | artifact | — | Must match the owning directory |
+| flow | title | nonempty string | — |
+| flow | trigger | nonempty string | — |
+| flow | outcome | nonempty string | — |
+| flow | entry_steps | nonempty list of unique declared step IDs | — |
+| flow | steps | nonempty list of step records | — |
+| flow | transitions | list of transition records | — |
+| flow | support | support records | — |
+| flow | gaps | optional list of nonempty strings | — |
+| flow | exclusions | optional list of nonempty strings | — |
+| step | id | — | Unique |
+| step | title | — | Nonempty |
+| step | supports | list of unique declared support IDs | A support-free step is readable but produces an evidence-gap diagnostic unless its gap is explained |
+| transition | from | step ID | — |
+| transition | to | step ID | — |
+| transition | condition | optional nonempty text | — |
+| support | id | — | Unique |
+| support | kind | element, flow, implementation or test | The fields of each kind are in the support kinds table below |
+| support | requires | — | Nonempty |
+| support | basis | documented, static, observed or inferred | Describes the evidence basis, not an approval or verified-execution state |
+| support | evidence | paths to recorded check/trace details | Nonempty when basis is observed |
+
+Source: artifact-driven:specifications/system-flows.md, Document contract paragraphs 1 and 2; derived one row per field that the text names, grouped by record; current snapshot.
+
+A test file's existence alone is static evidence. Inferred support remains visible as a candidate; it cannot prove compatibility or establishment. Markdown records purpose, branch explanations, coverage and evidence detail without duplicating a second authority.
+
+The support kinds table gives, for each kind, the required and optional fields, the source selection, and the meaning and limits of the support.
+
+| Kind | Required fields | Optional fields | Source selection | Meaning and limits |
+| --- | --- | --- | --- | --- |
+| element | artifact, element (the existing safe knowledge element path) | status, change (legacy layout: follow the established/proposed reference contract) | In the in-place layout, the target resolves in the same checked-out tree, as knowledge-layout.md defines for references; the status and change selectors are legacy-only and have no effect. In the legacy layout, same-owner references with no explicit selector resolve in the flow's own snapshot; cross-artifact references default to the current established snapshot; explicit proposed references identify status: proposed and their supplying change. | Do not pin an old version in an element path. |
+| flow | artifact, flow (the target's local flow ID) | — | The same source-selection rules as element. | Links a named subjourney; does not turn step transitions into execution prerequisites. |
+| implementation or test | path (a safe repository-relative path) | symbol (a nonempty advisory location) | Sources must be readable tracked files within the selected worktree. | Never follow escaping symlinks or permit .git, credential files or arbitrary file access. Renames preserve flow IDs but require source references to be updated. A symbol match alone does not prove runtime behavior. |
+
+Source: artifact-driven:specifications/system-flows.md, Document contract support kinds, and artifact-driven:specifications/knowledge-layout.md, Structural facts and identity (resolution of references); derived one row per support kind; current snapshot.
 
 Examples use YAML values literally. A flow document can contain:
 
