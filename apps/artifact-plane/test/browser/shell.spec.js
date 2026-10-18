@@ -120,3 +120,32 @@ test('uncommitted count opens the work page; the sidebar resizes and becomes a d
     }
   } finally {await f.cleanup();}
 });
+
+test('sidebar tree indents children, draws joined guide lines, spaces groups and weights artifact rows', async ({page}) => {
+  const f = await branchFixture();
+  try {
+    await openRepository(page, f.root);
+    await treeItem(page, /^Tenant/).click();await treeItem(page, /^Specifications/).click();
+    await expect(treeItem(page, /^Identity/)).toBeVisible();
+    const facts = await tree(page).evaluate(node => {
+      const rows = [...node.querySelectorAll('[role=treeitem]')], find = title => rows.find(r => r.querySelector('.tree-title').textContent.startsWith(title));
+      const x = r => r.querySelector('.twisty').getBoundingClientRect().left - r.getBoundingClientRect().left;
+      const line = r => {const s = getComputedStyle(r, '::before');return {content: s.content, left: s.left, width: s.width, top: s.top, bottom: s.bottom, events: s.pointerEvents};};
+      const artifacts = rows.filter(r => r.classList.contains('level-0') && r.hasAttribute('aria-expanded'));
+      const tenant = find('Tenant'), kind = find('Specifications'), doc = find('Identity');
+      return {
+        offsets: [x(kind) - x(tenant), x(doc) - x(kind)], artifactLine: line(tenant).content, kindLine: line(kind), docLine: line(doc),
+        firstMargin: getComputedStyle(artifacts[0]).marginTop, firstAfterHeading: artifacts[0].previousElementSibling.classList.contains('tree-heading'),
+        secondMargin: getComputedStyle(artifacts[1]).marginTop, homeMargin: getComputedStyle(rows[0]).marginTop,
+        weights: [getComputedStyle(artifacts[1]).fontWeight, getComputedStyle(kind).fontWeight, getComputedStyle(doc).fontWeight],
+      };
+    });
+    expect(facts.offsets).toEqual([20, 20]);
+    expect(facts.artifactLine).toBe('none');
+    expect(facts.kindLine).toEqual({content: '""', left: '15px', width: '1px', top: '-1px', bottom: '-1px', events: 'none'});
+    expect(facts.docLine).toMatchObject({left: '15px', width: '21px', top: '-1px', bottom: '-1px'});
+    expect(facts.firstAfterHeading).toBe(true);
+    expect([facts.homeMargin, facts.firstMargin, facts.secondMargin]).toEqual(['0px', '0px', '8px']);
+    expect(facts.weights).toEqual(['500', '400', '400']);
+  } finally {await f.cleanup();}
+});

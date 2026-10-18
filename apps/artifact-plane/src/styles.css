@@ -9,6 +9,7 @@
   --border: #e6e5e0;
   --divider: #efeee9;
   --control: #d9d8d3;
+  --guide: #c8c7c1;
   --text: #1d1f23;
   --prose: #2b2e33;
   --muted: #5e636b;
@@ -159,14 +160,23 @@ fieldset.checks legend { font-size: 13px; font-weight: 500; margin-bottom: 6px; 
 .tree-row { display: flex; align-items: flex-start; gap: 6px; width: 100%; padding: 6px 8px; border: 0; border-radius: var(--r-control); background: none; color: var(--text); font: 400 14px/1.35 var(--sans); text-align: left; cursor: pointer; }
 .tree-row:hover { background: var(--hover); }
 .tree-row[aria-selected="true"] { background: var(--accent-soft); color: var(--accent-text); font-weight: 500; }
-.tree-row.level-2 { padding-left: 28px; font-size: 13px; }
-.tree-row.level-3 { padding-left: 48px; font-size: 13px; }
+/* Hierarchy: one 20px step per level (chevron column plus gap), guide lines
+   under each ancestor's chevron that join across the 2px row gap, extra space
+   before each top-level group, and medium weight for artifact rows. */
+.tree-row { position: relative; }
+.tree-row.level-1 { padding-left: 28px; }
+.tree-row.level-2 { padding-left: 48px; font-size: 13px; }
+.tree-row.level-1::before, .tree-row.level-2::before { content: ""; position: absolute; top: -1px; bottom: -1px; left: 15px; width: 1px; background: repeating-linear-gradient(to right, var(--guide) 0 1px, transparent 1px 20px); pointer-events: none; }
+.tree-row.level-2::before { width: 21px; }
+.tree-row.level-0 { margin-top: 8px; }
+.tree > .tree-row:first-child, .tree-heading + .tree-row { margin-top: 0; }
+.tree-row.level-0[aria-expanded] { font-weight: 500; }
 .tree-row .twisty { width: 14px; flex: none; color: var(--muted); text-align: center; }
 .tree-row .tree-label { flex: 1; min-width: 0; display: flex; flex-direction: column; }
 .tree-row .tree-title { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .tree-row .tree-detail { color: var(--muted); font-size: 12px; font-weight: 400; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .tree-row .tree-count { color: var(--muted); font-size: 12px; font-weight: 400; }
-.tree-row.show-all { color: var(--accent); }
+.tree-row.show-all { color: var(--accent); margin-top: 0; }
 .tree-empty { padding: 0 8px; color: var(--muted); font-size: 13px; }
 .sidebar-foot { flex: none; display: flex; align-items: center; justify-content: space-between; padding: 10px 20px; border-top: 1px solid var(--border); font-size: 13px; color: var(--muted); }
 .switch { position: relative; width: 32px; height: 18px; padding: 0; border: 0; border-radius: 9px; background: #c9c8c2; }
