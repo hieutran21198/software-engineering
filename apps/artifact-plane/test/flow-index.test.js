@@ -519,19 +519,23 @@ test('discovery drops chunks below the semantic cutoff instead of returning ever
   assert.deepEqual(near.data.flows.map(f=>f.id),['/repo:flow'],'the orthogonal flow scores 0 and stays out');
   assert.ok(SEMANTIC_CUTOFF>0&&SEMANTIC_CUTOFF<1);
 });
-test('keyword rank drops short and ubiquitous terms, so a query of common words finds nothing without the model', async t => {
+test('keyword rank drops short terms and terms in most flows, so a query of common words finds nothing without the model', async t => {
   const record=fixture();
-  record.graph.flows[0].title='Common login';record.sources[0].text='Common login flow documentation';record.sources[1].text='Common membership validation';
-  const {service}=await setup(t,{loader:async()=>structuredClone(record)});
+  record.graph.flows[0].title='Common login';
+  // Four more flows share the word "common" but none of the login sources; five flows enable the frequency rule.
+  const far=i=>({...record.graph.flows[0],id:`/repo:far${i}`,localId:`far${i}`,logicalId:`owner:far${i}`,title:`Common far away journey ${i}`,trigger:'Far away.',outcome:'Far away.',file:`far${i}.md`,steps:[],support:[]});
+  const five={...record,graph:{...record.graph,flows:[record.graph.flows[0],...[1,2,3,4].map(far)]}};
+  const {service}=await setup(t,{loader:async()=>structuredClone(five)});
   const common=await service.query({...query,query:'common of a'});
   assert.equal(common.data.semantic,false);
   assert.deepEqual(common.data.flows,[]);assert.equal(common.data.total,0);
   const rare=await service.query({...query,query:'common membership'});
-  assert.deepEqual(rare.data.flows.map(f=>f.id),['/repo:flow'],'a term present in one chunk still matches');
+  assert.deepEqual(rare.data.flows.map(f=>f.id),['/repo:flow'],'a term present in one flow still matches');
+  // With fewer than five flows, frequency carries no signal and every term of three or more characters matches.
+  const {service:small}=await setup(t,{loader:async()=>structuredClone(record)});
+  assert.deepEqual((await small.query({...query,query:'common of a'})).data.flows.map(f=>f.id),['/repo:flow']);
   // With the model, only flows above the semantic cutoff remain for a common-word query.
-  const far={...record.graph.flows[0],id:'/repo:far',localId:'far',logicalId:'owner:far',title:'Common far away journey',trigger:'Far away.',outcome:'Far away.',file:'far.md',steps:[],support:[]};
-  const two={...record,graph:{...record.graph,flows:[record.graph.flows[0],far]}};
-  const {service:semantic}=await setup(t,{loader:async()=>structuredClone(two),embedder:{signature:'common',embed:async texts=>texts.map(text=>text.includes('far away')?[0,1]:[1,0])}});
+  const {service:semantic}=await setup(t,{loader:async()=>structuredClone(five),embedder:{signature:'common',embed:async texts=>texts.map(text=>text.includes('far away')?[0,1]:[1,0])}});
   const result=await semantic.query({...query,query:'common'});
   assert.equal(result.data.semantic,true);
   assert.deepEqual(result.data.flows.map(f=>f.id),['/repo:flow']);

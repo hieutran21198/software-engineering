@@ -490,14 +490,14 @@ export function createFlowService({
           .map((f) => f.id);
       ranks.push(exact);
       exactMatch = exact.length === 1 ? exact[0] : null;
-      // Keyword rank: terms shorter than three characters and terms present in at least
-      // 80 percent of the context's chunks carry no signal and are dropped before matching;
-      // a query of only such terms skips this rank.
+      // Keyword rank: terms shorter than three characters, and terms that occur in at least
+      // 80 percent of the context's flows (when it has five or more), carry no signal and are
+      // dropped before matching; a query of only such terms skips this rank.
       const terms = [...new Set((query.match(/[\p{L}\p{N}_-]+/gu) || []).filter((t) => t.length >= 3))];
       if (terms.length && cached?.revision === record.revision) {
-        const chunkCount = db.prepare("SELECT count(*) AS n FROM documents WHERE context=?").get(context).n;
-        const frequency = db.prepare("SELECT count(*) AS n FROM flow_fts WHERE flow_fts MATCH ? AND context=?");
-        const informative = terms.filter((t) => frequency.get('"' + t + '"', context).n < 0.8 * chunkCount);
+        const flowCount = db.prepare("SELECT count(DISTINCT flow) AS n FROM documents WHERE context=?").get(context).n;
+        const frequency = db.prepare("SELECT count(DISTINCT flow) AS n FROM flow_fts WHERE flow_fts MATCH ? AND context=?");
+        const informative = flowCount < 5 ? terms : terms.filter((t) => frequency.get('"' + t + '"', context).n < 0.8 * flowCount);
         if (informative.length) {
           const rows = db
             .prepare(
