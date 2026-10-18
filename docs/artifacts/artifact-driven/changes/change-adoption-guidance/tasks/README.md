@@ -11,9 +11,9 @@ tasks:
 
 ## Approval and prerequisites
 
-Present this plan for explicit user approval before implementation. No upstream artifact is required. A material change to scope, page ownership or the release-selection contract requires renewed approval.
+Present this plan for explicit user approval before implementation. The user approved it on 18 October 2026. No upstream artifact is required. A material change to scope, page ownership or the release-selection contract requires renewed approval.
 
-After both tasks pass, the coordinator suggests the version, adds the version record and the unit evidence, and opens one PR. Publishing a release tag that ships the new guidance is outside this change.
+After both tasks pass, the coordinator suggests the version (the user confirmed 2.6.0 on 18 October 2026), adds the version record and the unit evidence, and opens one PR. Publishing a release tag that ships the new guidance is outside this change.
 
 ## Plan self-check
 
