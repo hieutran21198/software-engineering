@@ -10,3 +10,4 @@ Excluded: se-adopt code, an upgrade procedure, a new release tag, a renamed guid
 
 - [Requirements](../../requirements/adoption-guidance.md) (G1–G4)
 - [Contract](../../specifications/adoption-guidance.md) (page ownership, release selection, After Adoption)
+- [Plan](tasks/README.md)
