@@ -49,7 +49,6 @@ The state diagram shows the states of one project tab, as the sections Workspace
 stateDiagram-v2
     accTitle: States of one project tab
     accDescr: A tab starts empty when Plus adds and selects it, when closing the last tab creates it, or when there are no saved projects. A tab starts restored and not loaded when reload restores a saved project path. A successful open makes an empty tab active. An open that finds a duplicate canonical path selects the existing tab and removes the empty tab. A restored tab becomes active at once when it is the restored active tab, otherwise when it is first selected. A restored tab goes to error when the project is missing or unreadable. An active tab becomes inactive when another tab is selected, and its event stream closes and its reads are cancelled. An inactive tab becomes active when it is selected again, and the overview reconciles and the selected detail reloads. Close ends a tab in any of the five states.
-    direction LR
     state "Restored, not loaded" as Restored
     [*] --> Empty: Plus adds and selects an empty tab, closing the last tab creates one, or there are no saved projects
     [*] --> Restored: reload restores a saved project path

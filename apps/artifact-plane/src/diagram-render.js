@@ -7,7 +7,7 @@ const font='"IBM Plex Sans", system-ui, sans-serif';
 let initialized=false,counter=0;
 function initialize(){
  if(initialized)return;
- mermaid.initialize({startOnLoad:false,securityLevel:'strict',htmlLabels:false,flowchart:{htmlLabels:false},theme:'neutral',fontFamily:font,maxTextSize});
+ mermaid.initialize({startOnLoad:false,securityLevel:'strict',htmlLabels:false,flowchart:{htmlLabels:false},sequence:{wrap:true},theme:'neutral',fontFamily:font,maxTextSize});
  initialized=true;
 }
 // A separate DOMPurify instance keeps these hooks out of the Markdown sanitizing profile.
