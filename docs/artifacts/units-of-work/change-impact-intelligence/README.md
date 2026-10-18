@@ -102,6 +102,10 @@ evidence:
     method: Benchmark index, incremental, query and output-size measurements on the delivery branch.
     result: passed
     source: docs/artifacts/artifact-plane/changes/change-impact-intelligence/tasks/08-integration-version.md#combined-checks
+  - criterion: usability
+    method: Owner review of the Impact page on this repository through the integrated build at 1440 and 390 pixels, with the review screenshots.
+    result: passed
+    source: docs/artifacts/units-of-work/change-impact-intelligence/README.md#validation-evidence
   - criterion: integration
     method: Node, browser, build, Go, website, validate-knowledge and bundle mirror checks on the combined branch.
     result: passed
@@ -124,4 +128,4 @@ A graph database, a second vector store, a hosted model, generated answers, nume
 
 ## Validation evidence
 
-Six criteria passed on 18 October 2026; the check details are in the task evidence named in the front matter. On the delivery branch the benchmark measured direct precision and recall 1.0 for the eight symbol-seeded cases, 15 of 15 step checks, no hard negative, a full index in about 1 second, an incremental update in 35 ms and warm queries of at most 56 ms. The usability criterion is open until the owner reviews the Impact page. The research prototype measurements in the Plane decision record are not delivery evidence.
+All seven criteria passed on 18 October 2026; the check details are in the task evidence named in the front matter. On the delivery branch the benchmark measured direct precision and recall 1.0 for the eight symbol-seeded cases, 15 of 15 step checks, no hard negative, a full index in about 1 second, an incremental update in 35 ms and warm queries of at most 56 ms. On 18 October 2026 the owner reviewed the Impact page on this repository through the integrated build (http://127.0.0.1:4341) and the review screenshots at 1440 and 390 pixels, and accepted it. The research prototype measurements in the Plane decision record are not delivery evidence.
