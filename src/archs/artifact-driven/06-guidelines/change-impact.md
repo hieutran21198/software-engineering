@@ -16,7 +16,7 @@ Start from what changed: a knowledge element, a flow or step, a model, a source 
 | Potential | Evidence without a relationship: files that changed together in history, or code that shares the contract vocabulary of a changed document. | Confirm before acting. Adopt a confirmed coupling as a reference or a flow support; dismiss the rest in the specification prose. |
 | Unresolved | A relationship the reader could not resolve: a missing or renamed path, a support that does not resolve, or an artifact that depends on the changed artifact but declares no relationship to the changed element. | Treat as unknown, not as absent. Investigate the artifact or fix the stale declaration. |
 
-Two lists accompany the tiers. Verify names the tests that support affected steps; run them. Investigate names the implementation and test supports of affected steps that were not themselves reached; read them to confirm the step still behaves as specified.
+Two lists accompany the tiers. Verify names the tests that support affected steps; run them. Investigate names the implementation supports of affected steps that were not themselves reached; read them to confirm the step still behaves as specified.
 
 Every answer ends with a coverage statement: the relationship sources it used, what it did not analyze (for example dynamic calls, injected functions and process boundaries), the depth and the count of relationships beyond it, the symbol level, the history window, and freshness. An empty direct and transitive tier means that no consumer was found in the analyzed relationships. It does not prove that no impact exists.
 

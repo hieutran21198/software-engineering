@@ -18,7 +18,7 @@ Every reported entity carries exactly one tier.
 - potential: evidence without a propagating relationship, from change history or shared contract vocabulary. The reader caps each evidence kind, ranks potential items after transitive items and never promotes them.
 - unresolved: an origin that cannot be found; a support, reference or participant that does not resolve; an artifact that depends on the changed artifact but declares no reference, flow support, participant or model source for the changed element; or input that changed during the query.
 
-Two lists accompany the tiers. Verify holds the tests that support an affected step; they are work to run, not affected behavior. Investigate holds the implementation and test supports of affected steps that were not themselves reached; they are places to look, not affected entities.
+Two lists accompany the tiers. Verify holds the test supports of every affected step and the tests reached through code relationships; they are work to run, not affected behavior. Investigate holds the implementation supports of affected steps that were not themselves reached; they are places to look, not affected entities.
 
 ## Propagation rules
 
