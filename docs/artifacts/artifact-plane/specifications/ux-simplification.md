@@ -30,6 +30,28 @@ Render sanctioned navigation as locally handled controls backed by the trusted t
 
 Flow support rows resolve to source IDs already returned by the selected detail response. Activating a resolved row opens that registered source directly through the existing flow source operation; unresolved support stays visibly unresolved. Keep a source selector only as a secondary browse-all affordance if it still serves a distinct purpose. Review source readers keep revision-bound registered IDs. Supported same-document heading navigation uses generated heading identities after sanitization; unrecognized anchors remain explicit unavailable destinations.
 
+The table summarizes the link targets that the four paragraphs above name, with the rule that applies to each target and its outcome. The paragraphs state the full rules, including the security authority of the server.
+
+| Link target | Rule | Outcome |
+| --- | --- | --- |
+| Relative Markdown path | resolved against the exact displayed source, not the repository root or a current-version shortcut; path segments normalized; decoded once | navigable only under row 4; otherwise as the rows below |
+| Path with a `../` segment | the resolved destination decides containment | not rejected merely because the segment exists |
+| Absolute path, root escape, scheme, .git or credential destination, invalid encoding | none | rejected |
+| Root, current or change knowledge source; declared unit or evidence source; registered flow or review source | already allowed in the active context | navigable |
+| Cross-artifact link | resolves only to discovered artifact and source identities; exact version and change selectors retained | navigable only under row 4 |
+| Historical version outside the known allowlist | a newer or current version is never substituted for the exact unavailable snapshot | inert, with an accessible unavailable reason and the destination visible on demand |
+| External URL, missing file, unsupported file type | none | inert, with an accessible unavailable reason and the destination visible on demand |
+| Repository-supplied event handlers, href schemes, forged data attributes, HTML | sanctioned navigation uses locally handled controls backed by the trusted target map | cannot install callbacks or bypass the map |
+| Server rejection of a read | server markdown reads validate declared scope, realpath containment, task-directory containment and UTF-8 | local unavailable feedback; Back retained |
+| Flow support row, resolved | resolves to source IDs already returned by the selected detail response | opens that registered source directly through the existing flow source operation |
+| Flow support row, unresolved | none | stays visibly unresolved |
+| Same-document heading anchor, supported | uses generated heading identities after sanitization | navigable |
+| Unrecognized anchor | none | explicit unavailable destination |
+
+Source: artifact-plane:specifications/ux-simplification.md, Contained source navigation paragraphs 1 to 4; derived one row per target kind or shared rule that the paragraphs name; current snapshot.
+
+Gap: the text rejects schemes and keeps external URLs inert; it does not state how a rejected target appears or which row applies to an external URL.
+
 ## Independent disclosure and explicit graph reveal
 
 Keep canvas expansion and document-list disclosure in separate state sets with source-specific keys. Opening a list group or delivery history cannot expand or relayout graph nodes. Explicit Expand elements on canvas and selecting a resolved graph reference may reveal the required canvas groups. Selecting a document from its list opens the reader without adding nodes. Keep current-version and historical source boundaries, natural order and element IDs unchanged. Existing references still retain exact targets.

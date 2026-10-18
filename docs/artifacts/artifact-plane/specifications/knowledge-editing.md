@@ -54,9 +54,77 @@ Validation. The service runs buildSnapshot, buildTaskGraph for every change of t
 
 Response: repository, worktree, operation, applied (false for a dry run), operationId (applied only), files with path, action, before, after and digest, diagnostics, and revision (the repository revision after the write, computed as in repository-query). A dry run writes nothing and returns the same files list and the expected digests for a following apply.
 
+The two diagrams show the order of one operation request across this section and the Writer section. Solid arrows are calls; dashed arrows are replies.
+
+```mermaid
+sequenceDiagram
+    accTitle: Knowledge operation, plan and validate
+    accDescr: The caller sends a request to the operation service. The service resolves the root and worktree, checks the branch, scans the worktree, builds the plan and the post-image and has the readers validate the post-image. A new error diagnostic returns 422. A dry run returns the files and expected digests without a write. Otherwise the service continues to the apply path.
+    participant Caller as Caller (HTTP, MCP or test)
+    participant Service as Operation service
+    participant Scan as scanRepository
+    participant Readers as Readers
+    Caller->>Service: request: path, worktree, operation, input, expected, dryRun
+    Service->>Service: resolve root and registered worktree, check branch
+    Service->>Scan: scan the worktree
+    Scan-->>Service: metadata with full bodies for the touched artifact, units and flows
+    Service->>Service: build the plan and the post-image file map
+    Service->>Readers: validate the post-image
+    Readers-->>Service: diagnostics
+    alt new error diagnostic in the post-image
+        Service-->>Caller: 422 with diagnostics
+    else dryRun
+        Service-->>Caller: files, diagnostics and expected digests, nothing written
+    else apply
+        Note over Service: continue with the apply path
+    end
+```
+
+Source: artifact-plane:specifications/knowledge-editing.md, sections Operation service (Request, Processing, Validation, Response) and Writer (Atomic replacement, Expected digests, Journal and undo); derived one message per processing step and one alternative per stated outcome; current snapshot.
+
+```mermaid
+sequenceDiagram
+    accTitle: Knowledge operation, apply
+    accDescr: The service gives the plan and the expected digests to the writer. The writer computes the current digests. On a mismatch the operation returns 409 with the current content. Otherwise the writer writes temporary files and renames them in a fixed order, and the service returns the applied response with the operation ID, files, diagnostics and revision. The journal keeps, per repository root and in memory, the pre-image bytes and the pre- and post-image digests of the last 50 applied operations.
+    participant Caller as Caller (HTTP, MCP or test)
+    participant Service as Operation service
+    participant Writer as Writer
+    Service->>Writer: apply the plan with expected digests
+    Writer->>Writer: compute current digests of touched files
+    alt digest mismatch
+        Writer-->>Service: rejected with current content
+        Service-->>Caller: 409 with current content
+    else digests match
+        Writer->>Writer: write temporary files, rename in fixed order
+        Note over Writer: journal keeps, per repository root and in memory, the pre-image bytes and the pre- and post-image digests of the last 50 applied operations
+        Writer-->>Service: written files
+        Service-->>Caller: applied, operationId, files, diagnostics, revision
+    end
+```
+
+Source: artifact-plane:specifications/knowledge-editing.md, sections Operation service (Request, Processing, Validation, Response) and Writer (Atomic replacement, Expected digests, Journal and undo); derived one message per processing step and one alternative per stated outcome; current snapshot.
+
+Gap, as the source states it: this contract describes the journal in the Writer section but does not name the module that records it. The diagram therefore shows the journal as a note, not as a message.
+
 Identifiers. The service generates IDs from titles: NFKD normalization, removal of combining marks, lowercase, every run of characters outside a–z and 0–9 replaced by one hyphen, hyphens trimmed, a leading digit or letter required. Change names get the change- prefix. A collision within the plan, artifact, unit or flow namespace appends -2, -3 and so on. The response names the generated identifier so the user interface can show it before apply. A caller may supply an explicit ID that passes the same rules.
 
-Templates. New documents use fixed templates derived from the ADD guidance, with headings only and short placeholder sentences that name what to replace: requirement (Need and constraints, Acceptance criteria, Self-check), specification (Governing requirement, Behavior and interfaces, Self-check), decision (Context, Alternatives, Decision, Consequences), change record (Reason and scope, Baseline and ownership), plan (tasks: [] front matter, Approval and prerequisites, Plan self-check), task (id and depends_on front matter, Scope and ownership, Governing knowledge, Prerequisites, Definition of Done with one unchecked item, Evidence with "Implementation has not started."), unit brief (front matter fields and the Purpose, Included scope, Excluded scope and Validation evidence headings), flow (front matter with the first step as the entry step), version record (source_change front matter, compatibility sentence and the link to the retained plan). Templates never contain a passed self-check or a checked DoD item.
+Templates. New documents use fixed templates derived from the ADD guidance, with headings only and short placeholder sentences that name what to replace. The table lists the nine templates; Not named means that this contract names no content for that column.
+
+| Template | Front matter | Headings | Other fixed content |
+| --- | --- | --- | --- |
+| requirement | Not named | Need and constraints, Acceptance criteria, Self-check | Not named |
+| specification | Not named | Governing requirement, Behavior and interfaces, Self-check | Not named |
+| decision | Not named | Context, Alternatives, Decision, Consequences | Not named |
+| change record | Not named | Reason and scope, Baseline and ownership | Not named |
+| plan | `tasks: []` | Approval and prerequisites, Plan self-check | Not named |
+| task | id and depends_on | Scope and ownership, Governing knowledge, Prerequisites, Definition of Done, Evidence | Definition of Done with one unchecked item; Evidence with "Implementation has not started." |
+| unit brief | front matter fields (not listed in this contract) | Purpose, Included scope, Excluded scope, Validation evidence | Not named |
+| flow | front matter with the first step as the entry step | Not named | Not named |
+| version record | source_change | Not named | a compatibility sentence and the link to the retained plan |
+
+Source: artifact-plane:specifications/knowledge-editing.md, Operation service, Templates paragraph; derived one row per template in the order of the paragraph; current snapshot.
+
+Templates never contain a passed self-check or a checked DoD item.
 
 ### Operations
 

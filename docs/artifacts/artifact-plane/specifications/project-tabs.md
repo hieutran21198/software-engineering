@@ -43,6 +43,38 @@ Validate version, object shape, absolute path strings, uniqueness, and active me
 
 Restored inactive tabs load when first selected. The restored active tab opens through existing APIs and establishes fresh observation. A missing or unreadable project keeps its tab and path with an error and retry/open controls. Successful opens in another tab remain usable. Stored paths persist for retry until the user closes or replaces the tab. Separate browser windows read at startup and save their own workspace; live cross-window synchronization is excluded. Persistence is scoped to browser profile and origin, so port changes have separate workspaces.
 
+The state diagram shows the states of one project tab, as the sections Workspace and identity, Explorer isolation and lifecycle and Browser persistence describe them. Each arrow is an event that changes the state of one tab. Active is the active tab with the active explorer. Inactive is hidden, keeps its session state, and its loaded data is stale until reconciled. Error keeps the tab and path with an error and retry and open controls. The end marker means that the tab is closed or removed: close unmounts the explorer and releases its resources, and the next tab at the closed index is selected, otherwise the preceding tab.
+
+```mermaid
+stateDiagram-v2
+    accTitle: States of one project tab
+    accDescr: A tab starts empty when Plus adds and selects it, when closing the last tab creates it, or when there are no saved projects. A tab starts restored and not loaded when reload restores a saved project path. A successful open makes an empty tab active. An open that finds a duplicate canonical path selects the existing tab and removes the empty tab. A restored tab becomes active at once when it is the restored active tab, otherwise when it is first selected. A restored tab goes to error when the project is missing or unreadable. An active tab becomes inactive when another tab is selected, and its event stream closes and its reads are cancelled. An inactive tab becomes active when it is selected again, and the overview reconciles and the selected detail reloads. Close ends a tab in any of the five states.
+    direction LR
+    state "Restored, not loaded" as Restored
+    [*] --> Empty: Plus adds and selects an empty tab, closing the last tab creates one, or there are no saved projects
+    [*] --> Restored: reload restores a saved project path
+    Empty --> Active: a successful open assigns the canonical path
+    Empty --> [*]: the open finds a duplicate canonical path, the existing tab is selected and this tab is removed
+    Restored --> Active: it opens at once as the restored active tab, otherwise when it is first selected
+    Restored --> Error: the project is missing or unreadable
+    Active --> Inactive: another tab is selected, the event stream closes and reads are cancelled
+    Inactive --> Active: the tab is selected again, the overview reconciles and the selected detail reloads
+    Empty --> [*]: close
+    Restored --> [*]: close
+    Active --> [*]: close
+    Inactive --> [*]: close
+    Error --> [*]: close
+```
+
+Source: artifact-plane:specifications/project-tabs.md, sections Workspace and identity, Explorer isolation and lifecycle and Browser persistence; derived one state per tab condition that the text names and one transition per stated event; current snapshot.
+
+Gaps, as the source states them. The text does not name the state "Restored, not loaded"; the label uses the words "Restored inactive tabs load when first selected". The text also does not state:
+
+- the state after retry or open in Error;
+- whether an Empty tab becomes inactive when another tab is selected;
+- an open failure from Empty;
+- the meaning of "replaces the tab".
+
 ## Validation and impact
 
 Exercise two independent repositories with equal artifact/task IDs, rapid switching, delayed responses, close during reads, runtime observations, automatic changes, and reactivation. Verify viewport retention and container resize behavior. Check localStorage round trips, corrupt input, missing projects, duplicate opens, and blocked storage. Run existing reader and browser suites and build. Inspect server stream cleanup and read-only fixture fingerprints. Retained per-project session state grows with open tabs; closing tabs releases it. No fixed total-memory guarantee is introduced.
