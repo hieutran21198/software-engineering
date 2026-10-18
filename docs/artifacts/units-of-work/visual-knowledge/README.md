@@ -41,7 +41,27 @@ acceptance:
       links and the documentation hierarchy are valid, Go tests pass, the
       website builds and validate-knowledge reports no error.
     integration: true
-evidence: []
+evidence:
+  - criterion: principles
+    method: Review of the foundation page against the contract and resolution of all 46 sources.
+    result: passed
+    source: docs/artifacts/artifact-driven/changes/change-visual-knowledge/tasks/01-foundation.md#evidence
+  - criterion: guidance
+    method: Review of the guideline, the navigation edits and the four role-skill sections against the contract.
+    result: passed
+    source: docs/artifacts/artifact-driven/changes/change-visual-knowledge/tasks/02-guideline.md#evidence
+  - criterion: examples
+    method: Derivation script against the records at 126990d and browser render check of every diagram.
+    result: passed
+    source: docs/artifacts/artifact-driven/changes/change-visual-knowledge/tasks/04-worked-examples.md#evidence
+  - criterion: preservation
+    method: Review of the bundle diff for phases, registries and approval fields, and an empty apps diff.
+    result: passed
+    source: docs/artifacts/artifact-driven/changes/change-visual-knowledge/tasks/05-validation.md#evidence
+  - criterion: integration
+    method: Bundle diff, link and hierarchy check, Go tests and vet, website build and validate-knowledge.
+    result: passed
+    source: docs/artifacts/artifact-driven/changes/change-visual-knowledge/tasks/05-validation.md#evidence
 ---
 
 # Establish visual knowledge design principles for ADD
@@ -56,4 +76,8 @@ Artifact Plane code and its artifact knowledge; the story-driven bundle; image f
 
 ## Validation evidence
 
-No checks have run. Requirement, Specification and Plan are preparatory knowledge; implementation waits for explicit approval of the plan.
+Executed on 18 October 2026 on branch claude/visual-knowledge after explicit user approval of the plan. Details are in the originating tasks; this section records only the combined result.
+
+All five tasks meet their DoD. The examples page has 8 diagrams and the guideline 1; all render on the built website, and the derived diagrams match the records at 126990d. Both bundle copies are identical except the Go files and required-skills, the new links resolve without ancestor links, `go test ./...` and `go vet ./...` pass, the website builds, and validate-knowledge reports 0 errors. No file under apps changes. The proposed version is artifact-driven 2.7.0; it establishes when the PR lands on main.
+
+Sequencing: the concurrent change change-impact-semantics on branch claude/impact-intelligence also prepares 2.7.0. Whichever change merges second rebases, keeps both flow support records and both guideline rows, prepares the next minor version and repeats the parity, link and validate-knowledge checks.
