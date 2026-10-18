@@ -4,7 +4,7 @@
 // index; disposable, incremental by file identity, never an authority.
 import {DatabaseSync} from 'node:sqlite';
 import {existsSync,statSync,openSync,closeSync,readFileSync} from 'node:fs';
-import {join,dirname,resolve,relative,posix} from 'node:path';
+import {join,resolve,relative,posix} from 'node:path';
 import {createHash} from 'node:crypto';
 import {execFile} from 'node:child_process';
 import {promisify} from 'node:util';

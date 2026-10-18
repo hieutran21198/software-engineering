@@ -2,12 +2,13 @@
 // derived relationships with the ADD change-impact rules, and explains every entity.
 // Declared knowledge comes from the flow reader; derived relations from the impact index.
 import {realpath,readFile} from 'node:fs/promises';
-import {resolve,isAbsolute,dirname,posix} from 'node:path';
+import {resolve,isAbsolute,posix} from 'node:path';
 import {createHash} from 'node:crypto';
 import {ExploreError} from './reader.js';
 import {parseWorktrees} from './workflow.js';
 import {readFlowRepository} from './flow-reader.js';
 import {createImpactIndex,git,parseModule,isTestFile} from './impact-index.js';
+import {gitReads} from './git-reads.js';
 import {defaultStateDir} from './runtime-store.js';
 
 const digest=value=>createHash('sha256').update(typeof value==='string'?value:JSON.stringify(value)).digest('hex');
@@ -47,9 +48,28 @@ export function changedSections(text,lines){
   for(let i=0;i<all.length;i++){const h=all[i].match(/^#{1,6}[ \t]+(.+?)[ \t]*\r?$/);if(h)current=h[1];if(lines.has(i+1))out.add(current);}
   return [...out];
 }
-function hunkLines(diff){const added=new Set(),removed=new Set();for(const m of diff.matchAll(/^@@ -(\d+)(?:,(\d+))? \+(\d+)(?:,(\d+))? @@/gm)){const os=+m[1],ol=m[2]===undefined?1:+m[2],ns=+m[3],nl=m[4]===undefined?1:+m[4];for(let i=0;i<nl;i++)added.add(ns+i);for(let i=0;i<ol;i++)removed.add(os+i);}return {added,removed};}
+// One unified diff (-U0, -M) for all files: status, rename source, added and removed line numbers, added text.
+export function parseUnifiedDiff(text){
+  const files=new Map();let current=null;let oldLine=0,newLine=0;
+  const unquote=p=>{p=p.replace(/^"|"$/g,'');return p.replace(/^[ab]\//,'');};
+  for(const line of text.split('\n')){
+    if(line.startsWith('diff --git ')){const m=line.match(/^diff --git (?:"?a\/[^"]*"?) ("?b\/.*"?)$/);const path=m?unquote(m[1]):line.slice(11).split(' b/').pop();current={path,status:'modified',from:null,added:new Set(),removed:new Set(),addedLines:[]};files.set(path,current);continue;}
+    if(!current)continue;
+    if(line.startsWith('rename from ')){current.from=unquote(line.slice(12));current.status='renamed';continue;}
+    if(line.startsWith('rename to ')){const to=unquote(line.slice(10));if(to!==current.path){files.delete(current.path);current.path=to;files.set(to,current);}continue;}
+    if(line.startsWith('new file mode')){current.status='added';continue;}
+    if(line.startsWith('deleted file mode')){current.status='deleted';continue;}
+    if(line.startsWith('+++ ')){const p=line.slice(4).trim();if(p!=='/dev/null'){const to=unquote(p);if(to!==current.path){files.delete(current.path);current.path=to;files.set(to,current);}}continue;}
+    if(line.startsWith('--- ')||line.startsWith('index ')||line.startsWith('similarity ')||line.startsWith('old mode')||line.startsWith('new mode')||line.startsWith('Binary files'))continue;
+    const h=line.match(/^@@ -(\d+)(?:,(\d+))? \+(\d+)(?:,(\d+))? @@/);
+    if(h){oldLine=+h[1];newLine=+h[3];continue;}
+    if(line.startsWith('+')){current.added.add(newLine);current.addedLines.push(line.slice(1));newLine++;continue;}
+    if(line.startsWith('-')){current.removed.add(oldLine);oldLine++;continue;}
+  }
+  for(const c of files.values()){c.addedText=c.addedLines.join('\n');delete c.addedLines;}
+  return files;
+}
 function declarationsHit(text,lines,path){const {declarations,failed}=parseModule(text,path);if(failed)return null;const hit=new Set();for(const d of declarations)for(const line of lines)if(line>=d.start&&line<=d.end){hit.add(d.name);break;}return [...hit];}
-const addedText=diff=>diff.split('\n').filter(l=>l.startsWith('+')&&!l.startsWith('+++')).map(l=>l.slice(1)).join('\n');
 
 // Affected exports of one module when the given local names are affected (in-file closure).
 export function affectedExports(declarations,affectedLocals){
@@ -74,41 +94,52 @@ export function createImpactService({stateDir=defaultStateDir(),roots=[],loader=
   async function protectedRef(worktree){for(const ref of ['main','master'])if(await git(worktree,['rev-parse','--verify','refs/heads/'+ref]).catch(()=>null))return ref;return null;}
 
   // Origins: what changed, with declarations, sections, terms, renames and deletions.
+  // One unified diff per query; texts through the batch reader.
   async function resolveOrigins(body,worktree,relations,record){
     const origins=[],unresolved=[];
     const tracked=relations.files;
-    const fromStatus=async(rows,label)=>{for(const row of rows){const [status,a,b]=row.split('\t');const path=b||a;if(!path)continue;origins.push({path,status:status[0]==='R'?'renamed':status[0]==='D'?'deleted':status[0]==='A'?'added':'modified',from:b?a:null,ref:label});}};
-    if(body.origins){
-      for(const o of body.origins){
-        if(o.path!==undefined){const path=o.path.replace(/^\.\//,'');const entry={path,status:'modified',symbols:o.symbols};if(o.commit){entry.ref=o.commit;entry.isCommit=true;}origins.push(entry);continue;}
-        if(o.element){const [artifact,...rest]=o.element.split(':');const el=record.snapshot.artifacts.find(a=>a.id===artifact)?.elements.find(e=>e.source==='working'&&e.path===rest.join(':'));if(el)origins.push({path:el.file,status:'modified',id:o.element});else unresolved.push({entity:o.element,reason:'Element is not in the working knowledge of this worktree.'});continue;}
-        if(o.flow||o.step){const logical=o.flow||o.step.split(':').slice(0,2).join(':');const flow=record.graph.flows.find(f=>f.logicalId===logical);if(!flow){unresolved.push({entity:o.flow||o.step,reason:'Flow does not exist in the selected knowledge.'});continue;}
-          if(o.step){const stepId=o.step.split(':')[2];if(!flow.steps.some(s=>s.id===stepId)){unresolved.push({entity:o.step,reason:'Step does not exist in the flow.'});continue;}origins.push({path:flow.file,status:'modified',id:o.step,step:stepId,sections:[stepId]});}
-          else origins.push({path:flow.file,status:'modified',id:o.flow});continue;}
-        if(o.model){const node=record.graph.nodes.find(n=>n.kind==='model'&&n.logicalId===o.model);if(node)origins.push({path:node.file,status:'modified',id:o.model,model:o.model});else unresolved.push({entity:o.model,reason:'Model is not declared in the selected knowledge.'});}
+    const reads=gitReads(git);
+    try{
+      const diffs=new Map(); // key -> {files: Map(path -> change), oldRev, newRev, working}
+      const addDiff=async(key,args,oldRev,newRev,working)=>{if(diffs.has(key))return diffs.get(key);const text=await git(worktree,args,true).catch(()=>{throw new ExploreError(422,`${key} cannot be read.`);});const value={files:parseUnifiedDiff(text),oldRev,newRev,working};diffs.set(key,value);return value;};
+      const statusOf=c=>c.status;
+      if(body.origins){
+        for(const o of body.origins){
+          if(o.path!==undefined){const path=o.path.replace(/^\.\//,'');const entry={path,status:'modified',symbols:o.symbols};
+            if(o.commit){const d=await addDiff('commit:'+o.commit,['show','-U0','-M','--src-prefix=a/','--dst-prefix=b/','--format=',o.commit],o.commit+'^',o.commit,false);const c=d.files.get(path);if(c){entry.status=statusOf(c);entry.from=c.from;entry.change=c;entry.diff=d;}}
+            origins.push(entry);continue;}
+          if(o.element){const [artifact,...rest]=o.element.split(':');const el=record.snapshot.artifacts.find(a=>a.id===artifact)?.elements.find(e=>e.source==='working'&&e.path===rest.join(':'));if(el)origins.push({path:el.file,status:'modified',id:o.element});else unresolved.push({entity:o.element,reason:'Element is not in the working knowledge of this worktree.'});continue;}
+          if(o.flow||o.step){const logical=o.flow||o.step.split(':').slice(0,2).join(':');const flow=record.graph.flows.find(f=>f.logicalId===logical);if(!flow){unresolved.push({entity:o.flow||o.step,reason:'Flow does not exist in the selected knowledge.'});continue;}
+            if(o.step){const stepId=o.step.split(':')[2];if(!flow.steps.some(s=>s.id===stepId)){unresolved.push({entity:o.step,reason:'Step does not exist in the flow.'});continue;}origins.push({path:flow.file,status:'modified',id:o.step,step:stepId,sections:[stepId]});}
+            else origins.push({path:flow.file,status:'modified',id:o.flow});continue;}
+          if(o.model){const node=record.graph.nodes.find(n=>n.kind==='model'&&n.logicalId===o.model);if(node)origins.push({path:node.file,status:'modified',id:o.model,model:o.model});else unresolved.push({entity:o.model,reason:'Model is not declared in the selected knowledge.'});}
+        }
+      }else{
+        let d;
+        if(body.commit)d=await addDiff('commit:'+body.commit,['show','-U0','-M','--src-prefix=a/','--dst-prefix=b/','--format=',body.commit],body.commit+'^',body.commit,false);
+        else if(body.range){const three=body.range.indexOf('...'),two=body.range.indexOf('..');let oldRev,newRev,working=false;
+          if(three>=0){const [a,b]=[body.range.slice(0,three),body.range.slice(three+3)||'HEAD'];oldRev=await git(worktree,['merge-base',a,b]).catch(()=>a);newRev=b;}
+          else if(two>=0){oldRev=body.range.slice(0,two);newRev=body.range.slice(two+2)||'HEAD';}
+          else{oldRev=body.range;newRev=null;working=true;}
+          d=await addDiff('range:'+body.range,['diff','-U0','-M','--src-prefix=a/','--dst-prefix=b/',body.range],oldRev,newRev,working);}
+        else{const base=body.diff.base&&body.diff.base!=='protected'?body.diff.base:await protectedRef(worktree);if(!base)throw new ExploreError(422,'No protected branch is available for the difference.');d=await addDiff('diff:'+base,['diff','-U0','-M','--src-prefix=a/','--dst-prefix=b/',base],base,null,true);}
+        for(const [path,c] of d.files)origins.push({path,status:statusOf(c),from:c.from,ref:d.oldRev,change:c,diff:d});
       }
-    }else if(body.commit){await fromStatus((await git(worktree,['diff-tree','--no-commit-id','-r','-M','--name-status',body.commit]).catch(()=>{throw new ExploreError(422,'Commit cannot be read.');})).split('\n').filter(Boolean),body.commit);}
-    else if(body.range){await fromStatus((await git(worktree,['diff','--name-status','-M',body.range]).catch(()=>{throw new ExploreError(422,'Range cannot be read.');})).split('\n').filter(Boolean),body.range);}
-    else{const base=body.diff.base&&body.diff.base!=='protected'?body.diff.base:await protectedRef(worktree);if(!base)throw new ExploreError(422,'No protected branch is available for the difference.');await fromStatus((await git(worktree,['diff','--name-status','-M',base]).catch(()=>{throw new ExploreError(422,'Difference cannot be read.');})).split('\n').filter(Boolean),base);}
-    const byCommit=new Map();for(const o of origins)if(o.isCommit){if(!byCommit.has(o.ref))byCommit.set(o.ref,[]);byCommit.get(o.ref).push(o);}
-    for(const [ref,list] of byCommit){const rows=(await git(worktree,['diff-tree','--no-commit-id','-r','-M','--name-status',ref]).catch(()=>'')).split('\n').filter(Boolean);
-      for(const o of list){const row=rows.find(r=>{const parts=r.split('\t');return (parts[2]||parts[1])===o.path;});if(row){const [status,a,b]=row.split('\t');o.status=status[0]==='R'?'renamed':status[0]==='D'?'deleted':status[0]==='A'?'added':'modified';o.from=b?a:null;}}}
-    // Detail per origin: declarations and sections from the change, or the whole document. Reads run in parallel.
-    await Promise.all(origins.map(async o=>{
-      const known=tracked.has(o.path);
-      if(!known&&o.status!=='deleted'){let hint='not tracked at this revision';try{const log=await git(worktree,['log','-1','-M','--diff-filter=DR','--name-status','--format=%h','--',o.path]);if(log){const [h,row]=log.split('\n');const parts=(row||'').split('\t');hint=parts[0]?.startsWith('R')?`renamed to ${parts[2]} in ${h}`:`deleted in ${h}`;}}catch{}o.status='unknown';o.reason=`Path is ${hint}.`;return;}
-      const js=/\.(m?js|jsx)$/.test(o.path),md=o.path.endsWith('.md');
-      if(o.ref&&o.status!=='deleted'&&(js||md)){
-        const isCommit=o.isCommit||(!/\.\.|^[a-z]+$/.test(o.ref)&&!body.range&&!body.diff);
-        const diff=await git(worktree,isCommit?['show','-U0','--format=',o.ref,'--',o.path]:['diff','-U0',o.ref,'--',o.path],true).catch(()=>'');
-        const {added,removed}=hunkLines(diff);
-        if(js&&o.symbols===undefined){const [newText,oldText]=await Promise.all([isCommit?git(worktree,['show',`${o.ref}:${o.path}`],true).catch(()=>null):readFile(resolve(worktree,o.path),'utf8').catch(()=>null),git(worktree,['show',`${isCommit?o.ref+'^':o.ref}:${o.from||o.path}`],true).catch(()=>null)]);
-          const names=new Set();for(const [text,lines] of [[newText,added],[oldText,removed]]){if(text===null)continue;const hit=declarationsHit(text,lines,o.path);if(hit===null){names.add('*');break;}for(const n of hit)names.add(n);}o.symbols=[...names];}
-        if(md){const text=isCommit?await git(worktree,['show',`${o.ref}:${o.path}`],true).catch(()=>''):await readFile(resolve(worktree,o.path),'utf8').catch(()=>'');o.sections=changedSections(text,added);o.terms=knowledgeTerms(addedText(diff));}
-      }else if(md&&o.status!=='deleted'&&!o.terms){const text=await readFile(resolve(worktree,o.path),'utf8').catch(()=>'');o.terms=knowledgeTerms(text);if(!o.sections)o.sections=[...new Set((text.match(/^#{1,6}[ \t]+[^\n]+/gm)||[]).map(h=>h.replace(/^#+[ \t]+/,'').trim()))];}
-      if(js&&o.symbols?.includes('*'))o.symbols=undefined;
-    }));
-    for(const o of origins)delete o.isCommit;
+      // Detail per origin: declarations and sections from the change, or the whole document. Texts come from one batch reader.
+      await Promise.all(origins.map(async o=>{
+        const known=tracked.has(o.path);
+        if(!known&&o.status!=='deleted'){let hint='not tracked at this revision';try{const log=await git(worktree,['log','-1','-M','--diff-filter=DR','--name-status','--format=%h','--',o.path]);if(log){const [h,row]=log.split('\n');const parts=(row||'').split('\t');hint=parts[0]?.startsWith('R')?`renamed to ${parts[2]} in ${h}`:`deleted in ${h}`;}}catch{}o.status='unknown';o.reason=`Path is ${hint}.`;return;}
+        const js=/\.(m?js|jsx)$/.test(o.path),md=o.path.endsWith('.md');
+        const text=async(rev,path)=>rev===null?readFile(resolve(worktree,path),'utf8').catch(()=>null):reads(worktree,['show',`${rev}:${path}`],true).catch(()=>null);
+        if(o.change&&o.status!=='deleted'&&(js||md)){const c=o.change,d=o.diff;
+          if(js&&o.symbols===undefined){const [newText,oldText]=await Promise.all([text(d.working?null:d.newRev,o.path),c.status==='added'?null:text(d.oldRev,o.from||o.path)]);
+            const names=new Set();for(const [t,lines] of [[newText,c.added],[oldText,c.removed]]){if(t===null||t===undefined)continue;const hit=declarationsHit(t,lines,o.path);if(hit===null){names.add('*');break;}for(const n of hit)names.add(n);}o.symbols=[...names];}
+          if(md){const t=await text(d.working?null:d.newRev,o.path);o.sections=changedSections(t||'',c.added);o.terms=knowledgeTerms(c.addedText);}
+        }else if(md&&o.status!=='deleted'&&!o.terms){const t=await readFile(resolve(worktree,o.path),'utf8').catch(()=>'');o.terms=knowledgeTerms(t);if(!o.sections)o.sections=[...new Set((t.match(/^#{1,6}[ \t]+[^\n]+/gm)||[]).map(h=>h.replace(/^#+[ \t]+/,'').trim()))];}
+        if(js&&o.symbols?.includes('*'))o.symbols=undefined;
+      }));
+    }finally{reads.close();}
+    for(const o of origins){delete o.change;delete o.diff;if(o.ref===undefined)delete o.ref;}
     return {origins,unresolved};
   }
 
@@ -138,8 +169,8 @@ export function createImpactService({stateDir=defaultStateDir(),roots=[],loader=
     return {rev,nodes,flowFile};
   }
 
-  function propagate({origins,graph,relations,record,depth}){
-    const {rev,nodes}=graph;const reached=new Map(),notes=[],verify=[],unresolved=[];const originIds=new Set();
+  function propagate({origins,graph,relations,depth}){
+    const {rev}=graph;const reached=new Map(),notes=[],verify=[],unresolved=[];const originIds=new Set();
     for(const o of origins){if(o.status==='unknown')continue;originIds.add(o.path);
       const locals=o.symbols?.length?new Set(o.symbols):new Set(['*']);const decls=relations.declarations.get(o.path);
       const exports=decls?affectedExports(decls,locals):new Set(['*']);
@@ -165,9 +196,9 @@ export function createImpactService({stateDir=defaultStateDir(),roots=[],loader=
         const step={from:id,to:e.dependent,kind:e.kind,evidence};const entry=reached.get(e.dependent);
         if(!entry){reached.set(e.dependent,{hop,paths:[[...cur.paths[0],step]],via:new Set(cur.via),exports:exportsNext});queue.push(e.dependent);}
         else{if(entry.hop===hop&&entry.paths.length<3)entry.paths.push([...cur.paths[0],step]);for(const v of cur.via)entry.via.add(v);if(entry.exports&&!entry.exports.has('*'))for(const x of exportsNext)entry.exports.add(x);}
-        const lift=(from,flowId,extra)=>{const file=graph.flowFile.get(flowId.slice(5));if(!reached.has(flowId)){reached.set(flowId,{hop,paths:[[...cur.paths[0],step,...extra]],via:new Set(cur.via)});queue.push(flowId);}if(file&&!reached.has(file)){reached.set(file,{hop,paths:[[...cur.paths[0],step,...extra,{from:flowId,to:file,kind:'defines',evidence:{}}]],via:new Set(cur.via),virtual:true});queue.push(file);}};
-        if(e.dependent.startsWith('step:'))lift(e.dependent,'flow:'+e.dependent.split(':').slice(1,-1).join(':'),[{from:e.dependent,to:'flow:'+e.dependent.split(':').slice(1,-1).join(':'),kind:'contains',evidence:{}}]);
-        else if(e.dependent.startsWith('flow:'))lift(e.dependent,e.dependent,[]);
+        const lift=(flowId,extra)=>{const file=graph.flowFile.get(flowId.slice(5));if(!reached.has(flowId)){reached.set(flowId,{hop,paths:[[...cur.paths[0],step,...extra]],via:new Set(cur.via)});queue.push(flowId);}if(file&&!reached.has(file)){reached.set(file,{hop,paths:[[...cur.paths[0],step,...extra,{from:flowId,to:file,kind:'defines',evidence:{}}]],via:new Set(cur.via),virtual:true});queue.push(file);}};
+        if(e.dependent.startsWith('step:'))lift('flow:'+e.dependent.split(':').slice(1,-1).join(':'),[{from:e.dependent,to:'flow:'+e.dependent.split(':').slice(1,-1).join(':'),kind:'contains',evidence:{}}]);
+        else if(e.dependent.startsWith('flow:'))lift(e.dependent,[]);
       }
     }
     return {reached,notes,verify,unresolved,frontier,originIds};
@@ -188,7 +219,7 @@ export function createImpactService({stateDir=defaultStateDir(),roots=[],loader=
     const record=await knowledge(root,worktree,print);mark('knowledgeMs');
     const {origins,unresolved:unresolvedOrigins}=await resolveOrigins(body,worktree,relations,record);mark('originsMs');
     const graphKey=digest([relations.context,relations.generation,record.revision]);if(!graphCache.has(graphKey)){if(graphCache.size>=4)graphCache.delete(graphCache.keys().next().value);graphCache.set(graphKey,buildGraph(relations,record));}const graph=graphCache.get(graphKey);
-    const {reached,notes,verify,unresolved:propagationUnresolved,frontier,originIds}=propagate({origins,graph,relations,record,depth:body.depth});mark('propagateMs');
+    const {reached,notes,verify,unresolved:propagationUnresolved,frontier,originIds}=propagate({origins,graph,relations,depth:body.depth});mark('propagateMs');
     const unresolved=[...unresolvedOrigins,...origins.filter(o=>o.status==='unknown').map(o=>({entity:o.path,reason:o.reason+' Declared supports that name it are stale.'})),...propagationUnresolved];
     const items=[];
     for(const [id,r] of reached){if(r.hop===0||r.virtual)continue;const n=graph.nodes.get(id)||{id,kind:'file'};const last=r.paths[0].at(-1);const s=strength(last);

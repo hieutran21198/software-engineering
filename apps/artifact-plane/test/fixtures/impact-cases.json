@@ -224,7 +224,8 @@
    "expect": {
     "direct": [
      "apps/artifact-plane/server/reader.js",
-     "apps/artifact-plane/server/git-reads.js"
+     "apps/artifact-plane/server/git-reads.js",
+     "apps/artifact-plane/server/impact-index.js"
     ],
     "transitive": [
      "apps/artifact-plane/server/change-review.js",
@@ -264,7 +265,8 @@
    ],
    "notes": [
     "gitSlot gates every git command through reader.git; every module that runs git is affected. Depth 3 is needed to reach the flows.",
-    "workflow.js, units-of-work.js, knowledge-baseline.js and knowledge-writer.js receive git as a parameter: a static blind spot, expected to be missed."
+    "workflow.js, units-of-work.js, knowledge-baseline.js and knowledge-writer.js receive git as a parameter: a static blind spot, expected to be missed.",
+    "Since the impact index exists, server/impact-index.js imports gitSlot as well: a third direct importer at this revision."
    ]
   },
   {
