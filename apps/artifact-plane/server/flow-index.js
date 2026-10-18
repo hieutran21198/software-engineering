@@ -490,14 +490,22 @@ export function createFlowService({
           .map((f) => f.id);
       ranks.push(exact);
       exactMatch = exact.length === 1 ? exact[0] : null;
-      const terms = query.match(/[\p{L}\p{N}_-]+/gu) || [];
+      // Keyword rank: terms shorter than three characters and terms present in at least
+      // 80 percent of the context's chunks carry no signal and are dropped before matching;
+      // a query of only such terms skips this rank.
+      const terms = [...new Set((query.match(/[\p{L}\p{N}_-]+/gu) || []).filter((t) => t.length >= 3))];
       if (terms.length && cached?.revision === record.revision) {
-        const rows = db
-          .prepare(
-            "SELECT flow,bm25(flow_fts) AS rank FROM flow_fts WHERE flow_fts MATCH ? AND context=? ORDER BY rank,id",
-          )
-          .all(terms.map((t) => '"' + t + '"').join(" OR "), context);
-        ranks.push([...new Set(rows.filter(r => !eligible || eligible.has(r.flow)).map((r) => r.flow))]);
+        const chunkCount = db.prepare("SELECT count(*) AS n FROM documents WHERE context=?").get(context).n;
+        const frequency = db.prepare("SELECT count(*) AS n FROM flow_fts WHERE flow_fts MATCH ? AND context=?");
+        const informative = terms.filter((t) => frequency.get('"' + t + '"', context).n < 0.8 * chunkCount);
+        if (informative.length) {
+          const rows = db
+            .prepare(
+              "SELECT flow,bm25(flow_fts) AS rank FROM flow_fts WHERE flow_fts MATCH ? AND context=? ORDER BY rank,id",
+            )
+            .all(informative.map((t) => '"' + t + '"').join(" OR "), context);
+          ranks.push([...new Set(rows.filter(r => !eligible || eligible.has(r.flow)).map((r) => r.flow))]);
+        }
       }
       if (semantic && query) {
         try {

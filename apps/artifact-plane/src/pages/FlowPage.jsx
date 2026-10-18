@@ -1,4 +1,4 @@
-import React, {useEffect, useMemo, useState} from 'react';
+import {useEffect, useMemo, useState} from 'react';
 import {useShell, useDocument} from '../page-data.js';
 import {PageHeader, Section, Notice} from '../ui.jsx';
 import {ActionForm, OperationError, useEdit, frontValue, splitFront, lines} from '../editing.jsx';
