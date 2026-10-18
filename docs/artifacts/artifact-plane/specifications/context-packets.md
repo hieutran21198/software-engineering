@@ -38,4 +38,4 @@ Check UI/HTTP/MCP parity, source reconstruction/stale cursors, empty/shortened t
 
 ## Change-impact amendment
 
-[change-impact.md](change-impact.md) adds data.impact.tiers and data.impact.coverage as additive fields of the same schema and a Change impact section in the Markdown export after Recorded flow impact. The existing candidates and declared assessment fields stay.
+[change-impact.md](change-impact.md) adds data.impact.tiers, with the impact coverage statement under tiers.coverage, as an additive field of the same schema and a Change impact section in the Markdown export after Recorded flow impact. The existing candidates and declared assessment fields stay.

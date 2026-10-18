@@ -23,7 +23,7 @@ Task impact-service satisfies its DoD.
 - [ ] POST /api/impact/query validates its fields like the flow query, rejects unknown fields and unregistered worktrees, and returns the envelope with data, diagnostics and omissions.
 - [ ] The MCP tool get_change_impact has read-only annotations, accepts the same inputs, and returns structuredContent and the compact text; HTTP and MCP return identical facts for the same query.
 - [ ] The flow query impact operation and get_impact_context delegate to the service and keep their result shape, ordering and cursors; the existing flow and review tests pass without edits.
-- [ ] The packet adds data.impact.tiers and data.impact.coverage, the schema name is unchanged, and the Markdown export shows a Change impact section after Recorded flow impact.
+- [ ] The packet adds data.impact.tiers with the coverage statement under tiers.coverage, the schema name is unchanged, and the Markdown export shows a Change impact section after Recorded flow impact.
 - [ ] README documents the route, the tool, the delegation and the packet field.
 
 ## Evidence
