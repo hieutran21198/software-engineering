@@ -168,6 +168,7 @@ export function createImpactIndex({stateDir=defaultStateDir(),roots=[],goCommand
       const result=parseModule(text,file);if(result.failed)diagnostics.push({path:file,code:'parse-failure',message:result.failed});parsed.set(file,result);}
     mark('parseMs');
     const goChanged=!context||changed.some(f=>f.endsWith('.go')||/(^|\/)go\.(mod|sum)$/.test(f))||removed.some(f=>f.endsWith('.go'));
+    await goCheck(); // probe once per instance so an incremental update records the real availability
     const go=goChanged?await goPackages(worktree,current):undefined;mark('goMs');
     const hist=!context||context.history_head!==head?await history(worktree):null;mark('historyMs');
     db.exec('BEGIN IMMEDIATE');

@@ -1,7 +1,8 @@
 import test from 'node:test';
 import {request} from 'node:http';
 import assert from 'node:assert/strict';
-import {writeFile,utimes,symlink,rm} from 'node:fs/promises';
+import {writeFile,utimes,symlink,rm,mkdtemp} from 'node:fs/promises';
+import {tmpdir} from 'node:os';
 import {join} from 'node:path';
 import {fileURLToPath} from 'node:url';
 import {Client} from '@modelcontextprotocol/sdk/client/index.js';
@@ -16,14 +17,16 @@ function files(){
  return new Map([[base+'README.md','---\ncurrent_version: 1.0.0\ndepends_on: []\n---\n# Demo'],[version+'README.md','# Baseline'],[version+'requirements/contract.md','Before\n'],[change+'README.md','# Scope'],[change+'requirements/contract.md','After\n'],[change+'requirements/added.md','Added\n'],[change+'tasks/README.md','---\ntasks: []\n---\n# Plan'],[change+'specifications/flows/behavior.md','---\n'+JSON.stringify({flow})+'\n---\n# Behavior'],['src/check.js',content]]);
 }
 async function setup(t,{roots}={}){
- const fixture=await fixtureRepository(files()),other=await fixtureRepository(files()),reviewService=createReviewService({roots:[fixture.root]});
+ // A private state directory: the stdio child does not inherit ARTIFACT_PLANE_STATE_DIR.
+ const stateDir=await mkdtemp(join(tmpdir(),'plane-review-state-'));
+ const fixture=await fixtureRepository(files()),other=await fixtureRepository(files()),reviewService=createReviewService({roots:[fixture.root],stateDir});
  const server=createAppServer({reviewService,repositoryObservation:{intervalMs:20,debounceMs:5}});
  await new Promise(resolve=>server.listen(0,'127.0.0.1',resolve));
  const client=new Client({name:'review-stdio-test',version:'1'}),configured=roots?roots(fixture,other):[fixture.root];
- const transport=new StdioClientTransport({command:process.execPath,args:[fileURLToPath(new URL('../server/flow-mcp-stdio.js',import.meta.url)),...configured.flatMap(root=>['--repository',root])],stderr:'pipe'});
+ const transport=new StdioClientTransport({command:process.execPath,args:[fileURLToPath(new URL('../server/flow-mcp-stdio.js',import.meta.url)),...configured.flatMap(root=>['--repository',root]),'--state-dir',stateDir],stderr:'pipe'});
  let stderr='';transport.stderr?.on('data',chunk=>stderr+=chunk);
  await client.connect(transport);
- t.after(async()=>{await client.close();server.closeAllConnections();if(server.listening)await new Promise(resolve=>server.close(resolve));await fixture.cleanup();await other.cleanup();});
+ t.after(async()=>{await client.close();server.closeAllConnections();if(server.listening)await new Promise(resolve=>server.close(resolve));await fixture.cleanup();await other.cleanup();await reviewService.close();await rm(stateDir,{recursive:true,force:true});});
  const url='http://127.0.0.1:'+server.address().port;
  const selectors={path:fixture.root,artifact:'demo',change:'change-review'};
  const http=async(body,headers={})=>{const response=await fetch(url+'/api/review/query',{method:'POST',headers:{'Content-Type':'application/json',...headers},body:JSON.stringify(body)});return {status:response.status,body:await response.json()};};
@@ -31,7 +34,7 @@ async function setup(t,{roots}={}){
 }
 test('real stdio MCP and HTTP return identical review/packet facts, pages and omissions without writes',async t=>{
  const {fixture,client,http,selectors,stderr}=await setup(t),before=await fingerprint(fixture.root);
- assert.equal((await client.listTools()).tools.length,7);
+ assert.equal((await client.listTools()).tools.length,8);
  const implicit=await client.callTool({name:'get_change_context',arguments:{artifact:'demo',change:'change-review',budget:0}});assert.equal(implicit.structuredContent.repository.path,fixture.root);assert.ok(implicit.structuredContent.data.sources.every(s=>s.text===''&&s.nextCursor===null));
  for(const [operation,name]of [['review','get_change_review'],['packet','get_change_context']]){
   const args={...selectors,budget:7,limit:1};let cursor;const records=[];
@@ -91,4 +94,11 @@ test('unexpected review failures are sanitized across HTTP and MCP',async t=>{
  t.after(async()=>{await client.close();await app.close();await new Promise(resolve=>server.close(resolve));await fixture.cleanup();});
  const selectors={path:fixture.root,artifact:'demo',change:'change-review'},response=await fetch('http://127.0.0.1:'+server.address().port+'/api/review/query',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({...selectors,operation:'packet'})});assert.equal(response.status,500);assert.ok(!(await response.text()).includes('private failure'));
  const result=await client.callTool({name:'get_change_context',arguments:selectors});assert.equal(result.isError,true);assert.equal(JSON.parse(result.content[0].text).status,500);assert.ok(!result.content[0].text.includes('private failure'));
+});
+test('HTTP and stdio MCP return the same tiered change impact in the packet',async t=>{
+ const {client,http,selectors}=await setup(t);
+ const response=await http({...selectors,operation:'packet'}),mcp=await client.callTool({name:'get_change_context',arguments:selectors});
+ assert.equal(response.status,200);assert.ok(response.body.data.impact.tiers?.counts,JSON.stringify(response.body.data.impact.tiers?.coverage));
+ assert.deepEqual(mcp.structuredContent.data.impact.tiers,response.body.data.impact.tiers);
+ assert.ok(response.body.data.impact.tiers.direct.some(i=>i.entity==='flow:demo:behavior'));
 });

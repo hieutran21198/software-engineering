@@ -1,4 +1,5 @@
 import { DatabaseSync } from "node:sqlite";
+import { realpath } from "node:fs/promises";
 import {
   existsSync,
   mkdirSync,
@@ -135,6 +136,60 @@ function validate(body) {
     knowledge, operation, limit, budget,
   };
 }
+// Impact IDs of the flow query become origins of the impact service: a matching
+// graph node gives a flow, step, model or file origin; 'artifact:<id>' gives the
+// artifact's working documents; another ID is tried as a repository path.
+export function impactOrigins(record, ids) {
+  const flows = record.graph.flows, origins = [], unresolved = [], byId = new Map();
+  const add = (id, origin) => { const key = JSON.stringify(origin); if (!origins.some(o => JSON.stringify(o) === key)) origins.push(origin); byId.set(id, [...(byId.get(id) || []), origin]); };
+  for (const id of ids) {
+    if (id.startsWith("artifact:")) {
+      const artifact = record.snapshot?.artifacts?.find(a => a.id === id.slice(9));
+      const files = (artifact?.elements || []).filter(e => e.file).map(e => e.file);
+      if (files.length) for (const file of files.slice(0, 100)) add(id, { path: file }); else unresolved.push(id);
+      continue;
+    }
+    const node = record.graph.nodes.find(n => n.id === id || n.logicalId === id || n.elementId === id || n.file === id);
+    const flow = node?.kind === "flow" ? flows.find(f => f.id === node.id) : null;
+    if (flow) add(id, { flow: flow.logicalId });
+    else if (node?.kind === "step") { const owner = flows.find(f => f.id === node.flow); if (owner) add(id, { step: `${owner.logicalId}:${node.localId}` }); else unresolved.push(id); }
+    else if (node?.kind === "model" && node.logicalId) add(id, { model: node.logicalId });
+    else if (node?.file) add(id, { path: node.file });
+    else if (!node && !id.startsWith("[") && !id.includes("\0") && id.length < 2000) add(id, { path: id.replace(/^\.\//, "") });
+    else unresolved.push(id);
+  }
+  return { origins: origins.slice(0, 100), unresolved, byId };
+}
+// The old impactPath lists reverse edges from the origin outward: each target is the dependency.
+const legacyPath = (path, origin) => path.map((edge, i) => ({ source: edge.to, target: i ? path[i - 1].to : origin, kind: edge.via, ...(edge.reason ? { reason: edge.reason } : {}), ...(edge.basis ? { basis: edge.basis } : {}), ...(edge.symbols ? { symbols: edge.symbols } : {}), resolved: true }));
+async function delegatedImpact(service, record, body) {
+  const { origins, unresolved, byId } = impactOrigins(record, body.ids);
+  if (!origins.length) return { flows: [], unresolved, coverage: "Typed impact; no ID resolves to a known entity.", diagnostics: [] };
+  const result = await service.query({ path: body.path, ...(body.worktree ? { worktree: body.worktree } : {}), knowledge: body.knowledge, origins, depth: 4, limit: 200 });
+  const data = result.data, changed = new Map(data.changed.map(c => [c.path, c]));
+  // An ID is unresolved when none of its origins resolved.
+  const failed = new Set(data.unresolved.map(u => u.entity));
+  for (const [id, list] of byId) if (list.every(o => (o.path && changed.get(o.path)?.status === "unknown") || failed.has(o.flow || o.step || o.model || o.path))) unresolved.push(id);
+  const reached = [...data.direct, ...data.transitive].filter(i => i.kind === "flow");
+  const flows = [];
+  // Origin flows stay in the result as the old closure kept its starting nodes.
+  for (const o of origins) {
+    const logical = o.flow || o.step?.split(":").slice(0, 2).join(":");
+    const flow = logical ? record.graph.flows.find(f => f.logicalId === logical) : o.path ? record.graph.flows.find(f => f.file === o.path) : null;
+    if (!flow || flows.some(f => f.id === flow.id) || changed.get(flow.file)?.status === "unknown") continue;
+    flows.push({ ...flow, impactPath: o.step ? [{ source: flow.id, target: o.step, kind: "contains", resolved: true }] : o.path ? [{ source: flow.id, target: o.path, kind: "defines", resolved: true }] : [] });
+  }
+  for (const item of reached) {
+    const flow = record.graph.flows.find(f => `flow:${f.logicalId}` === item.entity);
+    if (!flow || flows.some(f => f.id === flow.id)) continue;
+    const path = item.paths[0] || [];
+    flows.push({ ...flow, impactPath: legacyPath(path, item.origins[0]) });
+  }
+  const diagnostics = [];
+  if (result.omissions.some(o => ["direct", "transitive"].includes(o.section))) diagnostics.push({ code: "truncated-impact", message: "More than 200 entities are affected in one tier; some flows may be missing. Use /api/impact/query." });
+  if (result.freshness !== "fresh") diagnostics.push({ code: "stale-flow-context", message: "Source or index changed during retrieval; retry before deciding impact" });
+  return { flows, unresolved, coverage: `Typed impact to depth ${data.coverage.depth}: declared knowledge and derived code relationships. Not analyzed: ${data.coverage.not_analyzed.join("; ")}.`, diagnostics };
+}
 const summary = (f) => ({
   id: f.id,
   localId:f.localId,
@@ -199,6 +254,7 @@ export function createFlowService({
   roots = [],
   embedder,
   loader = readFlowRepository,
+  impactService,
   fingerprint = loader === readFlowRepository ? flowFingerprint : null,
 } = {}) {
   const dir = guardFlowDirectory(stateDir, roots),
@@ -231,6 +287,18 @@ export function createFlowService({
   // Loaded repositories by fingerprint: consecutive reads of an unchanged repository reuse one load.
   const loaded = new Map();
   const remember = (key, record) => {loaded.delete(key);loaded.set(key, record);while (loaded.size > 4) loaded.delete(loaded.keys().next().value);};
+  // One cached load per repository, worktree, knowledge selector and fingerprint. Paths are
+  // canonical so that the impact service, which passes real paths, shares the same entry.
+  async function cachedLoad(path, worktree, knowledge) {
+    const root = await realpath(path).catch(() => path), target = worktree ? await realpath(worktree).catch(() => worktree) : root;
+    const load = () => loader(path, { worktree, knowledge, roots });
+    if (!fingerprint) return { record: await load(), unchanged: async record => (await load()).revision === record.revision };
+    const probe = () => fingerprint(root, target), initial = await probe();
+    const key = JSON.stringify([root, target, knowledge, initial]);
+    let record = loaded.get(key);
+    if (!record) {record = await load();remember(key, record);}
+    return { record, unchanged: async () => (await probe()) === initial };
+  }
   async function execute(raw) {
     const started = performance.now(),
       timings = {};
@@ -244,14 +312,9 @@ export function createFlowService({
       const identity = repositoryIdentity(body.path);
       guardFlowDirectory(dir, [identity.common, ...identity.roots]);
     }
-    const load = () => loader(body.path, { worktree: body.worktree, knowledge: body.knowledge, roots });
-    const probe = fingerprint ? () => fingerprint(body.path, body.worktree) : null;
-    const initialFingerprint = probe ? await probe() : null;
-    const loadKey = JSON.stringify([body.path, body.worktree ?? null, body.knowledge, initialFingerprint]);
-    let record = probe ? loaded.get(loadKey) : null;
-    if (!record) {record = await load();if (probe) remember(loadKey, record);}
     // Freshness compares the cheap fingerprint; without one, a second load compares revisions.
-    const unchanged = async () => probe ? (await probe()) === initialFingerprint : (await load()).revision === record.revision;
+    const current = await cachedLoad(body.path, body.worktree, body.knowledge);
+    const record = current.record, unchanged = () => current.unchanged(record);
     mark("loadMs");
     const artifactOptions = (record.snapshot?.artifacts || [])
       .filter(a => safeFlowID(a.id))
@@ -596,7 +659,9 @@ export function createFlowService({
           })),
       };
     } else if (body.operation === "impact") {
-      const impact = flowImpact(record.graph, body.ids);
+      // With an impact service, the typed tiers answer; the result keeps the flow-only shape.
+      const impact = impactService ? await delegatedImpact(impactService, record, body) : flowImpact(record.graph, body.ids);
+      if (impact.diagnostics) diagnostics.push(...impact.diagnostics);
       items = impact.flows.filter(f => !eligible || eligible.has(f.id)).map((f) => ({ ...summary(f), paths: f.impactPath }));
       total = items.length;
       data = {
@@ -708,6 +773,8 @@ export function createFlowService({
     };
   }
   return {
+    // The cached repository read, shared with the impact service.
+    async load(path, {worktree, knowledge = 'planning'} = {}) {return (await cachedLoad(path, worktree, knowledge)).record;},
     observedSources(root) {
       const result = [];
       for (const row of db.prepare("SELECT json FROM contexts").all()) {

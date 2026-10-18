@@ -127,6 +127,7 @@ test("HTTP and MCP expose equivalent scoped search/detail/impact/source context"
     listed = await client.listTools();
   assert.deepEqual(listed.tools.map((t) => t.name).sort(), [
     "get_change_context",
+    "get_change_impact",
     "get_change_review",
     "get_flow",
     "get_impact_context",
@@ -345,7 +346,7 @@ test('real stdio client initializes, lists tools and reads only configured roots
  const transport=new StdioClientTransport({command:process.execPath,args:[fileURLToPath(new URL('../server/flow-mcp-stdio.js',import.meta.url)),'--repository',fixture.root,'--state-dir',stateDir],stderr:'pipe'});
  let stderr='';transport.stderr?.on('data',chunk=>stderr+=chunk);
  t.after(async()=>{await client.close();await fixture.cleanup();await other.cleanup();await rm(stateDir,{recursive:true,force:true});});
- await client.connect(transport);assert.equal((await client.listTools()).tools.length,7);
+ await client.connect(transport);assert.equal((await client.listTools()).tools.length,8);
  const result=await client.callTool({name:'search_flows',arguments:{query:'membership'}});
  assert.equal(result.isError,undefined);assert.equal(result.structuredContent.data.flows.length,2);assert.equal(result.structuredContent.freshness,'fresh');
  assert.ok(result.structuredContent.diagnostics.some(d=>d.code==='flow-model-unavailable'));

@@ -16,7 +16,7 @@ const RECORD=/^docs\/artifacts\/[^/]+\/(changes|versions)\//;
 const KNOWLEDGE=/^docs\/artifacts\/([^/]+)\/(requirements|specifications|decisions)\/(.+\.md)$/;
 export const STRENGTHS=['declared+observed','declared+documented','declared+static','static+symbol','static','declared+inferred','historical','lexical'];
 const RANK=Object.fromEntries(STRENGTHS.map((s,i)=>[s,i]));
-const FIELDS=['path','worktree','origins','commit','range','diff','depth','budget','format','limit','unit'];
+const FIELDS=['path','worktree','knowledge','origins','commit','range','diff','depth','budget','format','limit','unit'];
 const safeId=v=>typeof v==='string'&&/^[a-z0-9][a-z0-9-]*$/.test(v);
 const safeRef=v=>typeof v==='string'&&v.length<=200&&/^[\w./^~-]+$/.test(v)&&!v.startsWith('-');
 
@@ -32,7 +32,9 @@ export function validateQuery(body){
   const depth=body.depth??2,budget=body.budget??8000,limit=body.limit??25,format=body.format??'json';
   if(!Number.isInteger(depth)||depth<1||depth>4||!Number.isInteger(budget)||budget<0||budget>100000||!Number.isInteger(limit)||limit<1||limit>200||!['json','text'].includes(format))throw new ExploreError(422,'Invalid depth, budget, limit or format.');
   if(body.unit!==undefined&&!safeId(body.unit))throw new ExploreError(422,'Invalid unit selector.');
-  return {...body,depth,budget,limit,format};
+  const knowledge=body.knowledge??'planning';
+  if(!['planning','established','all'].includes(knowledge))throw new ExploreError(422,'Invalid knowledge selector.');
+  return {...body,knowledge,depth,budget,limit,format};
 }
 
 // Contract vocabulary of a document: code spans, snake_case and camelCase tokens, front matter keys.
@@ -90,7 +92,7 @@ export function createImpactService({stateDir=defaultStateDir(),roots=[],loader=
   const knowledgeCache=new Map();
   async function snapshotState(worktree){const [heads,status]=await Promise.all([git(worktree,['show-ref','--heads','--head'],true).catch(()=>''),git(worktree,['status','--porcelain=v1','-z','--untracked-files=no'],true).catch(()=>'')]);const head=heads.split('\n').find(l=>l.endsWith(' HEAD'))?.split(' ')[0]||'';return {head,status,print:digest([heads,status])};}
   const graphCache=new Map();
-  async function knowledge(root,worktree,print){const key=digest([root,worktree,print]);if(knowledgeCache.has(key))return knowledgeCache.get(key);const record=await loader(root,{worktree,knowledge:'planning',roots});if(knowledgeCache.size>=4)knowledgeCache.delete(knowledgeCache.keys().next().value);knowledgeCache.set(key,record);return record;}
+  async function knowledge(root,worktree,print,selector='planning'){const key=digest([root,worktree,print,selector]);if(knowledgeCache.has(key))return knowledgeCache.get(key);const record=await loader(root,{worktree,knowledge:selector,roots});if(knowledgeCache.size>=4)knowledgeCache.delete(knowledgeCache.keys().next().value);knowledgeCache.set(key,record);return record;}
   async function protectedRef(worktree){for(const ref of ['main','master'])if(await git(worktree,['rev-parse','--verify','refs/heads/'+ref]).catch(()=>null))return ref;return null;}
 
   // Origins: what changed, with declarations, sections, terms, renames and deletions.
@@ -216,9 +218,9 @@ export function createImpactService({stateDir=defaultStateDir(),roots=[],loader=
     if(!worktree||!worktrees.some(w=>w.path===worktree))throw new ExploreError(422,'Select a registered readable worktree.');
     mark('validateMs');const state=await snapshotState(worktree);const print=state.print;mark('stateMs');
     const update=await impactIndex.update(root,worktree,{head:state.head,status:state.status});const relations=impactIndex.relations(root,worktree);mark('indexMs');
-    const record=await knowledge(root,worktree,print);mark('knowledgeMs');
+    const record=await knowledge(root,worktree,print,body.knowledge);mark('knowledgeMs');
     const {origins,unresolved:unresolvedOrigins}=await resolveOrigins(body,worktree,relations,record);mark('originsMs');
-    const graphKey=digest([relations.context,relations.generation,record.revision]);if(!graphCache.has(graphKey)){if(graphCache.size>=4)graphCache.delete(graphCache.keys().next().value);graphCache.set(graphKey,buildGraph(relations,record));}const graph=graphCache.get(graphKey);
+    const graphKey=digest([relations.context,relations.generation,record.revision,body.knowledge]);if(!graphCache.has(graphKey)){if(graphCache.size>=4)graphCache.delete(graphCache.keys().next().value);graphCache.set(graphKey,buildGraph(relations,record));}const graph=graphCache.get(graphKey);
     const {reached,notes,verify,unresolved:propagationUnresolved,frontier,originIds}=propagate({origins,graph,relations,depth:body.depth});mark('propagateMs');
     const unresolved=[...unresolvedOrigins,...origins.filter(o=>o.status==='unknown').map(o=>({entity:o.path,reason:o.reason+' Declared supports that name it are stale.'})),...propagationUnresolved];
     const items=[];
@@ -261,7 +263,7 @@ export function createImpactService({stateDir=defaultStateDir(),roots=[],loader=
       not_analyzed:['dynamic calls, injected functions, HTTP and process boundaries',...(relations.goAvailable?['Go and CSS symbol changes']:['Go packages (go command unavailable)','CSS symbol changes']),'semantic similarity (search only, never impact)'],
       depth:body.depth,frontier,symbol_level:origins.some(o=>o.symbols?.length)?'JS top-level declarations and their in-file closure':'file level',history_window:'last 500 non-merge commits',freshness:stale?'stale':'fresh',completeness:stale||unresolved.length||omissions.length||relations.diagnostics.length?'partial':'complete',declared};
     const data={...sections,potential_total:allPotential.length,declared,coverage};
-    const result={repository:{path:root},worktree,context:{origins:body.origins||null,commit:body.commit||null,range:body.range||null,diff:body.diff||null,depth:body.depth,unit:unit?.id||null},revision:digest([print,update.generation,record.revision]),generation:update.generation,freshness:coverage.freshness,completeness:coverage.completeness,data,diagnostics,omissions,metrics:{totalMs:+(performance.now()-started).toFixed(1),phases,index:update.timings}};
+    const result={repository:{path:root},worktree,context:{knowledge:body.knowledge,origins:body.origins||null,commit:body.commit||null,range:body.range||null,diff:body.diff||null,depth:body.depth,unit:unit?.id||null},revision:digest([print,update.generation,record.revision]),generation:update.generation,freshness:coverage.freshness,completeness:coverage.completeness,data,diagnostics,omissions,metrics:{totalMs:+(performance.now()-started).toFixed(1),phases,index:update.timings}};
     if(body.format==='text')result.text=compactText(result,body.budget);
     return result;
   }
