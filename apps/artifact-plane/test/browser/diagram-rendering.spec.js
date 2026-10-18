@@ -48,7 +48,7 @@ for (const width of [1440, 390]) {
     await openDocument(page, 'Tenant', 'Specifications', 'Diagrams');
     const rendered = documentPage(page).locator('figure.diagram-block > svg');
     await expect(rendered).toHaveCount(5);
-    await expect(documentPage(page).locator('.diagram-note')).toHaveCount(2);
+    await expect(documentPage(page).locator('.diagram-note')).toHaveCount(3);
     // First render time: from the renderer chunk request to the insertion of the last SVG.
     const timing = await page.evaluate(start => {
       const chunk = performance.getEntriesByType('resource').find(e => e.name.includes('diagram-render'));
@@ -79,6 +79,11 @@ for (const width of [1440, 390]) {
     await expect(figure(page, 'Invalid').getByRole('note')).toHaveText(/^Diagram not rendered: .+/);
     await expect(figure(page, 'Directive').locator('.code-panel')).toContainText('%%{init');
     await expect(figure(page, 'Directive').getByRole('note')).toHaveText('Diagram not rendered: the block contains a configuration directive (%%{).');
+    await expect(figure(page, 'Front matter config').getByRole('note')).toHaveText('Diagram not rendered: the block contains front matter configuration (---).');
+    await expect(figure(page, 'Front matter config').locator('.code-panel')).toHaveCount(1);
+    // CSS in style elements and style attributes of the rendered diagrams names no remote resource.
+    const remoteCSS = await documentPage(page).evaluate(root => [...root.querySelectorAll('svg style, svg [style]')].map(e => e.nodeName === 'style' ? e.textContent : e.getAttribute('style')).filter(css => /url\(\s*['"]?(?!#)/i.test(css) || /@import/i.test(css)));
+    expect(remoteCSS).toEqual([]);
     expect((await figure(page, 'Invalid').getByRole('note').textContent()).length).toBeLessThanOrEqual('Diagram not rendered: '.length + 160);
     // Markup in labels stays text: no element or attribute outside the profile.
     const markup = figure(page, 'Label with markup').locator('svg');
@@ -108,3 +113,15 @@ for (const width of [1440, 390]) {
     if (shots) {await page.setViewportSize({width, height: 3200});await page.screenshot({path: `${shots}/diagrams-${width}.png`});}
   });
 }
+
+test('a renderer that does not load leaves the code panels with a note', async ({page}) => {
+  await page.route(/diagram-render[^/]*\.js$/, route => route.abort());
+  await page.setViewportSize({width: 1440, height: 900});
+  const f = await fixture();
+  await openRepository(page, f.root);
+  await openDocument(page, 'Tenant', 'Specifications', 'Diagrams');
+  const figures = documentPage(page).locator('figure.diagram-block');
+  await expect(figures.first().getByRole('note')).toHaveText('Diagram not rendered: the diagram renderer did not load.');
+  expect(await documentPage(page).locator('figure.diagram-block svg').count()).toBe(0);
+  expect(await figures.count()).toBe(await documentPage(page).locator('figure.diagram-block .code-panel').count());
+});

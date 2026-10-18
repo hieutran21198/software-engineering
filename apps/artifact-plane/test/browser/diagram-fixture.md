@@ -53,6 +53,17 @@ flowchart LR
   A --> B
 ```
 
+## Front matter config
+
+```mermaid
+---
+config:
+  themeCSS: "svg { background: url(https://example.com/x.png) }"
+---
+flowchart LR
+  A --> B
+```
+
 ## Label with markup
 
 ```mermaid

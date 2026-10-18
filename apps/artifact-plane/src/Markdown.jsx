@@ -41,7 +41,8 @@ export default function Markdown({text='',source,targets,onNavigate}){
  useEffect(()=>{
   if(!diagrams.length)return;
   let live=true;
-  import('./diagram-render.js').then(module=>live&&module.renderDiagrams(ref.current,diagrams,()=>live)).catch(()=>{});
+  const unavailable=()=>{if(!live)return;for(const figure of ref.current?.querySelectorAll('figure.diagram-block')??[]){const note=document.createElement('p');note.className='diagram-note';note.setAttribute('role','note');note.textContent='Diagram not rendered: the diagram renderer did not load.';figure.append(note);}};
+  import('./diagram-render.js').then(module=>live&&module.renderDiagrams(ref.current,diagrams,()=>live),unavailable);
   return ()=>{live=false;};
  },[html]);
  const activate=event=>{const marker=event.target.closest?.('button[data-knowledge-index]');if(!marker||!event.currentTarget.contains(marker))return;const link=links[Number(marker.dataset.knowledgeIndex)];if(link?.kind==='heading'){event.currentTarget.querySelector(`[id="knowledge-heading-${CSS.escape(link.fragment)}"]`)?.scrollIntoView({block:'start'});}else if(link?.kind==='source')onNavigate(link);};

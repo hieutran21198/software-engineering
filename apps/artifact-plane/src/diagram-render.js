@@ -18,6 +18,7 @@ purify.addHook('uponSanitizeAttribute',(node,data)=>{
  const name=data.attrName.toLowerCase();
  if(name.startsWith('on'))data.keepAttr=false;
  if((name==='href'||name==='xlink:href')&&!localURL(data.attrValue))data.keepAttr=false;
+ if(name==='style')data.attrValue=localCSS(data.attrValue);
 });
 purify.addHook('afterSanitizeElements',node=>{
  if(node.nodeName?.toLowerCase()==='style')node.textContent=localCSS(node.textContent);
@@ -27,6 +28,7 @@ export function sanitizeSVG(svg){
 }
 export function refusal(text){
  if(text.includes('%%{'))return 'the block contains a configuration directive (%%{).';
+ if(/^\s*---\s*\r?\n/.test(text))return 'the block contains front matter configuration (---).';
  if(text.length>maxTextSize)return `the block is larger than ${maxTextSize.toLocaleString('en-US')} characters.`;
  return null;
 }
