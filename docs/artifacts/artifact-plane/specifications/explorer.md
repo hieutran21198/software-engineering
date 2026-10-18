@@ -1,3 +1,9 @@
+---
+self_check:
+  result: passed
+  source: docs/artifacts/artifact-plane/specifications/project-tabs.md#hidden-tab-specification-self-check
+---
+
 # Explorer contract
 
 ## Runtime and opening
@@ -8,7 +14,7 @@ Use a Node.js process with a small HTTP server and static browser UI. Bind to `1
 
 Use Git read commands with argument arrays, no shell interpolation, and optional locks disabled. Verify the selected directory is a Git worktree root. Return branch, HEAD, and dirty status as context; the working tree supplies current file contents. Never run mutating Git commands.
 
-Return 400 for invalid input, 404 for a missing repository or ADD directory, and 422 for an unreadable or invalid Git root. A readable but inconsistent ADD repository returns 200 with diagnostics. Unexpected failures return a sanitized 500 error.
+Return 400 for invalid input, 404 for a missing repository or ADD directory, and 422 for an unreadable or invalid Git root. A readable but inconsistent ADD repository returns 200 with diagnostics. Unexpected failures return a sanitized 500 error. The server serializes a JSON reply before it sends the headers, so a reply that cannot be serialized also returns the sanitized 500 error. If a failure occurs after the headers are sent, the server closes that connection and sends nothing more on it. A failed reply never stops the server process.
 
 ## Implementation boundaries
 

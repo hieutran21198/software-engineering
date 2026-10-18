@@ -1,3 +1,9 @@
+---
+self_check:
+  result: passed
+  source: docs/artifacts/artifact-plane/specifications/project-tabs.md#hidden-tab-specification-self-check
+---
+
 # Repository update and reload contract
 
 ## Scope and unchanged contracts
@@ -34,7 +40,7 @@ Share the poll across subscribers for the same root. Closing the final subscribe
 
 Order unit tabs Artifacts, Workflow, Implementation and use Artifacts for a new repository or newly selected unit. Refresh preserves the current tab. Recorded executions remain Implementation only.
 
-Subscribe after successful open. Every initial event, changed sequence, reconnect, online transition, and browser focus requests a fresh overview and active section under lazy-loading.md. Coalesce requests with one in-flight fetch and a single trailing-request flag. Manual Refresh shares the same queue and remains usable after failures. Abort/ignore old requests and streams on repository switch or unmount; a generation token prevents late response overwrite.
+Subscribe after successful open. Every initial event, changed sequence, reconnect, online transition, and browser focus requests a fresh overview and active section under lazy-loading.md. Coalesce requests with one in-flight fetch and a single trailing-request flag. Manual Refresh shares the same queue and remains usable after failures. Abort/ignore old requests and streams on repository switch or unmount; a generation token prevents late response overwrite. A hidden browser tab closes its streams and opens them again when it becomes visible, under the hidden browser tab rules in project-tabs.md.
 
 Show Updating while a read runs, Current only after the latest requested read succeeds with observation connected, and Stale with a concise reason on disconnected/failed sampling or reload. Keep old graphs and details usable while updating. A transport reconnection alone does not mark an old snapshot current. Automatic retries remain bounded by the normal poll/reconnect cadence.
 

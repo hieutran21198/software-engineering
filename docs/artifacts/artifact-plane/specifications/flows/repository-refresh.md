@@ -16,6 +16,9 @@ flow:
         - ux-browser-checks
         - events
         - evidence-usability-contract
+        - hidden-tab-contract
+        - explorer
+        - hidden-tab-checks
     - id: notify
       title: Coalesce changes into a local SSE notification
       supports:
@@ -91,7 +94,21 @@ flow:
     - id: explorer
       kind: implementation
       path: apps/artifact-plane/src/main.jsx
-      requires: Reject results from stale generations and inactive contexts.
+      requires: Reject results from stale generations and inactive contexts, and
+        observe only while the project is active and the browser tab is visible.
+      basis: static
+    - id: hidden-tab-contract
+      kind: element
+      artifact: artifact-plane
+      element: specifications/project-tabs.md
+      requires: Close both event streams in a hidden browser tab and reconcile
+        evidence when the tab is visible again.
+      basis: documented
+    - id: hidden-tab-checks
+      kind: test
+      path: apps/artifact-plane/test/browser/project-tabs.spec.js
+      requires: Prove that reads in the visible tab answer while other tabs are
+        hidden, and that a tab reconnects when it is visible again.
       basis: static
     - id: reload-tests
       kind: test
