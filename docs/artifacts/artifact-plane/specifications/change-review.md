@@ -24,6 +24,22 @@ Reuse scoped plan/phase/task/provenance readers. Show missing/unverified publica
 
 One small review service supplies UI, packet, HTTP and MCP. Request fields: path, optional worktree, artifact, change, operation (review/packet/source), optional limit (1–100; default 20), budget (0–100000 excerpt characters; default 12000), cursor and source for source operations. Reject unknown fields. IDs use existing safe-ID rules; changes use change-. Cursor/source strings are at most 10000 characters. Existing 16 KiB HTTP cap and host/origin safeguards remain.
 
+The table lists the request fields with presence, rule and default. "—" means that the text states no default.
+
+| Field | Presence | Values or rule | Default |
+| --- | --- | --- | --- |
+| path | required | permitted or open repository | — |
+| worktree | optional | registered readable worktree | — |
+| artifact | required | existing safe-ID rules | — |
+| change | required | existing safe-ID rules; starts with change- | — |
+| operation | required | review, packet or source | — |
+| limit | optional | 1–100 | 20 |
+| budget | optional | 0–100000 excerpt characters | 12000 |
+| cursor | for source operations | at most 10000 characters | — |
+| source | for source operations | at most 10000 characters | — |
+
+Source: artifact-plane:specifications/change-review.md, Context and comparison paragraph 1 (repository and worktree) and Query and source boundaries paragraph 1; derived one row per request field in source order; current snapshot.
+
 Envelope: repository, worktree, context, revision, freshness (fresh/stale), completeness (complete/partial), data, diagnostics, pagination, omissions. Revision hashes selected context, relevant source bytes/declarations/refs, unit assessment and evidence. Read/revalidate relevant inputs before returning. Changed inputs return stale/partial with retry diagnostics. Bind source IDs and cursors to context/revision/operation/selectors. A remaining comparison-record page stays explicit; comparison/impact discovery precedes page slicing.
 
 Registered sources are selected/baseline root and contract knowledge, selected plan/tasks, owning unit/evidence, and safe tracked implementation/test support explicitly referenced by those flows. Preserve scoped-directory containment for knowledge and existing tracked-file source guards for support. New interface sources must be UTF-8 text of at most 1 MiB. Missing/unsafe/oversized sources become diagnostics/omissions; no arbitrary path is accepted. Source pages contain offset, totalCharacters, text, fingerprint and optional next cursor; zero budget returns metadata and no advancing text cursor.

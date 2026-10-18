@@ -104,6 +104,27 @@ Recognize an explicit Active change section in an artifact root README when it h
 
 POST /api/explore keeps its input and existing snapshot fields. Add workflow = {worktrees, diagnostics, historyLimit: 200}. Each worktree has path, branch (nullable), head (nullable), selected, detached, locked, prunable, availability (readable, unavailable, non-add), changes, and diagnostics. Each change has artifact, name, declaredActive, currentStep (nullable), inferenceReason, steps, and tasks. Each step has name, state (observed, inferred, documented-complete, unknown), evidence[], commits[], and completionCommit (nullable). A commit contains full id and subject. Evidence contains a kind, relative file, and short explanation. Tasks include path and checked/unchecked counts from actual Markdown checkboxes, with malformed/empty checklists marked unknown. These additive fields are bounded runtime data, never stored in inspected files.
 
+The tree shows the nesting of the records and fields of the POST /api/explore response that this contract defines. Indentation shows that a record belongs to the line above it, and "[]" marks a list. The enumerated values are in the text. Other contracts add fields to this response.
+
+```text
+POST /api/explore response
+  repository: branch, HEAD, dirty status
+  artifacts[]: identifier, title, README, currentVersion (nullable), activeChange (nullable), change candidates, elements
+    elements[]: artifact, relative path, snapshot source, Markdown content
+  edges[]: source, target, status
+  references[]: consuming element, target artifact/path/source, reason, status, resolution succeeded
+  diagnostics[]: code, source path, message
+  workflow: worktrees, diagnostics, historyLimit (200)
+    worktrees[]: path, branch (nullable), head (nullable), selected, detached, locked, prunable, availability, changes, diagnostics
+      changes[]: artifact, name, declaredActive, currentStep (nullable), inferenceReason, history, historyReason, lastCommitAt (nullable), steps, tasks
+        steps[]: name, state, evidence, commits, completionCommit (nullable)
+          evidence[]: kind, relative file, short explanation
+          commits[]: full id, subject
+        tasks[]: path, checked and unchecked counts
+```
+
+Source: artifact-plane:specifications/explorer.md, Runtime and opening paragraph 3 (repository context), Snapshot response and UI paragraph 1, Read-only API extension paragraph 1 and Workflow history and navigation contract paragraph 2 (history, historyReason, lastCommitAt); derived one line per record type with its fields in source order; current snapshot.
+
 Enumerate registered worktrees using git worktree list --porcelain -z. Preserve spaces and non-ASCII paths. Read only those roots; apply the existing containment and symlink protections separately in each. Do not follow arbitrary paths from Markdown. No recursive workflow scans: one enumeration and one bounded evidence read per registered worktree. Reuse plain scanner functions and the safe Git subprocess wrapper. Unavailable entries receive diagnostics rather than failing the selected snapshot. Selecting a worktree calls the scoped overview API with the canonical project root and explicit target worktree, then installs the complete target context. Refresh performs fresh mutable reads; polling and immutable history reuse follow live-reload.md.
 
 ### Step evidence and commit association
@@ -113,6 +134,19 @@ Read at most the latest 200 commits reachable from each worktree HEAD that touch
 For copied change baselines, compare against the declared current snapshot and the change's introduction commit; unchanged inherited files/checklists do not prove new progress. If the current snapshot contains the same change knowledge, report no distinguishable ongoing change rather than a running workflow. Root declarations can be stale after merge. Multiple distinguishable changes remain separate, with no guessed global active step.
 
 Current step prioritizes relevant uncommitted file changes, then the latest distinguishable committed evidence. Requirement/specification edits identify observed work. Task definition edits identify Plan work; unchecked current tasks with implementation evidence indicate Implementation. Validation is supported only by explicit current-task validation evidence, and Version preparation by distinguishable snapshot preparation. Missing or conflicting evidence yields unknown with a reason. A higher phase never automatically completes preceding phases. Documented completion requires explicit self-check/completion text or checked current-task criteria plus evidence; label it as documented, not independently verified. Approval is not inferable from Git; the explorer does not display an Approval phase. completionCommit stays null unless history shows the introduction of explicit completion evidence; otherwise show associated commits and 'Exact completion commit unknown'.
+
+For legacy changes, the table gives the paths that associate a commit with each phase and the evidence that identifies the current step. For in-place changes, [knowledge-layout-reading.md](knowledge-layout-reading.md#declared-evidence-instead-of-history) gives the declared-evidence rule.
+
+| Phase | Associated commit paths | Evidence for the current step |
+| --- | --- | --- |
+| Requirement | requirements/ | Requirement or specification edits identify observed work. |
+| Specification | specifications/ and decisions/ | Requirement or specification edits identify observed work. |
+| Plan | tasks/README.md and task definitions | Task definition edits identify Plan work. |
+| Implementation | task checklist and evidence changes | Unchecked current tasks with implementation evidence. |
+| Validation | task evidence that describes check results | Only explicit current-task validation evidence. |
+| Version preparation | versions/ changes and artifact root version changes | Distinguishable snapshot preparation. |
+
+Source: artifact-plane:specifications/explorer.md, Step evidence and commit association paragraphs 1 and 3 and Workflow history and navigation contract paragraph 1 (six phases); derived one row per phase in phase order; current snapshot.
 
 ### UI and failures
 

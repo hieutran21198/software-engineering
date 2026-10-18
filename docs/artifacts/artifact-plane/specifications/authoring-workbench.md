@@ -32,6 +32,24 @@ At 800 pixels and below:
 - The padding is 24 pixels at the top and 16 pixels at the sides. Buttons are 44 pixels high, and primary actions in cards use the full width.
 - Tables become stacked rows. No page overflows horizontally at 390, 700, 851 and 1440 pixels.
 
+The table collects the sizes of the layout and the values at narrow widths. "—" means that the text states no value for that width.
+
+| Element | Default | Narrow layout |
+| --- | --- | --- |
+| Top bar | 52 pixels high; parts as in Top bar | At 800 pixels and below: menu button, repository name with the branch below it, uncommitted-files button, More button |
+| Sidebar | 264 pixels wide; divider resizes it between 200 and 400 pixels | At 800 pixels and below: drawer from the menu button; closes when a page opens |
+| Content padding | 40 pixels at the top, 56 pixels at the sides | At 800 pixels and below: 24 pixels at the top, 16 pixels at the sides |
+| Page column | at most 880 pixels | — |
+| Change page column | at most 960 pixels | — |
+| Document text column | at most 720 pixels | — |
+| Document properties column | 240 to 280 pixels | At 1100 pixels and below: Properties disclosure under the title |
+| Graph panel | 420 pixels high | At 800 pixels and below: 320 pixels high |
+| Buttons | 36 pixels high | At 800 pixels and below: 44 pixels high |
+| Primary actions in cards | — | At 800 pixels and below: full width |
+| Tables | — | At 800 pixels and below: stacked rows |
+
+Source: artifact-plane:specifications/authoring-workbench.md, sections Layout, Document page, Graph panel and Visual style (Buttons row); derived one row per element that the sections give a size or a narrow behavior; current snapshot.
+
 ## Top bar
 
 From left to right:

@@ -19,11 +19,58 @@ Read declared knowledge relations through the existing flow reader once per requ
 
 ## Query
 
-Inputs: path, optional worktree, and one of origins (a list of {path | element | flow | step | model} with optional symbols, or {path, commit} to take that path's change from that commit), commit, range, or diff with base protected or a ref; depth from 1 to 4 (default 2); budget in characters for the compact text (default 8000, maximum 100000); format json or text; limit per section (default 25, maximum 200); optional unit. Validate selectors as the flow query does; reject unknown fields and unregistered worktrees.
+The table lists the inputs of the query with their presence, values, default and maximum. "—" means that the text gives no value for that column. "Not stated" marks a value that the text leaves open.
+
+| Input | Presence | Values | Default | Maximum |
+| --- | --- | --- | --- | --- |
+| path | required | repository path | — | — |
+| worktree | optional | registered worktree | — | — |
+| origins | one of origins, commit, range or diff | list of {path, element, flow, step or model} with optional symbols, or {path, commit} to take that path's change from that commit | — | — |
+| commit | one of origins, commit, range or diff | a commit | — | — |
+| range | one of origins, commit, range or diff | a range | — | — |
+| diff | one of origins, commit, range or diff | base: protected or a ref | — | — |
+| depth | optional | 1 to 4 | 2 | 4 |
+| budget | optional | characters of the compact text | 8000 | 100000 |
+| format | not stated | json or text | not stated | — |
+| limit | optional | entities per section | 25 | 200 |
+| unit | optional | a unit | — | — |
+
+Source: artifact-plane:specifications/change-impact.md, Query paragraph 1; derived one row per input in source order; current snapshot.
+
+Validate selectors as the flow query does; reject unknown fields and unregistered worktrees.
 
 Resolve origins as the ADD contract requires: tracked paths, IDs, changed declarations from a commit or diff, changed sections of documents, renames and deletions through `git log -M`. Propagate with the ADD rules, the in-module symbol closure, the test rule, the depth limit and the frontier count. Build Verify, Investigate, Potential (history support at least 2 and confidence at least 0.5, no document pairs, cap 10 per evidence kind) and Unresolved, including the artifact prerequisite check. When a unique unit owns the change of a changed artifact, or unit is given, compare its declared affected flows with the computed flows.
 
-Response envelope: repository, worktree, context, revision, generation, freshness, completeness, data, diagnostics, omissions and metrics with the phase timings of the query. data has changed, direct, transitive, verify, investigate, potential, potential_total, unresolved, declared and coverage, with the explanation record and the coverage fields of the ADD contract. Sections longer than limit are cut with their total in omissions. The compact text has the sections Changed, Direct, Transitive, Verify, Potential (confirm before acting), Investigate, Unresolved and Coverage, one line per entity with its kind, strength, hops, path summary and evidence, cut to budget with a note.
+The response envelope and its data sections are listed below. Indentation shows that a field belongs to the line above it.
+
+```text
+Impact query response
+  repository
+  worktree
+  context
+  revision
+  generation
+  freshness
+  completeness
+  data: with the explanation record and the coverage fields of the ADD contract
+    changed
+    direct
+    transitive
+    verify
+    investigate
+    potential
+    potential_total
+    unresolved
+    declared
+    coverage
+  diagnostics
+  omissions
+  metrics: the phase timings of the query
+```
+
+Source: artifact-plane:specifications/change-impact.md, Query paragraph 3, sentences 1 and 2; derived one line per named field in source order; current snapshot.
+
+Sections longer than limit are cut with their total in omissions. The compact text has the sections Changed, Direct, Transitive, Verify, Potential (confirm before acting), Investigate, Unresolved and Coverage, one line per entity with its kind, strength, hops, path summary and evidence, cut to budget with a note.
 
 ## Interfaces
 

@@ -14,6 +14,21 @@ maxBytes without compact format, unsupported formats, and compact with the legac
 budget field rather than guessing units. Existing comparison selectors still
 apply. Compact source reads are not required: use registered existing source reads.
 
+The table compares the default v1 packet with the deferred compact format for the request and the response.
+
+| Attribute | Default v1 packet | Compact format |
+| --- | --- | --- |
+| Selector | format omitted | format: compact |
+| Schema | artifact-plane.change-context.v1 | artifact-plane.change-context.compact.v1 |
+| Budget field | budget: 0–100000 excerpt characters, default 12000 | maxBytes: integer 4096..65536, default 16384; budget is rejected |
+| What the budget limits | excerpt characters; not a token or full-response-byte cap | UTF-8 bytes of the entire serialized result, the larger of the HTTP JSON body and the MCP tool result |
+| Source text | governing source pointers and excerpts | no raw excerpts by default; registered existing source reads |
+| MCP result | text plus structuredContent | one JSON text block without structuredContent |
+| Cursor | v1 cursor; cannot be used in compact mode | bound to repository, worktree, artifact/change, comparison, revision, format, category ordering and next offset |
+| Budget too small | not stated | 422 with reason response-budget-too-small; invalid budgets return 400 |
+
+Source: artifact-plane:specifications/compact-context.md, Request and compatibility and Response and byte accounting; artifact-plane:specifications/context-packets.md, Schema and budgets; artifact-plane:specifications/change-review.md, Query and source boundaries (budget range); derived one row per attribute that the sources state for at least one format; current snapshot.
+
 ## Response and byte accounting
 
 Use schema artifact-plane.change-context.compact.v1. Return repository/worktree,

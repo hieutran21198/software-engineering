@@ -10,6 +10,21 @@ Run a complete byte reconciliation at least every 30 seconds after the previous 
 
 Missed events are detected by the next full scan; the bound is the applicable 30-second or 10-second interval plus scan duration. Do not promise two-second detection in degraded mode. Current means the latest requested reconciliation succeeded with connected observation, not continuous filesystem truth. Updating/Stale behavior and last usable content remain as before. Failures recover on the next scheduled reconciliation.
 
+The table lists the bounds of observation and the mode in which each bound applies.
+
+| Bound | Value | Applies when |
+| --- | --- | --- |
+| Watch handles | at most 4096 per shared repository observer | Reaching the cap starts degraded observation. |
+| Notification debounce | 250 ms | Watch notifications; stated without a mode condition. |
+| Metadata poll (ref, status, worktree) | every 2 seconds | Stated without a mode condition. |
+| Full byte reconciliation | at least every 30 seconds after the previous full scan completes, also when no events arrive | Connected observation. |
+| Full-scan fallback | every 10 seconds after scan completion | Degraded observation: watch creation fails, the cap is reached, or an event cannot be resolved safely. |
+| Missed-event bound | the applicable interval (30 or 10 seconds) plus scan duration | Both modes; no two-second detection in degraded mode. |
+| Immediate reconciliation | on wake, focus or manual refresh | Stated without a mode condition. |
+| Scans per observer | at most one; invalidations received during a scan coalesce and drain afterward | Stated without a mode condition. |
+
+Source: artifact-plane:specifications/incremental-observation.md, Sampling and events paragraphs 1 to 3; derived one row per stated bound, with the mode that the source names; current snapshot.
+
 ## Lifecycle and evidence
 
 Share watchers across subscribers. Closing the final subscriber closes every watch, timer, queued scan and map; shutdown does the same. Inactive tabs retain existing pause behavior. Immutable Git-byte caching remains separate. Expose scan duration, knowledge bytes read, full/incremental scan counts and watch mode to the benchmark interface without adding high-cardinality persistent telemetry.

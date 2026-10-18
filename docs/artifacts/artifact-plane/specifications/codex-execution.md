@@ -10,6 +10,25 @@ Use Node 24 built-in node:sqlite, already compatible with the app engine, and no
 
 Register a random repository ID in the runtime store, associated with the canonical Git common directory and remaining root checkout. Bind/matching identity includes canonical source worktree, repository ID, unit ID (nullable for individual plans), artifact, originating change, task path and signature. Capture identity also includes source revision and graph digest. Apply specifications/evidence-correctness.md for aliases, legacy records and changed HEADs. Agent identity = session ID plus optional subagent ID; each binding creates an attempt ID. A session/agent has at most one active binding. Rebinding closes the prior attempt as superseded/unknown and creates a new attempt. Task IDs remain plan-local.
 
+The table shows the fields that the sources name for each identity. "—" means that the sources do not name the field for that identity.
+
+| Field | Binding and task matching | Capture | Agent identity |
+| --- | --- | --- | --- |
+| Repository ID (random, associated with the canonical Git common directory) | included | — | — |
+| Canonical source worktree | included | included | — |
+| Unit | unit ID, nullable for individual plans | unit selector | — |
+| Artifact | included | — | — |
+| Originating change | included | — | — |
+| Task path (relative) | included | — | — |
+| Task signature | included | — | — |
+| Source revision (HEAD) | — | included, when known | — |
+| Graph digest | — | included | — |
+| Session ID | — | — | included |
+| Subagent ID | — | — | optional |
+| Attempt ID | created by each binding | — | — |
+
+Source: artifact-plane:specifications/codex-execution.md, Identity and retained graph context paragraph 1; artifact-plane:specifications/evidence-correctness.md, Worktree-bound observation paragraph 1; derived one row per named identity field, a cell only where a source names the field for that identity; current snapshot.
+
 The local runtime CLI provides register, bind, report, and hook commands. Bind reads the selected current plan through existing contained readers, rejects invalid/unavailable graphs or unlisted tasks, and captures immutable node/edge metadata for that plan/unit, plus its source digest and revision when available. Capture only safe labels, identity, and edges; never store arbitrary file contents. Bind does not authorize execution or verify prerequisites. Identical graphs at the same canonical worktree and source revision can share captured context. Never attach older observations to a materially changed task solely because its path matches.
 
 Live overlays resolve exact matching context. A retained context is separately labeled Recorded execution context, with source revision/digest, capture time, and missing-worktree status. A surviving repository can list archived contexts even if the unit/change source is missing. Archived metadata is not current knowledge, approval evidence, or a historical establishment proof. Git remote URLs are not identity; do not merge unrelated clones automatically.
@@ -33,13 +52,62 @@ Event records include event ID, repository ID when resolved, session/agent ident
 - Interrupted: Interrupt observed for the matching main turn. No invented child interruption events.
 - Failed: explicit failed report; no success/failure inference from tool output or generic Stop.
 - Done: explicit validated report containing nonempty validation method and a safe existing Markdown evidence reference with nonempty check details. Mark Done (reported); an assertion is not independent verification. Runtime validation references do not replace artifact-local evidence.
-- Unknown: expired active observation, restart without fresh matching activity, missing correlation, or contradictory report. Retain last observed state/time in the inspector.
+- Unknown: expired active observation, restart without fresh matching activity, missing correlation, or contradictory report. Retain the last observed state and time.
 
 Active observations expire after ten minutes without fresh matching evidence; show Unknown / last observed Processing or Blocked. This is freshness expiry, not proof the agent stopped. No heartbeat or process scanning is claimed. SessionEnd terminates activity visibility but does not prove DoD. Terminal reports are not overwritten by later unrelated tool events. Multiple attempts remain separately inspectable; concurrent attempts for one task show a count and each agent. The task projection remains Processing while any fresh attempt is Processing, then Blocked, then Validating; mixed/contradictory results are disclosed and cannot produce an unqualified Done. No runtime event changes DAG edges or establishment gates.
+
+The table gives the condition that enters each derived state and the condition that leaves it. "Not stated" marks a gap of the source.
+
+| State | Entered when | Left or cleared when |
+| --- | --- | --- |
+| No recorded execution | No matching attempt exists (internal waiting state). | Not stated. |
+| Processing | A bound UserPromptSubmit or PreToolUse is observed. | After ten minutes without fresh matching evidence, it shows Unknown. |
+| Blocked | A PermissionRequest is observed, or an explicit blocked report with a bounded reason label arrives. | The next corresponding activity can clear it. After ten minutes without fresh matching evidence, it shows Unknown. |
+| Validating | Stop or SubagentStop is observed, or an explicit execution-returned report arrives. | Not stated. |
+| Interrupted | Interrupt is observed for the matching main turn. | Not stated. |
+| Failed | An explicit failed report arrives. | Not stated. |
+| Done (reported) | An explicit validated report arrives with a nonempty validation method and a safe existing Markdown evidence reference with nonempty check details. | Not stated. |
+| Unknown | An active observation expires, a restart has no fresh matching activity, correlation is missing, or a report is contradictory. | Not stated. |
+
+Source: artifact-plane:specifications/codex-execution.md, Derived states list and the expiry paragraph after it; derived one row per listed state, entry from its bullet, exit only where the section states one; current snapshot.
+
+Gaps: the section states no exit for 6 of the 8 states. It does not name the terminal reports, so the rule that later unrelated tool events do not overwrite terminal reports is not in a row.
 
 ## Local API and live browser updates
 
 Reuse existing loopback host/origin checks. Add POST /api/runtime/query with a contained root and optional context ID, returning repository ID, contexts, attempt summaries, freshness, and latest sequence. Add GET /api/runtime/events for same-origin SSE invalidation, containing only the latest sequence. Browsers refetch their selected runtime context on invalidation; initial query and reconnect recover missed updates. A single bounded server watcher checks database sequence once per second while clients are connected; no repository scan/polling is added. Limit SSE clients, clean up watchers on disconnect, and surface runtime-store failure without failing knowledge exploration. Expose no event-write, execution, shell, or arbitrary file-read HTTP endpoint. Writes occur through the local CLI/hook only. Browsers cannot bind tasks or report validation.
+
+The diagram shows how an event that a hook writes reaches the browser. Solid arrows are requests, writes or checks; dashed arrows are replies or events.
+
+```mermaid
+sequenceDiagram
+    accTitle: Live runtime update path
+    accDescr: The browser queries the runtime state and subscribes to SSE. A hook writes an event to the runtime store. While clients are connected, the server checks the database sequence once per second and sends an invalidation that contains the latest sequence. The browser then refetches its selected runtime context. Initial query and reconnect recover missed updates.
+    participant Hook as Codex command hook
+    participant Store as Runtime store (runtime.sqlite)
+    participant Server as Plane server (watcher and runtime endpoints)
+    participant Browser as Browser
+    Browser->>Server: POST /api/runtime/query, contained root and optional context ID (initial query)
+    Server-->>Browser: repository ID, contexts, attempt summaries, freshness, latest sequence
+    Browser->>Server: GET /api/runtime/events, same-origin SSE
+    Hook->>Store: write event with a unique event ID, in a transaction
+    Note over Store: SQLite supplies a monotonically increasing ingestion sequence, duplicate event IDs are ignored
+    loop once per second while clients are connected
+        Server->>Store: check database sequence
+    end
+    Server-->>Browser: SSE invalidation that contains only the latest sequence
+    Browser->>Server: POST /api/runtime/query for the selected runtime context (refetch)
+    Server-->>Browser: query response
+    Note over Server,Browser: initial query and reconnect recover missed updates
+```
+
+Source: artifact-plane:specifications/codex-execution.md, sections Codex lifecycle adapter (direct store write, unique event ID), Observation event contract and ordering (ingestion sequence, duplicates, transactions) and Local API and live browser updates; derived one message per stated request, reply, write or check; current snapshot.
+
+Gaps in the source:
+
+- The source does not state the condition under which the server sends an invalidation after a sequence check, so the invalidation has no condition.
+- A hook can write an event at any time, also when Plane is not running. The position of the hook write after the first three messages shows one case only.
+- The source does not state the reply of the store to the sequence check, so the diagram does not draw it.
 
 ## UI
 
