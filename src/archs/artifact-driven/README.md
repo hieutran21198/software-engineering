@@ -44,7 +44,8 @@ artifact-driven/
 │   ├── README.md
 │   ├── definitions.md
 │   ├── principles.md
-│   └── artifact-model.md
+│   ├── artifact-model.md
+│   └── visual-knowledge.md
 ├── 02-methodology/
 │   ├── README.md
 │   ├── workflow.md
@@ -76,6 +77,8 @@ artifact-driven/
     ├── system-flows.md
     ├── units-of-work.md
     ├── writing-artifacts.md
+    ├── visual-representations.md
+    ├── visual-examples.md
     ├── adopting-from-git.md
     └── working-with-ai.md
 ```
