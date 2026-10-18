@@ -10,3 +10,4 @@ Artifact Plane owns this change. The established baseline is Artifact Plane 1.17
 
 - [Requirements](../../requirements/navigation-hierarchy.md) (N1–N5)
 - [Workbench contract](../../specifications/authoring-workbench.md) (Sidebar, Tree presentation)
+- [Plan](tasks/README.md)
