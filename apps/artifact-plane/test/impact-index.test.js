@@ -1,6 +1,6 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import {chmod,mkdir,writeFile,rm} from 'node:fs/promises';
+import {chmod,writeFile,rm} from 'node:fs/promises';
 import {join} from 'node:path';
 import {execFileSync} from 'node:child_process';
 import {createImpactIndex,parseModule,vocabulary,isTestFile,git as rawGit} from '../server/impact-index.js';
