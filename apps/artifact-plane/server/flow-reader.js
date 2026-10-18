@@ -20,6 +20,25 @@ export async function readFlowSource(root, source, tracked) {
   return {...source,text,fingerprint:sourceDigest(bytes)};
 }
 
+// A cheap identity of the inputs a flow read depends on: HEAD, the protected refs, the
+// registered worktrees, the worktree status and the bytes of every dirty file, so that a
+// repeated edit to an already dirty file changes it. It is not a knowledge revision; a changed
+// fingerprint only forces a new read.
+export async function flowFingerprint(path, worktree) {
+  const root = await realpath(path).catch(() => path), target = worktree ? await realpath(worktree).catch(() => worktree) : root;
+  const read = (dir, args, raw) => git(dir, args, raw).catch(error => 'error:' + (error.code || error.message));
+  const [head, main, master, trees, status] = await Promise.all([
+    read(target, ['rev-parse', 'HEAD']),
+    read(target, ['rev-parse', '--verify', 'refs/heads/main']),
+    read(target, ['rev-parse', '--verify', 'refs/heads/master']),
+    read(root, ['worktree', 'list', '--porcelain', '-z'], true),
+    read(target, ['status', '--porcelain=v1', '-z', '--untracked-files=all', '--no-renames'], true),
+  ]);
+  const dirty = typeof status === 'string' ? status.split('\0').filter(entry => entry.length > 3).map(entry => entry.slice(3)) : [];
+  const bytes = await Promise.all(dirty.map(file => readFile(resolve(target, file)).then(sourceDigest, error => 'unreadable:' + error.code)));
+  return sourceDigest(JSON.stringify([root, target, head, main, master, trees, status, dirty, bytes]));
+}
+
 // Disposable, bounded history metadata; never infer dates from filesystem times.
 const creationCache=new Map();
 export async function flowCreationDates(root,heads,paths){

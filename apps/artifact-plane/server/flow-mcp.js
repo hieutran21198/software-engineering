@@ -4,6 +4,7 @@ import {z} from 'zod/v4';
 import {createFlowService} from './flow-index.js';
 import {createReviewService} from './change-review.js';
 import {createImpactService} from './impact.js';
+import {readFlowRepository} from './flow-reader.js';
 import {createKnowledgeService, OPERATION_NAMES} from './knowledge-operations.js';
 import {errorBody as editError} from './knowledge-writer.js';
 
@@ -11,7 +12,8 @@ import {errorBody as editError} from './knowledge-writer.js';
 export function createFlowMcpServer({service,reviewService,impactService,knowledgeService,roots=[],stateDir,allowWrites=false}={}){
  if(!service&&!roots.length)throw Error('Configure at least one repository root.');
  let flows=service,reviews=reviewService,impact=impactService;
- const getImpact=()=>impact??=createImpactService({roots,stateDir});
+ const sharedLoad=(path,settings)=>{const flowService=getService();return flowService.load?flowService.load(path,settings):readFlowRepository(path,settings);};
+ const getImpact=()=>impact??=createImpactService({roots,stateDir,loader:sharedLoad});
  const getService=()=>flows??=createFlowService({roots,stateDir,impactService:getImpact()});
  const getReviews=()=>reviews??=createReviewService({roots,impactService:getImpact()});
  const server=new McpServer({name:'artifact-plane-flows',version:'1.12.2'});

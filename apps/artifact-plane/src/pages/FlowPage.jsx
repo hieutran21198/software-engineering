@@ -1,9 +1,9 @@
-import React, {useEffect, useMemo, useState} from 'react';
+import {useEffect, useMemo, useState} from 'react';
 import {useShell, useDocument} from '../page-data.js';
 import {PageHeader, Section, Notice} from '../ui.jsx';
 import {ActionForm, OperationError, useEdit, frontValue, splitFront, lines} from '../editing.jsx';
 import {GraphPanel} from '../GraphPanel.jsx';
-import {flowCanvas} from '../flow-canvas.js';
+import {flowDiagram} from '../flow-canvas.js';
 import {sha256} from '../knowledge-api.js';
 import {artifactDocuments} from '../work-model.js';
 import {useFlowDetail, useTrackedFiles, SUPPORT_GROUPS, supportGroup, supportTarget, supportFields, supportOperation, TextEditor, FrontMatterEditor, flowNodeTypes} from './FlowPageParts.jsx';
@@ -89,15 +89,12 @@ export default function FlowPage({page}) {
   const writable = Boolean(edit.editable && artifact?.layout === 'in-place' && entry?.source === 'working'), editable = writable && Boolean(valid);
   const tracked = useTrackedFiles({root, worktreePath, enabled: editable && action === 'support'});
   const resolved = useMemo(() => new Map(list(detail.data?.flow?.support).map(s => [s.id, s.resolved])), [detail.data]);
-  const graph = useMemo(() => detail.data?.flow ? flowCanvas(detail.data.graph, detail.data.flow, false, null) : null, [detail.data]);
-  // The flow canvas, placed in rows of three steps in step order so that the panel stays readable.
+  // The diagram comes from the document itself, so it draws before the detail reply arrives and
+  // does not redraw when the reply lands; the detail adds resolution and sources for the step view.
   const diagram = useMemo(() => {
-    if (!graph) return null;
-    const order = list(detail.data.flow.steps).map(s => s.nodeId), place = id => {const i = order.indexOf(id);return i < 0 ? order.length : i;};
-    const nodes = [...graph.nodes].sort((a, b) => place(a.id) - place(b.id)).map((n, i) => ({...n, data: {...n.data, number: order.includes(n.id) ? place(n.id) + 1 : null}, style: {width: 250, height: 80}, position: {x: (i % 3) * 410, y: Math.floor(i / 3) * 200}}));
-    const edges = graph.edges.map(e => ({...e, label: e.kind === 'transition' ? e.condition || '' : e.label, markerEnd: {type: 'arrowclosed', color: '#8a8f96'}, style: {stroke: '#8a8f96', strokeWidth: 1.5}}));
-    return {nodes, edges};
-  }, [graph, detail.data]);
+    const front = frontValue(doc.markdown).flow, source = front && typeof front === 'object' && !Array.isArray(front) ? front : detail.data?.flow;
+    return source ? flowDiagram(source) : null;
+  }, [doc.markdown, valid ? null : detail.data]);
 
   const title = flow?.title || entry?.title || page.flow;
   const eyebrow = <>{artifact ? <button className="link" onClick={() => go({kind: 'artifact', artifact: artifact.id, section: 'flows'})}>{artifact.title}</button> : page.artifact} / Flows</>;
@@ -142,9 +139,10 @@ export default function FlowPage({page}) {
     </div>
 
     {view === 'diagram' ? <div className="flow-diagram">
+      {detail.status === 'error' && <Notice tone="warning">{detail.error}</Notice>}
       <GraphPanel label="Flow diagram" nodes={diagram?.nodes || []} edges={diagram?.edges || []} nodeTypes={flowNodeTypes} labelled flowKey={`${page.flow}:${epoch}`}
-        message={detail.status === 'error' ? detail.error : !diagram ? 'Reading the diagram…' : diagram.nodes.length ? null : 'This flow has no steps.'}
-        onNodeClick={(_, node) => {const step = steps.find(s => node.id === s.nodeId || node.data?.title === s.title);if (step) {setView('steps');setOpen(step.id);setAction(null);}}}
+        message={!diagram ? 'Reading the diagram…' : diagram.nodes.length ? null : 'This flow has no steps.'}
+        onNodeClick={(_, node) => {const step = steps.find(s => String(s.id) === node.id);if (step) {setView('steps');setOpen(step.id);setAction(null);}}}
         legend={<><span><i/>Transition</span><span>Select a step to open it.</span></>}/>
     </div> : <Section title="Steps" summary={steps.length} actions={editable && <span className="muted small">Select a step to edit it.</span>}>
       <ol className="flow-steps">

@@ -7,6 +7,7 @@ import {repositoryService, registeredSourceFingerprint} from './repository-event
 import {createFlowService} from './flow-index.js';
 import {createReviewService} from './change-review.js';
 import {createImpactService} from './impact.js';
+import {readFlowRepository} from './flow-reader.js';
 import {queryRepository} from './repository-query.js';
 import { runtimeService } from "./runtime-api.js";
 import {createKnowledgeService} from './knowledge-operations.js';
@@ -38,7 +39,9 @@ export function createAppServer(options = {}) {
   const runtime = runtimeService(options);
   // One impact service answers /api/impact/query, the delegated flow impact operation and the packet field.
   let impact=options.impactService;
-  const getImpact=()=>impact??=createImpactService({stateDir:options.stateDir,roots:options.flowRoots||[]});
+  // The impact service reads knowledge through the flow service's fingerprint-cached load.
+  const sharedLoad=(path,settings)=>{const service=getFlows();return service.load?service.load(path,settings):readFlowRepository(path,settings);};
+  const getImpact=()=>impact??=createImpactService({stateDir:options.stateDir,roots:options.flowRoots||[],loader:sharedLoad});
   let flows=options.flowService;
   const getFlows=()=>flows??=(createFlowService({stateDir:options.stateDir,roots:options.flowRoots||[],impactService:getImpact()}));
   let reviews=options.reviewService;

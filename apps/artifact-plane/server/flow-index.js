@@ -1,4 +1,5 @@
 import { DatabaseSync } from "node:sqlite";
+import { realpath } from "node:fs/promises";
 import {
   existsSync,
   mkdirSync,
@@ -11,11 +12,16 @@ import { resolve, relative, isAbsolute, dirname, join } from "node:path";
 import { execFileSync } from "node:child_process";
 import { createHash } from "node:crypto";
 import { defaultStateDir, repositoryIdentity } from "./runtime-store.js";
-import { readFlowRepository } from "./flow-reader.js";
+import { readFlowRepository, flowFingerprint } from "./flow-reader.js";
 import { flowImpact, safeFlowID } from "./flow-model.js";
 import { ExploreError } from "./reader.js";
 import { createLocalEmbedder, normalizeVector } from "./flow-embeddings.js";
 const digest = (x) => createHash("sha256").update(x).digest("hex");
+// Discovery keeps only chunks whose cosine similarity to the query reaches this value, so a
+// query returns the flows it resembles instead of every flow. Measured on this repository's
+// 18 flows with the pinned model on 18 October 2026: unrelated sentences score at most 0.26,
+// the expected flows of the benchmark queries score at least 0.59; see README, Flow discovery.
+export const SEMANTIC_CUTOFF = 0.5;
 const normalizedName = value => String(value || "").trim().normalize("NFC").toLowerCase();
 const inside = (root, path) => {
   const r = relative(root, path);
@@ -249,6 +255,7 @@ export function createFlowService({
   embedder,
   loader = readFlowRepository,
   impactService,
+  fingerprint = loader === readFlowRepository ? flowFingerprint : null,
 } = {}) {
   const dir = guardFlowDirectory(stateDir, roots),
     path = join(dir, "flow-index.sqlite");
@@ -277,6 +284,21 @@ export function createFlowService({
   let encoder = embedder;
   const getEncoder = () => encoder ??= createLocalEmbedder(dir);
   let serial = Promise.resolve(), closing=false, closePromise;
+  // Loaded repositories by fingerprint: consecutive reads of an unchanged repository reuse one load.
+  const loaded = new Map();
+  const remember = (key, record) => {loaded.delete(key);loaded.set(key, record);while (loaded.size > 4) loaded.delete(loaded.keys().next().value);};
+  // One cached load per repository, worktree, knowledge selector and fingerprint. Paths are
+  // canonical so that the impact service, which passes real paths, shares the same entry.
+  async function cachedLoad(path, worktree, knowledge) {
+    const root = await realpath(path).catch(() => path), target = worktree ? await realpath(worktree).catch(() => worktree) : root;
+    const load = () => loader(path, { worktree, knowledge, roots });
+    if (!fingerprint) return { record: await load(), unchanged: async record => (await load()).revision === record.revision };
+    const probe = () => fingerprint(root, target), initial = await probe();
+    const key = JSON.stringify([root, target, knowledge, initial]);
+    let record = loaded.get(key);
+    if (!record) {record = await load();remember(key, record);}
+    return { record, unchanged: async () => (await probe()) === initial };
+  }
   async function execute(raw) {
     const started = performance.now(),
       timings = {};
@@ -290,11 +312,9 @@ export function createFlowService({
       const identity = repositoryIdentity(body.path);
       guardFlowDirectory(dir, [identity.common, ...identity.roots]);
     }
-    let record = await loader(body.path, {
-      worktree: body.worktree,
-      knowledge: body.knowledge,
-      roots,
-    });
+    // Freshness compares the cheap fingerprint; without one, a second load compares revisions.
+    const current = await cachedLoad(body.path, body.worktree, body.knowledge);
+    const record = current.record, unchanged = () => current.unchanged(record);
     mark("loadMs");
     const artifactOptions = (record.snapshot?.artifacts || [])
       .filter(a => safeFlowID(a.id))
@@ -306,13 +326,17 @@ export function createFlowService({
     const eligibleFlows = record.graph.flows.filter(f => !eligible || eligible.has(f.id));
     const scopedRecord = {...record, graph: {...record.graph, flows: eligibleFlows}};
     const titleMode = body.operation === 'search' && body.match === 'title';
+    // Only discovery search chunks sources and prepares embeddings. Title search, detail,
+    // impact and source never load the model and never rebuild documents for an unchanged revision.
+    const discovery = body.operation === 'search' && !titleMode;
     const context = digest(
       JSON.stringify([record.repository.path, record.worktree, body.knowledge, body.match, body.artifact]),
     );
-    const model = titleMode ? "metadata-title-v1" : getEncoder().signature || "injected";
+    const model = discovery ? getEncoder().signature || "injected" : "metadata-only-v1";
     let cached = db.prepare("SELECT * FROM contexts WHERE id=?").get(context),
       diagnostics = [...record.graph.diagnostics];
     const reusableChunks =
+      discovery &&
       cached?.revision === record.revision &&
       cached.model === model &&
       JSON.parse(cached.json).semantic &&
@@ -322,10 +346,10 @@ export function createFlowService({
           .prepare("SELECT id,flow,text FROM documents WHERE context=?")
           .all(context)
           .map((doc) => ({ ...doc, hash: digest(doc.text) }))
-      : titleMode ? [] : chunks(scopedRecord);
+      : discovery ? chunks(scopedRecord) : [];
     const vectors = new Map();
     let semantic = false;
-    if (!titleMode) try {
+    if (discovery) try {
       await encoder.embed([]);
       if (encoder.split && !reusableChunks)
         docs = chunks(scopedRecord, (text) => encoder.split(text));
@@ -357,23 +381,17 @@ export function createFlowService({
       });
     }
     mark("embeddingPreparationMs");
-    const chunkRevision = digest(JSON.stringify(docs.map((d) => d.id).sort()));
+    const chunkRevision = discovery ? digest(JSON.stringify(docs.map((d) => d.id).sort())) : null;
     const needsRebuild =
       !cached ||
       cached.revision !== record.revision ||
-      cached.model !== model ||
-      JSON.parse(cached.json).chunker !== "token128-v1" ||
-      JSON.parse(cached.json).chunkRevision !== chunkRevision ||
-      (semantic && !JSON.parse(cached.json).semantic);
+      (discovery &&
+        (cached.model !== model ||
+          JSON.parse(cached.json).chunker !== "token128-v1" ||
+          JSON.parse(cached.json).chunkRevision !== chunkRevision ||
+          (semantic && !JSON.parse(cached.json).semantic)));
     let fresh = true;
-    if (needsRebuild) {
-      const checked = await loader(body.path, {
-        worktree: body.worktree,
-        knowledge: body.knowledge,
-        roots,
-      });
-      fresh = checked.revision === record.revision;
-    }
+    if (needsRebuild) fresh = await unchanged();
     if (fresh && needsRebuild) {
       db.exec("BEGIN IMMEDIATE");
       try {
@@ -436,7 +454,7 @@ export function createFlowService({
           generation,
           JSON.stringify({
             semantic,
-            chunker: "token128-v1",
+            chunker: discovery ? "token128-v1" : "none",
             chunkRevision,
             repository: record.repository.path,
             worktree: record.worktree,
@@ -535,14 +553,22 @@ export function createFlowService({
           .map((f) => f.id);
       ranks.push(exact);
       exactMatch = exact.length === 1 ? exact[0] : null;
-      const terms = query.match(/[\p{L}\p{N}_-]+/gu) || [];
+      // Keyword rank: terms shorter than three characters, and terms that occur in at least
+      // 80 percent of the context's flows (when it has five or more), carry no signal and are
+      // dropped before matching; a query of only such terms skips this rank.
+      const terms = [...new Set((query.match(/[\p{L}\p{N}_-]+/gu) || []).filter((t) => t.length >= 3))];
       if (terms.length && cached?.revision === record.revision) {
-        const rows = db
-          .prepare(
-            "SELECT flow,bm25(flow_fts) AS rank FROM flow_fts WHERE flow_fts MATCH ? AND context=? ORDER BY rank,id",
-          )
-          .all(terms.map((t) => '"' + t + '"').join(" OR "), context);
-        ranks.push([...new Set(rows.filter(r => !eligible || eligible.has(r.flow)).map((r) => r.flow))]);
+        const flowCount = db.prepare("SELECT count(DISTINCT flow) AS n FROM documents WHERE context=?").get(context).n;
+        const frequency = db.prepare("SELECT count(DISTINCT flow) AS n FROM flow_fts WHERE flow_fts MATCH ? AND context=?");
+        const informative = flowCount < 5 ? terms : terms.filter((t) => frequency.get('"' + t + '"', context).n < 0.8 * flowCount);
+        if (informative.length) {
+          const rows = db
+            .prepare(
+              "SELECT flow,bm25(flow_fts) AS rank FROM flow_fts WHERE flow_fts MATCH ? AND context=? ORDER BY rank,id",
+            )
+            .all(informative.map((t) => '"' + t + '"').join(" OR "), context);
+          ranks.push([...new Set(rows.filter(r => !eligible || eligible.has(r.flow)).map((r) => r.flow))]);
+        }
       }
       if (semantic && query) {
         try {
@@ -560,6 +586,7 @@ export function createFlowService({
           }
           ranks.push(
             [...scores]
+              .filter(([, score]) => score >= SEMANTIC_CUTOFF)
               .sort((a, b) => b[1] - a[1] || a[0].localeCompare(b[0]))
               .map(([id]) => id),
           );
@@ -714,12 +741,7 @@ export function createFlowService({
           : null;
     }
     mark("rankingMs");
-    const final = await loader(body.path, {
-      worktree: body.worktree,
-      knowledge: body.knowledge,
-      roots,
-    });
-    fresh &&= final.revision === record.revision;
+    fresh &&= await unchanged();
     const published = db
       .prepare("SELECT generation FROM contexts WHERE id=?")
       .get(context);
@@ -751,6 +773,8 @@ export function createFlowService({
     };
   }
   return {
+    // The cached repository read, shared with the impact service.
+    async load(path, {worktree, knowledge = 'planning'} = {}) {return (await cachedLoad(path, worktree, knowledge)).record;},
     observedSources(root) {
       const result = [];
       for (const row of db.prepare("SELECT json FROM contexts").all()) {

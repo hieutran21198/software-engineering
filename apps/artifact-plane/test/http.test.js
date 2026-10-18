@@ -73,8 +73,9 @@ import {createImpactService} from "../server/impact.js";
 import {impactRepository} from "./impact-fixtures.js";
 async function impactSetup(t) {
   const repo = await impactRepository();
-  const impactService = createImpactService({stateDir: repo.stateDir, roots: [repo.root]});
-  const flowService = createFlowService({stateDir: repo.stateDir, roots: [repo.root], impactService, embedder: {signature: "stub", embed: async texts => texts.map(() => [1, 0])}});
+  let flowService;
+  const impactService = createImpactService({stateDir: repo.stateDir, roots: [repo.root], loader: (path, settings) => flowService.load(path, settings)});
+  flowService = createFlowService({stateDir: repo.stateDir, roots: [repo.root], impactService, embedder: {signature: "stub", embed: async texts => texts.map(() => [1, 0])}});
   const server = createAppServer({impactService, flowService, flowRoots: [repo.root]});
   await new Promise(resolve => server.listen(0, "127.0.0.1", resolve));
   const app = createFlowMcpServer({service: flowService, impactService, roots: [repo.root]});
@@ -84,7 +85,7 @@ async function impactSetup(t) {
   t.after(async () => {await client.close();server.closeAllConnections();await new Promise(resolve => server.close(resolve));await flowService.close();await impactService.close();await repo.cleanup();});
   const base = `http://127.0.0.1:${server.address().port}`;
   const post = async (route, body) => {const response = await fetch(base + route, {method: "POST", headers: {"Content-Type": "application/json"}, body: JSON.stringify(body)});return {status: response.status, body: await response.json()};};
-  return {repo, client, post};
+  return {repo, client, post, flowService};
 }
 const withoutTiming = result => {const copy = JSON.parse(JSON.stringify(result));delete copy.metrics;return copy;};
 
@@ -123,8 +124,10 @@ test("get_change_impact returns the same facts as the route and the compact text
 });
 
 test("the flow impact operation delegates and keeps its shape, ordering and knowledge selector", async t => {
-  const {repo, client, post} = await impactSetup(t);
+  const {repo, client, post, flowService} = await impactSetup(t);
   const contract = "docs/artifacts/a/specifications/contract.md";
+  // The impact service and the flow query share one fingerprint-cached repository read.
+  assert.equal(await flowService.load(repo.root), await flowService.load(repo.root + "/", {knowledge: "planning"}));
   const {status, body} = await post("/api/flows/query", {path: repo.root, operation: "impact", ids: [contract, "missing/file.js"], limit: 1});
   assert.equal(status, 200);
   assert.equal(body.data.total, 2);assert.equal(body.data.flows.length, 1);
