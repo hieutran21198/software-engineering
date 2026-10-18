@@ -66,4 +66,4 @@ Plane rendering: not checked here. The Plane source in this worktree has no Merm
 
 ### Rendering
 
-A browser check on a disposable clone of this repository at 65d5df9 opened framework.md in the Plane document page at 1440 and 390 pixels: one SVG with the title "Core domain relations of Story-Driven" and a description, no fallback note, no horizontal page scroll. The graph is 1,093 pixels wide; at 1440 it shrinks to 820 pixels and scrolls inside its figure in the 720-pixel column. Links resolve; validate-knowledge reports 0 errors.
+A browser check on a disposable clone of this repository at a08810a, rebased on main 3c317fd, opened framework.md in the Plane document page at 1440 and 390 pixels: one SVG with the title "Core domain relations of Story-Driven" and a description, no fallback note, no horizontal page scroll. The graph is 1,153 pixels wide; at 1440 it shrinks to 865 pixels and scrolls inside its figure in the 720-pixel column. Links resolve; validate-knowledge reports 0 errors.

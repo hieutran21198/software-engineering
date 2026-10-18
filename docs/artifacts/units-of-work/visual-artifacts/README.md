@@ -48,7 +48,27 @@ acceptance:
       the Plane and on GitHub-compatible Mermaid, the Plane tests and build pass,
       and every relative link resolves.
     integration: true
-evidence: []
+evidence:
+  - criterion: representations
+    method: Row-by-row check of the 29 kept candidates against their row specifications, with sentence-to-cell mappings and count checks.
+    result: passed
+    source: docs/artifacts/units-of-work/visual-artifacts/README.md#combined-checks
+  - criterion: corrections
+    method: Review of the D3, D8 and inspector-clause corrections against knowledge-layout.md and the current workbench contract.
+    result: passed
+    source: docs/artifacts/artifact-driven/changes/change-visual-artifacts/tasks/01-representations.md#evidence
+  - criterion: plane-rendering
+    method: CSP check, diagram browser tests at 1440 and 390 pixels and the renderer-load failure test.
+    result: passed
+    source: docs/artifacts/artifact-plane/changes/change-visual-artifacts/tasks/01-renderer.md#evidence
+  - criterion: preservation
+    method: Record diff against main, heading comparison per file and the replaced-text comparisons.
+    result: passed
+    source: docs/artifacts/units-of-work/visual-artifacts/README.md#combined-checks
+  - criterion: integration
+    method: Real-knowledge rendering in the Plane, Plane unit and browser suites, build, Go tests, link check and validate-knowledge.
+    result: passed
+    source: docs/artifacts/units-of-work/visual-artifacts/README.md#combined-checks
 ---
 
 # Improve current artifacts with visual representations
@@ -71,4 +91,14 @@ The user decided on 18 October 2026: survey before the impact changes merged and
 
 ## Validation evidence
 
-No checks have run. Requirement, Specification and Plan are preparatory knowledge; implementation waits for explicit approval of the plan.
+Implementation ran on 18 October 2026 after explicit approval of the three plans. Task details are in the originating tasks; this section records the combined result.
+
+## Combined checks
+
+Executed on branch claude/visual-artifacts at a08810a, rebased on main 3c317fd (ADD 2.8.0, Artifact Plane 1.18.1, Story-Driven 1.1.0).
+
+- Representations: 29 of the 36 high- and medium-priority candidates are in place as 24 tables, 3 listings and 5 diagrams in 21 specifications; the 7 rejected candidates and their reasons are in the artifact-plane representation contract. The GitHub-flavored Markdown lexer finds the expected table and fence counts in every changed file, and each replace row has a sentence-to-cell mapping in its task evidence.
+- Preservation: `git diff main` changes no established version record or retained change outside change-visual-artifacts; every heading of the changed specifications is unchanged; the only rule-text changes are the corrections D3 (with its extension to the shared evidence sentence), D8 and the inspector clause. Defects outside drawn passages stay recorded in the survey.
+- Integration: every Mermaid block of the changed knowledge renders in the Plane document page at 1440 and 390 pixels with its title and description and no note, checked on a disposable clone. Plane `npm test` (365 tests, 364 passed, 1 skipped), the browser suite (105 passed) and `npm run build` pass; `go vet ./...` and `go test ./...` pass; 335 relative links and anchors under docs/artifacts resolve; validate-knowledge reports 0 errors and the existing info diagnostic retained-legacy-change.
+- Rebase: Artifact Plane 1.18.1 landed on main during Implementation and amended project-tabs.md and explorer.md. The tab diagram was rechecked: page visibility adds no tab state, so its states and transitions are unchanged.
+- Proposed versions: artifact-driven 2.8.1 and story-driven 1.1.1 (patch: presentation and defect corrections), artifact-plane 1.19.0 (minor: diagram rendering). They establish when the PR lands on main.
