@@ -13,3 +13,5 @@ Excluded: Artifact Plane code and artifact knowledge, the story-driven bundle, i
 The baseline is established ADD 2.6.0 on main at 126990d. Knowledge is edited in place on branch claude/visual-knowledge; the protected branch holds the established baseline. Artifact Plane is affected only as a reader of the guidance; its implementation directions are recorded in the specification, and no Plane change is opened. This is the artifact's single active change.
 
 - [Requirements](../../requirements/visual-knowledge.md) (V1–V10)
+- [Contract](../../specifications/visual-knowledge.md) (research basis, principles, categories, selection guide, agent procedure, page ownership, examples, reader directions)
+- [Decision 013](../../decisions/013-text-defined-representations.md)
