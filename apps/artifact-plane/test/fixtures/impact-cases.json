@@ -288,7 +288,8 @@
      "apps/artifact-plane/test/change-review.test.js",
      "apps/artifact-plane/test/review-adapters.test.js",
      "flow:artifact-plane:change-review",
-     "flow:artifact-plane:context-handoff"
+     "flow:artifact-plane:context-handoff",
+     "flow:artifact-plane:change-impact"
     ],
     "transitive": [
      "apps/artifact-plane/server/flow-mcp-stdio.js",
@@ -307,7 +308,8 @@
    "notes": [
     "layout-benchmark.mjs imports queryChangeReview, which calls createReviewService: affected through the in-file closure.",
     "context-packet.js formats the packet schema that change-review.js produces; no import links them: a coupling visible only in history.",
-    "story-driven:revision-impact shares words, not code or contracts."
+    "story-driven:revision-impact shares words, not code or contracts.",
+    "Since this change, the change-impact flow cites change-review.js at its handoff step (support packet), so it is a true direct consumer."
    ]
   },
   {
