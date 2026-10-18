@@ -26,7 +26,23 @@ acceptance:
   - id: owner-acceptance
     criterion: The owner accepts sidebar screenshots at 1440 and 390 pixels on
       this repository.
-evidence: []
+evidence:
+  - criterion: hierarchy
+    method: Browser test of chevron offsets, guide lines and weights.
+    result: passed
+    source: docs/artifacts/artifact-plane/changes/change-navigation-hierarchy/tasks/01-tree-style.md#evidence
+  - criterion: group-space
+    method: Browser test of level-0 margins and screenshot review.
+    result: passed
+    source: docs/artifacts/artifact-plane/changes/change-navigation-hierarchy/tasks/01-tree-style.md#evidence
+  - criterion: preserved
+    method: npm test, build and the full browser suite with overflow checks.
+    result: passed
+    source: docs/artifacts/artifact-plane/changes/change-navigation-hierarchy/tasks/02-validation.md#evidence
+  - criterion: owner-acceptance
+    method: Owner review of sidebar screenshots at 1440 and 390 pixels.
+    result: passed
+    source: docs/artifacts/artifact-plane/changes/change-navigation-hierarchy/tasks/02-validation.md#evidence
 ---
 
 # Show hierarchy in the navigation tree
@@ -41,4 +57,4 @@ Sidebar contents, row order and behavior, pages, the top bar, interfaces and ADD
 
 ## Validation evidence
 
-No checks have run.
+All four criteria passed on 18 October 2026; the owner accepted the screenshots. The check details are in the [tree-style](../../artifact-plane/changes/change-navigation-hierarchy/tasks/01-tree-style.md#evidence) and [validation](../../artifact-plane/changes/change-navigation-hierarchy/tasks/02-validation.md#evidence) task evidence.

@@ -11,9 +11,9 @@ tasks:
 
 ## Approval and prerequisites
 
-Present this plan for explicit user approval before implementation. ADD 2.6.0 is established on main; no ADD contract is required beyond it. A material change to the tree presentation rules requires renewed approval.
+Present this plan for explicit user approval before implementation. The owner approved it on 18 October 2026. ADD 2.6.0 is established on main; no ADD contract is required beyond it. A material change to the tree presentation rules requires renewed approval.
 
-After both tasks pass, the coordinator suggests the version, adds the version record and the unit evidence, and opens one PR.
+After both tasks pass, the coordinator suggests the version (the owner confirmed 1.17.1 on 18 October 2026), adds the version record and the unit evidence, and opens one PR.
 
 ## Plan self-check
 
