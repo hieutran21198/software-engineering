@@ -150,3 +150,18 @@ test("the flow impact operation delegates and keeps its shape, ordering and know
   const http = await post("/api/flows/query", {path: repo.root, operation: "impact", ids: [contract], limit: 100});
   assert.deepEqual(withoutTiming(mcp.structuredContent), withoutTiming(http.body));
 });
+
+test("a reply that cannot be serialized returns 500 and the server keeps answering", async (t) => {
+  let replies = 0;
+  const flowService = {query: async () => (++replies === 1 ? {count: 1n} : {ok: true}), observedSources: () => [], close() {}};
+  const server = createAppServer({flowService});
+  await new Promise((resolve) => server.listen(0, "127.0.0.1", resolve));
+  t.after(() => new Promise((resolve) => server.close(resolve)));
+  const query = () => fetch(`http://127.0.0.1:${server.address().port}/api/flows/query`, {method: "POST", headers: {"Content-Type": "application/json"}, body: "{}", signal: AbortSignal.timeout(5000)});
+  const failed = await query();
+  assert.equal(failed.status, 500);
+  assert.deepEqual(await failed.json(), {error: "The repository could not be explored."});
+  const next = await query();
+  assert.equal(next.status, 200);
+  assert.deepEqual(await next.json(), {ok: true});
+});
