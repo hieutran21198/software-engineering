@@ -11,6 +11,7 @@ flow:
     - id: requirement
       title: Discover the outcome, scope and candidate flows
       supports:
+        - impact-contract
         - efficiency-contract
         - knowledge
         - evidence-usability-contract
@@ -19,6 +20,7 @@ flow:
     - id: specification
       title: Define contracts and assess affected flow support
       supports:
+        - impact-contract
         - knowledge
         - flow-contract
         - evidence-usability-contract
@@ -80,6 +82,12 @@ flow:
       to: specification
       condition: A contract gap requires correction and renewed approval if material.
   support:
+    - id: impact-contract
+      kind: element
+      artifact: artifact-driven
+      element: specifications/change-impact.md
+      requires: Use the tiers, the propagation rules and the coverage statement to find candidates and assess compatibility.
+      basis: documented
     - id: knowledge
       kind: element
       artifact: artifact-driven

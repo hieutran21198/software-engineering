@@ -28,6 +28,7 @@ flow:
     - id: derive
       title: Derive packet facts from one validated revision
       supports:
+        - impact-contract
         - contract
         - review-service
         - review-interface
@@ -91,6 +92,12 @@ flow:
       to: request
       condition: The source selection changes or a stale/error reply requires a new read.
   support:
+    - id: impact-contract
+      kind: element
+      artifact: artifact-plane
+      element: specifications/change-impact.md
+      requires: Add the tiered impact result and its coverage to the packet as additive fields.
+      basis: documented
     - id: ux-browser-checks
       kind: test
       path: apps/artifact-plane/test/browser/change-page.spec.js

@@ -28,6 +28,7 @@ flow:
     - id: discover
       title: Filter named flows, discover behavior or expand explicit participation
       supports:
+        - impact-contract
         - flow-contract
         - index
         - named-scope-index
@@ -84,6 +85,12 @@ flow:
     - from: freshness
       to: return
   support:
+    - id: impact-contract
+      kind: element
+      artifact: artifact-plane
+      element: specifications/change-impact.md
+      requires: Apply the discovery score cutoff and delegate the impact operation to the impact service without changing its result shape.
+      basis: documented
     - id: authoring-contract
       kind: element
       artifact: artifact-plane

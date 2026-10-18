@@ -46,6 +46,7 @@ flow:
     - id: recheck
       title: Compare established contracts with prepared knowledge
       supports:
+        - impact-contract
         - dependency-guidance
         - layout-contract
       interactions:
@@ -102,6 +103,12 @@ flow:
       to: dispatch
       condition: Required contracts match and internal/approval gates are satisfied.
   support:
+    - id: impact-contract
+      kind: element
+      artifact: artifact-driven
+      element: specifications/change-impact.md
+      requires: Compare an established contract with prepared knowledge through the tiered impact of their difference.
+      basis: documented
     - id: dependency-guidance
       kind: implementation
       path: docs/artifact-driven/02-methodology/dependencies.md
