@@ -34,7 +34,7 @@ Give each requirement and each acceptance criterion an ID. Write it as the label
 - TL2: A user without membership gets the error `membership-required`.
 ```
 
-The ID matches `[A-Z][A-Z0-9]*[0-9]+` and is unique in its file. A requirement file that a change creates or edits should have at least one ID. A file without IDs stays valid; the validator reports `requirement-ids-missing` as information. You do not have to add IDs to files that the change does not edit.
+The ID matches `[A-Z][A-Z0-9]*[0-9]+` and is unique in its file. Older files can use a paragraph label instead: the line starts with the ID, `.` and a space, as in `R4. Group bursts …`. A paragraph label is also an ID, and `covers` can name it; changing it to a list item with the same ID adds no ID. Write new IDs in the list form. A requirement file that a change creates or edits should have at least one ID in the list form. A file without list-form IDs stays valid; the validator reports `requirement-ids-missing` as information. You do not have to add IDs to files that the change does not edit.
 
 ## Specifications and Decisions
 
@@ -162,8 +162,8 @@ Without `--change`, it checks all knowledge of the repository. `--repository <pa
 | `version-identity-mismatch` | error | The identity `current_version` has no version record, or a version record has no `source_change` directory. |
 | `version-number-invalid` | error | A version record that is not on the protected branch is not the number computed from the plan level and the protected `current_version`. |
 | `upstream-unestablished` | warning | A `depends_on` target has no established version on the protected branch. |
-| `requirement-id-duplicate` | error | An ID occurs twice in one requirement file. |
-| `requirement-ids-missing` | info | A requirement file that the change edits has no ID. |
+| `requirement-id-duplicate` | error | An ID occurs twice in one requirement file, in either form. |
+| `requirement-ids-missing` | info | A requirement file that the change edits has no ID in the list form. |
 | `covers-unknown-id` | error | A `covers` ID that its element does not define. |
 | `requirement-uncovered` | warning | An added or changed requirement ID that no task of the plan covers. |
 | `tier-mismatch` | error | The declared tier is `small` and a criterion fails or is unresolved. |

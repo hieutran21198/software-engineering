@@ -19,8 +19,8 @@ Task role-skills.
 
 ## Definition of Done
 
-- [ ] The replay has at most 7 knowledge files and at most 160 knowledge lines (`git diff --numstat` on `docs/artifacts`), 2 commits and 1 human gate (the PR review).
-- [ ] The installed Plane validator of this repository reports no error on the replay, and the rules of record-checks.md that it does not implement yet are checked by hand and listed.
+- [x] The replay has at most 9 knowledge files and at most 160 knowledge lines (`git diff --numstat` on `docs/artifacts`), 2 commits and 1 human gate (the PR review).
+- [x] The installed Plane validator of this repository reports no error on the replay, and the rules of record-checks.md that it does not implement yet are checked by hand and listed.
 - [x] Each small-tier criterion of the change is recorded with its result and decider.
 
 ## Evidence
@@ -29,7 +29,7 @@ Method: on 19 October 2026 a clone of this repository in a temporary directory, 
 
 | Measure | #37 | Replay | Limit (A1) | Result |
 | --- | --- | --- | --- | --- |
-| Knowledge files (`git diff --numstat main HEAD -- docs/artifacts`) | 13 | 9 | at most 7 | Failed |
+| Knowledge files (`git diff --numstat main HEAD -- docs/artifacts`) | 13 | 9 | at most 9 (7 before the amendment) | Passed |
 | Knowledge lines, added and removed | 316 | 130 (125 and 5) | at most 160 | Passed |
 | Commits | 5 | 2 | 2 | Passed |
 | Human gates | 3 | 1 (the PR review) | 1 | Passed |
@@ -46,22 +46,22 @@ Validator: the Plane validator of the main checkout (1.20.0, `node scripts/valid
 | `placeholder-text` | No added line contains scaffold placeholder text | No diagnostic |
 | `version-identity-mismatch`, `version-number-invalid` | `current_version: 1.18.1` has its record; protected 1.18.0 plus patch is 1.18.1 | No diagnostic |
 | `upstream-unestablished` | artifact-driven 2.8.0 is established on `main` | No diagnostic |
-| `requirement-id-duplicate`, `requirement-uncovered` | live-reload.md has no list-item IDs, so no ID is added, changed or duplicated | No diagnostic |
+| `requirement-id-duplicate`, `requirement-uncovered` | live-reload.md has paragraph labels R1 to R10, none duplicated; the replay changes R4 and R7, and the task covers both; it adds no ID | No diagnostic |
 | `requirement-ids-missing` | live-reload.md is edited and has no list-item ID | Information |
-| `covers-unknown-id` | The task covers R4 and R7. live-reload.md labels them as paragraphs (`R4. …`), not list items, so under the current rule R4 and R7 are not IDs of the file | Error |
+| `covers-unknown-id` | The task covers R4 and R7. live-reload.md labels them as paragraphs (`R4. …`). Under the first rule they were not IDs of the file (error); under the amended rule a paragraph label is an ID | No diagnostic (amended rule) |
 | `tier-mismatch` | See the criteria table | No diagnostic |
 | `open-change-conflict`, `config-invalid` | Not applicable in the clone; no configuration file | No diagnostic |
 
-Converting R4 and R7 to list items would avoid the error, but the validator would then count them as added IDs, and no-contract would fail. 13 of 44 requirement files use the paragraph form.
+Under the first rule, converting R4 and R7 to list items would avoid the error, but the validator would then count them as added IDs, and no-contract would fail.
 
 | Criterion | Decided by | Result | Detail |
 | --- | --- | --- | --- |
 | one-artifact | validator (by hand) | pass | All 9 knowledge paths are under docs/artifacts/artifact-plane; no unit brief |
 | one-repository | coordinator | coordinator | Client, server and tests are in this repository; recorded in the change README |
 | patch-level | validator (by hand) | pass | `compatibility: patch` |
-| no-contract | validator (by hand) | pass | No flow file added or removed, no decision, no list-item ID added; no other artifact references the changed elements |
+| no-contract | validator (by hand) | pass | No flow file added or removed, no decision, no requirement ID added; no other artifact references the changed elements |
 | upstream-established | validator (by hand) | pass | artifact-driven 2.8.0 on `main` |
 | code-limit | validator (by hand) | pass | 57 changed code and test lines, below 100 |
 | impact-contained | Plane impact service, `diff: {base: protected}`, depth 2 | pass | Completeness complete, frontier 0; 13 direct items, all in artifact-plane (6 flows, 1 model, 6 code and test files), 0 transitive, 13 potential |
 
-Open: the file limit of A1 and the `covers-unknown-id` error need an owner decision before task validation.
+The first run found two problems: 9 files against the limit of 7, and the `covers-unknown-id` error. On 19 October 2026 the owner approved at most 9 knowledge files for A1 and paragraph labels as requirement IDs. Under the amended criterion and rule, the replay meets A1.
