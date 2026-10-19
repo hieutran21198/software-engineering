@@ -152,14 +152,34 @@ jobs:
           RELEASE_TAG: ${{ github.ref_name }}
         run: |
           gh release create "$RELEASE_TAG" dist/* --verify-tag --generate-notes --title "se-adopt $RELEASE_TAG"
+  # The six files and their checksums in one artifact, on every run.
+  plane-sums:
+    needs: [plane-app]
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/download-artifact@v4
+        with:
+          pattern: artifact-plane-*-*
+          path: plane-release
+          merge-multiple: true
+      - name: Write checksums
+        working-directory: plane-release
+        run: sha256sum artifact-plane-* > SHA256SUMS
+      - uses: actions/upload-artifact@v4
+        with:
+          name: artifact-plane-release
+          path: plane-release/
+          if-no-files-found: error
   plane-release:
     if: github.event_name == 'push' && startsWith(github.ref, 'refs/tags/plane-v')
-    needs: [artifact-plane, plane-app]
+    needs: [artifact-plane, plane-sums]
     runs-on: ubuntu-latest
     permissions:
       contents: write
     steps:
       - uses: actions/checkout@v6
+        with:
+          fetch-depth: 0
       - uses: actions/setup-node@v6
         with:
           node-version: '24.21.0'
@@ -167,15 +187,13 @@ jobs:
         run: node apps/artifact-plane/scripts/check-release-version.mjs "$GITHUB_REF_NAME"
       - uses: actions/download-artifact@v4
         with:
-          pattern: artifact-plane-*
+          name: artifact-plane-release
           path: plane-release
-          merge-multiple: true
-      - name: Write checksums
-        working-directory: plane-release
-        run: sha256sum artifact-plane-* > SHA256SUMS
       - name: Publish the Plane files and checksums
         env:
           GH_TOKEN: ${{ github.token }}
           GH_REPO: ${{ github.repository }}
         run: |
-          gh release create "$GITHUB_REF_NAME" plane-release/* --verify-tag --generate-notes --title "Artifact Plane ${GITHUB_REF_NAME#plane-v}"
+          # Notes start at the previous Plane tag, not at a se-adopt tag.
+          previous=$(git tag --list 'plane-v*' --sort=-v:refname | grep -vx "$GITHUB_REF_NAME" | head -n 1)
+          gh release create "$GITHUB_REF_NAME" plane-release/* --verify-tag --generate-notes ${previous:+--notes-start-tag "$previous"} --title "Artifact Plane ${GITHUB_REF_NAME#plane-v}"
