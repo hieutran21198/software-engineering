@@ -22,7 +22,7 @@ specifications/agent-integration.md: Flows, Validation; the unit brief plane-age
 - [x] The same sessions with Plane 1.22.0 on the path, and with no executable, run tools without a refusal (claim harness-launch).
 - [x] The PreToolUse input of a Codex subagent is recorded (claim codex-subagent-identity); the five claims have a status from evidence.
 - [x] specifications/flows/agent-session-guidance.md exists and execution-observation has the new supports; the validator reports no error.
-- [ ] The Node, browser and Go suites and the executable smoke check pass; the unit evidence is complete.
+- [x] The Node, browser and Go suites and the executable smoke check pass; the unit evidence is complete.
 
 ## Evidence
 
@@ -35,6 +35,7 @@ Live check on 19 October 2026 in a disposable clone of branch claude/plane-agent
 | Older and missing executable | Plane 1.22.0 on the path: each harness called the hook 6 times, each call ended with status 2 inside `\|\| true`, and `git status` ran. No executable on the path: `git status` ran in both harnesses (claim harness-launch) | Passed |
 | Subagent identity | A Claude Code subagent (Explore) and a Codex subagent read tasks/06-validation.md. Both inputs carried the parent `session_id` and the subagent `agent_id`; Codex also sent the subagent's own `turn_id`. Each run created one inferred attempt for the subagent and none for the parent, whose spawn input named the task path (Claude Code) or held an encrypted message (Codex). Claim codex-subagent-identity is refuted | Passed |
 | Flows and validator | specifications/flows/agent-session-guidance.md is new; execution-observation has the supports agent-integration-contract, inferred-binding, hook-command and binding-tests; the validator reports `ok: true` for the change and for the repository | Passed |
+| Suites | CI run 39257515159 on commit b8bf50c: the artifact-plane job (`npm test` and `npm run test:browser`), the go job, the docs job, the plane-app job on the six targets and plane-sums passed. After the prompt_id fix, a live Claude Code subagent attempt with the executable of this run ended in Validating after SubagentStop | Passed |
 
 Finding: Claude Code sends `prompt_id` and no `turn_id`, so the observer showed each Claude Code attempt as Unknown. Commit caf7472 uses `prompt_id` as the turn; test/runtime-store.test.js "Claude Code prompt_id correlates a turn like turn_id" covers it.
 

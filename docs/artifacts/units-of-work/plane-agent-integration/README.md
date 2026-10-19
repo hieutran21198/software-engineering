@@ -44,7 +44,43 @@ acceptance:
     criterion: The Node, browser and Go suites and the executable smoke check
       pass.
     integration: true
-evidence: []
+evidence:
+  - criterion: one-command
+    method: Recorded Claude Code and Codex inputs for each hook event against the dispatcher and the built executable; smoke checks of hook and runtime on six targets.
+    result: passed
+    source: docs/artifacts/artifact-plane/changes/change-agent-integration/tasks/03-hook-command.md#evidence
+  - criterion: one-command
+    method: Live sessions of Claude Code 2.1.301 and codex-cli 0.163.0 received the context, the refusal of a commit on main and the stop hook.
+    result: passed
+    source: docs/artifacts/artifact-plane/changes/change-agent-integration/tasks/06-validation.md#evidence
+  - criterion: fail-open
+    method: Fail-open tests with invalid input, a broken store, a missing repository and slow steps, and a search of the store for forbidden fields.
+    result: passed
+    source: docs/artifacts/artifact-plane/changes/change-agent-integration/tasks/03-hook-command.md#evidence
+  - criterion: fail-open
+    method: Live sessions of both harnesses with Plane 1.22.0 and with no executable on the path ran their tools.
+    result: passed
+    source: docs/artifacts/artifact-plane/changes/change-agent-integration/tasks/06-validation.md#evidence
+  - criterion: inferred-binding
+    method: Node tests of the binding rule and supersession, and a browser test of the binding labels.
+    result: passed
+    source: docs/artifacts/artifact-plane/changes/change-agent-integration/tasks/02-inferred-binding.md#evidence
+  - criterion: inferred-binding
+    method: Live subagent task reads in Claude Code and Codex created one inferred attempt each and none for the parent.
+    result: passed
+    source: docs/artifacts/artifact-plane/changes/change-agent-integration/tasks/06-validation.md#evidence
+  - criterion: mcp-status
+    method: An MCP client compared get_change_status and check_records with worktreeStatus and validateKnowledge.
+    result: passed
+    source: docs/artifacts/artifact-plane/changes/change-agent-integration/tasks/04-mcp-tools.md#evidence
+  - criterion: live-harnesses
+    method: Live sessions of both harnesses in a clone of this branch with the committed configuration.
+    result: passed
+    source: docs/artifacts/artifact-plane/changes/change-agent-integration/tasks/06-validation.md#evidence
+  - criterion: integration
+    method: Node, browser, Go and docs suites and the six executable smoke checks in the pull request CI run.
+    result: passed
+    source: docs/artifacts/artifact-plane/changes/change-agent-integration/tasks/06-validation.md#evidence
 ---
 
 # Plane agent integration

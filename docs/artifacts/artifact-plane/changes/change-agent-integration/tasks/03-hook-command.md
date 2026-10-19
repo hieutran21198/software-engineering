@@ -23,7 +23,7 @@ specifications/agent-integration.md: Command line, Hook command, Inferred bindin
 - [x] The fail-open tests of the Validation section exit 0 and leave no forbidden field in the store.
 - [x] A PreToolUse with an inferred binding returns within 2 seconds, and the binding appears in `runtime query` after the detached process ends (claim detached-inferred-bind).
 - [x] The smoke check runs `hook` with a SessionStart input and `runtime query` on every CI target.
-- [ ] `npm test` passes; CI passes on the six targets.
+- [x] `npm test` passes; CI passes on the six targets.
 
 ## Evidence
 
@@ -38,3 +38,5 @@ specifications/agent-integration.md: Command line, Hook command, Inferred bindin
 Times on this repository, median of five runs with a private state directory (source / executable): SessionStart 743 / 792 ms; PreToolUse `git status` 158 / 143 ms; PreToolUse `git commit` on a branch 127 / 160 ms; Stop with a passing validator 1,969 / 2,148 ms. `npm test` 463 tests, 462 passed, 0 failed, 1 skipped; `npm run build` passes (commit e3b0956).
 
 Finding: the runtime store requires private POSIX modes, which Windows does not report, so the observer fails on Windows from source and from the executable; the specification now records it.
+
+CI: CI run 39257515159 on commit b8bf50c passed the plane-app job on the six targets, with the smoke checks of `hook` and `runtime query`. On Windows the store refused its directory, as the specification records: "Use a private runtime directory (0700)" on AMD64 and "Runtime store must be outside repositories and worktrees" on ARM64 (a short temporary path); the smoke check accepts both refusals on Windows only.
