@@ -8,8 +8,12 @@ claims:
     statement: The hook finds the three reserved actions by splitting a shell
       command into simple commands and reading the words of each one, and it
       reads the branch of the effective directory from local Git.
-    status: open
-    basis: inferred
+    status: verified
+    basis: observed
+    verified_by: agent
+    evidence:
+      - docs/artifacts/artifact-plane/changes/change-agent-integration/tasks/01-guidance-functions.md#evidence
+      - docs/artifacts/artifact-plane/changes/change-agent-integration/tasks/06-validation.md#evidence
     rejected:
       - option: Permission rules of each harness.
         reason: A Claude Code permission pattern cannot express "commit while
@@ -27,10 +31,12 @@ claims:
     kind: decision
     statement: The hook starts an inferred binding as a detached process of the
       executable and returns at once.
-    status: open
+    status: verified
     basis: observed
+    verified_by: agent
     evidence:
-      - docs/artifacts/artifact-plane/changes/change-human-guidance/tasks/09-explore-scale.md#evidence
+      - docs/artifacts/artifact-plane/changes/change-agent-integration/tasks/03-hook-command.md#evidence
+      - docs/artifacts/artifact-plane/changes/change-agent-integration/tasks/06-validation.md#evidence
     rejected:
       - option: Bind inside the hook process.
         reason: A binding reads the repository through exploreRepository, which
@@ -43,8 +49,12 @@ claims:
     kind: unknown
     statement: The change state of one worktree takes at most 2 seconds on this
       repository, so the session start hook stays within its limit.
-    status: open
-    basis: inferred
+    status: verified
+    basis: observed
+    verified_by: agent
+    evidence:
+      - docs/artifacts/artifact-plane/changes/change-agent-integration/tasks/01-guidance-functions.md#evidence
+      - docs/artifacts/artifact-plane/changes/change-agent-integration/tasks/03-hook-command.md#evidence
     risk_if_wrong: The session starts without the context because the hook times
       out.
     check: Time the SessionStart hook on this repository and on the fixture of
@@ -54,8 +64,10 @@ claims:
     statement: Codex sends agent_id only on SubagentStart and SubagentStop, so a
       tool call of a Codex subagent in the main worktree cannot be told from a
       tool call of its parent.
-    status: open
-    basis: documented
+    status: refuted
+    basis: observed
+    evidence:
+      - docs/artifacts/artifact-plane/changes/change-agent-integration/tasks/06-validation.md#evidence
     risk_if_wrong: An inferred binding of Codex is missed or binds the parent
       session.
     check: Record the PreToolUse input of a Codex subagent in the live check of
@@ -65,8 +77,11 @@ claims:
     statement: Claude Code and Codex start a stdio MCP server in the project
       directory and run a hook command through a POSIX shell on Linux and
       macOS.
-    status: open
-    basis: inferred
+    status: verified
+    basis: observed
+    verified_by: agent
+    evidence:
+      - docs/artifacts/artifact-plane/changes/change-agent-integration/tasks/06-validation.md#evidence
     risk_if_wrong: The committed MCP server finds no repository, or the `|| true`
       guard of an older executable does not apply and its usage error exit 2
       refuses each tool call.
@@ -150,7 +165,7 @@ On Stop and SubagentStop with `stop_hook_active` false, the hook runs `validateK
 On PreToolUse, the hook looks for exactly one distinct path of the form `docs/artifacts/<artifact>/changes/<change>/tasks/<file>.md` in `tool_input.file_path`, `tool_input.path` or `tool_input.command`. `tasks/README.md` is not a task. Two or more distinct task paths start no binding. The worktree is the Git top level of `cwd`; the task must belong to a current change of that worktree. The hook starts a binding when all conditions hold:
 
 - the session and agent of the input have no open attempt;
-- the input has an `agent_id`; or the input has no `agent_id`, `cwd` is a linked worktree (not the first entry of `git worktree list`), and the store has no SubagentStart event of the session, so that a Codex subagent cannot bind its parent session;
+- the input has an `agent_id`; or the input has no `agent_id`, `cwd` is a linked worktree (not the first entry of `git worktree list`), and the store has no SubagentStart event of the session, so that a subagent input without `agent_id` cannot bind its parent session. Claude Code 2.1.301 and codex-cli 0.163.0 both send `agent_id` on the tool calls of a subagent;
 - the change of the path is a current change of the worktree.
 
 The hook starts `<executable> runtime bind --root <worktree> --artifact <a> --change <c> --task <file> --session <id> [--agent <id>] [--unit <unit>] --binding inferred` as a detached process with no standard streams, and does not wait. `<unit>` is the member unit of the change, when it has one. The bind command rejects the binding when an open attempt appeared in the meantime.
