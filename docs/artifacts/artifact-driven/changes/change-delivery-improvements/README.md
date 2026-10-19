@@ -15,3 +15,7 @@ Excluded: a code-only maintenance tier without records (the owner deferred it), 
 The established baseline is artifact-driven 2.9.0 on main. Knowledge is edited in place on branch claude/delivery-improvements. The owner chose a major version (3.0.0) because consumers follow changed rules. This change belongs to the delivery-improvements unit.
 
 - [Requirements](../../requirements/delivery-improvements.md)
+- [Delivery tiers contract](../../specifications/delivery-tiers.md)
+- [Record checks contract](../../specifications/record-checks.md)
+- Decisions: [tiers](../../decisions/015-change-tiers.md), [validator delivery](../../decisions/016-validator-delivery.md), [one bundle source](../../decisions/017-single-bundle-source.md)
+- [Plan](tasks/README.md)

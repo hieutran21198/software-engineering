@@ -13,3 +13,5 @@ Excluded: pushing, opening PRs or merging (the Plane never does these), a requir
 The established baseline is artifact-plane 1.20.0 on main. It depends on artifact-driven; implementation waits until ADD 3.0.0 is established on main. Knowledge is edited in place on branch claude/delivery-improvements. This change belongs to the delivery-improvements unit.
 
 - [Requirements](../../requirements/delivery-improvements.md)
+- [Delivery support contract](../../specifications/delivery-support.md)
+- [Plan](tasks/README.md)
