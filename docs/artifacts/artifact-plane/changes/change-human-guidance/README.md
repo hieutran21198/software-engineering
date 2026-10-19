@@ -17,6 +17,7 @@ Included:
 - version labels that tell a version prepared on a branch from a version established on the protected branch;
 - one source for each count and state that a page shows twice;
 - one visual grammar for navigation, actions, destructive controls and states, and an explanation for each status term.
+- an explore response that stays within the string limit for a repository with many worktrees (added at the owner's request on 19 October 2026).
 
 Excluded, for later changes: a coverage view of requirement IDs on the document page, a branch-difference default on the Impact page, grouping of History, a dark theme, code signing by a paid certificate, an installer or package manager entry, auto-update, and any change of the ADD bundle or of `se-adopt`.
 
@@ -24,6 +25,7 @@ Knowledge is edited in place on this branch. The unit brief is [Plane human guid
 
 - [Requirements: human guidance](../../requirements/human-guidance.md)
 - [Requirements: application release](../../requirements/app-release.md)
+- [Requirements: explore scale](../../requirements/explore-scale.md)
 - [Specification: human guidance](../../specifications/human-guidance.md)
 - [Specification: application release](../../specifications/app-release.md)
 - [Plan](tasks/README.md)
