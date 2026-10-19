@@ -74,11 +74,11 @@ Three visual families replace the current badge styles. Each badge has an icon, 
 
 | Family | Shape | Members |
 | --- | --- | --- |
-| Status | filled pill with a leading icon | done (check, green): Passed, pass, Complete, established, Delivered, verified; waiting (clock, amber): prepared, Ready for team review, Waiting for merge, Incomplete, Unchecked items; active (dot, blue): current phase, open; problem (exclamation, red): Failed, fail, refuted, error; neutral (info, gray): coordinator, unresolved, Unknown, not loaded |
+| Status | filled pill with a leading icon | done (check, green): Passed, pass, Complete, established, Delivered, verified; waiting (clock, amber): prepared, Ready for team review, Waiting for merge, Incomplete, Unchecked items, supported; active (dot, blue): current phase, open, affected; problem (exclamation, red): Failed, fail, refuted, error; neutral (info, gray): coordinator, unresolved, Unknown, not loaded, superseded |
 | Difference | outlined pill with a leading sign | New (+, blue), Changed (~, amber), Removed (−, red) |
-| Kind | square tag, gray text, no icon | Decision, Assumption, Root cause, Risk, Unknown, Fact from Git, documented, static, observed |
+| Kind | square tag, gray text, no icon | Decision, Assumption, Hypothesis, Root cause, Risk, Unknown, Fact from Git, documented, static, observed, Integration, and the impact tiers direct, transitive, potential and verify |
 
-One component renders each family. Pages pass a status name, not a color. Status words that are sentences, such as the uncertainty sentences about approval and independent verification, stay as text.
+One component renders each family. Pages pass a status name, not a color. The Impact page uses the Kind family for its tiers and the Status family for unresolved. Status words that are sentences, such as the uncertainty sentences about approval and independent verification, stay as text.
 
 ## Visual grammar of controls
 
@@ -104,7 +104,7 @@ The action row of an expanded flow step has three groups separated by 16 pixels 
 
 `src/glossary.js` holds one entry for each term: term, family and a definition of at most 30 words. A `Term` component renders the term as a button with a dotted underline. Activating it with Enter, Space or a pointer opens a popover with the definition; Escape, a second activation or focus leaving the popover closes it, and focus returns to the term. The popover has `role="dialog"` and an accessible name of the term.
 
-The first entries: documented, static, observed, coordinator, unresolved, prepared, established, Delivered, Ready for team review, Waiting for merge, Unchecked items, Retained change, Publication review, Declared evidence, verified by an agent, not independent, Re-checked, reached (direct, transitive), undecided flow, Fact from Git, open claim, tier, small, medium, large. A page wraps the first occurrence of a glossary term in each section with `Term`.
+The first entries: documented, static, observed, coordinator, unresolved, prepared, established, Delivered, Ready for team review, Waiting for merge, Unchecked items, Retained change, Publication review, Declared evidence, verified by an agent, not independent, Re-checked, reached (direct, transitive), undecided flow, Fact from Git, open claim, tier, small, medium, large. A page wraps the first occurrence of a glossary term on the page with `Term`, so that each term button name is unique on the page.
 
 ## Narrow screens
 
@@ -124,4 +124,5 @@ Browser tests on fixtures cover HGA1 to HGA7: each change status on the work pag
 - The decision upstream-from-local-refs is open for the owner's plan approval.
 - KISS: two server fields; the rest derives in the work model and three badge components; one glossary module. No state is stored.
 - STE: each table row holds one rule; terms keep one meaning.
+- Amended during Implementation: the families gain supported, superseded, affected, Hypothesis, Integration and the impact tiers, which pages show and the first table did not list; a term is wrapped once per page, which keeps control names unique.
 - No blocker prevents Plan.
