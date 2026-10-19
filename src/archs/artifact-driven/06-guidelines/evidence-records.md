@@ -52,6 +52,104 @@ Changing the illustrative result to `failed` or `incomplete` retains that outcom
 | A passed structured record beside prose saying that the same check failed | Conflicting evidence; no positive aggregate completion. |
 | No structured field | Preserve legacy prose interpretation and its existing limits. |
 
+## Claims
+
+A requirement, specification, decision, plan, task or unit brief may add an optional `claims` list to its YAML front matter. A claim records one consequential assertion and the evidence for it. It records no approval and no workflow state. Change READMEs, version records, identity records and flow records do not declare claims.
+
+| Field | Presence | Rule |
+| --- | --- | --- |
+| `id` | required | Unique within the file; matches `[a-z0-9][a-z0-9-]*`. |
+| `kind` | required | `decision`, `assumption`, `hypothesis`, `root_cause`, `unknown` or `risk`. |
+| `statement` | required | One nonempty assertion. Not a DoD item, a requirement or a summary. |
+| `status` | required | `open`, `supported`, `verified`, `refuted` or `superseded`. |
+| `basis` | required | `documented`, `static`, `observed` or `inferred`, as in [flow supports](system-flows.md). |
+| `evidence` | by status | Nonempty list of sources. Each source follows the `source` rule of check records. |
+| `check` | by status | Inert text: the cheapest check that a reader can perform. |
+| `verified_by` | by status | `person` or `agent`. |
+| `rejected` | optional, `decision` only | List of `option` and `reason`, both nonempty text. |
+| `risk_if_wrong` | optional | One line of text. |
+| `about` | optional | Entity identities of the [change impact](change-impact.md) reader, or tracked repository paths. |
+| `superseded_by` | by status | The `id` of another claim in the same file. |
+
+| Status | Meaning | Required | Forbidden |
+| --- | --- | --- | --- |
+| `open` | Asserted; no supporting evidence is recorded. | — | `verified_by`, `superseded_by` |
+| `supported` | Rests on the author's own recorded evidence. | `evidence` | `verified_by`, `superseded_by` |
+| `verified` | Checked again with its own recorded detail. | `evidence`, `verified_by` | `superseded_by` |
+| `refuted` | Recorded evidence shows that it is wrong. | `evidence` | `verified_by`, `superseded_by` |
+| `superseded` | Replaced by another claim of the same file. | `superseded_by` | `verified_by` |
+
+`basis: observed` requires `evidence`. A `decision`, `root_cause` or `assumption` claim with status `open`, `supported` or `verified` should state `check`. Keep refuted and superseded claims in the file: they record what was ruled out. Unknown keys are an error. A status never means approval.
+
+### Record only consequential claims
+
+Record a claim only when at least one condition is true:
+
+1. It selects between options that change a contract, a flow, a dependency or files outside the task scope.
+2. If it is wrong, a DoD item, an acceptance criterion or a declared flow is wrong.
+3. It dismisses a computed impact item or a tested hypothesis.
+4. It names a limit that the version ships with.
+
+A file with more than ten claims gets a warning. Do not restate requirements, DoD items or summaries as claims.
+
+### Verify a claim
+
+Set `verified` only together with the detail of the check: what was run and what was observed. Put the detail under a heading in the same file and point `evidence` at it. The interface that performs the write sets `verified_by`: `person` for an interface that a person operates, `agent` for an agent interface. The input of the write never sets it. A field written directly with an editor or a script is an unchecked assertion; Git authorship remains the audit.
+
+Readers never show the word verified for `verified_by: agent` without the qualifier that an agent check is not independent. A test that the same change adds is recorded evidence. It checks a root cause only when its detail records a run that fails without the fix.
+
+### Claim diagnostics
+
+| Code | Severity | Rule |
+| --- | --- | --- |
+| `invalid-claim` | error | A field breaks the field or status rules, or `superseded_by` names no claim of the file. |
+| `claim-evidence-missing` | error | An `evidence` source does not resolve or resolves to an empty section. |
+| `claim-evidence-conflict` | error | A `supported` or `verified` claim cites a source that is also the source of a `failed` or `incomplete` check record or self-check. |
+| `claim-check-missing` | warning | A `decision`, `root_cause` or `assumption` claim with status `open`, `supported` or `verified` has no `check`. |
+| `claim-unverified-at-version` | warning | The change has an unmerged version record, and its `decision`, `root_cause` or `assumption` claim is `open` or `supported`. |
+| `claim-list-long` | warning | A file declares more than ten claims. |
+
+An error makes the claim unavailable as evidence and never falls back to a favorable prose reading. A warning keeps the claim available.
+
+### Illustrative claims
+
+These invented examples follow a debugging task. They do not assert that the sources exist. A task records the hypothesis that a measurement refuted and the root cause with a check that fails without the fix:
+
+~~~text
+claims:
+  - id: slow-reads
+    kind: hypothesis
+    statement: The server reads documents slowly.
+    status: refuted
+    basis: observed
+    evidence: [docs/artifacts/sample/changes/change-tab-streams/tasks/01-streams.md#slow-reads]
+  - id: connections
+    kind: root_cause
+    statement: Each tab keeps two event streams open, so three tabs use all six browser connections to the host and reads wait.
+    status: supported
+    basis: observed
+    evidence: [docs/artifacts/sample/changes/change-tab-streams/tasks/01-streams.md#evidence]
+    check: Run the tab test on the previous client (fails) and on the fix (passes).
+    about: [sample:repository-refresh:observe]
+~~~
+
+A unit brief dismisses reached flows that the impact reader computed but the unit did not declare:
+
+~~~text
+claims:
+  - id: reached-flows-unchanged
+    kind: assumption
+    statement: The two reached flows keep their steps; the reply guard changes no successful reply and no route.
+    status: open
+    basis: inferred
+    check: Compare the server diff with the supports of the two flows and run their browser tests.
+    about: [sample:knowledge-authoring, sample:context-handoff]
+~~~
+
+### Review claims
+
+The plan review reads the open claims first. The reviewer accepts or amends the goal and scope in the conversation; that acceptance stays outside the files. Correctness comes from checks and their recorded results. A reviewer can record a check, add a counter-claim or ask for a change. Version preparation reports `claim-unverified-at-version` warnings. Claims add no phase, role or gate.
+
 ## Publication reviews
 
 An artifact identity record (the root README front matter) or its owning unit brief may declare `publication_reviews`. Each record contains:

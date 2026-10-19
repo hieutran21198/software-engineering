@@ -27,6 +27,7 @@ flow:
         - evidence-usability-contract
         - explicit-evidence-guide
         - visual-contract
+        - claim-contract
     - id: plan
       title: Create fresh dependency-ordered tasks and DoD
       supports:
@@ -42,6 +43,7 @@ flow:
         - knowledge
         - evidence-usability-contract
         - explicit-evidence-guide
+        - claim-contract
     - id: gate
       title: Check upstream establishment and internal prerequisites
       supports:
@@ -55,6 +57,7 @@ flow:
         - evidence-usability-contract
         - explicit-evidence-guide
         - visual-contract
+        - claim-contract
     - id: publication
       title: Prepare version and team review
       supports:
@@ -62,6 +65,7 @@ flow:
         - evidence-usability-contract
         - explicit-evidence-guide
         - layout-contract
+        - claim-contract
   transitions:
     - from: requirement
       to: specification
@@ -156,6 +160,13 @@ flow:
       element: specifications/knowledge-layout.md
       requires: Edit working knowledge in place, record versions and changes without copies, and derive established and proposed knowledge from the protected branch.
       basis: documented
+    - id: claim-contract
+      kind: element
+      artifact: artifact-driven
+      element: specifications/claim-records.md
+      requires: Record consequential claims with evidence and checks, read open claims
+        before approval, and report unchecked claims at version preparation.
+      basis: documented
     - id: visual-contract
       kind: element
       artifact: artifact-driven
@@ -164,6 +175,8 @@ flow:
       basis: documented
   gaps:
     - Approval is available conversation/Git evidence, not a field in this map.
+    - Claim checks are recorded assertions; the map does not show who performed
+      a check beyond the verified_by value of the record.
     - Guidance and scaffold checks do not independently verify consumer
       execution, approval or remote publication.
   exclusions:

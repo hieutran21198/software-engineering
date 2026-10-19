@@ -90,6 +90,7 @@ Readers derive these facts; no file stores them:
 | Version snapshot | The tree of the first-parent protected-branch commit that introduced `versions/<version>/README.md`. A tag `<artifact>/<version>` on that commit is optional. |
 | Proposed edges | The difference between the checked-out and protected `depends_on` lists. |
 | Phase evidence | `self_check` in requirement, specification and plan documents; `evidence_records` and checklists in tasks; the version record. |
+| Claims | Optional `claims` in requirement, specification, decision, plan, task and unit-brief front matter. A claim status describes evidence; it is not approval. See [claims](../06-guidelines/evidence-records.md#claims). |
 | Approval | Not a file fact. Authorization comes from the user. |
 
 A shallow clone, a missing protected ref or a version record without an introducing commit is a diagnostic. Readers never guess a baseline from names, timestamps or the largest version.

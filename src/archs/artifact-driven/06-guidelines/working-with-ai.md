@@ -53,7 +53,7 @@ After approval, the coordinator can create or reuse agents for independent imple
 
 ## Review the Plan
 
-Check scope, contracts, affected repositories, dependencies, DoD, and integrated acceptance checks. Approve the concrete plan or request amendments. A new plan or material change requires renewed review before affected implementation proceeds.
+Read the open [claims](evidence-records.md#claims) of the change first. Check scope, contracts, affected repositories, dependencies, DoD, and integrated acceptance checks. Approve the concrete plan or request amendments. Approval accepts the goal and scope; it does not verify correctness. Correctness comes from checks and their recorded results, and a check with `verified_by: agent` is not independent. A new plan or material change requires renewed review before affected implementation proceeds.
 
 Passing task checks is not the same as combined validation. The coordinator integrates work, records evidence, prepares the proposed version, pushes dedicated branches, opens linked PRs, and stops for team review and merge.
 
