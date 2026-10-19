@@ -18,11 +18,17 @@ specifications/human-guidance.md: Validation; requirements/human-guidance.md, ac
 
 ## Definition of Done
 
-- [ ] Browser tests cover HGA1 to HGA7 on fixtures.
-- [ ] The full browser suite passes on the local Chromium and on the Playwright 1.64 headless shell (Chromium 156).
+- [x] Browser tests cover HGA1 to HGA7 on fixtures.
+- [x] The full browser suite passes on the local Chromium and on the Playwright 1.64 headless shell (Chromium 156).
 - [ ] Screenshots at 1440 and 390 pixels of the work, artifact, change and flow pages of a disposable clone are taken, and the owner looked at them.
-- [ ] `npm test` passes; existing route, tool and packet tests pass without edits.
+- [x] `npm test` passes; existing route, tool and packet tests pass without edits.
 
 ## Evidence
 
-Not recorded.
+| DoD item | Check | Result |
+| --- | --- | --- |
+| HGA1 to HGA7 | test/browser/human-guidance.spec.js: "HGA1: in progress and ready for version…", "HGA1/HGA2/HGA3: a prepared version with an unchecked item stays in Current work…", "HGA1: ready for team review without an upstream, waiting for merge when the upstream equals HEAD, and back after a new commit" (also the check of claim upstream-from-local-refs), "HGA4: the change brief and the PR description name what they count", "HGA5: every glossary term on the six pages opens its explanation with Enter, Space and a pointer, once per page" (22 of 27 terms on fixture pages; the Node test covers all), "HGA6: links, quiet actions, primary and danger buttons…", two HGA7 tests including the Impact page | Passed |
+| Both browsers | Full browser suite 117 of 117 on the Nix Chromium 149 and 117 of 117 on the Playwright 1.64 headless shell (Chromium 156); no existing test edited in this step | Passed |
+| Node suite | `npm test` 430 tests: 429 passed, 0 failed, 1 skipped on two reruns; one earlier run failed one test once (the known flaky SQLite test) | Passed |
+
+Limits: five glossary terms (Retained change, direct, transitive, small, large) appear on no fixture page and are covered only by the Node test; style checks skip disabled controls.
