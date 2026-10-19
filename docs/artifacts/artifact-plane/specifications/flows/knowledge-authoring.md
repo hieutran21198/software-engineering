@@ -29,6 +29,8 @@ flow:
     - id: edit
       title: Edit a document body or apply a domain operation
       supports:
+        - human-guidance-contract
+        - human-guidance-browser
         - workbench-contract
         - editing-contract
         - operations-module
@@ -121,6 +123,21 @@ flow:
     - from: version
       to: review
   support:
+    - id: human-guidance-contract
+      kind: element
+      artifact: artifact-plane
+      element: specifications/human-guidance.md
+      requires: Show the status and next step of each change, version labels,
+        one status vocabulary, the control grammar and the glossary.
+      basis: documented
+    - id: human-guidance-browser
+      kind: test
+      path: apps/artifact-plane/test/browser/human-guidance.spec.js
+      requires: Prove statuses, version labels, the stepper rule, named counts,
+        glossary terms, control styles and status badges on the pages.
+      basis: observed
+      evidence:
+        - docs/artifacts/artifact-plane/changes/change-human-guidance/tasks/04-guidance-validation.md
     - id: workbench-contract
       kind: element
       artifact: artifact-plane

@@ -11,6 +11,9 @@ flow:
     - id: select
       title: Select the project and worktree
       supports:
+        - app-entry
+        - app-smoke
+        - app-release-contract
         - authoring-contract
         - reading-controls-browser
         - reading-controls-contract
@@ -43,6 +46,11 @@ flow:
     - id: overview
       title: Load metadata first and scoped details on demand
       supports:
+        - human-guidance-contract
+        - guidance-pages
+        - human-guidance-browser
+        - explore-response
+        - explore-response-tests
         - query
         - measured-edge-labels
         - label-placement
@@ -111,6 +119,62 @@ flow:
       to: inspect
       condition: Relevant knowledge is selected.
   support:
+    - id: app-entry
+      kind: implementation
+      path: apps/artifact-plane/server/app.js
+      requires: Start the server, the stdio MCP server or the model install from
+        the executable or the source entry.
+      basis: static
+    - id: app-smoke
+      kind: test
+      path: apps/artifact-plane/scripts/app-smoke.mjs
+      requires: Start each built executable and prove that it serves the
+        application, opens a repository and lists the MCP tools.
+      basis: observed
+      evidence:
+        - docs/artifacts/artifact-plane/changes/change-human-guidance/tasks/06-app-build.md
+    - id: app-release-contract
+      kind: element
+      artifact: artifact-plane
+      element: specifications/app-release.md
+      requires: Release the Plane as one executable for each target with a
+        command line, a payload cache and a plane-v release.
+      basis: documented
+    - id: human-guidance-contract
+      kind: element
+      artifact: artifact-plane
+      element: specifications/human-guidance.md
+      requires: Show the status and next step of each change, version labels,
+        one status vocabulary, the control grammar and the glossary.
+      basis: documented
+    - id: guidance-pages
+      kind: implementation
+      path: apps/artifact-plane/src/pages/guidance.jsx
+      requires: Status names, version labels, glossary terms and section links
+        for the pages.
+      basis: static
+    - id: human-guidance-browser
+      kind: test
+      path: apps/artifact-plane/test/browser/human-guidance.spec.js
+      requires: Prove statuses, version labels, the stepper rule, named counts,
+        glossary terms, control styles and status badges on the pages.
+      basis: observed
+      evidence:
+        - docs/artifacts/artifact-plane/changes/change-human-guidance/tasks/04-guidance-validation.md
+    - id: explore-response
+      kind: implementation
+      path: apps/artifact-plane/server/explore-response.js
+      symbol: exploreResponse
+      requires: Omit on-demand unit data from the explore response so that a
+        repository with many worktrees can be opened.
+      basis: static
+    - id: explore-response-tests
+      kind: test
+      path: apps/artifact-plane/test/explore-response.test.js
+      requires: Prove a 200 response and bounded growth with 12 worktrees.
+      basis: observed
+      evidence:
+        - docs/artifacts/artifact-plane/changes/change-human-guidance/tasks/09-explore-scale.md
     - id: authoring-contract
       kind: element
       artifact: artifact-plane
