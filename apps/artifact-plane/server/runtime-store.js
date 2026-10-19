@@ -4,7 +4,10 @@ import { resolve, dirname, relative, isAbsolute, join } from 'node:path';
 import { homedir } from 'node:os';
 import { execFileSync } from 'node:child_process';
 import { randomUUID, createHash } from 'node:crypto';
-import { exploreRepository } from './reader.js';
+import { exploreRepository, scanRepository, git as gitRead } from './reader.js';
+import { evidenceFor } from './workflow.js';
+import { unitBriefs } from './units-of-work.js';
+import { isCurrent } from '../src/work-model.js';
 
 export const FRESHNESS_MS = 10 * 60 * 1000;
 const terminal = new Set(['done','failed','interrupted','superseded']);
@@ -37,7 +40,8 @@ function capturedNode(n) {
 export function observedAttempt(attempt,now=Date.now(),connected=true) {
  const baseState=attempt.lastObservedState||attempt.state;
  const stale=['processing','blocked'].includes(baseState)&&(!connected||now-attempt.updatedAt>FRESHNESS_MS);
- return {...attempt,state:stale?'unknown':attempt.state,lastObservedState:baseState,stale:stale||attempt.stale,elapsedMs:Math.max(0,(attempt.endedAt||now)-attempt.startedAt)};
+ // Attempts without a binding field are explicit.
+ return {...attempt,binding:attempt.binding==='inferred'?'inferred':'explicit',state:stale?'unknown':attempt.state,lastObservedState:baseState,stale:stale||attempt.stale,elapsedMs:Math.max(0,(attempt.endedAt||now)-attempt.startedAt)};
 }
 export class RuntimeStore {
  constructor({stateDir=defaultStateDir(),roots=[],create=true}={}) {
@@ -77,8 +81,8 @@ export class RuntimeStore {
   if(!repo&&register){repo={id:randomUUID(),common:identity.common,root:identity.roots[0]||identity.root};this.db.prepare('INSERT INTO repositories VALUES(?,?,?)').run(repo.id,repo.common,repo.root);}
   return repo;
  }
- async bind({root,unit=null,artifact,change,task,session,agent=''}) {
-  if(!safeName(artifact)||!safeName(change)||unit!==null&&!safeName(unit)||!label(session)||typeof agent!=='string')throw Error('Invalid binding identity');
+ async bind({root,unit=null,artifact,change,task,session,agent='',binding='explicit'}) {
+  if(!safeName(artifact)||!safeName(change)||unit!==null&&!safeName(unit)||!label(session)||typeof agent!=='string'||!['explicit','inferred'].includes(binding))throw Error('Invalid binding identity');
   const snapshot=await exploreRepository(root),worktree=snapshot.workflow.worktrees.find(w=>w.selected);
   let nodes,edges;
   if(unit){const u=worktree.unitsOfWork.find(u=>u.id===unit);if(u?.implementationGraph.state!=='available')throw Error('Unit implementation graph unavailable');({nodes,edges}=u.implementationGraph);}
@@ -92,17 +96,25 @@ export class RuntimeStore {
   const graphDigest=digest(JSON.stringify([sourceWorktree,sourceRevision,unit,safeNodes.map(n=>[n.kind,n.artifact,n.change,n.source,n.task?.signature]),edges.map(e=>[e.source,e.target,e.kind])]));
   let context=this.db.prepare('SELECT json FROM contexts WHERE repository=? AND digest=?').get(repo.id,graphDigest);
   const now=Date.now();context=context?JSON.parse(context.json):{id:randomUUID(),repository:repo.id,unit,root:sourceWorktree,revision:sourceRevision,digest:graphDigest,capturedAt:now,nodes:safeNodes,edges};
-  const attempt={id:randomUUID(),repository:repo.id,context:context.id,task:selected.id,session:label(session),agent:label(agent)||'',artifact,change,path:selected.source,signature:taskSignature(selected.task),sourceWorktree,sourceRevision,state:'unknown',startedAt:now,updatedAt:now,endedAt:null,activity:'Bound; waiting for observed activity'};
+  const attempt={id:randomUUID(),repository:repo.id,context:context.id,task:selected.id,session:label(session),agent:label(agent)||'',artifact,change,path:selected.source,signature:taskSignature(selected.task),sourceWorktree,sourceRevision,binding,state:'unknown',startedAt:now,updatedAt:now,endedAt:null,activity:'Bound; waiting for observed activity'};
   this.db.exec('BEGIN IMMEDIATE');try{
    this.db.prepare('INSERT OR IGNORE INTO contexts VALUES(?,?,?,?,?)').run(context.id,repo.id,graphDigest,now,JSON.stringify(context));
-   for(const row of this.db.prepare('SELECT json FROM attempts WHERE session=? AND agent=?').all(attempt.session,attempt.agent)){
-    const old=JSON.parse(row.json);if(!old.endedAt){old.state='superseded';old.endedAt=now;this.saveAttempt(old);}}
+   const open=this.db.prepare('SELECT json FROM attempts WHERE session=? AND agent=?').all(attempt.session,attempt.agent).map(row=>JSON.parse(row.json)).filter(old=>!old.endedAt);
+   // An inferred binding never replaces an attempt; an explicit one supersedes each open attempt.
+   if(binding==='inferred'&&open.length)throw Error('The session and agent have an open attempt');
+   for(const old of open){old.state='superseded';old.endedAt=now;this.saveAttempt(old);}
    this.db.prepare('INSERT INTO attempts VALUES(?,?,?,?,?,?,?)').run(attempt.id,repo.id,context.id,attempt.task,attempt.session,attempt.agent,JSON.stringify(attempt));
    this.insertEvent({id:randomUUID(),attempt:attempt.id,session:attempt.session,agent:attempt.agent,kind:'bind',observedAt:now});
    this.db.exec('COMMIT');
   }catch(e){this.db.exec('ROLLBACK');throw e;}
   return {repository:repo.id,context:context.id,attempt:attempt.id};
  }
+ openAttempt(session,agent=''){
+  if(!this.db)return null;
+  for(const row of this.db.prepare('SELECT json FROM attempts WHERE session=? AND agent=?').all(label(session),label(agent)||'')){const a=JSON.parse(row.json);if(!a.endedAt)return a;}
+  return null;
+ }
+ subagentStarted(session){return !!this.db?.prepare("SELECT 1 FROM events WHERE session=? AND kind='SubagentStart' LIMIT 1").get(label(session));}
  saveAttempt(a){this.db.prepare('UPDATE attempts SET json=? WHERE id=?').run(JSON.stringify(a),a.id);}
  insertEvent(e){return this.db.prepare('INSERT OR IGNORE INTO events(id,attempt,session,agent,kind,json) VALUES(?,?,?,?,?,?)').run(e.id,e.attempt||null,e.session,e.agent||'',e.kind,JSON.stringify(e));}
  observe(input){
@@ -150,4 +162,33 @@ export class RuntimeStore {
   const events=this.db.prepare('SELECT seq,json FROM events WHERE attempt IN (SELECT id FROM attempts WHERE repository=?) ORDER BY seq DESC LIMIT 1000').all(repo.id).reverse().map(r=>({...JSON.parse(r.json),sequence:Number(r.seq)}));
   return {repository:repo.id,contexts,attempts,events,sequence:this.sequence()};
  }
+}
+
+// Inferred binding (specifications/agent-integration.md). It returns the bind
+// arguments for one task file path of a PreToolUse input, or null.
+const TASK_FILE=/docs\/artifacts\/([^/\s'"`]+)\/changes\/([^/\s'"`]+)\/tasks\/([^/\s'"`;|&<>()]+\.md)(?![\w.-])/g;
+export function taskFilePaths(toolInput){
+ const command=Array.isArray(toolInput?.command)?toolInput.command.join(' '):toolInput?.command;
+ const found=new Map();
+ for(const value of [toolInput?.file_path,toolInput?.path,command])if(typeof value==='string')for(const [,artifact,change,file] of value.matchAll(TASK_FILE))
+  if(file!=='README.md')found.set(JSON.stringify([artifact,change,file]),{artifact,change,task:file});
+ return [...found.values()];
+}
+export async function worktreeChanges(root){
+ const data=await scanRepository(root);
+ const changes=await evidenceFor(root,data,gitRead,data.snapshot.repository.head,[]);
+ return {changes:changes.filter(isCurrent),units:unitBriefs(data.files)};
+}
+export async function inferredBinding(input,store,{worktrees=cwd=>repositoryIdentity(cwd,{allowNested:true}),changes=worktreeChanges}={}){
+ const paths=taskFilePaths(input?.tool_input),session=label(input?.session_id),agent=label(input?.agent_id)||'';
+ if(paths.length!==1||!session||typeof input.cwd!=='string')return null;
+ const {artifact,change,task}=paths[0];
+ if(store.openAttempt(session,agent))return null;
+ const {root,roots}=worktrees(input.cwd);
+ // Without agent_id, only a linked worktree of a session with no subagent can bind.
+ if(!agent&&(canonical(root)===roots[0]||store.subagentStarted(session)))return null;
+ const current=await changes(root);
+ if(!current.changes.some(c=>c.artifact===artifact&&c.name===change))return null;
+ const units=current.units.filter(u=>u.members.some(m=>m.artifact===artifact&&m.change===change));
+ return {root,artifact,change,task,session,agent,unit:units.length===1?units[0].id:null};
 }

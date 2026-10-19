@@ -251,3 +251,20 @@ test('Recorded executions show a failed read with Retry, and the entry returns w
     await expect(recorded(page).getByRole('alert')).toHaveCount(0);
   } finally {store.close();await page.unrouteAll({behavior: 'ignoreErrors'});await f.cleanup();}
 });
+
+test('the attempt list of a recorded task labels an inferred binding', async ({page}) => {
+  // The store persists across tests, so each run uses new session names.
+  const f = await runtimeFixture(), store = new RuntimeStore({stateDir: stateDir()}), run = Date.now().toString(36);
+  const inferred = 'inferred-' + run, child = 'child-' + run, explicit = 'explicit-' + run;
+  try {
+    await store.bind({root: f.root, artifact: 'demo', change: 'change-live', task: 'a.md', session: inferred, agent: child, unit: 'live', binding: 'inferred'});
+    await bind(store, f.root, 'a.md', explicit);
+    hook(f.root, inferred, 'PreToolUse', {agent_id: child, tool_name: 'Read'});hook(f.root, explicit, 'UserPromptSubmit');
+    await openRepository(page, f.root);
+    await openMore(page, 'Recorded executions');await recorded(page).getByRole('button', {name: /^Live execution/}).click();
+    await recorded(page).getByRole('group', {name: 'Captured implementation graph'}).locator('.react-flow__node').filter({hasText: 'Task A'}).click();
+    const attempts = recorded(page).locator('.recorded-task li');
+    await expect(attempts.filter({hasText: child + ' ·'})).toContainText('Inferred from a task file read');
+    await expect(attempts.filter({hasText: explicit + ' ·'})).not.toContainText('Inferred');
+  } finally {store.close();await f.cleanup();}
+});
