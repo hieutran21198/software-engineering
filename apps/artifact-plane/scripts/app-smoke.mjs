@@ -70,6 +70,30 @@ await check("mcp answers initialize and lists its tools", async () => {
   } finally {await client.close();}
 });
 
+// The hook writes one JSON object and exits with status 0; runtime query prints the JSON of the store.
+const runWith = (args, input) => new Promise((done, reject) => {
+  const child = execFile(file, args, { env }, (error, stdout, stderr) => error ? reject(Object.assign(error, { stderr })) : done(JSON.parse(stdout)));
+  child.stdin.end(input);
+});
+await check("hook answers a SessionStart input with one JSON object", async () => {
+  const input = { session_id: "app-smoke", hook_event_name: "SessionStart", source: "startup", cwd: repository };
+  const output = await Promise.race([runWith(["hook", "--state-dir", state], JSON.stringify(input)), timeout(60000, "no hook output within 60 seconds")]);
+  assert(output && typeof output === "object" && !Array.isArray(output), `output ${JSON.stringify(output)}`);
+  const context = output.hookSpecificOutput?.additionalContext;
+  assert(context === undefined || typeof context === "string", "additionalContext is not text");
+  console.log(`     ${context ? context.split("\n")[0] : "{}"}`);
+});
+await check("runtime query prints the JSON of the store", async () => {
+  const result = await runWith(["runtime", "query", "--root", repository, "--state-dir", state], "").catch((error) => {
+    // The store requires POSIX modes 0700 and 0600, which Windows does not report; the command then exits with status 1.
+    if (process.platform === "win32" && error.code === 1 && /private runtime/.test(error.stderr)) return { windows: error.stderr.trim() };
+    throw error;
+  });
+  if (result.windows) {console.log(`     runtime store unavailable on Windows: ${result.windows}`);return;}
+  assert(Number.isInteger(result.sequence) && Array.isArray(result.attempts), `result ${JSON.stringify(result).slice(0, 200)}`);
+  console.log(`     ${result.sequence} events`);
+});
+
 await rm(state, { recursive: true, force: true });
 console.log(failed ? `${failed} checks failed` : "All checks passed");
 process.exitCode = failed ? 1 : 0;

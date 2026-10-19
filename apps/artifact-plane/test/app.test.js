@@ -24,12 +24,12 @@ test("--version prints the package version", async () => {
 test("--help prints the commands and environment variables", async () => {
   const { code, stdout, stderr } = await run("--help");
   assert.equal(code, 0);assert.equal(stderr, "");
-  for (const word of ["serve", "mcp", "model-install", "--version", "--help", "PORT", "ARTIFACT_PLANE_STATE_DIR"]) assert.ok(stdout.includes(word), word);
+  for (const word of ["serve", "mcp", "hook", "runtime <register|bind|report|query>", "--binding inferred", "default: the Git top level", "model-install", "--version", "--help", "PORT", "ARTIFACT_PLANE_STATE_DIR"]) assert.ok(stdout.includes(word), word);
 });
 
 test("an unknown argument prints the help to standard error with exit status 2", async () => {
   const help = (await run("--help")).stdout;
-  for (const args of [["unknown"], ["serve", "extra"], ["--version", "extra"]]) assert.deepEqual(await run(...args), { code: 2, stdout: "", stderr: help });
+  for (const args of [["unknown"], ["serve", "extra"], ["--version", "extra"], ["runtime"], ["runtime", "hook"], ["runtime", "--root", "/"]]) assert.deepEqual(await run(...args), { code: 2, stdout: "", stderr: help });
 });
 
 test("the server finds dist/ beside a bundled server.mjs and beside server/ in a source checkout", async (t) => {
