@@ -46,9 +46,11 @@ canonical ADD bundle and its references intact. Add concise ADD
 guidance to the applicable existing AGENTS.md or CLAUDE.md, preserving
 unrelated instructions. Report any capability or instruction conflicts.
 
-The coordinator must interview me, complete Requirement, Specification,
-and Plan with self-checks and phase commits, then wait for my plan
-approval. A new plan or material change requires renewed approval.
+The coordinator must interview me and assign a change tier. For a
+medium or large change, complete Requirement, Specification, and Plan
+with self-checks and phase commits, then wait for my plan approval. A
+new plan or material change requires renewed approval. A small change
+commits the three phases together, and my request is its approval.
 Independent implementation agents use separate worktrees. Dependent
 implementation waits for required established upstream versions.
 After validation, prepare proposed versions and linked PRs, then stop

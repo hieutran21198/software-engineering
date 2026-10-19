@@ -48,7 +48,7 @@ depends_on: [tenant]
 
 `current_version` is a semantic version, or null before the first established version. `depends_on` lists upstream artifact IDs and can be empty. `publication_reviews` is optional; see [publication reviews](../06-guidelines/evidence-records.md#publication-reviews). The body records purpose, scope, boundaries and ownership. Readers derive the active change; do not write sections for it, the version or the dependencies.
 
-The change record `changes/<change>/README.md` states the reason and scope in prose. Its `tasks/` directory holds the plan, DoD checklists and evidence. A change copies no knowledge.
+The change record `changes/<change>/README.md` states the reason and scope in prose. Its optional front matter key `tier` is `small`, `medium` or `large`; without it, the change is medium ([change tiers](../06-guidelines/change-tiers.md)). Its `tasks/` directory holds the plan, DoD checklists and evidence. The plan front matter can declare `compatibility` (`patch`, `minor` or `major`), and a task can declare the requirement IDs that it `covers`. A change copies no knowledge.
 
 The version record is `versions/<version>/README.md`:
 
@@ -141,7 +141,7 @@ Use `<major>.<minor>.<patch>`. Start with `1.0.0` and suggest the next version w
 | Minor | The change adds capability while preserving compatibility. |
 | Patch | The change corrects a defect or clarifies knowledge without breaking compatibility. |
 
-Assess all affected interfaces, including APIs, events, data formats, and operational contracts. Suggest the highest applicable change level. The user confirms or overrides the suggestion.
+Assess all affected interfaces, including APIs, events, data formats, and operational contracts. The plan proposes the highest applicable level, and the user confirms or overrides it with the plan approval. At Version, the coordinator computes the number from the confirmed level and `current_version` on the protected branch.
 
 ## Legacy Layout and Migration
 

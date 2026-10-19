@@ -44,9 +44,11 @@ The knowledge workspace is <knowledge-workspace>. Implementation
 repositories are <repository-paths>. I want <business-or-technical-outcome>.
 
 Interview me about material gaps before defining the change. Reuse
-established knowledge. Complete Requirement, Specification, and Plan
-with phase self-checks and commits on a dedicated branch, then stop
-and present the plan for my explicit approval. Do not implement yet.
+established knowledge and assign the change tier. For a medium or large
+change, complete Requirement, Specification, and Plan with phase
+self-checks and commits on a dedicated branch, then stop and present
+the plan for my explicit approval. Do not implement yet. For a small
+change, my request is the approval; commit the three phases together.
 ```
 
 After approval, the coordinator can create or reuse agents for independent implementation tasks, each in a separate Git worktree. The TL completes Specification and Plan sequentially in the same frontier-model session when available. Do not require another model review for every task.

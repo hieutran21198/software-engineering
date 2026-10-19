@@ -27,19 +27,33 @@ func TestMinimalChangeScaffold(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	blocks := regexp.MustCompile(`(?m)^### (docs/artifacts/[^\n]+)\n\n~~~markdown\n([\s\S]*?)\n~~~`).FindAllSubmatch(guide, -1)
-	if len(blocks) != 6 {
-		t.Fatalf("want six copyable files, got %d", len(blocks))
+	small, additions, ok := bytes.Cut(guide, []byte("\n## Medium and large additions\n"))
+	if !ok {
+		t.Fatal("guide lacks the medium and large additions")
 	}
+	blockPattern := regexp.MustCompile(`(?m)^### (docs/artifacts/[^\n]+)\n\n~~~markdown\n([\s\S]*?)\n~~~`)
 	files := fstest.MapFS{}
-	for _, block := range blocks {
-		name, body := string(block[1]), block[2]
-		if !fs.ValidPath(name) || files[name] != nil {
-			t.Fatalf("unsafe or duplicate scaffold path: %s", name)
+	addBlocks := func(text []byte) int {
+		blocks := blockPattern.FindAllSubmatch(text, -1)
+		for _, block := range blocks {
+			name, body := string(block[1]), block[2]
+			if !fs.ValidPath(name) || files[name] != nil {
+				t.Fatalf("unsafe or duplicate scaffold path: %s", name)
+			}
+			files[name] = &fstest.MapFile{Data: body}
+			if bytes.Contains(body, []byte("[x]")) || bytes.Contains(body, []byte(`"result": "passed"`)) {
+				t.Fatalf("fresh scaffold contains completion evidence: %s", name)
+			}
 		}
-		files[name] = &fstest.MapFile{Data: body}
-		if bytes.Contains(body, []byte("[x]")) || bytes.Contains(body, []byte(`"result": "passed"`)) {
-			t.Fatalf("fresh scaffold contains completion evidence: %s", name)
+		return len(blocks)
+	}
+	// A small change copies at most seven knowledge files and no unit brief.
+	if count := addBlocks(small); count == 0 || count > 7 {
+		t.Fatalf("want one to seven small-tier files, got %d", count)
+	}
+	for name := range files {
+		if strings.HasPrefix(name, "docs/artifacts/units-of-work/") {
+			t.Fatalf("small tier copies a unit brief: %s", name)
 		}
 	}
 	// Links must still resolve after copying the blocks out of the guide.
@@ -66,6 +80,80 @@ func TestMinimalChangeScaffold(t *testing.T) {
 			t.Fatalf("invalid JSON-compatible YAML in %s: %v", name, err)
 		}
 	}
+	// In-place layout: knowledge is edited under the artifact and the change
+	// holds only its record and plan, so a new change copies no baseline.
+	artifact, base := "docs/artifacts/sample", "docs/artifacts/sample/changes/change-small-update"
+	var change struct{ Tier string }
+	readMetadata(base+"/README.md", &change)
+	if change.Tier != "small" {
+		t.Fatalf("change README tier: %q", change.Tier)
+	}
+	for _, file := range []string{artifact + "/requirements/outcome.md", artifact + "/specifications/outcome.md"} {
+		if files[file] == nil {
+			t.Fatalf("scaffold lacks %s", file)
+		}
+	}
+	for name := range files {
+		if strings.HasPrefix(name, base+"/") && !strings.HasPrefix(name, base+"/tasks/") && name != base+"/README.md" {
+			t.Errorf("change copies knowledge instead of editing in place: %s", name)
+		}
+		if strings.Contains(name, "/versions/") {
+			t.Errorf("fresh scaffold creates a version: %s", name)
+		}
+	}
+	var plan struct {
+		Tasks         []string
+		Compatibility string
+	}
+	readMetadata(base+"/tasks/README.md", &plan)
+	if len(plan.Tasks) != 1 || !fs.ValidPath(plan.Tasks[0]) || plan.Tasks[0] == "README.md" || plan.Compatibility != "patch" {
+		t.Fatalf("invalid one-task small plan: %+v", plan)
+	}
+	var task struct {
+		ID      string
+		Depends []string `json:"depends_on"`
+		Covers  []struct {
+			Element string
+			IDs     []string `json:"ids"`
+		}
+		Evidence []any `json:"evidence_records"`
+	}
+	taskPath := path.Join(base, "tasks", plan.Tasks[0])
+	readMetadata(taskPath, &task)
+	if task.ID == "" || task.Depends == nil || len(task.Depends) != 0 || task.Evidence == nil || len(task.Evidence) != 0 || len(task.Covers) == 0 {
+		t.Fatalf("invalid initial task or fabricated evidence: %+v", task)
+	}
+	for _, cover := range task.Covers {
+		requirement := files[path.Join(artifact, cover.Element)]
+		if requirement == nil || len(cover.IDs) == 0 {
+			t.Fatalf("covers names a missing requirement file: %+v", cover)
+		}
+		for _, id := range cover.IDs {
+			if !regexp.MustCompile(`(?m)^- ` + regexp.QuoteMeta(id) + `: `).Match(requirement.Data) {
+				t.Errorf("covers names an undefined ID %s in %s", id, cover.Element)
+			}
+		}
+	}
+	// Single-source records: depends_on is the only prerequisite record and
+	// approval stays out of the task files.
+	for name, file := range files {
+		if !strings.HasPrefix(name, base+"/tasks/") {
+			continue
+		}
+		if bytes.Contains(file.Data, []byte("## Prerequisites")) || bytes.Contains(bytes.ToLower(file.Data), []byte("approv")) {
+			t.Errorf("task record restates prerequisites or approval: %s", name)
+		}
+	}
+	body := string(files[taskPath].Data)
+	for _, section := range []string{"## Scope and ownership", "## Definition of Done", "## Evidence", "- [ ]"} {
+		if !strings.Contains(body, section) {
+			t.Errorf("task lacks %s", section)
+		}
+	}
+	// A medium or large change adds the unit brief for the same change.
+	if count := addBlocks(additions); count != 1 {
+		t.Fatalf("want one unit brief in the additions, got %d", count)
+	}
 	var unit struct {
 		ID       string `json:"unit_of_work"`
 		Changes  []struct{ Artifact, Change string }
@@ -78,50 +166,15 @@ func TestMinimalChangeScaffold(t *testing.T) {
 	if unit.ID != "small-update" || len(unit.Changes) != 1 || unit.Flows == nil || strings.TrimSpace(unit.Assess) == "" || len(unit.Accept) == 0 || unit.Evidence == nil || len(unit.Evidence) != 0 {
 		t.Fatalf("incomplete unit or fabricated evidence: %+v", unit)
 	}
+	if member := unit.Changes[0]; path.Join("docs/artifacts", member.Artifact, "changes", member.Change) != base {
+		t.Fatalf("unit member is not the scaffold change: %+v", member)
+	}
 	criteria := map[string]bool{}
 	for _, criterion := range unit.Accept {
 		if criterion.ID == "" || strings.TrimSpace(criterion.Criterion) == "" || criteria[criterion.ID] {
 			t.Fatalf("invalid acceptance criterion: %+v", criterion)
 		}
 		criteria[criterion.ID] = true
-	}
-	// In-place layout: knowledge is edited under the artifact and the change
-	// holds only its record and plan, so a new change copies no baseline.
-	member := unit.Changes[0]
-	artifact := path.Join("docs/artifacts", member.Artifact)
-	base := path.Join(artifact, "changes", member.Change)
-	for _, file := range []string{base + "/README.md", artifact + "/requirements/outcome.md", artifact + "/specifications/outcome.md"} {
-		if files[file] == nil {
-			t.Fatalf("unit member lacks %s", file)
-		}
-	}
-	for name := range files {
-		if strings.HasPrefix(name, base+"/") && !strings.HasPrefix(name, base+"/tasks/") && name != base+"/README.md" {
-			t.Errorf("change copies knowledge instead of editing in place: %s", name)
-		}
-		if strings.Contains(name, "/versions/") {
-			t.Errorf("fresh scaffold creates a version: %s", name)
-		}
-	}
-	var plan struct{ Tasks []string }
-	readMetadata(base+"/tasks/README.md", &plan)
-	if len(plan.Tasks) != 1 || !fs.ValidPath(plan.Tasks[0]) || plan.Tasks[0] == "README.md" {
-		t.Fatalf("invalid one-task plan: %+v", plan)
-	}
-	var task struct {
-		ID       string
-		Depends  []string `json:"depends_on"`
-		Evidence []any    `json:"evidence_records"`
-	}
-	readMetadata(path.Join(base, "tasks", plan.Tasks[0]), &task)
-	if task.ID == "" || task.Depends == nil || len(task.Depends) != 0 || task.Evidence == nil || len(task.Evidence) != 0 {
-		t.Fatalf("invalid initial task or fabricated evidence: %+v", task)
-	}
-	body := string(files[path.Join(base, "tasks", plan.Tasks[0])].Data)
-	for _, section := range []string{"## Scope and ownership", "## Governing knowledge", "## Prerequisites", "## Definition of Done", "## Evidence", "- [ ]"} {
-		if !strings.Contains(body, section) {
-			t.Errorf("task lacks %s", section)
-		}
 	}
 }
 

@@ -121,7 +121,7 @@ The consumer workspace must already exist. Output paths must remain inside it. D
 
 ## Result
 
-The destination contains the ADD overview, foundation, methodology, execution guidance and role skills, reusable patterns, adoption guide, and end-user guidelines. Relative documentation links remain usable within the copied bundle.
+The destination contains the ADD overview, foundation, methodology, execution guidance and role skills, reusable patterns, adoption guide, end-user guidelines and the `tools/` directory. Relative documentation links remain usable within the copied bundle.
 
 This destination holds ADD guidance. Project-specific artifacts can use the documented `docs/artifacts/` structure; adoption does not invent domain artifacts, tasks, or versions. Skills are supplied as files; the command does not register them in an agent tool or modify consumer `AGENTS.md` or `CLAUDE.md` files.
 
@@ -137,6 +137,16 @@ Add `--json` to any command to write one `se-adopt.result.v1` JSON object to sta
 
 For updates that conflict with local changes, compare and reconcile manually or adopt into a separate directory. There is no automatic upgrade, forced overwrite, Git commit, push, or PR creation. The normal ADD workflow applies when you begin a project change.
 
+## Validator
+
+The `tools/` directory always contains a README that explains how to run the record validator. The validator file `tools/add-validate.mjs` is present only when the release build supplies it. Adoption succeeds without it, and the command does not run it. The validator needs Node.js 24 or later:
+
+```sh
+node docs/artifact-driven/tools/add-validate.mjs
+```
+
+It reads the project knowledge under `docs/artifacts` and writes one JSON object with its diagnostics. It never writes files. The [writing guide](../06-guidelines/writing-artifacts.md#check-records-with-the-validator) lists its checks. Without the file, apply the same rules by hand in each self-check.
+
 ## Required Utility Skills
 
 The ADD bundle includes `kiss` and `asd-ste-100` under `required-skills/`. Both are required for ADD work. The copy command embeds their canonical utility sources, so adopted bundles remain self-contained. Consumer AI setup must make both skills available to every ADD role.
@@ -149,7 +159,7 @@ The bundle includes the [system-flow format](../06-guidelines/system-flows.md) a
 
 Do these steps in order after a successful copy:
 
-1. Check the result. Run the same `se-adopt` command again with `--dry-run`. A complete adoption reports `0 new files`. Confirm that the destination contains `README.md`, `required-skills/kiss/SKILL.md` and `required-skills/asd-ste-100/SKILL.md`.
+1. Check the result. Run the same `se-adopt` command again with `--dry-run`. A complete adoption reports `0 new files`. Confirm that the destination contains `README.md`, `required-skills/kiss/SKILL.md`, `required-skills/asd-ste-100/SKILL.md` and `tools/README.md`. When `tools/add-validate.mjs` is present, run it once; exit status 0 means that the project knowledge has no error.
 2. Configure your harness to load the coordinator, PO, TL and implementer skills, and make both [required skills](../06-guidelines/working-with-ai.md#required-skills) available to every role. The [required capabilities](../06-guidelines/working-with-ai.md#required-capabilities) describe the role setup and the fallback when a capability is unavailable.
 3. Add focused ADD instructions to the applicable existing `AGENTS.md` or `CLAUDE.md`, as the [required capabilities](../06-guidelines/working-with-ai.md#required-capabilities) describe. Preserve unrelated instructions.
 4. Put the adopted bundle and the setup changes on a dedicated branch. Record the release tag in the PR description, then use your normal review and merge process. `se-adopt` does not commit, push or open PRs.

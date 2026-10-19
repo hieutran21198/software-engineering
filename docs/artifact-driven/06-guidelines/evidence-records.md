@@ -15,9 +15,9 @@ A task or phase document may add `evidence_records` to its YAML front matter:
 | `result` | `passed`, `failed`, or `incomplete`. |
 | `source` | Safe repository-relative Markdown path, optionally followed by one heading fragment, resolving to nonempty check details. |
 
-The source may be the same task's Evidence section. Record the method, observed result, relevant implementation or test references, and limitations there. A bare result marker or front matter alone is insufficient detail. An empty `evidence_records` list supplies no positive evidence.
+The source may be the same task's Evidence section. In a task file, `source` is optional: an entry without it has the source `<task path>#evidence`. Record the method, observed result, relevant implementation or test references, and limitations there. A bare result marker or front matter alone is insufficient detail. An empty `evidence_records` list supplies no positive evidence.
 
-A phase document may also declare `self_check` with `result` and `source` under the same rules. A passed self-check records completion of that document's check only. It does not complete other phase documents, validate task DoD, grant approval, or establish a version. A task still needs all applicable DoD criteria: a passed record cannot override an unchecked criterion or another relevant failed or incomplete record.
+A phase document may also declare `self_check` with `result` and `source` under the same rules; its `source` is always required. A passed self-check records completion of that document's check only. It does not complete other phase documents, validate task DoD, grant approval, or establish a version. A task still needs all applicable DoD criteria: a passed record cannot override an unchecked criterion or another relevant failed or incomplete record.
 
 Reject duplicate YAML keys or record IDs, wrong types, missing fields, unsafe paths, escaping symlinks, absent source files, missing headings, and empty detail sections. Paths must not be absolute or contain traversal, backslashes, or NUL. Conflicting structured and prose results produce a diagnostic and cannot support positive aggregate completion. Readers identify exact sources and distinguish recorded checks from independently executed checks.
 
