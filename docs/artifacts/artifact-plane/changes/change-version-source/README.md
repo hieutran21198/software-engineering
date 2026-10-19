@@ -23,3 +23,4 @@ Excluded, for later changes: the same test in the change status, the change list
 Knowledge is edited in place on this branch. The unit brief is [Plane version source](../../../units-of-work/plane-version-source/README.md).
 
 - [Requirements: version record identity](../../requirements/version-record-identity.md)
+- [Specification: version record identity](../../specifications/version-record-identity.md)
