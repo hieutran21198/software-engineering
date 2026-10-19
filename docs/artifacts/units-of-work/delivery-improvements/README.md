@@ -55,8 +55,9 @@ claims:
     statement: The flows dependency-gates, repository-exploration,
       repository-refresh and unit-inspection keep their steps, although the
       impact service reaches them from the edited specifications.
-    status: supported
+    status: verified
     basis: observed
+    verified_by: agent
     evidence:
       - docs/artifacts/units-of-work/delivery-improvements/README.md#impact-reconciliation
     check: Run the impact service with the branch difference as origin at depth
@@ -133,7 +134,9 @@ On 19 October 2026 the Plane impact service ran on this worktree with the differ
 
 | Flow | Tier | Reached from | Why its steps stay |
 | --- | --- | --- | --- |
-| artifact-driven dependency-gates | direct | knowledge-layout.md, knowledge.md | The amendments change the lifecycle and phase text for tiers; the resolution of established and proposed knowledge is unchanged. |
+| artifact-driven dependency-gates | direct | knowledge-layout.md, knowledge.md; at Version also 02-methodology/dependencies.md | The amendments change the lifecycle, phase and approval text for tiers; the resolution of established and proposed knowledge is unchanged, and the step "Check task DoD prerequisites and available plan approval" holds for every tier. |
 | artifact-plane repository-exploration | direct | change-review.md, knowledge.md | change-review.md only points to the new description section; inspection still opens the change page. |
 | artifact-plane repository-refresh | transitive | knowledge-layout.md through knowledge-layout-reading.md | Layout reading is unchanged. |
 | artifact-plane unit-inspection | transitive | evidence-records.md through evidence-and-comparison.md | A task evidence record may omit its source; the reader resolves the default section, and the inspection steps are unchanged. |
+
+On 19 October 2026, during Version preparation of artifact-driven 3.0.0, the check of claim reached-flows-kept ran again on the final branch difference (depth 2). The service reached the same eleven flows, the seven declared flows and the four in the table; its completeness was partial, and each listed origin is an amendment that adds no step, branch or support condition.
