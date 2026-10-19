@@ -37,10 +37,13 @@ claims:
     check: Compare the size of each built file in the CI artifacts with 200 MB.
   - id: sharp-import
     kind: unknown
-    statement: The Node build of @huggingface/transformers may import sharp at
-      load time; the payload then needs the sharp binding of its target.
-    status: open
-    basis: inferred
+    statement: The Node build of @huggingface/transformers imports sharp at load
+      time, so the payload needs the sharp binding of its target.
+    status: verified
+    basis: observed
+    verified_by: agent
+    evidence:
+      - docs/artifacts/artifact-plane/changes/change-human-guidance/tasks/06-app-build.md#evidence
     risk_if_wrong: Semantic discovery fails in the executable with a missing
       module error.
     check: Run the model install and one semantic query with the Linux AMD64
@@ -75,7 +78,7 @@ The source entry `server/app.js` implements this table. `npm start` and `npm run
 1. Build the browser application (`vite build`).
 2. Bundle `server/app.js` with Vite in SSR mode into one ES module `payload/server.mjs`. `@huggingface/transformers` and its runtime packages stay external.
 3. Copy into `payload/`: `dist/`, the external packages with only the native files of the running target, and a `manifest.json` with the version and the SHA-256 of every payload file.
-4. Write the launcher `payload-launcher.cjs`. At start it computes the cache directory `<state>/app/<version>-<first 12 hex of the manifest hash>`. When that directory has no `manifest.json` with the same hash, it writes every asset into a new sibling directory and renames it into place. Then it imports `server.mjs` from the cache directory with the arguments.
+4. Use `scripts/app-launcher.cjs` as the main of the blob; it reads the version from the manifest asset. At start it computes the cache directory `<state>/app/<version>-<first 12 hex of the manifest hash>`. When that directory has no `manifest.json` with the same hash, it writes every asset into a new sibling directory and renames it into place. Then it imports `server.mjs` from the cache directory with the arguments.
 5. Generate the blob with `node --experimental-sea-config` (`useSnapshot: false`, `useCodeCache: false`, `disableExperimentalSEAWarning: true`, one asset for each payload file), copy `process.execPath`, and inject the blob with the pinned `postject`. On macOS, remove the signature before injection and sign ad hoc (`codesign --sign -`) after it.
 
 The state directory default is the existing `defaultStateDir()`. The cache keeps only the two newest version directories; the launcher removes older ones after a successful start. The server finds `dist/` relative to `server.mjs` in the cache directory and relative to `server/` in a source checkout.
