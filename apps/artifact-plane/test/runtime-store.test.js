@@ -35,6 +35,16 @@ test('late Stop, missing correlation, freshness, retry and child isolation',asyn
   assert.throws(()=>event(s,'SubagentStart'),/Subagent ID/);assert.throws(()=>event(s,'Unknown'),/Unsupported/);assert.equal(s.query(f.root).attempts.length,3);
  }finally{s.close();await f.cleanup();}
 });
+// Claude Code sends prompt_id and no turn_id (live check of change-agent-integration); prompt_id is the turn.
+test('Claude Code prompt_id correlates a turn like turn_id',async()=>{
+ const f=await runtimeFixture(),s=new RuntimeStore({stateDir:f.stateDir});try{
+  await bind(s,f.root);const claude=(kind,fields={})=>s.observe({session_id:'session',hook_event_name:kind,prompt_id:'prompt-1',...fields});
+  claude('UserPromptSubmit');claude('PreToolUse',{tool_name:'Read'});assert.equal(s.query(f.root).attempts[0].state,'processing');
+  claude('Stop');assert.equal(s.query(f.root).attempts[0].state,'validating');
+  await bind(s,f.root,'b.md','session','child');claude('SubagentStart',{agent_id:'child'});claude('PreToolUse',{agent_id:'child'});assert.equal(s.query(f.root).attempts.at(-1).state,'processing');
+  claude('SubagentStop',{agent_id:'child'});assert.equal(s.query(f.root).attempts.at(-1).state,'validating');
+ }finally{s.close();await f.cleanup();}
+});
 test('history survives removed worktree, restart and changed revision',async()=>{
  const f=await runtimeFixture(),other=f.root+'-worktree';git(f.root,'worktree','add','-qb','implementation',other);let s=new RuntimeStore({stateDir:f.stateDir});try{
   const first=await bind(s,other);event(s,'UserPromptSubmit');s.close();git(f.root,'worktree','remove','--force',other);s=new RuntimeStore({stateDir:f.stateDir,create:false});assert.equal(s.query(f.root).contexts[0].sourceMissing,true);assert.equal(s.query(f.root).attempts.length,1);s.close();s=new RuntimeStore({stateDir:f.stateDir});

@@ -119,7 +119,7 @@ export class RuntimeStore {
  insertEvent(e){return this.db.prepare('INSERT OR IGNORE INTO events(id,attempt,session,agent,kind,json) VALUES(?,?,?,?,?,?)').run(e.id,e.attempt||null,e.session,e.agent||'',e.kind,JSON.stringify(e));}
  observe(input){
   if(!label(input.session_id)||!label(input.hook_event_name))throw Error('Invalid lifecycle event');
-  const e={id:label(input.event_id)||randomUUID(),session:label(input.session_id),agent:label(input.agent_id)||'',kind:label(input.hook_event_name),turn:label(input.turn_id),tool:label(input.tool_name),model:label(input.model),agentType:label(input.agent_type),observedAt:Date.now()};
+  const e={id:label(input.event_id)||randomUUID(),session:label(input.session_id),agent:label(input.agent_id)||'',kind:label(input.hook_event_name),turn:label(input.turn_id)||label(input.prompt_id),tool:label(input.tool_name),model:label(input.model),agentType:label(input.agent_type),observedAt:Date.now()};
   if(['SubagentStart','SubagentStop'].includes(e.kind)&&!e.agent)throw Error('Subagent ID required');
   const supported=new Set(['SessionStart','UserPromptSubmit','PreToolUse','PostToolUse','PermissionRequest','Stop','Interrupt','SessionEnd','SubagentStart','SubagentStop']);
   if(!supported.has(e.kind))throw Error('Unsupported lifecycle event');

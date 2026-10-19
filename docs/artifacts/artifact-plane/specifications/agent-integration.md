@@ -96,7 +96,7 @@ server/app.js imports the module of a command only when that command runs. The `
 
 The hook reads at most 1 MiB. It parses the JSON and dispatches on `hook_event_name`. A field that the input does not have is treated as empty. The supported events are the events of the observer (specifications/codex-execution.md, Codex lifecycle adapter) and `SessionStart` with any source.
 
-For each supported event, the hook first records the observation as the observer does now. Then it does the work of the event:
+For each supported event, the hook first records the observation as the observer does now. Claude Code 2.1.301 sends `prompt_id` and no `turn_id`; the observer uses `prompt_id` as the turn when `turn_id` is absent, so Claude Code attempts reach Processing and Validating. Then it does the work of the event:
 
 | Event | Work | Output |
 | --- | --- | --- |
