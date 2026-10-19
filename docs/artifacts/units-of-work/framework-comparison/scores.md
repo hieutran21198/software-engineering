@@ -1,6 +1,6 @@
 # Capability scores
 
-Status: research record, 19 October 2026. The scores turn [the comparison](research.md) into one number from 1 to 5 for each of ten criteria. The anchors below were fixed before any score was given, and every subject was scored with the same anchors. Each score cites a rubric section (§) of the surveys in [surveys](surveys/). Scores use whole numbers only, because the evidence does not support finer steps.
+Status: research record, 19 October 2026. The scores turn [the comparison](research.md) into one number from 1 to 5 for each of eleven criteria. The anchors below were fixed before any score was given, and every subject was scored with the same anchors. Each score cites a rubric section (§) of the surveys in [surveys](surveys/). Scores use whole numbers only, because the evidence does not support finer steps.
 
 Baseline: ADD 2.8.1 with Artifact Plane 1.19.0 (ADD 2.9.0 changes no score), Spec Kit 1.2.1, OpenSpec 1.14.3, BMAD V7 preview. "ADD" below means ADD with the Plane.
 
@@ -18,6 +18,7 @@ Baseline: ADD 2.8.1 with Artifact Plane 1.19.0 (ADD 2.9.0 changes no score), Spe
 | Extensibility | None | Edit the files by hand | Templates or configuration overrides | A plug-in mechanism (presets, schemas, modules) | 4, plus a catalog or ecosystem and broad agent integration |
 | Low overhead | Six or more records and several gates for any change, no fast path | Several records; a lighter variant exists but is not the default | 3 to 5 steps; an optional light path | 3 steps or fewer; a documented skip for trivial changes | One command, with automatic routing by size |
 | Human interface | Files only | CLI status output | Terminal dashboard or generated HTML reports | Interactive viewer of the knowledge | 4, plus authoring, graphs, impact and change review |
+| Human comprehension and control | The person sees only raw files or chat; no defined control points | Human gates exist, but the person must read everything; facts, assumptions and checks are not told apart | Defined control points with a reviewable plan or proposal; open questions come to the person before commitment | 3, plus rationale and evidence linked to claims, so the person can tell verified facts from assertions and check them cheaply | 4, plus tool-supported review views (changes, impact, verification status) and review effort scaled to the size and risk of the change |
 
 ## Scores
 
@@ -33,7 +34,8 @@ Baseline: ADD 2.8.1 with Artifact Plane 1.19.0 (ADD 2.9.0 changes no score), Spe
 | Extensibility | 2 | 5 | 4 | 4 |
 | Low overhead | 1 | 3 | 4 | 5 |
 | Human interface | 5 | 1 | 3 | 3 |
-| **Total (of 50)** | **35** | **27** | **33** | **39** |
+| Human comprehension and control | 4 | 3 | 3 | 4 |
+| **Total (of 55)** | **39** | **30** | **36** | **43** |
 
 ## Reasons
 
@@ -124,7 +126,7 @@ This criterion is not in the owner's list of ten. It is added because the ten cr
 - OpenSpec 2: no dependency metadata; "Stores" beta gives read-only references across repositories without sync (§6, §9).
 - BMAD 3: `after` order, cycle and order-conflict checks in `tickets.py`; a ticket names the projects it touches (§6, §9).
 
-With this criterion, the totals out of 55 are ADD 40, Spec Kit 29, OpenSpec 35, BMAD 42.
+With this criterion, the totals out of 60 are ADD 44, Spec Kit 32, OpenSpec 38, BMAD 46.
 
 ## Revisions
 
@@ -133,6 +135,16 @@ Before publication, a consistency pass changed two anchors and three scores:
 - Workflow: the 5 anchor no longer includes routing by change size, because low overhead already scores it. ADD 4 → 5.
 - Workflow: Spec Kit has no roles in core, so the 4 anchor is not met. Spec Kit 4 → 3.
 - Requirements: the 4 anchor now names a required clarification step and a quality check. The product-owner skill requires both. ADD 3 → 4.
+- Later the same day, the owner added an eleventh criterion, human comprehension and control. Totals moved from 50 to 55 points.
+
+### Human comprehension and control
+
+This criterion measures how well a person can understand what agents produced and decided, and keep control of it. It was added on 19 October 2026 at the owner's request, after the other ten.
+
+- ADD 4: plan approval before implementation; the product owner separates facts from assumptions; evidence records carry method, result and source, and readers label them "documented evidence, not independently verified test success" (`06-guidelines/evidence-records.md`, `06-guidelines/units-of-work.md:76`); the Plane shows change review with line diffs, impact tiers and context export (§8, §10). ADD 2.9.0 adds claim records with status (`open`, `supported`, `verified`, `refuted`, `superseded`), evidence, the cheapest check and `verified_by` (`06-guidelines/evidence-records.md:67-80`). Anchor 5 is not met: review effort does not scale with the change. Knowledge is a median 61% of added lines, and 26% of owner prompts are gate actions (`measurements/git-cost.md` §1, `measurements/session-cost.md` §5).
+- Spec Kit 3: the user reviews each step "one at a time"; checklists are "reviewer-owned"; up to 3 clarification markers come to the user; `research.md` records decision, rationale and alternatives. Claims are not linked to evidence, and core has no review view (§2, §3, §7, §10).
+- OpenSpec 3: `propose` stops for review; a two-minute review checklist; `show --diff`; `design.md` keeps decisions with alternatives and open questions. Approval is a convention, and issue #2032 reports agents that approve without checking purpose (§2, §8, §14).
+- BMAD 4: open questions must be answered before the plan checkpoint, and the approved intent is frozen so "only the human can change it"; review triage logs a verdict for every finding and sends intent gaps back to the person; `bmad-walkthrough` guides a human review; routing by size shortens review for small work. Anchor 5 is not met: there is no review view of its own, only HTML reports and chat (§2, §8, §10, §12).
 
 ## Notes
 
