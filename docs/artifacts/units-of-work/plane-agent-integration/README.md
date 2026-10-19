@@ -21,6 +21,27 @@ flow_assessment: Discovery on 19 October 2026 read the ten Plane flow records,
   their behavior. Change-review, change-impact, knowledge-authoring,
   project-tabs, repository-exploration, repository-refresh and unit-inspection
   are not reached. No ADD or Story-Driven flow is affected.
+claims:
+  - id: reached-flows-kept
+    kind: assumption
+    statement: The flows repository-exploration, change-impact, context-handoff,
+      source-retrieval, knowledge-authoring and repository-refresh keep their
+      steps and supports, although the impact service reaches them from this
+      change.
+    status: verified
+    basis: observed
+    verified_by: agent
+    evidence:
+      - docs/artifacts/units-of-work/plane-agent-integration/README.md#impact-reconciliation
+    check: Run the impact service on the branch difference with main and confirm
+      that each of the six flows is reached only through the origins listed in
+      the reconciliation, and that the existing tests of those origins pass
+      with only the tool-name lists changed.
+    risk_if_wrong: A flow record keeps steps that the delivered Plane no longer
+      follows.
+    about: [flow:artifact-plane:repository-exploration, flow:artifact-plane:change-impact,
+      flow:artifact-plane:context-handoff, flow:artifact-plane:source-retrieval,
+      flow:artifact-plane:knowledge-authoring, flow:artifact-plane:repository-refresh]
 acceptance:
   - id: one-command
     criterion: The executable runs the observer commands and one hook command,
@@ -96,3 +117,19 @@ The hook and observer commands of the executable, the session guidance hooks, th
 ## Excluded scope
 
 ADD bundle and `se-adopt` changes, other harnesses, a check after each edit, other blocking rules and code signing.
+
+## Impact reconciliation
+
+The impact service on the branch difference with `main` (depth 2) reaches eight flows. Two are declared above. The other six keep their steps and supports:
+
+| Flow | Reached through | Why the flow is kept |
+| --- | --- | --- |
+| repository-exploration | server/app.js (support of the select step) | `serve` starts the same server; the new commands are separate entries. |
+| change-impact | server/flow-mcp.js (get_change_impact) | The tool keeps its input and result; the server adds two tools. |
+| context-handoff | server/flow-mcp.js (review and context tools) | The tools keep their inputs and results. |
+| source-retrieval | server/flow-mcp.js (flow tools) | The four flow tools keep their inputs and results. |
+| knowledge-authoring | transitive, through the runtime store and the recorded page | Only the attempt labels change; no authoring step changes. |
+| repository-refresh | transitive, through the runtime store | The store keeps its schema and events; only the turn of Claude Code events and the binding field are added. |
+
+The existing MCP tests pass with only the tool-name lists and counts changed (tasks/04-mcp-tools.md of the change).
+
