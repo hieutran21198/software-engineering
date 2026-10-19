@@ -3,6 +3,8 @@ unit_of_work: human-cognitive-support
 changes:
   - artifact: artifact-driven
     change: change-claim-records
+  - artifact: artifact-plane
+    change: change-review-brief
 affected_flows:
   - artifact: artifact-driven
     flow: change-delivery
@@ -99,7 +101,7 @@ The [investigation record](research.md) holds the current-state map, the researc
 
 ## Members
 
-ADD change-claim-records delivers the claim contract and the bundle guidance as version 2.9.0. Artifact Plane change-review-brief joins this unit when its knowledge lands, after ADD 2.9.0 establishes; until then the Plane criteria have no evidence.
+ADD change-claim-records delivered the claim contract and the bundle guidance as version 2.9.0, established on main. Artifact Plane change-review-brief implements the contract: the claim reader, the claim operations, the change brief and the change page.
 
 ## Validation evidence
 
