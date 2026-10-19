@@ -168,7 +168,7 @@ New read-only tools, with the annotations of the existing read tools:
 | Tool | Input | Result |
 | --- | --- | --- |
 | `get_change_status` | `path`, `worktree` (optional, as in the review tools) | `{repository, worktree, branch, changes: [{artifact, change, title, tier, unit, status: {name, text, next, family}, version, unchecked: [{task, count}]}], text}`; `repository` is the path of the main worktree, `changes` holds the current changes only, and `text` is the session context. |
-| `check_records` | `path`, `change` as `<artifact>/<change>` (optional) | The `add-validate.result.v1` object of `validateKnowledge` for that root and change. |
+| `check_records` | `path`, `worktree` (optional, as in the review tools), `change` as `<artifact>/<change>` (optional) | The `add-validate.result.v1` object of `validateKnowledge` for that worktree and change. |
 
 The server sends these instructions on initialize:
 
