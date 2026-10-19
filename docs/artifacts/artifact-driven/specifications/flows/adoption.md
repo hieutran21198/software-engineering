@@ -23,8 +23,9 @@ flow:
         - copy
         - copy-tests
     - id: copy
-      title: Copy pending assets and retain identical files
+      title: Copy pending assets, including tools, and retain identical files
       supports:
+        - checks-contract
         - copy
         - copy-tests
     - id: conflict
@@ -68,6 +69,12 @@ flow:
       artifact: artifact-driven
       element: specifications/agent-efficiency.md
       requires: Report safe conflicts together and preserve JSON and copy safety.
+      basis: documented
+    - id: checks-contract
+      kind: element
+      artifact: artifact-driven
+      element: specifications/record-checks.md
+      requires: Install tools/README.md and, when the release contains it, the validator.
       basis: documented
   gaps:
     - Write-time failures attempt file rollback; this map does not prove

@@ -33,9 +33,9 @@ ADD has no required external artifact contract. The canonical reusable bundle is
 
 1. Requirement: PO records reason, scope, rules, outcomes, acceptance criteria and potential impacts. Self-check and commit before Specification.
 2. Specification: TL defines behavior, applicable interfaces, necessary ADRs and impact analysis. Self-check and commit before Plan.
-3. Plan: the same TL session produces tasks with locations, governing references, prerequisites, concrete DoD and integration checks. Self-check and separate commit; explicit user approval before Implementation or material plan amendment.
+3. Plan: the same TL session produces tasks with locations, covered requirement IDs, prerequisites, concrete DoD and integration checks. Self-check and separate commit; explicit user approval before Implementation or material plan amendment. A small change of [delivery-tiers.md](delivery-tiers.md) commits Requirement, Specification and Plan together, and the owner's request counts as its plan approval.
 4. Implementation: assigned implementers execute approved tasks and record real validation results. Coordinator checks combined acceptance, contracts and dependencies. Independent useful tasks may use separate worktrees; sequential execution is valid. Required upstream versions gate dependent work.
-5. Version: coordinator suggests semantic version, user confirms, coordinator prepares complete snapshot/root/DAG and opens required PRs. Team review and merge establish only after all required knowledge/code land on main or master. No direct protected-branch commit, assistant merge, auto-merge, or deployment is authorized by preparation.
+5. Version: coordinator computes the version number from the compatibility level that the user confirmed with the plan approval (at merge for a small change), coordinator prepares complete snapshot/root/DAG and opens required PRs. Team review and merge establish only after all required knowledge/code land on main or master. No direct protected-branch commit, assistant merge, auto-merge, or deployment is authorized by preparation.
 
 ADRs belong to Specification. Validation is an obligation within phases, not a sixth ADD phase. Missing rules return to Requirement, contract/architecture gaps to Specification, task gaps to Plan, code/test defects to Implementation. Corrections remain in the same change, repeat affected checks, and retain unaffected work.
 
@@ -47,7 +47,7 @@ Git records history; tasks in retained originating changes record durable checks
 
 ## Guidance and source reuse
 
-The canonical local bundle remains intact. Packaged Markdown under src/archs/artifact-driven and utility skill sources under src/utils/agents/skills feed the Go bundle and website. Delivery checks their correspondence to the local bundle; it does not silently choose one side of a conflict. Artifact contracts summarize stable behavior and reference identifiable sources; they do not copy all pattern or skill text. Each approved ADD change must keep affected delivered sources and the local method consistent.
+The canonical local bundle remains intact. The Go package in docs/artifact-driven embeds it directly, and utility skill sources under src/utils/agents/skills are mounted at required-skills; no second copy of the bundle is kept (decision 017). The website copies the bundle Markdown from docs/artifact-driven. Artifact contracts summarize stable behavior and reference identifiable sources; they do not copy all pattern or skill text. Each approved ADD change must keep affected delivered sources and the local method consistent.
 
 Nine pattern guides cover strategic DDD, tactical DDD, contract-driven development, behavior-driven development, event-driven development, test-driven development, ports/adapters, policy as code and continuous integration. They are selectable guidance, not executable components or mandatory extra phases.
 

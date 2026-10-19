@@ -46,8 +46,24 @@ flow_assessment: Discovery on 19 October 2026 read the 15 flow records of ADD
   tier check calls it. The other Plane flows and the Story-Driven flows keep
   their steps. Gap - the impact service covers JS, JSX and Go imports only, so
   the small-tier impact criterion is unresolved for other languages and such
-  changes cannot be small. Specification reconciles this list with the impact
-  service on the branch difference.
+  changes cannot be small. Reconciliation after Specification - the impact
+  service on the branch difference reached the seven declared flows and four
+  more; the claim reached-flows-kept records why the four are not declared.
+claims:
+  - id: reached-flows-kept
+    kind: assumption
+    statement: The flows dependency-gates, repository-exploration,
+      repository-refresh and unit-inspection keep their steps, although the
+      impact service reaches them from the edited specifications.
+    status: supported
+    basis: observed
+    evidence:
+      - docs/artifacts/units-of-work/delivery-improvements/README.md#impact-reconciliation
+    check: Run the impact service with the branch difference as origin at depth
+      2 and confirm, for each of the four flows, that every reaching origin is
+      an amendment that adds no step, branch or support condition.
+    risk_if_wrong: A flow record keeps steps that the delivered rules no longer
+      follow.
 acceptance:
   - id: small-path
     criterion: Replayed on the knowledge of change-hidden-tab-streams, the
@@ -102,3 +118,14 @@ The investigation, scores, measurements and optimization options are in the fram
 ## Order
 
 Requirement, Specification and Plan of both members are prepared together. Plane implementation waits until ADD 3.0.0 is established on main, because the Plane depends on artifact-driven.
+
+## Impact reconciliation
+
+On 19 October 2026 the Plane impact service ran on this worktree with the difference against the protected branch as origin, depth 2. It reached the seven declared flows and four more:
+
+| Flow | Tier | Reached from | Why its steps stay |
+| --- | --- | --- | --- |
+| artifact-driven dependency-gates | direct | knowledge-layout.md, knowledge.md | The amendments change the lifecycle and phase text for tiers; the resolution of established and proposed knowledge is unchanged. |
+| artifact-plane repository-exploration | direct | change-review.md, knowledge.md | change-review.md only points to the new description section; inspection still opens the change page. |
+| artifact-plane repository-refresh | transitive | knowledge-layout.md through knowledge-layout-reading.md | Layout reading is unchanged. |
+| artifact-plane unit-inspection | transitive | evidence-records.md through evidence-and-comparison.md | A task evidence record may omit its source; the reader resolves the default section, and the inspection steps are unchanged. |

@@ -9,8 +9,9 @@ flow:
     - requirement
   steps:
     - id: requirement
-      title: Discover the outcome, scope and candidate flows
+      title: Discover the outcome, scope, tier and candidate flows
       supports:
+        - tier-contract
         - impact-contract
         - efficiency-contract
         - knowledge
@@ -31,6 +32,8 @@ flow:
     - id: plan
       title: Create fresh dependency-ordered tasks and DoD
       supports:
+        - tier-contract
+        - checks-contract
         - task-contract
         - evidence-usability-contract
         - explicit-evidence-guide
@@ -61,6 +64,7 @@ flow:
     - id: publication
       title: Prepare version and team review
       supports:
+        - tier-contract
         - publication-flow
         - evidence-usability-contract
         - explicit-evidence-guide
@@ -75,7 +79,11 @@ flow:
       condition: Specification self-check passes.
     - from: plan
       to: approval
-      condition: Plan self-check passes.
+      condition: Plan self-check passes and the change is medium or large.
+    - from: plan
+      to: gate
+      condition: The change is small; the owner's request is the plan approval and the
+        plan goes to the PR description.
     - from: approval
       to: gate
       condition: Explicit approval is available.
@@ -172,6 +180,18 @@ flow:
       artifact: artifact-driven
       element: specifications/visual-knowledge.md
       requires: Select, check and maintain representations of knowledge inside the existing phase self-checks.
+      basis: documented
+    - id: tier-contract
+      kind: element
+      artifact: artifact-driven
+      element: specifications/delivery-tiers.md
+      requires: Assign the tier, follow the records, commits and gates of that tier, and keep the five guarantees.
+      basis: documented
+    - id: checks-contract
+      kind: element
+      artifact: artifact-driven
+      element: specifications/record-checks.md
+      requires: Declare requirement IDs and covers, write single-source records and use the validator result in self-checks.
       basis: documented
   gaps:
     - Approval is available conversation/Git evidence, not a field in this map.

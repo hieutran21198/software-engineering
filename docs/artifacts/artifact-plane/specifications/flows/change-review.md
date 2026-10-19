@@ -59,10 +59,12 @@ flow:
     - id: brief
       title: Answer the seven review questions and record a person's check
       supports:
+        - delivery-support-contract
         - brief-contract
     - id: return
       title: Return to delivery or capture the reviewed context
       supports:
+        - delivery-support-contract
         - authoring-contract
         - contract
         - review-service
@@ -188,6 +190,12 @@ flow:
       artifact: artifact-plane
       element: specifications/review-brief.md
       requires: Derive the change brief, the verification ladder and the claim facts from the review and impact services, and record claim checks through the operations.
+      basis: documented
+    - id: delivery-support-contract
+      kind: element
+      artifact: artifact-plane
+      element: specifications/delivery-support.md
+      requires: Show the tier check and the PR description of the change.
       basis: documented
   gaps:
     - Declared current is not a historical code predecessor; recorded

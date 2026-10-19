@@ -16,8 +16,10 @@ flow:
         - evidence-usability-contract
         - explicit-evidence-guide
     - id: version
-      title: Propose semantic version for user review
+      title: Compute the version number from the confirmed level
       supports:
+        - tier-contract
+        - checks-contract
         - validation-guidance
         - evidence-usability-contract
         - explicit-evidence-guide
@@ -53,7 +55,9 @@ flow:
       condition: All applicable checks passed.
     - from: version
       to: snapshot
-      condition: The version selection is confirmed or explicitly proposed for review.
+      condition: The number is computed from the level confirmed with the plan
+        approval, or at merge for a small change, and the validator reports no
+        version error.
     - from: snapshot
       to: review
       condition: Root, knowledge snapshot, provenance and DAG are consistent.
@@ -113,6 +117,18 @@ flow:
       artifact: artifact-driven
       element: specifications/knowledge-layout.md
       requires: Edit working knowledge in place, record versions and changes without copies, and derive established and proposed knowledge from the protected branch.
+      basis: documented
+    - id: tier-contract
+      kind: element
+      artifact: artifact-driven
+      element: specifications/delivery-tiers.md
+      requires: Compute the version number from the confirmed level and the protected current_version.
+      basis: documented
+    - id: checks-contract
+      kind: element
+      artifact: artifact-driven
+      element: specifications/record-checks.md
+      requires: Check the version record against the identity record and the computed number.
       basis: documented
   gaps:
     - A proposed snapshot or PR alone does not establish the version.

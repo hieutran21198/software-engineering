@@ -68,9 +68,9 @@ are compatible; changing existing field meanings requires a versioned schema.
 
 ## Progressive context and recovery
 
-Keep the coordinator/PO/TL/implementer roles and phase commits. Before a role acts,
-read its canonical skill and required utilities unless their complete current
-instructions are already available in the same session. A summary or a path alone
+Keep the coordinator/PO/TL/implementer roles and the phase commits of medium and
+large changes. Before a role acts, read the core of its canonical skill unless
+its complete current instructions are already available in the same session. A summary or a path alone
 does not meet that condition. After context loss, source changes or switching the
 adopted bundle, reload affected instructions. Do not require another session just
 to change roles. TL performs Specification then Plan in the same capable session.
@@ -95,6 +95,36 @@ when earlier complete instructions remain current. Verify authorization from
 available human context and upstream establishment separately. If either required
 gate is unavailable, name the exact missing proof and wait for it. Use an ordinary
 handoff message and existing files; create no recovery ledger or approval registry.
+
+## Progressive guidance
+
+Each role skill has a core of at most 400 words, counted with `wc -w` on the
+SKILL.md body without front matter. The core states the role's duty, its phase
+steps and a self-check checklist. The checklist includes five KISS and STE
+items. A "Read when" table follows the core; each row names a condition and the
+guidance path to load when the condition is true. Content that only some
+changes need (legacy layout, multi-repository publication, flows, visuals,
+claims, units, patterns) moves behind a row. The full `kiss` and `asd-ste-100`
+skills stay in the bundle; a role reads them when the checklist does not settle
+a case. The guidance that the coordinator reads unconditionally, the coordinator
+core and the files of `reading.coordinator` in the configuration file, has at
+most 3,000 words.
+
+## Implementer context
+
+The coordinator dispatches each implementer with the task path, the governing
+paths and the DoD, in a new agent context, not as a copy of its own context.
+Implementers read code by section or symbol, return a short summary with
+commits and evidence, and start a new context at a phase boundary when the
+harness allows it. An implementer runs the tests that the change impact lists
+under verification and the fast unit suites; CI runs the full suites.
+
+## Harness profiles
+
+The adoption guidance describes registration for Codex (`.agents/skills`,
+`.codex/agents`) and Claude Code (`.claude/skills` entries that point to the
+canonical role skill directories). This repository adds the Claude Code
+entries. The adoption tool still does not register skills.
 
 ## Retained evidence and consistency
 

@@ -67,3 +67,7 @@ Apply ux-simplification.md for purpose-first review, complete bounded line compa
 ## Change brief extension
 
 [review-brief.md](review-brief.md) adds the brief operation, the additive packet field `data.brief` and the Change brief section of the change page. It reuses this service, its request fields and its envelope.
+
+## Delivery support extension
+
+[delivery-support.md](delivery-support.md) adds the operation `description`, the MCP tool `get_change_description`, the packet field `data.description` and the PR description section of the change page. It reuses this service, its request fields and its envelope.

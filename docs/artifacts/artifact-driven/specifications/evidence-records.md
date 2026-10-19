@@ -13,7 +13,7 @@ A task or phase document may declare evidence_records, a list of objects with id
 | evidence_records | id | matches `[a-z0-9][a-z0-9-]*` | Unique within that file |
 | evidence_records | method | nonempty descriptive text | — |
 | evidence_records | result | passed, failed or incomplete | — |
-| evidence_records | source | safe repository-relative Markdown path with an optional heading fragment | Resolves to nonempty check details. It may target the same file's Evidence section. |
+| evidence_records | source | safe repository-relative Markdown path with an optional heading fragment | Resolves to nonempty check details. It may target the same file's Evidence section. Optional in a task file: when omitted, the source is that task's `#evidence` heading ([record-checks.md](record-checks.md#single-source-records)). |
 | self_check | result | as for evidence_records | Phase document only; the same rules as evidence_records |
 | self_check | source | as for evidence_records | Phase document only; the same rules as evidence_records |
 
