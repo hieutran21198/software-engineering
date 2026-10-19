@@ -3,6 +3,22 @@ unit_of_work: add-runbooks
 changes:
   - artifact: artifact-driven
     change: change-runbooks
+affected_flows:
+  - artifact: artifact-driven
+    flow: change-delivery
+    effect: modify
+  - artifact: artifact-driven
+    flow: version-publication
+    effect: modify
+flow_assessment: Discovery on 19 October 2026 read the five ADD flow records,
+  the workflow, the coordinator reference, the layout contract and the
+  continuous-integration pattern. Change-delivery changes because its
+  requirement, approval and implement steps follow the reverse, amendment,
+  stop, live-check and failed-check runbooks. Version-publication changes
+  because its version, establish and shared steps follow the renumber and
+  after-merge runbooks. Adoption, dependency-gates and unit-validation keep
+  their steps; a withdrawn member leaves a unit through the existing brief
+  edit. No Artifact Plane or Story-Driven flow is affected.
 acceptance:
   - id: runbooks-complete
     criterion: The bundle has seven runbooks with when, inputs, steps, done

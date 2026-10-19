@@ -6,7 +6,7 @@ self_check:
 
 # In-place knowledge layout contract
 
-Governs N1 to N10 and K1 to K8 in requirements/knowledge-layout.md. ADD owns this contract, its guidance and the migration procedure. Readers that consume it belong to Artifact Plane. The snapshot-copy layout defined in knowledge.md and task-retention.md remains valid for existing artifacts and is called the legacy layout below.
+Governs N1 to N10 and K1 to K8 in requirements/knowledge-layout.md, and RB6 and RB7 in requirements/runbooks.md. ADD owns this contract, its guidance and the migration procedure. Readers that consume it belong to Artifact Plane. The snapshot-copy layout defined in knowledge.md and task-retention.md remains valid for existing artifacts and is called the legacy layout below.
 
 ## Layout
 
@@ -126,7 +126,11 @@ A shallow clone, a missing protected ref, or a version record without an introdu
 4. Prepare the version: compute the number from the confirmed level and the protected `current_version`, add versions/<version>/README.md with source_change, set current_version and any changed depends_on in the identity record, and open the PR.
 5. The version is established when the PR lands on the protected branch. The change directory remains as the retained delivery record.
 
-One active change per artifact remains a rule; two branches that edit the same artifact's knowledge conflict at merge, which makes the rule visible. Units of work, task graphs, flow documents, evidence records and publication reviews are unchanged.
+One active change per artifact remains a rule; two branches that edit the same artifact's knowledge conflict at merge, which makes the rule visible.
+
+A change that stops before merge leaves no record on the protected branch, because its knowledge exists only on its branch. Withdrawal closes its PR with the reason; the branch stays until the owner allows its removal. A paused change keeps the artifact's active change; the owner withdraws it before another change of the artifact starts. When a unit brief on the protected branch names a withdrawn change, the next PR of the unit removes the member and records the reason in the excluded scope (RB6 in requirements/runbooks.md).
+
+A reversal of an established version is a new change. Its requirement names the version that it reverses and the reason. It edits knowledge and code in place and keeps the reversed version record and its change directory unchanged. Its level follows the effect on consumers of the current version, and its number is computed from `current_version` as for every change, so numbers never decrease (RB7). Units of work, task graphs, flow documents, evidence records and publication reviews are unchanged.
 
 ## Migration
 
@@ -167,4 +171,4 @@ Record the following before and after migration of this repository, with the met
 
 ## Specification self-check
 
-N1 to N10 map to layout, records, identity, derived facts, lifecycle, migration, guidance and measurement. Converted legacy snapshots stay recoverable from the commit that introduced them; unconverted snapshots are not rewritten. KISS removes copies, a stored index and prose parsing instead of adding a model file; STE keeps derivations and failure cases explicit. No Specification blocker prevents Plan.
+N1 to N10 map to layout, records, identity, derived facts, lifecycle, migration, guidance and measurement. Converted legacy snapshots stay recoverable from the commit that introduced them; unconverted snapshots are not rewritten. KISS removes copies, a stored index and prose parsing instead of adding a model file; STE keeps derivations and failure cases explicit. RB6 and RB7 add two lifecycle rules and no field. No Specification blocker prevents Plan.
