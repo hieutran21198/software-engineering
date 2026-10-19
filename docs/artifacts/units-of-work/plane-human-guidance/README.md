@@ -53,6 +53,9 @@ acceptance:
     criterion: The owner looked at screenshots of the work, artifact, change and
       flow pages at 1440 and 390 pixels and at the downloaded executable
       before the version.
+  - id: many-worktrees
+    criterion: POST /api/explore returns 200 on this repository with its
+      registered worktrees and on a fixture with 12 worktrees.
   - id: integration
     criterion: The Node, browser and Go suites pass, and the release workflow
       check refuses a plane-v tag that differs from current_version.

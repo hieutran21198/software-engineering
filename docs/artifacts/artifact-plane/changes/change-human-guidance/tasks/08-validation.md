@@ -1,6 +1,6 @@
 ---
 id: validation
-depends_on: [guidance-validation, ci-release]
+depends_on: [guidance-validation, ci-release, explore-scale]
 covers:
   - element: requirements/app-release.md
     ids: [ARA1, ARA2, ARA3, ARA4, ARA5]
