@@ -147,7 +147,7 @@ On Stop and SubagentStop with `stop_hook_active` false, the hook runs `validateK
 
 ## Inferred binding
 
-On PreToolUse, the hook looks for one path of the form `docs/artifacts/<artifact>/changes/<change>/tasks/<file>.md` in `tool_input.file_path`, `tool_input.path` or `tool_input.command`. `tasks/README.md` is not a task. The hook starts a binding when all conditions hold:
+On PreToolUse, the hook looks for exactly one distinct path of the form `docs/artifacts/<artifact>/changes/<change>/tasks/<file>.md` in `tool_input.file_path`, `tool_input.path` or `tool_input.command`. `tasks/README.md` is not a task. Two or more distinct task paths start no binding. The worktree is the Git top level of `cwd`; the task must belong to a current change of that worktree. The hook starts a binding when all conditions hold:
 
 - the session and agent of the input have no open attempt;
 - the input has an `agent_id`; or the input has no `agent_id`, `cwd` is a linked worktree (not the first entry of `git worktree list`), and the store has no SubagentStart event of the session, so that a Codex subagent cannot bind its parent session;
@@ -155,7 +155,9 @@ On PreToolUse, the hook looks for one path of the form `docs/artifacts/<artifact
 
 The hook starts `<executable> runtime bind --root <worktree> --artifact <a> --change <c> --task <file> --session <id> [--agent <id>] [--unit <unit>] --binding inferred` as a detached process with no standard streams, and does not wait. `<unit>` is the member unit of the change, when it has one. The bind command rejects the binding when an open attempt appeared in the meantime.
 
-The attempt record gets the field `binding` with the value `explicit` or `inferred`. Attempts without the field are explicit. An explicit bind supersedes an open inferred attempt as it supersedes any open attempt. The attempt inspector shows "Inferred from a task file read" for an inferred binding. The SQLite schema does not change; the field is in the attempt JSON.
+The attempt record gets the field `binding` with the value `explicit` or `inferred`. Attempts without the field are explicit. An explicit bind supersedes an open inferred attempt as it supersedes any open attempt. The attempt inspector of the recorded task shows "Inferred from a task file read" for an inferred binding and "Bound explicitly" for an explicit binding. The SQLite schema does not change; the field is in the attempt JSON.
+
+Limits: an attempt is open until a Stop, SubagentStop, Interrupt or SessionEnd ends it, so a task file read between a Stop and the next prompt can bind. The SubagentStart rule reads the bounded buffer of unbound events (10,000 rows); in a longer session an old SubagentStart can be gone.
 
 ## MCP
 
