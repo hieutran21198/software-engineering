@@ -6,15 +6,16 @@
 // Status family: filled pill with a leading icon.
 export const STATUS_FAMILIES = {
   done: {icon: 'check', members: ['Passed', 'pass', 'Complete', 'established', 'Delivered', 'verified']},
-  waiting: {icon: 'clock', members: ['prepared', 'Ready for team review', 'Waiting for merge', 'Incomplete', 'Unchecked items']},
-  active: {icon: 'dot', members: ['current phase', 'open']},
+  waiting: {icon: 'clock', members: ['prepared', 'Ready for team review', 'Waiting for merge', 'Incomplete', 'Unchecked items', 'supported']},
+  active: {icon: 'dot', members: ['current phase', 'open', 'affected']},
   problem: {icon: 'alert', members: ['Failed', 'fail', 'refuted', 'error']},
-  neutral: {icon: 'info', members: ['coordinator', 'unresolved', 'Unknown', 'not loaded']},
+  neutral: {icon: 'info', members: ['coordinator', 'unresolved', 'Unknown', 'not loaded', 'superseded']},
 };
 // Difference family against the protected branch: outlined pill with a leading sign.
 export const DIFFERENCES = {New: {family: 'new', sign: '+'}, Changed: {family: 'changed', sign: '~'}, Removed: {family: 'removed', sign: '−'}};
 // Kind family: square tag, gray text, no icon.
-export const KIND_TAGS = ['Decision', 'Assumption', 'Root cause', 'Risk', 'Unknown', 'Fact from Git', 'documented', 'static', 'observed'];
+export const KIND_TAGS = ['Decision', 'Assumption', 'Hypothesis', 'Root cause', 'Risk', 'Unknown', 'Fact from Git', 'documented', 'static', 'observed',
+  'Integration', 'direct', 'transitive', 'potential', 'verify'];
 
 const key = name => String(name ?? '').trim().toLowerCase();
 const STATUS = new Map(Object.entries(STATUS_FAMILIES).flatMap(([family, {members}]) => members.map(m => [key(m), family])));
@@ -61,8 +62,8 @@ export const GLOSSARY = [
   {term: 'not independent', family: null, definition: 'The same agent or session that made the claim also checked it. Treat the result as documented, not proven.'},
   {term: 'Re-checked', family: null, definition: 'Someone ran the check of a claim again after it was first recorded, and recorded the new result.'},
   {term: 'reached', family: null, definition: 'The change impact found a relationship path from a changed file to this item: direct is one relationship away, transitive is more than one.'},
-  {term: 'direct', family: null, definition: 'Reached by one relationship from a changed file.'},
-  {term: 'transitive', family: null, definition: 'Reached by more than one relationship from a changed file.'},
+  {term: 'direct', family: 'kind', definition: 'Reached by one relationship from a changed file.'},
+  {term: 'transitive', family: 'kind', definition: 'Reached by more than one relationship from a changed file.'},
   {term: 'undecided flow', family: null, definition: 'A flow that the change impact reaches, but neither the unit brief affected_flows nor a claim about list names it.'},
   {term: 'Fact from Git', family: 'kind', definition: 'Changed records and files, impact tiers and fields that the Plane read from Git. Nobody wrote it as a claim.'},
   {term: 'open claim', family: 'active', definition: 'A claim with status open: nobody has supported, refuted or verified it yet.'},

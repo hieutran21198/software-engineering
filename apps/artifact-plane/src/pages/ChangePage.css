@@ -42,8 +42,7 @@
 .export-context { display: flex; align-items: center; gap: 8px; margin-left: auto; }
 .export-context .menu { width: 320px; }
 .export-note { padding: 6px 10px; font-size: 13px; color: var(--muted); }
-.row .doc-link { font-weight: 400; color: var(--text); text-align: left; white-space: normal; }
-.row .doc-link:hover { color: var(--accent); }
+.row .doc-link { font-weight: 400; text-align: left; white-space: normal; }
 .comparison { padding: 12px 16px 16px; border-top: 1px solid var(--divider); background: var(--subtle); overflow-x: auto; }
 .line-diff { margin: 0; font: 12px/1.6 var(--mono); }
 .diff-line { display: grid; grid-template-columns: 36px 36px 16px minmax(0, 1fr); }

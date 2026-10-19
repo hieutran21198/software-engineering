@@ -7,7 +7,7 @@
 .criteria .criterion.editing { background: var(--selected-bg); }
 .criterion-id { font-family: var(--mono); font-size: 12px; color: var(--muted); padding-top: 2px; overflow-wrap: anywhere; }
 .criterion-text { display: block; min-width: 0; overflow-wrap: anywhere; }
-.criterion-flag { margin-left: 8px; font-size: 12px; font-weight: 500; color: var(--muted); white-space: nowrap; }
+.criterion-text .kind-tag { margin-left: 8px; }
 .member-state { flex: none; }
 button.criterion-text { width: 100%; border-radius: var(--r-control); padding: 2px 4px; margin: -2px -4px; }
 button.criterion-text:hover { background: var(--subtle); }

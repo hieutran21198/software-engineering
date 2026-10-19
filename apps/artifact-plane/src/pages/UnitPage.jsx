@@ -1,6 +1,6 @@
 import React, {useId, useMemo, useRef, useState} from 'react';
 import {useShell, useQuery, useDocument} from '../page-data.js';
-import {Icon, PageHeader, Section, StatusBadge} from '../ui.jsx';
+import {Icon, KindTag, PageHeader, Section, StatusBadge} from '../ui.jsx';
 import {SectionLinks, StatusText, statusMember, termOnce, VersionLabel} from './guidance.jsx';
 import {ActionForm, OperationError, useEdit, sectionText, splitFront} from '../editing.jsx';
 import {GraphPanel} from '../GraphPanel.jsx';
@@ -64,8 +64,8 @@ function CriterionRow({unit, criterion, index, mode, onMode, editable, sources})
         <button className="primary" disabled={busy} aria-busy={busy}>Save</button>
       </div>
     </form> : editable ? <button className="unstyled criterion-text" aria-label={`Edit criterion ${criterion.id}`} aria-describedby={descId} onClick={() => open('text')}>
-      <span id={descId}>{criterion.criterion}</span>{criterion.integration && <span className="criterion-flag">Integration criterion</span>}
-    </button> : <span className="criterion-text">{criterion.criterion}{criterion.integration && <span className="criterion-flag">Integration criterion</span>}</span>}
+      <span id={descId}>{criterion.criterion}</span>{criterion.integration && <KindTag kind="Integration">Integration criterion</KindTag>}
+    </button> : <span className="criterion-text">{criterion.criterion}{criterion.integration && <KindTag kind="Integration">Integration criterion</KindTag>}</span>}
     <span className="criterion-evidence">
       {editable ? <button className="unstyled badge-button" aria-label={`Record evidence for ${criterion.id}`} title="Record evidence" aria-expanded={mode === 'evidence'} onClick={() => open(mode === 'evidence' ? null : 'evidence')}><StatusBadge status={badge.status}>{badge.label}</StatusBadge></button>
         : <StatusBadge status={badge.status}>{badge.label}</StatusBadge>}

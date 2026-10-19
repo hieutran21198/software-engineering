@@ -7,6 +7,7 @@ import {Icon, KindTag, Section, StatusBadge} from '../ui.jsx';
 import {OperationError, useEdit} from '../editing.jsx';
 import {postJSON} from '../request.js';
 import {memberUnit} from '../work-model.js';
+import {statusFamily} from '../glossary.js';
 import {termOnce} from './guidance.jsx';
 
 const LADDER_NOTES = {
@@ -22,11 +23,8 @@ const LADDER_NOTES = {
 const LADDER = Object.keys(LADDER_NOTES);
 const KIND = {decision: 'Decision', assumption: 'Assumption', hypothesis: 'Hypothesis', root_cause: 'Root cause', unknown: 'Unknown', risk: 'Risk'};
 const KIND_ORDER = {decision: 0, root_cause: 1, assumption: 2, unknown: 3, risk: 3, hypothesis: 4};
-// Kinds of the Kind family; a hypothesis has no tag in the vocabulary and stays text.
-const KIND_TAG = {decision: 'Decision', assumption: 'Assumption', root_cause: 'Root cause', unknown: 'Unknown', risk: 'Risk'};
-// Claim statuses of the Status family; supported and superseded stay text. family: the stripe of the card.
-const CLAIM_STATUS = {open: 'open', verified: 'verified', refuted: 'refuted'};
-const CLAIM_FAMILY = {open: 'active', supported: 'active', verified: 'done', refuted: 'problem', superseded: 'neutral'};
+// Claim statuses are members of the Status family; a status outside it stays text.
+const CLAIM_STATUS = new Set(['open', 'supported', 'verified', 'refuted', 'superseded']);
 // Attention categories in server order and the stripe family of each.
 const CATEGORIES = ['Delivered with unmet evidence', 'Claim with an error', 'Open decision', 'Open root cause', 'Undecided flow or unresolved item', 'Open assumption', 'Unknown or risk'];
 const ATTENTION_FAMILY = ['problem', 'problem', 'active', 'active', 'waiting', 'active', 'neutral'];
@@ -39,7 +37,7 @@ export const Step = ({step, terms = plainTerms}) => <span className={`ladder-ste
 function ClaimStatus({claim, terms = plainTerms}) {
   const agent = claim.status === 'verified' && claim.verifiedBy === 'agent';
   return <span className={`claim-status s-${claim.status}`}>
-    {CLAIM_STATUS[claim.status] ? <StatusBadge status={CLAIM_STATUS[claim.status]}>{claim.status === 'open' ? terms('open claim', 'open') : claim.status}</StatusBadge> : <span className="claim-status-text">{claim.status}</span>}
+    {CLAIM_STATUS.has(claim.status) ? <StatusBadge status={claim.status}>{claim.status === 'open' ? terms('open claim', 'open') : claim.status}</StatusBadge> : <span className="claim-status-text">{claim.status}</span>}
     {agent && <> {terms('verified by an agent', 'by an agent')}, {terms('not independent')}</>}
   </span>;
 }
@@ -135,9 +133,9 @@ function ClaimCard({claim, writable, terms}) {
   const [form, setForm] = useState(null);
   const active = !['refuted', 'superseded'].includes(claim.status);
   const errors = claim.diagnostics.filter(d => d.severity === 'error');
-  const family = errors.length ? 'problem' : CLAIM_FAMILY[claim.status] || 'neutral';
+  const family = errors.length ? 'problem' : CLAIM_STATUS.has(claim.status) ? statusFamily(claim.status) : 'neutral';
   return <article className={`claim-card stripe ${family}`} id={`claim-${claim.id}`} aria-label={`Claim ${claim.id}`}>
-    <div className="claim-tags">{KIND_TAG[claim.kind] ? <KindTag kind={KIND_TAG[claim.kind]}/> : <span className="claim-kind">{KIND[claim.kind] || claim.kind}</span>}<ClaimStatus claim={claim} terms={terms}/><Step step={claim.step} terms={terms}/></div>
+    <div className="claim-tags">{KIND[claim.kind] ? <KindTag kind={KIND[claim.kind]}/> : <span className="claim-kind">{claim.kind}</span>}<ClaimStatus claim={claim} terms={terms}/><Step step={claim.step} terms={terms}/></div>
     <p className="claim-statement">{claim.statement}</p>
     <dl className="claim-fields">
       <dt>Basis</dt><dd>{['documented', 'observed'].includes(claim.basis) ? terms(claim.basis) : claim.basis}</dd>

@@ -1,6 +1,6 @@
 // Shared guidance parts of the pages (specifications/human-guidance.md): the
 // badge name of a change status, version labels, glossary terms once per
-// section, the section link row and the PR description copy.
+// page, the section link row and the PR description copy.
 import React from 'react';
 import {StatusBadge, Term} from '../ui.jsx';
 import {GLOSSARY, STATUS_FAMILIES} from '../glossary.js';
@@ -14,7 +14,8 @@ export const isTerm = text => TERMS.has(String(text || '').toLowerCase());
 const FAMILY_MEMBER = {active: 'current phase', waiting: 'prepared', done: 'Delivered', problem: 'error', neutral: 'Unknown'};
 export const statusMember = status => MEMBERS.has(String(status.name).toLowerCase()) ? status.name : status.name === 'Reading' ? 'not loaded' : FAMILY_MEMBER[status.family] || 'Unknown';
 
-// Wraps the first occurrence of each glossary term in one section with Term.
+// Wraps the first occurrence of each glossary term in one section with Term;
+// the TermScope of the page keeps only the first Term of a term on the page.
 // Create one with termOnce() for each section render.
 export function termOnce() {
   const seen = new Set();

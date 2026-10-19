@@ -53,7 +53,7 @@ function StepDetail({step, index, steps, support, resolved, editable, run, snaps
         <ul>{items.map(s => {const t = supportTarget(snapshot, s), unresolved = resolved.get(s.id) === false;return <li key={s.id}>
           {t.page ? <button className="link" onClick={() => go(t.page)}>{t.title}</button> : readable(t.path) ? <button className="link mono" onClick={() => go({kind: 'source', artifact: owner, flow: self, flowId, sourceId: readable(t.path).id, path: t.path})}>{t.path}</button> : t.title ? <span>{t.title}</span> : <span className="mono">{t.path}</span>}
           <span className={`basis ${unresolved ? 'unresolved' : ''}`}><Basis basis={s.basis} terms={terms}/>{s.basis === 'observed' && list(s.evidence).length ? ` · ${plural(s.evidence.length, 'evidence file', 'evidence files')}` : ''}{unresolved && <> <StatusBadge status="unresolved" small>{terms('unresolved')}</StatusBadge></>}</span>
-          {affected.includes(supportFile(s)) && <span className="support-affected">affected</span>}
+          {affected.includes(supportFile(s)) && <StatusBadge status="affected" small/>}
           {editable && <button className="danger support-remove" aria-label={`Remove ${t.title || t.path || s.id} from this step`} onClick={() => removeSupport(s.id)}>Remove</button>}
         </li>;})}</ul>
       </div>;

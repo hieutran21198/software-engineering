@@ -1,6 +1,6 @@
 // Shared page parts. Every page uses the same header, sections, badges, phase
 // steps, notices and menus, so pages look and behave the same.
-import React, {useEffect, useId, useLayoutEffect, useRef, useState} from 'react';
+import React, {createContext, useContext, useEffect, useId, useLayoutEffect, useRef, useState} from 'react';
 import {phaseLabel, phaseModel, PHASES} from './work-model.js';
 import {difference, differenceOf, glossaryEntry, kindTag, statusFamily, STATUS_FAMILIES} from './glossary.js';
 
@@ -91,12 +91,30 @@ export function StatusCard({status, text, title, next, action, children, label =
   </section>;
 }
 
+// One term button per page: inside a TermScope, the first Term of each glossary
+// term in document order is the button; later ones render as plain text.
+const TermContext = createContext(null);
+export function TermScope({children}) {
+  const [scope] = useState(() => {
+    const terms = new Map();
+    const order = (a, b) => a.root.current.compareDocumentPosition(b.root.current) & Node.DOCUMENT_POSITION_FOLLOWING ? -1 : 1;
+    const update = key => [...(terms.get(key) || [])].filter(t => t.root.current).sort(order).forEach((t, i) => t.setFirst(i === 0));
+    return (key, entry) => {
+      if (!terms.has(key)) terms.set(key, new Set());
+      terms.get(key).add(entry);update(key);
+      return () => {terms.get(key).delete(entry);update(key);};
+    };
+  });
+  return <TermContext.Provider value={scope}>{children}</TermContext.Provider>;
+}
+
 // A glossary term: a dotted-underline button that opens its definition in a
 // popover. Enter, Space or a pointer toggles it; Escape, a pointer outside or
 // focus leaving closes it; Escape and a second activation keep focus on the term.
 export function Term({term, children}) {
-  const entry = glossaryEntry(term);
-  const [open, setOpen] = useState(false), id = useId(), root = useRef(null), button = useRef(null), popover = useRef(null);
+  const entry = glossaryEntry(term), register = useContext(TermContext);
+  const [open, setOpen] = useState(false), [first, setFirst] = useState(true), id = useId(), root = useRef(null), button = useRef(null), popover = useRef(null);
+  useLayoutEffect(() => register?.(entry.term.toLowerCase(), {root, setFirst}), [register, entry.term]);
   // Keep the popover inside the viewport with a 16-pixel margin.
   useLayoutEffect(() => {
     const box = popover.current?.getBoundingClientRect();
@@ -110,6 +128,7 @@ export function Term({term, children}) {
   }, [open]);
   const keys = event => {if (event.key === 'Escape' && open) {event.stopPropagation();setOpen(false);button.current?.focus();}};
   const blur = event => {if (!root.current?.contains(event.relatedTarget)) setOpen(false);};
+  if (!first) return <span ref={root}>{children ?? entry.term}</span>;
   return <span className="term-root" ref={root} onKeyDown={keys} onBlur={blur}>
     <button ref={button} type="button" className="term" aria-expanded={open} aria-controls={open ? id : undefined} onClick={() => {setOpen(value => !value);button.current?.focus();}}>{children ?? entry.term}</button>
     {open && <span ref={popover} className="term-popover" id={id} role="dialog" aria-label={entry.term} tabIndex={-1}><b>{entry.term}</b><span>{entry.definition}</span></span>}

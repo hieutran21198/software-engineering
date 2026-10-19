@@ -114,8 +114,6 @@ fieldset.checks legend { font-size: 13px; font-weight: 500; margin-bottom: 6px; 
 .operation-error ul { margin: 6px 0 0; padding-left: 18px; }
 
 /* Impact tier badges of the Impact page; the other pages use the status vocabulary below. */
-.badge { display: inline-flex; align-items: center; height: 22px; padding: 0 8px; border-radius: 11px; font-size: 12px; font-weight: 500; white-space: nowrap; background: var(--soft); color: var(--muted); }
-.badge.small { height: 18px; padding: 0 6px; font-size: 11px; }
 /* Status vocabulary: status (filled pill, icon), difference (outlined pill, sign), kind (square gray tag). */
 .status-badge { display: inline-flex; align-items: center; gap: 5px; height: 22px; padding: 0 9px 0 7px; border-radius: 11px; font-size: 12px; font-weight: 500; white-space: nowrap; vertical-align: middle; }
 .status-badge .family-icon { flex: none; }

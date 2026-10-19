@@ -9,12 +9,13 @@ import {DIFFERENCES, difference, differenceOf, GLOSSARY, glossaryEntry, KIND_TAG
 // The lists of specifications/human-guidance.md, Status vocabulary and Glossary.
 const SPEC_STATUS = {
   done: ['Passed', 'pass', 'Complete', 'established', 'Delivered', 'verified'],
-  waiting: ['prepared', 'Ready for team review', 'Waiting for merge', 'Incomplete', 'Unchecked items'],
-  active: ['current phase', 'open'],
+  waiting: ['prepared', 'Ready for team review', 'Waiting for merge', 'Incomplete', 'Unchecked items', 'supported'],
+  active: ['current phase', 'open', 'affected'],
   problem: ['Failed', 'fail', 'refuted', 'error'],
-  neutral: ['coordinator', 'unresolved', 'Unknown', 'not loaded'],
+  neutral: ['coordinator', 'unresolved', 'Unknown', 'not loaded', 'superseded'],
 };
-const SPEC_KINDS = ['Decision', 'Assumption', 'Root cause', 'Risk', 'Unknown', 'Fact from Git', 'documented', 'static', 'observed'];
+const SPEC_KINDS = ['Decision', 'Assumption', 'Hypothesis', 'Root cause', 'Risk', 'Unknown', 'Fact from Git', 'documented', 'static', 'observed',
+  'Integration', 'direct', 'transitive', 'potential', 'verify'];
 const SPEC_TERMS = ['documented', 'static', 'observed', 'coordinator', 'unresolved', 'prepared', 'established', 'Delivered', 'Ready for team review',
   'Waiting for merge', 'Unchecked items', 'Retained change', 'Publication review', 'Declared evidence', 'verified by an agent', 'not independent',
   'Re-checked', 'reached', 'direct', 'transitive', 'undecided flow', 'Fact from Git', 'open claim', 'tier', 'small', 'medium', 'large'];
@@ -35,7 +36,8 @@ test('difference and kind families hold the specified members and reject other n
   assert.throws(() => difference('Moved'), /Unknown difference name/);
   assert.deepEqual(KIND_TAGS, SPEC_KINDS);
   for (const kind of SPEC_KINDS) assert.equal(kindTag(kind.toLowerCase()), kind);
-  assert.throws(() => kindTag('Hypothesis'), /Unknown kind name/);
+  assert.throws(() => kindTag('Mood'), /Unknown kind name/);
+  assert.throws(() => kindTag('investigate'), /Unknown kind name/);
 });
 
 test('the glossary holds every listed term with a definition of at most 30 words and a known family', () => {
@@ -47,6 +49,7 @@ test('the glossary holds every listed term with a definition of at most 30 words
     assert.ok(words(definition) <= 30, `${term}: ${words(definition)} words`);
     assert.ok(family === null || family === 'kind' || family in STATUS_FAMILIES, `${term}: family ${family}`);
     if (family === 'kind') assert.equal(kindTag(term), term);
+    if (KIND_TAGS.includes(term)) assert.equal(family, 'kind', `${term} has the kind family`);
     const status = Object.values(STATUS_FAMILIES).some(f => f.members.some(m => m.toLowerCase() === term.toLowerCase()));
     if (status) assert.equal(statusFamily(term), family, `${term} has the family of its status`);
   }
@@ -82,6 +85,11 @@ test('family components render an icon and a text for every member; the narrow s
   const term = html(ui.Term, {term: 'prepared'});
   assert.match(term, /<button type="button" class="term" aria-expanded="false">prepared<\/button>/);
   assert.throws(() => html(ui.Term, {term: 'synergy'}), /Unknown glossary term/);
+  // HGA5: every glossary entry renders as a term button that holds its definition.
+  for (const {term, definition} of GLOSSARY) {
+    assert.ok(html(ui.Term, {term}).includes(`<button type="button" class="term" aria-expanded="false">${term}</button>`), term);
+    assert.ok(definition.trim().length > 0, term);
+  }
   const change = {layout: 'in-place', currentStep: 'Implementation', steps: []};
   assert.ok(html(ui.PhaseSteps, {change}).includes('<div class="phase-text small">Phase 4 of 5: Implementation</div>'));
   assert.ok(html(ui.PhaseSteps, {change: {layout: 'in-place', steps: [{name: 'Requirement', state: 'documented-complete'}]}, status: 'Ready for team review'}).includes('>Ready for team review</div>'));

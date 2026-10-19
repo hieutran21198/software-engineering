@@ -20,7 +20,7 @@ import {gitAction, unavailable, knowledgeStatus, operate, protectedBranch} from 
 import {EditContext, OperationStatus} from './editing.jsx';
 import {changeKey, currentChanges, isCurrent, samePage} from './work-model.js';
 import {ShellContext} from './page-data.js';
-import {PageHeader} from './ui.jsx';
+import {PageHeader, TermScope} from './ui.jsx';
 import WorkPage from './pages/WorkPage.jsx';
 import ArtifactPage from './pages/ArtifactPage.jsx';
 import DocumentPage from './pages/DocumentPage.jsx';
@@ -276,7 +276,7 @@ export function ProjectExplorer({active: isActive = true, initialPath = '', onOp
               </div>
               {busy && <p className="muted" role="status">Reading repository…</p>}
             </form>
-          </section> : <Page key={pageKey} page={page}/>}
+          </section> : <TermScope key={pageKey}><Page page={page}/></TermScope>}
         </main>
       </div>
     </div>
