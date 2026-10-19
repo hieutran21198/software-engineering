@@ -64,7 +64,7 @@ From a source checkout, `node server/runtime-cli.js <command>` takes the same co
 
 ## State location
 
-The default is ~/.local/state/artifact-plane/runtime.sqlite, or XDG_STATE_HOME/artifact-plane/runtime.sqlite. Set ARTIFACT_PLANE_STATE_DIR to use another private directory outside every inspected repository and worktree. Set the same value in the environment of the agent and the Plane server, or add `--state-dir` to the hook command and the runtime commands. Runtime paths inside a Git checkout, including symlink aliases, are rejected.
+The default is ~/.local/state/artifact-plane/runtime.sqlite, or XDG_STATE_HOME/artifact-plane/runtime.sqlite. Set ARTIFACT_PLANE_STATE_DIR to use another private directory outside every inspected repository and worktree. Set the same value in the environment of the agent and the Plane server, or add `--state-dir` to the hook command and the runtime commands. Runtime paths inside a Git checkout, including symlink aliases, are rejected. On Windows the store cannot confirm a private directory and refuses it, so the observer and the runtime commands do not work there; the context, the refusals and the stop check still work.
 
 Hook processes write directly to SQLite, even when the web server is stopped. The agent harness keeps its own conversation history; the Plane keeps allowlisted observations, session and task bindings, attempts, and graph labels and edges.
 
