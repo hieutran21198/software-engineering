@@ -24,3 +24,6 @@ Knowledge is edited in place on this branch. The unit brief is [Plane human guid
 
 - [Requirements: human guidance](../../requirements/human-guidance.md)
 - [Requirements: application release](../../requirements/app-release.md)
+- [Specification: human guidance](../../specifications/human-guidance.md)
+- [Specification: application release](../../specifications/app-release.md)
+- [Plan](tasks/README.md)
