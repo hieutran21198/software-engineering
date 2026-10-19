@@ -116,14 +116,31 @@ export function declaredChange(artifact, name, files, data, diagnostics) {
     if (records.length) step('Validation').state = records.every(r => r.result === 'passed') && complete ? 'documented-complete' : 'declared-incomplete';
   }
   if (version) {const s = step('Version preparation');s.state = 'documented-complete';s.evidence.push(note('declared', `docs/artifacts/${artifact.id}/versions/${version}/README.md`, 'Version record names this change.'));}
-  const delivered = !!version && !!artifact.baseline && data.baselines?.[artifact.id]?.versionRecords?.includes(version);
+  const delivered = !!(version && artifact.baseline && data.baselines?.[artifact.id]?.versionRecords?.includes(version));
   const current = steps.find(s => s.state !== 'documented-complete');
-  return {artifact: artifact.id, name, layout: 'in-place', version, declaredActive: open, currentStep: open ? current?.name ?? null : null,
+  return {artifact: artifact.id, name, layout: 'in-place', version, delivered, declaredActive: open, currentStep: open ? current?.name ?? null : null,
     inferenceReason: open ? 'Derived from declared evidence; undeclared steps are not declared.' : 'Retained change record.',
     steps, tasks, taskGraph, history: !open, lastCommitAt: null,
     historyReason: delivered ? 'Its version record is on the protected ref.' : version ? 'Its version record is proposed on this branch.' : open ? '' : meta(name)?.layout === 'legacy' ? 'Retained legacy change record with copied knowledge.' : 'Another open change record exists.'};
 }
+// Upstream of the worktree branch from local refs: same, ahead, behind,
+// diverged or none. It never fetches, so a stale remote ref stays stale.
+export async function upstreamState(root, git) {
+  let counts = '';
+  try {counts = await git(root, ['rev-list', '--left-right', '--count', 'HEAD...@{upstream}']);} catch {}
+  const match = String(counts).trim().match(/^(\d+)\s+(\d+)$/);
+  if (!match) return 'none';
+  const [ahead, behind] = [Number(match[1]), Number(match[2])];
+  return ahead && behind ? 'diverged' : ahead ? 'ahead' : behind ? 'behind' : 'same';
+}
 export async function evidenceFor(root, data, git, head, diagnostics) {
+  const changes = await changeEvidence(root, data, git, head, diagnostics);
+  // One upstream read for each worktree, shared by its changes.
+  const upstream = changes.length ? await upstreamState(root, git) : 'none';
+  for (const change of changes) change.upstream = upstream;
+  return changes;
+}
+async function changeEvidence(root, data, git, head, diagnostics) {
   const { files, snapshot } = data;
   let history = [], dirty = [];
   const changes = [];
@@ -174,7 +191,7 @@ export async function evidenceFor(root, data, git, head, diagnostics) {
     const steps = phases.map(name => ({ name, state: 'unknown', evidence: [], commits: [], completionCommit: null }));
     const step = name => steps.find(s => s.name === name);
     const tasks = owned.filter(([path]) => path.includes('/tasks/')).map(([path, text]) => ({ path, ...checklist(text), inherited: !distinct.some(file => file.path === path && !file.inherited) }));
-    const change = { artifact: artifact.id, name, declaredActive: artifact.activeChange === name, currentStep: null, inferenceReason: 'No distinguishable ongoing change: current snapshot contains the same knowledge.', steps, tasks, taskGraph: buildTaskGraph(files, prefix, checklist, data.unsafeTaskPaths) };
+    const change = { artifact: artifact.id, name, delivered, declaredActive: artifact.activeChange === name, currentStep: null, inferenceReason: 'No distinguishable ongoing change: current snapshot contains the same knowledge.', steps, tasks, taskGraph: buildTaskGraph(files, prefix, checklist, data.unsafeTaskPaths) };
     changes.push(change);
     const ongoing = !delivered && distinct.length > 0;
     change.history = !ongoing || !!artifact.activeChange && !change.declaredActive;

@@ -1,7 +1,6 @@
 import React, {useId, useRef} from 'react';
 
-export const normalizeName = value => String(value || '').normalize('NFC').trim().toLowerCase();
-export const matchesName = (query, ...fields) => fields.some(field => normalizeName(field).includes(normalizeName(query)));
+export {normalizeName, matchesName} from './names.js';
 
 export default function SearchField({label, value, onChange, onSubmit, placeholder = 'Title or ID', submit = false}) {
   const id = useId(), input = useRef(null);

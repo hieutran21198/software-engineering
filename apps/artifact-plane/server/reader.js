@@ -298,7 +298,7 @@ export async function exploreRepository(path, {legacy=false}={}) {
       const {snapshot,files,unsafeTaskPaths,baselines}=await scan(path);
       // Record checks of ADD 3.0.0 join the reader diagnostics that the views show.
       snapshot.diagnostics.push(...await recordChecks({root:snapshot.repository.path,scan:{snapshot,files,baselines},git:reads}));
-      snapshot.workflow=await readWorkflow(snapshot.repository.path,{snapshot,files,unsafeTaskPaths},scan,reads);
+      snapshot.workflow=await readWorkflow(snapshot.repository.path,{snapshot,files,unsafeTaskPaths,baselines},scan,reads);
       snapshot.unitsOfWork=snapshot.workflow.worktrees.find(w=>w.selected)?.unitsOfWork||[];
       return snapshot;
     }finally{reads.close?.();}
