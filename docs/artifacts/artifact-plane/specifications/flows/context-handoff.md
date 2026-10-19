@@ -28,6 +28,7 @@ flow:
     - id: derive
       title: Derive packet facts from one validated revision
       supports:
+        - delivery-support-contract
         - impact-contract
         - contract
         - review-service
@@ -186,6 +187,12 @@ flow:
       artifact: artifact-plane
       element: specifications/review-brief.md
       requires: Derive the change brief, the verification ladder and the claim facts from the review and impact services, and record claim checks through the operations.
+      basis: documented
+    - id: delivery-support-contract
+      kind: element
+      artifact: artifact-plane
+      element: specifications/delivery-support.md
+      requires: Add the PR description to the packet as data.description.
       basis: documented
   gaps:
     - A captured packet cannot prove continuing freshness or authorize

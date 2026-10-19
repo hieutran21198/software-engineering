@@ -3,3 +3,4 @@ website/.docusaurus/
 website/.docs/
 website/build/
 dist/
+docs/artifact-driven/tools/add-validate.mjs

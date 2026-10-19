@@ -12,6 +12,7 @@ flow:
     - id: membership
       title: Resolve unique artifact/change membership and flow impact
       supports:
+        - tier-contract
         - unit-contract
         - flow-contract
         - evidence-usability-contract
@@ -102,6 +103,12 @@ flow:
       artifact: artifact-driven
       element: specifications/knowledge-layout.md
       requires: Resolve in-place version records and their introducing commits for member delivery and publication checks.
+      basis: documented
+    - id: tier-contract
+      kind: element
+      artifact: artifact-driven
+      element: specifications/delivery-tiers.md
+      requires: A single-member outcome of a tier outside unit_brief.required_for needs no brief.
       basis: documented
   gaps:
     - Documented evidence is not independently verified test success; this

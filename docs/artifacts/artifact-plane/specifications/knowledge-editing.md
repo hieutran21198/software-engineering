@@ -199,3 +199,7 @@ Tests cover, for every operation: a fixture round trip where only the targeted k
 ## Specification self-check
 
 W3–W6, W8 and W9 map to the writer, operations, Git, HTTP and MCP sections; A2–A6, A8 and A9 map to the validation plan. The writer reuses the migrate-layout containment pattern and the yaml Document API already used there; validation reuses the readers without a second parser or schema store. KISS adds one writer, one service and two routes, no database and no new dependency. STE keeps refusals, limits and derivations explicit. No blocker prevents Plan.
+
+## Delivery support extension
+
+[delivery-support.md](delivery-support.md) adds `tier` and `compatibility` to change.start, `covers` to task.add and task.update, the composite operation change.scaffold, an evidence.record without a written default source, and a version.prepare that defaults the level to the plan and computes the number from the protected `current_version`. The writer, digests, journal and channel rules stay unchanged.

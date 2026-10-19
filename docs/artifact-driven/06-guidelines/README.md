@@ -4,13 +4,14 @@ Use these guides to adopt ADD and carry out the first artifact change. They supp
 
 | Guide | Purpose |
 | --- | --- |
+| [Change tiers](change-tiers.md) | Choose small, medium or large, and apply the records, commits, gates and version rule of the tier. |
 | [Minimal change scaffold](minimal-change.md) | Start a one-artifact outcome with complete phase, task and evidence structure. |
 | [Getting started](getting-started.md) | Choose a knowledge workspace, identify an artifact, and complete the first change. |
 | [System flows](system-flows.md) | Define named journeys, reusable models, interactions, supporting evidence and flow maintenance. |
 | [Change impact](change-impact.md) | Read a tiered impact answer, use it in each phase, and keep it precise without a manual graph. |
 | [Units of work](units-of-work.md) | Group artifact changes around one outcome and record shared validation knowledge. |
 | [Evidence records](evidence-records.md) | Record checks, consequential claims and publication assertions with explicit sources and verification limits. |
-| [Writing artifacts](writing-artifacts.md) | Write identity, change and version records, requirements, specifications, decisions, and task plans. |
+| [Writing artifacts](writing-artifacts.md) | Write identity, change and version records, requirements with IDs, specifications, decisions, task plans, and check them with the validator. |
 | [Visual representations](visual-representations.md) | Select, write, check and maintain tables, diagrams and derived views of knowledge. |
 | [Visual examples](visual-examples.md) | Follow worked examples that turn real artifact text into better representations. |
 | [Adopting from a release](adopting-from-git.md) | Follow the adoption guide by hand, or give an AI agent the ready request to adopt a verified release and set up its harness. |

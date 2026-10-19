@@ -17,7 +17,7 @@ The resources include ADD guidance and role skills, a story knowledge architectu
 
 ## Getting Started
 
-Download the binary for your operating system and processor, plus `SHA256SUMS`, from [GitHub Releases](https://github.com/hieutran21198/software-engineering/releases). Follow the [download and checksum instructions](src/archs/artifact-driven/05-adoption/README.md#download-the-binary), then run:
+Download the binary for your operating system and processor, plus `SHA256SUMS`, from [GitHub Releases](https://github.com/hieutran21198/software-engineering/releases). Follow the [download and checksum instructions](docs/artifact-driven/05-adoption/README.md#download-the-binary), then run:
 
 ```sh
 ./se-adopt --project /path/to/consumer
@@ -25,7 +25,7 @@ Download the binary for your operating system and processor, plus `SHA256SUMS`, 
 
 Go and a source checkout are not required. On Windows, use `.\se-adopt.exe` and your consumer workspace path. Use `./se-adopt --list` to see available architectures, or add `--arch artifact-driven` to select ADD explicitly.
 
-The default output is `docs/<architecture>` inside the consumer workspace: `docs/artifact-driven` for ADD or `docs/story-driven` for story knowledge. Use `--dry-run` to preview or `--output` to choose a different relative destination. See the [adoption guide](src/archs/artifact-driven/05-adoption/README.md) and [end-user guidelines](src/archs/artifact-driven/06-guidelines/README.md) for details.
+The default output is `docs/<architecture>` inside the consumer workspace: `docs/artifact-driven` for ADD or `docs/story-driven` for story knowledge. Use `--dry-run` to preview or `--output` to choose a different relative destination. See the [adoption guide](docs/artifact-driven/05-adoption/README.md) and [end-user guidelines](docs/artifact-driven/06-guidelines/README.md) for details.
 
 To adopt story knowledge guidance and skills:
 
@@ -49,16 +49,13 @@ For individual resources:
 ```text
 cmd/se-adopt/          # Adoption command
 internal/adopt/        # Workspace copy logic
+docs/artifact-driven/  # ADD bundle (the only source) and the Go package that embeds it
+├── README.md
+├── 01-foundation/ … 06-guidelines/
+└── tools/             # Validator guide; the release adds add-validate.mjs
 src/
 ├── archs/
-│   ├── artifact-driven/
-│   │   ├── README.md
-│   │   ├── 01-foundation/
-│   │   ├── 02-methodology/
-│   │   ├── 03-execution/
-│   │   ├── 04-patterns/
-│   │   ├── 05-adoption/
-│   │   └── 06-guidelines/
+│   ├── catalog.go       # Architecture catalog
 │   └── story-driven/    # Story knowledge, workflow, skills, templates, and examples
 └── utils/
     ├── agents/
@@ -79,6 +76,7 @@ src/
 
 | Path | Purpose |
 | --- | --- |
+| `docs/artifact-driven/` | The ADD bundle and its embedding Go package. |
 | `src/archs/` | Resources grouped by architecture approach. |
 | `src/utils/project/assets/templates/` | Reusable project documentation templates. |
 | `src/utils/agents/skills/` | Reusable agent skills that support software engineering work. |
@@ -117,7 +115,7 @@ Keep its knowledge under `src/archs/<name>/` and expose an embedded `fs.FS` bund
 
 - [ADD project artifact](https://github.com/hieutran21198/software-engineering/blob/main/docs/artifacts/artifact-driven/README.md): Recovered ADD requirements, contracts, decisions, and validation evidence for future changes.
 
-- [Artifact-Driven Development](src/archs/artifact-driven/README.md): Foundation, methodology, execution skills, and reusable patterns for coordinating artifact-centered work.
+- [Artifact-Driven Development](docs/artifact-driven/README.md): Foundation, methodology, execution skills, and reusable patterns for coordinating artifact-centered work.
 - [Story-Driven Knowledge Framework](src/archs/story-driven/README.md): Shared Core and Content, creative assistance, and novel/game story skeletons.
 - [Project README template](src/utils/project/assets/templates/README.md): A starting structure for documenting a project's purpose, responsibilities, setup, and development workflow.
 - [ASD-STE100 principles skill](src/utils/agents/skills/asd-ste-100/SKILL.md): Guidance for writing new documents or rewriting existing documents with Simplified Technical English principles. It improves readability and removes filler while preserving technical meaning. It does not certify compliance with ASD-STE100.

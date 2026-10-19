@@ -2,9 +2,9 @@
 
 ## Phase Self-Checks
 
-The PO validates Requirement output. The TL validates Specification and Plan output in sequence. Each owner checks the phase completion criteria before committing and handing off. The same self-check validates the tables and diagrams of the changed documents under the [visual representation guide](../06-guidelines/visual-representations.md#traceability-and-maintenance).
+The PO validates Requirement output. The TL validates Specification and Plan output in sequence. Each owner checks the phase completion criteria before committing and handing off. When the [validator](../06-guidelines/writing-artifacts.md#check-records-with-the-validator) is available, each self-check runs it with `--change` and records the command and `ok: true` in one line; the self-check then states only the checks that need judgment. The same self-check validates the tables and diagrams of the changed documents under the [visual representation guide](../06-guidelines/visual-representations.md#traceability-and-maintenance).
 
-Discovery of a blocker returns the active change to the phase that owns the correction. The user must approve the completed implementation plan. A new plan or material amendment requires renewed approval. No mandatory extra agent review is required.
+Discovery of a blocker returns the active change to the phase that owns the correction. The user must explicitly approve the completed implementation plan of a medium or large change. For a small change, the user's request is the approval. A new plan or material amendment requires renewed approval. No mandatory extra agent review is required.
 
 ## Task Validation
 
@@ -32,9 +32,11 @@ Passing isolated task checks does not replace integration validation. Record int
 
 Do not establish a version while applicable DoD criteria or integration and dependency checks fail or remain incomplete.
 
-The coordinator suggests a semantic version and explains the compatibility impact. The user confirms or overrides the suggestion. The initial established version is `1.0.0`.
+The plan proposes the compatibility level and explains its impact. The user confirms or overrides the level with the plan approval; for a small change, the level is patch and the user confirms it at merge. The coordinator asks again only when the level changes after approval. At Version, the coordinator computes the number from the level and `current_version` on the protected branch, and computes it again when that branch moves before merge ([change tiers](../06-guidelines/change-tiers.md#compatibility-level-and-version-number)). The initial established version is `1.0.0`.
 
-Working knowledge on the change branch is the complete resulting knowledge. Remove or amend obsolete knowledge and repeat checks whose coverage is affected. Add the version record `versions/<version>/README.md` with `source_change`, a compatibility summary and a link to the originating change's retained plan. Add no knowledge or tasks to the version directory. Set `current_version` and any changed `depends_on` in the identity record on the same branch. Until merge, these describe proposed state. Push and open linked PRs for repositories with remotes, then stop for team review and merge. Ask the user how to finish when a remote is absent.
+When a medium or large change changes a user interface, its plan has a DoD item for an owner look at screenshots or at the running interface, recorded before Version. For a small change, the screenshot goes in the PR description. The owner look is a check record, not an approval.
+
+Working knowledge on the change branch is the complete resulting knowledge. Remove or amend obsolete knowledge and repeat checks whose coverage is affected. Add the version record `versions/<version>/README.md` with `source_change`, the compatibility level with its reason, a summary of at most three sentences and a link to the originating change's retained plan. Add no knowledge or tasks to the version directory. Set `current_version` and any changed `depends_on` in the identity record on the same branch. Until merge, these describe proposed state. Push and open linked PRs for repositories with remotes, then stop for team review and merge. Ask the user how to finish when a remote is absent.
 
 The version becomes established only when all required knowledge and implementation changes land on their repositories' `main` or `master` branches. A version record, local commit, or open PR alone does not establish it. Verify the required merges before releasing dependent Implementation. Git then holds the version snapshot as the tree of the first-parent commit that introduced the version record.
 

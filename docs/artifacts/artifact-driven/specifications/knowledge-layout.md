@@ -121,9 +121,9 @@ A shallow clone, a missing protected ref, or a version record without an introdu
 ## Lifecycle
 
 1. Start a change on a dedicated branch. Add changes/<change>/README.md. Copy nothing. Edit working knowledge in place: retain, amend, remove and add.
-2. Complete Requirement, Specification and Plan with existing self-checks and commits. Record self_check where readers need it.
-3. Present the plan and wait for explicit approval. Implementation records evidence in tasks.
-4. Prepare the version: add versions/<version>/README.md with source_change, set current_version and any changed depends_on in the identity record, and open the PR.
+2. Complete Requirement, Specification and Plan with existing self-checks and commits. Record self_check where readers need it. A small change commits the three phases together ([delivery-tiers.md](delivery-tiers.md)).
+3. Present the plan and wait for explicit approval; for a small change the owner's request is the approval and the plan appears in the PR description. Implementation records evidence in tasks.
+4. Prepare the version: compute the number from the confirmed level and the protected `current_version`, add versions/<version>/README.md with source_change, set current_version and any changed depends_on in the identity record, and open the PR.
 5. The version is established when the PR lands on the protected branch. The change directory remains as the retained delivery record.
 
 One active change per artifact remains a rule; two branches that edit the same artifact's knowledge conflict at merge, which makes the rule visible. Units of work, task graphs, flow documents, evidence records and publication reviews are unchanged.

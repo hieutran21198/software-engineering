@@ -13,6 +13,7 @@ flow:
     - id: select-work
       title: Choose current work or start a change
       supports:
+        - delivery-support-contract
         - workbench-contract
         - editing-contract
         - workbench-shell
@@ -44,6 +45,7 @@ flow:
     - id: validate
       title: Validate the post-image with the readers and preview the files
       supports:
+        - delivery-support-contract
         - editing-contract
         - layout-contract
         - operations-module
@@ -81,6 +83,7 @@ flow:
     - id: version
       title: Prepare the version record and identity record together
       supports:
+        - delivery-support-contract
         - editing-contract
         - layout-contract
         - operations-module
@@ -255,6 +258,12 @@ flow:
       artifact: artifact-plane
       element: specifications/review-brief.md
       requires: Derive the change brief, the verification ladder and the claim facts from the review and impact services, and record claim checks through the operations.
+      basis: documented
+    - id: delivery-support-contract
+      kind: element
+      artifact: artifact-plane
+      element: specifications/delivery-support.md
+      requires: Scaffold a change at its tier, check records with the shared checks and compute the version number from the protected current_version.
       basis: documented
   gaps:
     - The scenario tests limit user actions to the 1.16.0 measurements; the

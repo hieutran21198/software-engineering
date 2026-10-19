@@ -10,16 +10,20 @@ A unit of work groups artifact changes around one deliverable outcome. Each arti
 | Specification | Technical Lead (TL) | Behavior and all applicable interface contracts are defined. Necessary ADRs are recorded, dependency impact analysis is complete, and no blockers prevent Plan. |
 | Plan | Technical Lead | Tasks cover the required work, reference governing knowledge, identify dependencies and parallel implementation opportunities, and contain concrete DoD checks. No blockers prevent Implementation planning. |
 | Implementation | Assigned implementers, coordinated by one implementation coordinator | Required tasks satisfy their DoD and combined implementation passes integration and dependency validation. |
-| Version | Implementation coordinator prepares; team reviews and merges | Checks pass, the version is selected, and the version record and identity record agree. Establishment requires all required changes to land on `main` or `master`. |
+| Version | Implementation coordinator prepares; team reviews and merges | Checks pass, the version number is computed from the confirmed compatibility level, and the version record and identity record agree. Establishment requires all required changes to land on `main` or `master`. |
 
 The coordinator can be the TL or a designated implementer. This is an assigned responsibility; it does not require another agent session.
+
+## Change Tiers
+
+The coordinator assigns each change a [tier](../06-guidelines/change-tiers.md) at Requirement: small, medium or large. Every tier has all five phases. A small change keeps each phase short, commits Requirement, Specification and Plan together, and its plan approval is the owner's request. A medium or large change commits each phase and waits for explicit plan approval. The tier guide lists the small-tier criteria, the records and gates of each tier, and the guarantees that hold for all tiers.
 
 ## Change Lifecycle
 
 1. Start the change on a dedicated branch. Add `changes/<change>/README.md`. Copy nothing. Edit working knowledge in place: retain, amend, remove and add.
-2. Complete Requirement, Specification and Plan with their self-checks and commits. Record `self_check` where readers need it.
-3. Present the plan and wait for explicit approval. Implementation records evidence in tasks.
-4. Prepare the version: add `versions/<version>/README.md` with `source_change`, set `current_version` and any changed `depends_on` in the identity record, and open the PR.
+2. Complete Requirement, Specification and Plan with their self-checks. Commit each phase for a medium or large change; commit the three phases together for a small change. Record `self_check` where readers need it.
+3. For a medium or large change, present the plan and wait for explicit approval; the approval also confirms the compatibility level. For a small change, the owner's request is the approval and the plan goes in the PR description. Implementation records evidence in tasks.
+4. Prepare the version: compute the number from the confirmed level and `current_version` on the protected branch, add `versions/<version>/README.md` with `source_change`, set `current_version` and any changed `depends_on` in the identity record, and open the PR.
 5. The version is established when the PR lands on the protected branch. The change directory remains as the retained delivery record.
 
 The [artifact model](../01-foundation/artifact-model.md#records) defines the records. For an artifact in the legacy layout, the change starts from a copy of the current version knowledge and the version is a complete copy of the resulting knowledge.
@@ -38,7 +42,7 @@ Cover all applicable interfaces, including APIs, events, data formats, error beh
 
 For AI-assisted work, use a frontier model for Specification and then Plan in the same session. Self-check each phase before advancing. Preserve the phase gates even when one actor performs both roles. A separate planning agent or fresh-session review is not mandatory.
 
-The plan produces `tasks/README.md` and task files. Each task records its scope, implementation location, governing references, dependencies, and DoD checks. Identify which tasks can run in parallel across applications, services, or repositories. Present the completed plan and wait for explicit user approval before Implementation. A new plan or material change requires renewed approval.
+The plan produces `tasks/README.md` and task files. Each task records its scope, implementation location, the requirement IDs that it covers, dependencies, and DoD checks. The plan proposes the compatibility level. Identify which tasks can run in parallel across applications, services, or repositories. For a medium or large change, present the completed plan and wait for explicit user approval before Implementation. A new plan or material change requires renewed approval. For a small change, the owner's request is the approval.
 
 ## Implementation
 
@@ -67,11 +71,11 @@ Pause affected downstream work while its governing input is corrected. Repeat af
 
 ## Commits and Team Review
 
-Each completed phase produces a commit containing its output. Corrections also produce commits. In projects spanning repositories, commit the relevant outputs in their owning repositories.
+For a medium or large change, each completed phase produces a commit containing its output. A small change has one knowledge commit for Requirement, Specification and Plan. Corrections also produce commits. In projects spanning repositories, commit the relevant outputs in their owning repositories.
 
 Commit each phase on a dedicated branch. Never commit directly to protected branches such as `main` or `master`. When remotes exist, push change branches and open one PR per changed repository, cross-linking companion PRs. Always stop for the team to review and merge. If no remote exists, ask the user how to finish; do not assume remote creation or local integration.
 
-Plan approval is a required user gate before Implementation. Team PR review and merge establish the version after validation. Neither requires redundant agent reviews; phase self-checks and implementation validation remain required.
+Plan approval is a required user gate before Implementation: explicit for a medium or large change, the owner's request for a small change. Team PR review and merge establish the version after validation for every tier. Neither requires redundant agent reviews; phase self-checks and implementation validation remain required.
 
 ## Flow maintenance in existing phases
 

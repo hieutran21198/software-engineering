@@ -8,7 +8,7 @@ Ask the consumer AI to adopt the bundle and configure its own harness, such as C
 
 ## Required Skills
 
-Make `kiss` and `asd-ste-100` available to every ADD role. Their canonical instructions are at `required-skills/kiss/SKILL.md` and `required-skills/asd-ste-100/SKILL.md` in the adopted bundle. Read and apply them during existing phase and task self-checks. KISS guides solution complexity; ASD-STE100 principles guide document writing and rewriting.
+Make `kiss` and `asd-ste-100` available to every ADD role. Their canonical instructions are at `required-skills/kiss/SKILL.md` and `required-skills/asd-ste-100/SKILL.md` in the adopted bundle. Each role skill core has a self-check with five KISS and STE items; apply it during existing phase and task self-checks, and read the full skills when the checklist does not settle a case. KISS guides solution complexity; ASD-STE100 principles guide document writing and rewriting.
 
 ## Required Capabilities
 
@@ -18,13 +18,13 @@ Make `kiss` and `asd-ste-100` available to every ADD role. Their canonical instr
 - Implementers execute approved tasks and record DoD evidence. Independent implementation agents use separate Git worktrees.
 - The coordinator validates the integrated change and dependencies, prepares the proposed version, opens required PRs, and stops for team review and merge.
 
-Roles can share a session; a role profile does not require a separate agent run. Do not start another session only to change roles. The consumer AI registers or adapts the bundled skills using native harness capabilities. If a required capability is unavailable, it reports the limitation and uses an explicit sequential fallback where possible.
+Register the role skills where the harness finds them, and point each entry to the canonical skill directory in the bundle so that its `reference.md` and links resolve. Codex reads `.agents/skills` and role profiles in `.codex/agents`; Claude Code reads `.claude/skills`. Roles can share a session; a role profile does not require a separate agent run. Do not start another session only to change roles. The consumer AI registers or adapts the bundled skills using native harness capabilities. If a required capability is unavailable, it reports the limitation and uses an explicit sequential fallback where possible.
 
-Add concise ADD instructions to the applicable existing `AGENTS.md` or `CLAUDE.md`. Preserve unrelated guidance and avoid duplicate instructions. Point to the canonical bundle, identify the knowledge and implementation workspaces, require both skills, and state the plan-approval, dependency, worktree, and merge boundaries. Do not duplicate the full methodology or introduce a workflow state layer. Resolve conflicts with existing instructions through the user rather than overwriting them.
+Add concise ADD instructions to the applicable existing `AGENTS.md` or `CLAUDE.md`. Preserve unrelated guidance and avoid duplicate instructions. Point to the canonical bundle, identify the knowledge and implementation workspaces, require the KISS and STE checklists, and state the change tiers and the plan-approval, dependency, worktree, and merge boundaries. Do not duplicate the full methodology or introduce a workflow state layer. Resolve conflicts with existing instructions through the user rather than overwriting them.
 
 ## Reuse Context in One Session
 
-Before a role acts, read its canonical skill and the required utilities, unless their complete current instructions are already available in the same session. A summary or a path alone does not meet this condition. When the coordinator, PO, and TL work in one session, read `kiss` and `asd-ste-100` once and apply them in each phase self-check.
+Before a role acts, read the core of its canonical skill, unless its complete current instructions are already available in the same session. A summary or a path alone does not meet this condition. Read a section of the skill's `reference.md` or another guide only when its row in the skill's Read-when table applies. When the coordinator, PO, and TL work in one session, read each core once and apply its checklist in each phase self-check. A project can add guidance that a role always reads in `reading.<role>` of the [configuration file](change-tiers.md#configuration-file).
 
 Reload the affected instructions after context loss, after a change to their source files, or after a switch to another adopted bundle.
 
@@ -44,16 +44,27 @@ The knowledge workspace is <knowledge-workspace>. Implementation
 repositories are <repository-paths>. I want <business-or-technical-outcome>.
 
 Interview me about material gaps before defining the change. Reuse
-established knowledge. Complete Requirement, Specification, and Plan
-with phase self-checks and commits on a dedicated branch, then stop
-and present the plan for my explicit approval. Do not implement yet.
+established knowledge and assign the change tier. For a medium or large
+change, complete Requirement, Specification, and Plan with phase
+self-checks and commits on a dedicated branch, then stop and present
+the plan for my explicit approval. Do not implement yet. For a small
+change, my request is the approval; commit the three phases together.
 ```
 
 After approval, the coordinator can create or reuse agents for independent implementation tasks, each in a separate Git worktree. The TL completes Specification and Plan sequentially in the same frontier-model session when available. Do not require another model review for every task.
 
+## Implementer context
+
+The coordinator gives each implementer a new agent context, not a copy of its own context. The dispatch message holds the task path, the governing paths and the DoD; the implementer reads those files itself.
+
+- Read code by section or symbol. Do not load whole files or repositories when a section answers the question.
+- Return a short summary: the commits, each check with its result, failures and open questions. Detailed evidence goes in the task file, not in the conversation.
+- Start a new context at a phase boundary when the harness allows it. The files and Git carry the state; a summary is not a copy of the instructions.
+- Run the tests in the Verify list of the [change impact](change-impact.md) and the fast unit suites. CI runs the full suites on the PR.
+
 ## Review the Plan
 
-Read the open [claims](evidence-records.md#claims) of the change first. Check scope, contracts, affected repositories, dependencies, DoD, and integrated acceptance checks. Approve the concrete plan or request amendments. Approval accepts the goal and scope; it does not verify correctness. Correctness comes from checks and their recorded results, and a check with `verified_by: agent` is not independent. A new plan or material change requires renewed review before affected implementation proceeds.
+For a medium or large change, read the open [claims](evidence-records.md#claims) of the change first. Check scope, contracts, affected repositories, dependencies, DoD, and integrated acceptance checks. Approve the concrete plan or request amendments. Approval accepts the goal and scope; it does not verify correctness. Correctness comes from checks and their recorded results, and a check with `verified_by: agent` is not independent. A new plan or material change requires renewed review before affected implementation proceeds. A small change has no separate plan review: your request is the approval, and you read its plan, checks and open claims in the PR description.
 
 Passing task checks is not the same as combined validation. The coordinator integrates work, records evidence, prepares the proposed version, pushes dedicated branches, opens linked PRs, and stops for team review and merge.
 
