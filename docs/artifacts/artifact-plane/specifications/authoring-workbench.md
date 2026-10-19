@@ -110,7 +110,7 @@ The rules are CSS only and use the existing `level-N` row classes and aria attri
   - the commit message, prefilled as in 1.16.0, and "Commit N files".
   - When there are no files, the section says "All knowledge is committed."
 - Dependencies section: one sentence that names the edges, and Show graph, which opens the dependency graph inline.
-- Empty state: "No open change." with Start a change.
+- Empty state: "No change in progress." with Start a change.
 
 ### Artifact page
 
@@ -230,8 +230,8 @@ The fonts are bundled with the application from @fontsource packages, so the Pla
 | Phases | Requirement, Specification, Plan, Implementation, Version. The declared Validation step counts as Implementation; Version preparation is Version. |
 | Document compared with main | New, Changed, Removed; no badge when it is the same |
 | Change after its version record merges | Delivered <version> |
-| Change with a version record that is not on main | Version <version> prepared |
-| No open change | No open change |
+| Change with a version record that is not on main | the status of human-guidance.md (Unchecked items, Ready for team review or Waiting for merge); the version shows "<version> prepared on this branch" |
+| No change in progress | No change in progress |
 | Unit completion | Complete, Incomplete, Unknown, with the first reason |
 | Evidence of a criterion | Passed, Failed, Incomplete, No evidence |
 | Freshness | nothing when current; "Not up to date" beside Refresh otherwise |
@@ -286,4 +286,5 @@ The steps of knowledge-authoring, repository-exploration, source-retrieval, unit
 - STE: each control has an exact label.
 - The superseded requirement statements are amended in place.
 - change-browser-suite-fixes: the step form rule maps to W11 and to the browser test of a late reply in flow-page.spec.js.
+- change-human-guidance amends the Labels table and the empty state; specifications/human-guidance.md holds the statuses, the version labels and the visual grammar.
 - No blocker prevents Plan.
