@@ -26,7 +26,11 @@ The coordinator assigns each change a [tier](../06-guidelines/change-tiers.md) a
 4. Prepare the version: compute the number from the confirmed level and `current_version` on the protected branch, add `versions/<version>/README.md` with `source_change`, set `current_version` and any changed `depends_on` in the identity record, and open the PR.
 5. The version is established when the PR lands on the protected branch. The change directory remains as the retained delivery record.
 
-The [artifact model](../01-foundation/artifact-model.md#records) defines the records. For an artifact in the legacy layout, the change starts from a copy of the current version knowledge and the version is a complete copy of the resulting knowledge.
+A change that stops before merge leaves no record on the protected branch, because its knowledge exists only on its branch. Withdrawal closes its PR with the reason; the branch stays until the owner allows its removal. A paused change stays the active change of its artifact; the owner withdraws it before another change of the artifact starts. When a unit brief on the protected branch names a withdrawn change, the next PR of the unit removes the member and records the reason in the excluded scope.
+
+A reversal of an established version is a new change. Its requirement names the version and the reason. It edits knowledge and code in place, and keeps the reversed version record and its change directory unchanged. Its level follows the effect on consumers of the current version. Its number is computed from `current_version` like every number, so version numbers never decrease.
+
+The [runbooks](../06-guidelines/runbooks.md) give the steps for these cases and for other recurring situations. The [artifact model](../01-foundation/artifact-model.md#records) defines the records. For an artifact in the legacy layout, the change starts from a copy of the current version knowledge and the version is a complete copy of the resulting knowledge.
 
 ## Requirement
 
@@ -67,7 +71,7 @@ Use [evidence records and reconciliation](../06-guidelines/evidence-records.md) 
 | Missing or incorrect implementation task | Plan; the TL amends and self-checks the plan. |
 | Code or test defect | Implementation; the implementer fixes and repeats relevant checks. |
 
-Pause affected downstream work while its governing input is corrected. Repeat affected phase checks before resuming; retain unaffected work that remains valid.
+Pause affected downstream work while its governing input is corrected. A material amendment after plan approval needs approval again; the [material test](../06-guidelines/runbooks.md#amendment) decides. Repeat affected phase checks before resuming; retain unaffected work that remains valid.
 
 ## Commits and Team Review
 

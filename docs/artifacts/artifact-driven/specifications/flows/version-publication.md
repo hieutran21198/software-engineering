@@ -23,6 +23,7 @@ flow:
         - validation-guidance
         - evidence-usability-contract
         - explicit-evidence-guide
+        - runbooks-contract
     - id: snapshot
       title: Prepare complete knowledge with delivery provenance
       supports:
@@ -43,12 +44,14 @@ flow:
         - evidence-usability-contract
         - explicit-evidence-guide
         - layout-contract
+        - runbooks-contract
     - id: shared
       title: Reassess shared outcome and release eligible downstream work
       supports:
         - unit-flow
         - evidence-usability-contract
         - explicit-evidence-guide
+        - runbooks-contract
   transitions:
     - from: validate
       to: version
@@ -129,6 +132,12 @@ flow:
       artifact: artifact-driven
       element: specifications/record-checks.md
       requires: Check the version record against the identity record and the computed number.
+      basis: documented
+    - id: runbooks-contract
+      kind: element
+      artifact: artifact-driven
+      element: specifications/runbooks.md
+      requires: Follow the renumber runbook when the protected branch moves before merge, and the after-merge runbook to report establishment, release dependent work and remove worktrees and branches with the owner's consent.
       basis: documented
   gaps:
     - A proposed snapshot or PR alone does not establish the version.

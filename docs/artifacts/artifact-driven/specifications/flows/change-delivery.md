@@ -19,6 +19,7 @@ flow:
         - explicit-evidence-guide
         - layout-contract
         - visual-contract
+        - runbooks-contract
     - id: specification
       title: Define contracts and assess affected flow support
       supports:
@@ -47,6 +48,7 @@ flow:
         - evidence-usability-contract
         - explicit-evidence-guide
         - claim-contract
+        - runbooks-contract
     - id: gate
       title: Check upstream establishment and internal prerequisites
       supports:
@@ -61,6 +63,7 @@ flow:
         - explicit-evidence-guide
         - visual-contract
         - claim-contract
+        - runbooks-contract
     - id: publication
       title: Prepare version and team review
       supports:
@@ -192,6 +195,12 @@ flow:
       artifact: artifact-driven
       element: specifications/record-checks.md
       requires: Declare requirement IDs and covers, write single-source records and use the validator result in self-checks.
+      basis: documented
+    - id: runbooks-contract
+      kind: element
+      artifact: artifact-driven
+      element: specifications/runbooks.md
+      requires: Follow the reverse runbook for a defect in an established version, the amendment runbook and its material test after approval, the stop runbook for a change that stops, and the live-check and failed-check runbooks during implementation.
       basis: documented
   gaps:
     - Approval is available conversation/Git evidence, not a field in this map.
