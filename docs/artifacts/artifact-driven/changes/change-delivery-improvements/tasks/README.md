@@ -30,7 +30,7 @@ Artifact Plane change-delivery-improvements implements the validator rules, the 
 
 ## Approval and prerequisites
 
-Present this plan with the Plane plan for explicit user approval before implementation; one approval covers both plans. ADD 2.9.0 is established on main and no upstream contract is proposed. The owner chose the major level at Requirement; confirm it with this approval. The number is 3.0.0. Decision 017 meets the owner's choice of one bundle source with a Go package beside the bundle instead of a generated copy; the approval confirms this. A material change to the tiers, the record checks or the validator delivery requires renewed approval. The owner approved both plans on 19 October 2026 and confirmed ADD 3.0.0 (major), Artifact Plane 1.21.0 (minor) and decision 017.
+Present this plan with the Plane plan for explicit user approval before implementation; one approval covers both plans. ADD 2.9.0 is established on main and no upstream contract is proposed. The owner chose the major level at Requirement; confirm it with this approval. The number is 3.0.0. Decision 017 meets the owner's choice of one bundle source with a Go package beside the bundle instead of a generated copy; the approval confirms this. A material change to the tiers, the record checks or the validator delivery requires renewed approval. The owner approved both plans on 19 October 2026 and confirmed ADD 3.0.0 (major), Artifact Plane 1.21.0 (minor) and decision 017. On 19 October 2026, after task small-replay, the owner approved two amendments: at most 9 knowledge files in the small-path criterion, and paragraph labels as requirement IDs (record-checks.md, delivery-support.md Readers).
 
 ## Plan self-check
 

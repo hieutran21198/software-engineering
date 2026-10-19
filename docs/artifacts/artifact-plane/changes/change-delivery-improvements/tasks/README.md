@@ -30,7 +30,7 @@ Readers runs first. Record checks follows. Tier check and operations follow reco
 
 ## Approval and prerequisites
 
-Present this plan with the ADD plan for explicit user approval; one approval covers both plans. Implementation waits until artifact-driven 3.0.0 is established on main; recheck these tasks against the established contracts before the first task starts. The level is minor (new optional fields, operations and interfaces; existing behavior kept); confirm it with this approval. The change page gains a section, so the owner looks at screenshots before the version (task validation). The owner approved both plans on 19 October 2026 and confirmed ADD 3.0.0 (major), Artifact Plane 1.21.0 (minor) and decision 017.
+Present this plan with the ADD plan for explicit user approval; one approval covers both plans. Implementation waits until artifact-driven 3.0.0 is established on main; recheck these tasks against the established contracts before the first task starts. The level is minor (new optional fields, operations and interfaces; existing behavior kept); confirm it with this approval. The change page gains a section, so the owner looks at screenshots before the version (task validation). The owner approved both plans on 19 October 2026 and confirmed ADD 3.0.0 (major), Artifact Plane 1.21.0 (minor) and decision 017. On 19 October 2026, after task small-replay, the owner approved two amendments: at most 9 knowledge files in the small-path criterion, and paragraph labels as requirement IDs (record-checks.md, delivery-support.md Readers).
 
 ## Plan self-check
 

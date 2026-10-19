@@ -7,7 +7,7 @@ depends_on: []
 
 ## Scope and ownership
 
-Implementer, `apps/artifact-plane`. Parse the change README `tier`, the plan `compatibility`, task `covers`, list-item requirement IDs and `docs/artifacts/add.config.yaml` with defaults; resolve a task evidence record without `source` to the task's `#evidence` heading. Report `invalid-tier`, `invalid-compatibility`, `requirement-id-duplicate` and `config-invalid`.
+Implementer, `apps/artifact-plane`. Parse the change README `tier`, the plan `compatibility`, task `covers`, list-item and paragraph-label requirement IDs and `docs/artifacts/add.config.yaml` with defaults; resolve a task evidence record without `source` to the task's `#evidence` heading. Report `invalid-tier`, `invalid-compatibility`, `requirement-id-duplicate` and `config-invalid`.
 
 ## Governing knowledge
 

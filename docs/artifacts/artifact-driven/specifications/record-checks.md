@@ -7,13 +7,15 @@ claims:
     kind: decision
     statement: A requirement ID is the label of a Markdown list item, written as
       `- DI1:` at the start of a line, because most requirement files of this
-      repository already use this form.
+      repository already use this form; the paragraph label `R4.` of older
+      files is also an ID, so those files need no migration.
     status: supported
     basis: static
     evidence:
       - docs/artifacts/artifact-driven/specifications/record-checks.md#requirement-ids
-    check: Run the validator on this repository; at most 13 of the 44
-      requirement files report requirement-ids-missing.
+    check: Run the validator on this repository; no requirement file reports
+      requirement-id-duplicate, and at most 13 of the 44 requirement files
+      report requirement-ids-missing.
     rejected:
       - option: A `### R11` heading for each requirement.
         reason: Existing files would need new headings to gain IDs.
@@ -29,9 +31,11 @@ Governs DI6 to DI8 and A2, A5 and A7 in requirements/delivery-improvements.md. T
 
 A requirement ID is the label of a list item in a file under `requirements/`. The line starts with `- `, then the ID, then `:` and a space. The ID matches `[A-Z][A-Z0-9]*[0-9]+`, for example `C1`, `DI12`, `UX13` or `A3`. An ID is unique in its file. Acceptance criteria use the same form and are IDs too.
 
-On 19 October 2026, 31 of the 44 requirement files of this repository already use this form, and no file has a duplicate ID (counted with `grep -E '^- [A-Z][A-Z0-9]*[0-9]+: '`). The other 13 files stay valid without edits.
+A paragraph label is the older form: the line starts with the ID, then `.` and a space, for example `R4. Group bursts …`. A paragraph label is also an ID of its file, for `covers`, for duplicates and for the added-ID comparison of the no-contract criterion. Changing a paragraph label to a list item with the same ID adds no ID. New IDs use the list form.
 
-A requirement file that a change creates or edits should have at least one ID. A file without IDs is valid; the validator reports `requirement-ids-missing` as information. A duplicate ID in one file is the error `requirement-id-duplicate`.
+On 19 October 2026, 31 of the 44 requirement files of this repository use the list form, 11 use paragraph labels (2 of them use both forms), and 4 have no ID; no file has a duplicate ID when both forms count (counted with `grep -E '^(- )?[A-Z][A-Z0-9]*[0-9]+(: |\. )'`). All 44 files stay valid without edits.
+
+A requirement file that a change creates or edits should have at least one ID in the list form. A file without list-form IDs is valid; the validator reports `requirement-ids-missing` as information. A duplicate ID in one file, in either form, is the error `requirement-id-duplicate`.
 
 ## Covers
 
@@ -95,7 +99,7 @@ The validator never writes files, runs commands found in records, fetches or pus
 | `version-number-invalid` | error | A version record that is not on the protected branch is not the number computed from the plan level and the protected `current_version`. | a minor record that skips a number |
 | `upstream-unestablished` | warning | A `depends_on` target has no established version on the protected branch. | a dependency on an artifact with `current_version: null` |
 | `requirement-id-duplicate` | error | An ID occurs twice in one requirement file. | two `- R1:` items |
-| `requirement-ids-missing` | info | A requirement file that the change edits has no ID. | a prose-only requirement file |
+| `requirement-ids-missing` | info | A requirement file that the change edits has no ID in the list form. | a prose-only requirement file |
 | `covers-unknown-id` | error | See Covers. | `ids: [R99]` |
 | `requirement-uncovered` | warning | See Covers. | a new ID with no task |
 | `tier-mismatch` | error | The declared tier is `small` and a criterion fails or is unresolved. | `tier: small` with 400 code lines |

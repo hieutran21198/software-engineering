@@ -43,7 +43,7 @@ Governs PI1 to PI8 and PA1 to PA6 in requirements/delivery-improvements.md. It c
 | `tasks/README.md` | front matter `compatibility` | Parsed into the plan; absent is allowed; other values are `invalid-compatibility` errors. |
 | task | front matter `covers` | Parsed into the task; the ID rules of record-checks.md apply. |
 | task | `evidence_records` without `source` | Source becomes `<task path>#evidence`. |
-| requirement file | list-item IDs | Parsed into a list of `{id, line}`; duplicates are errors. |
+| requirement file | list-item IDs and paragraph labels | Parsed into a list of `{id, line, form}` with form `list` or `paragraph`; a duplicate in either form is an error. |
 | `docs/artifacts/add.config.yaml` | all keys | Parsed with defaults; errors are `config-invalid`. |
 
 Existing records without these fields read as before. The diagnostic codes are the codes of record-checks.md.

@@ -67,7 +67,7 @@ claims:
 acceptance:
   - id: small-path
     criterion: Replayed on the knowledge of change-hidden-tab-streams, the
-      small-tier path produces at most 7 knowledge files, at most 160
+      small-tier path produces at most 9 knowledge files, at most 160
       knowledge lines, 2 commits and 1 human gate, and the validator reports
       no error.
   - id: validator
@@ -113,7 +113,7 @@ A code-only maintenance tier without records (deferred by the owner until new me
 
 ## Basis
 
-The investigation, scores, measurements and optimization options are in the framework-comparison unit directory: [research](../framework-comparison/research.md), [scores](../framework-comparison/scores.md), [optimization](../framework-comparison/optimization.md). The owner decided on 19 October 2026: releases R1 to R3 in this unit; tier limits as proposed, without a code-only tier; unit brief optional for small outcomes; approval by request, level with plan approval and one knowledge commit for small changes; a validator in the default install; the bundle copy generated at build; requirement IDs and `covers` for new and edited files only.
+The investigation, scores, measurements and optimization options are in the framework-comparison unit directory: [research](../framework-comparison/research.md), [scores](../framework-comparison/scores.md), [optimization](../framework-comparison/optimization.md). The owner decided on 19 October 2026: releases R1 to R3 in this unit; tier limits as proposed, without a code-only tier; unit brief optional for small outcomes; approval by request, level with plan approval and one knowledge commit for small changes; a validator in the default install; the bundle copy generated at build; requirement IDs and `covers` for new and edited files only. After the small-tier replay the owner allowed at most 9 knowledge files in the small-path criterion and accepted paragraph labels (`R4. …`) as requirement IDs.
 
 ## Order
 
