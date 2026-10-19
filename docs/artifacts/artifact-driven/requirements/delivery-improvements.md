@@ -70,7 +70,7 @@ The capability scores of the investigation (`docs/artifacts/units-of-work/framew
 
 ### Knowledge records
 
-- DI6: Each fact is written once. A task does not restate `depends_on` or the plan approval. An evidence record without a source points to the Evidence section of its own task. A unit brief references task evidence and requirement acceptance IDs and does not copy their text or results. A numeric result is stated in the task that produced it; other records link to it. A version record states the compatibility level, its reason and a short summary, without boilerplate.
+- DI6: Each fact is written once. A task does not restate `depends_on` or the plan approval. An evidence record without a source points to the Evidence section of its own task. A unit brief references task evidence and requirement acceptance IDs and does not copy their text; an evidence entry keeps one line of method and the result that the completion rule needs. A numeric result is stated in the task that produced it; other records link to it. A version record states the compatibility level, its reason and a short summary, without boilerplate.
 - DI7: A requirement file that a change creates or edits gives each requirement an ID in a form that a reader can parse. A task declares the requirement IDs it covers as a structural fact, instead of a prose list of governing knowledge. Requirement files without parseable IDs stay valid; readers report them as information, not as an error.
 
 ### Validation
@@ -86,7 +86,7 @@ The capability scores of the investigation (`docs/artifacts/units-of-work/framew
 ### Configuration and delivery
 
 - DI12: A project configuration file holds the tier criteria values, whether a one-member outcome needs a unit brief, and the guidance each role reads. The validator and the guidance read it. Without the file, the defaults of DI1 to DI3 apply. The bundle provides role profiles for Claude Code next to the Codex profiles.
-- DI13: The repository keeps one source of the bundle. The copy that the adoption tool embeds is generated at build time. A release stays self-contained.
+- DI13: The repository keeps one source of the bundle. No second copy is committed, and the adoption tool embeds the bundle from that source. A release stays self-contained.
 - DI14: The repository instructions in `AGENTS.md` follow DI1 to DI3, DI9 and DI12. A unit of work stays required for medium and large outcomes.
 
 ### Limits
@@ -96,9 +96,9 @@ The capability scores of the investigation (`docs/artifacts/units-of-work/framew
 ## Acceptance criteria
 
 - A1: Replayed on the knowledge of Artifact Plane change-hidden-tab-streams (#37), the small-tier path produces at most 7 knowledge files, at most 160 knowledge lines, 2 commits and 1 human gate, and the validator reports no error.
-- A2: In a new project adopted with the release build, the validator runs, finds one seeded defect for each check of DI8, and reports no error on this repository.
+- A2: The validator contract lists each check of DI8 with its diagnostic code and one seeded example. The adoption tool installs the validator when the release contains it, and adoption succeeds without it. The run of the installed validator on seeded defects is a unit criterion, because the Plane supplies the rule implementation.
 - A3: Each role skill core has at most 400 words, and the guidance that the coordinator reads unconditionally has at most 3,000 words, counted with `wc -w`.
-- A4: Git holds one copy of the bundle; the build generates the embedded copy; `go test ./...` passes, the website builds and the release archive contains the full bundle.
+- A4: Git holds one copy of the bundle; the adoption tool embeds it without a second copy; `go test ./...` passes, the website builds and the release archive contains the full bundle.
 - A5: Existing knowledge without tier, `covers` or requirement IDs stays valid; the validator reports no new error on this repository.
 - A6: For each guarantee of DI15, a check or a contract statement shows that it holds for small, medium and large changes.
 - A7: A configuration file with a changed tier limit changes the tier result of the validator for the same change; without the file the defaults apply.
@@ -116,3 +116,5 @@ Facts: the numbers above come from Git history and local agent session logs, mea
 ## Requirement self-check
 
 Each requirement states what is needed and is testable through A1 to A7. DI2 and DI3 keep plan approval for medium and large changes, as the owner fixed. DI15 keeps every guarantee, and approval stays out of files as the artifact model requires. The validator implementation language, the ID syntax and the configuration format belong to Specification. KISS: the tiers reuse the existing scaffold, impact service and validator rules; nothing is added that no measured cost justifies. STE: one rule per item, with obligations stated. Claims: two assumptions with checks; no other statement selects between contract options. No blocker prevents Specification.
+
+Amendment during Specification: A2 moves the run of the installed validator to the unit criteria, because the rule implementation is in the Plane and Plane implementation waits for this version. DI13 and A4 keep the owner's goal of one bundle source and leave the mechanism to Specification. DI6 keeps the result field that the unit completion rule needs. The owner decisions are unchanged.
