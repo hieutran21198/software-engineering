@@ -65,6 +65,22 @@ claims:
       an amendment that adds no step, branch or support condition.
     risk_if_wrong: A flow record keeps steps that the delivered rules no longer
       follow.
+  - id: plane-reached-flows-kept
+    kind: assumption
+    statement: The flows source-retrieval, change-impact, repository-exploration,
+      repository-refresh and execution-observation keep their steps, although
+      the impact service reaches them from the Plane code of this unit.
+    status: verified
+    basis: observed
+    verified_by: agent
+    evidence:
+      - docs/artifacts/units-of-work/delivery-improvements/README.md#impact-reconciliation
+    check: Run the impact service on the Plane branch difference at depth 2 and
+      confirm, for each of the five flows, that the reaching code only adds a
+      tool, an operation, diagnostics or an import and no step, branch or
+      support condition.
+    risk_if_wrong: A flow record keeps steps that the delivered Plane no longer
+      follows.
 acceptance:
   - id: small-path
     criterion: Replayed on the knowledge of change-hidden-tab-streams, the
@@ -104,6 +120,26 @@ evidence:
     method: one contract statement or check for each guarantee and tier
     result: passed
     source: docs/artifacts/artifact-driven/changes/change-delivery-improvements/tasks/06-validation.md#evidence
+  - criterion: small-path
+    method: replay of #37 counted and checked with the validator of a fresh adoption
+    result: passed
+    source: docs/artifacts/artifact-plane/changes/change-delivery-improvements/tasks/07-validation.md#evidence
+  - criterion: validator
+    method: adopted validator on the seeded fixture; built file and entry point compared
+    result: passed
+    source: docs/artifacts/artifact-plane/changes/change-delivery-improvements/tasks/07-validation.md#evidence
+  - criterion: review
+    method: description parity test over operation, HTTP, MCP, packet and page
+    result: passed
+    source: docs/artifacts/artifact-plane/changes/change-delivery-improvements/tasks/06-description.md#evidence
+  - criterion: scores
+    method: ADD rescored with the anchors of the framework-comparison scores
+    result: passed
+    source: docs/artifacts/units-of-work/framework-comparison/scores.md#rescore-after-delivery
+  - criterion: integration
+    method: Go, Node, browser, website and validator checks on the combined branch
+    result: passed
+    source: docs/artifacts/artifact-plane/changes/change-delivery-improvements/tasks/07-validation.md#evidence
 ---
 
 # Make delivery cost scale with the change
@@ -140,3 +176,13 @@ On 19 October 2026 the Plane impact service ran on this worktree with the differ
 | artifact-plane unit-inspection | transitive | evidence-records.md through evidence-and-comparison.md | A task evidence record may omit its source; the reader resolves the default section, and the inspection steps are unchanged. |
 
 On 19 October 2026, during Version preparation of artifact-driven 3.0.0, the check of claim reached-flows-kept ran again on the final branch difference (depth 2). The service reached the same eleven flows, the seven declared flows and the four in the table; its completeness was partial, and each listed origin is an amendment that adds no step, branch or support condition.
+
+On 19 October 2026, at Version preparation of artifact-plane 1.21.0, the impact service on the Plane branch difference (depth 2) reached the three declared Plane flows and five more (claim plane-reached-flows-kept):
+
+| Flow | Tier | Reached from | Why its steps stay |
+| --- | --- | --- | --- |
+| artifact-plane source-retrieval | direct | server/flow-mcp.js | The MCP server gains the read tool get_change_description; the context step and its tools keep their behavior. |
+| artifact-plane change-impact | direct | server/change-review.js | The review service gains the description operation, which calls the impact service; the handoff of the tiered impact is unchanged. |
+| artifact-plane repository-exploration | direct | server/reader.js | Exploration adds the record-check diagnostics to the snapshot; it stays read-only and contained. On this repository the checks add about 0.45 s to a 2.55 s exploration (47 Git reads, 17 refs). |
+| artifact-plane repository-refresh | transitive | src/pages/ChangePage.jsx through main.jsx | The change page gains a section; observation and reload are unchanged. |
+| artifact-plane execution-observation | transitive | server/reader.js through runtime-store.js | runtime-store imports exploreRepository; binding observations is unchanged. |

@@ -1,5 +1,5 @@
 // The change page: header with the change's parents, phase steps, the change brief, the plan,
-// the changed knowledge and the version readiness. A retained change is read
+// the changed knowledge, the version readiness and the PR description. A retained change is read
 // only and shows its delivery instead of readiness.
 import React, {useCallback, useState} from 'react';
 import {useQuery, useShell} from '../page-data.js';
@@ -10,6 +10,7 @@ import PlanSection, {detailField, resultField} from './ChangePagePlan.jsx';
 import {ChangedKnowledge, DeliverySection, ReadySection, useReviewPacket} from './ChangePageReview.jsx';
 import {missingSelfChecks, planSelfCheckMissing} from './ChangePageModel.js';
 import ChangeBrief from './ChangePageBrief.jsx';
+import PrDescription from './ChangePageDescription.jsx';
 import './ChangePage.css';
 
 // Record self-check for the documents of the current Requirement or Specification phase.
@@ -77,5 +78,6 @@ export default function ChangePage({page}) {
     <PlanSection change={change} writable={writable}/>
     {!retained && <ChangedKnowledge change={change} artifact={artifact} review={review} onLoadReview={loadReview}/>}
     {!retained && <ReadySection change={change} artifact={artifact} writable={writable} onFix={onFix}/>}
+    {artifact?.layout === 'in-place' && <PrDescription artifact={change.artifact} change={change.name}/>}
   </div></section>;
 }

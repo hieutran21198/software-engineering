@@ -31,6 +31,17 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v6
+      - uses: actions/setup-node@v6
+        with:
+          node-version: '24'
+          cache: npm
+          cache-dependency-path: apps/artifact-plane/package-lock.json
+      # The ADD bundle embeds the built validator, so build it before the Go
+      # tests and the release binaries.
+      - run: npm ci
+        working-directory: apps/artifact-plane
+      - run: npm run build:validator
+        working-directory: apps/artifact-plane
       - uses: actions/setup-go@v6
         with:
           go-version-file: go.mod

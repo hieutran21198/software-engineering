@@ -13,6 +13,8 @@ import {planMigration, MigrationError} from '../scripts/migrate-layout.mjs';
 import {EditError, editFrontMatter, setFrontMatterText, replaceBody, replaceSection, readSection, sectionAnchors, setCheckbox, checklistItems, splitDocument, frontValue, writePlan, readPlan, undoPlan, createJournal, serialize, requireEditableBranch, digestOf, anchorOf} from './knowledge-writer.js';
 import {resolveWorktree, gitStatus} from './knowledge-git.js';
 import {readClaims, claimRecord, CLAIM_WARNINGS, CLAIM_KINDS, CLAIM_BASES} from './claims.js';
+import {TIERS, LEVELS, CONFIG_PATH, readConfig, planCompatibility, taskCovers} from '../src/delivery-records.js';
+import {recordChecks, nextVersion, versionGreater} from './record-checks.js';
 
 const BASE = 'docs/artifacts/';
 const VERSION = /^\d+\.\d+\.\d+$/;
@@ -72,13 +74,34 @@ const TEMPLATES = {
   specification: title => `# ${title}\n\n## Governing requirement\n\nName the requirement that this specification governs. Replace this text.\n\n## Behavior and interfaces\n\nDescribe the behavior, interfaces and limits. Replace this text.\n\n## Self-check\n\nNot recorded.\n`,
   decision: title => `# ${title}\n\n## Context\n\nDescribe the problem and the forces. Replace this text.\n\n## Alternatives\n\nList the options that you evaluated. Replace this text.\n\n## Decision\n\nState the selected option. Replace this text.\n\n## Consequences\n\nDescribe the results of the decision. Replace this text.\n`,
 };
-const changeReadme = (title, reason, scope, baseline) => `# ${title}\n\n## Reason and scope\n\n${reason}\n${scope ? `\n${scope}\n` : ''}\n## Baseline and ownership\n\n${baseline}\n`;
-const planReadme = title => `---\ntasks: []\n---\n\n# ${title} plan\n\n## Approval and prerequisites\n\nPresent this plan for explicit approval before implementation. Name the prerequisites here.\n\n## Plan self-check\n\nNot recorded.\n`;
+// A change README with a tier has front matter; a small change keeps its plan
+// paragraph and tier decisions in the README.
+function changeReadme(title, reason, scope, baseline, {tier, plan} = {}) {
+  const small = tier === 'small' ? `\n## Plan\n\n${plan || 'Describe the one task, the requirement IDs that it covers and the compatibility level. Replace this text.'}\n\n## Tier decisions\n\nRecord the one-repository decision and the impact assessment. Replace this text.\n` : '';
+  const body = `# ${title}\n\n## Reason and scope\n\n${reason}\n${scope ? `\n${scope}\n` : ''}${small}\n## Baseline and ownership\n\n${baseline}\n`;
+  return tier ? editFrontMatter('', [{op: 'set', path: ['tier'], value: tier}]) + `\n${body}` : body;
+}
+// The plan of a small change has no approval section: the request is the approval.
+function planReadme(title, {tier, compatibility, plan} = {}) {
+  const intro = tier !== 'small' && plan ? `${plan}\n\n` : '';
+  const approval = tier === 'small' ? '' : '## Approval and prerequisites\n\nPresent this plan for explicit approval before implementation. Name the prerequisites here.\n\n';
+  const body = `---\ntasks: []\n---\n\n# ${title} plan\n\n${intro}${approval}## Plan self-check\n\nNot recorded.\n`;
+  return compatibility ? editFrontMatter(body, [{op: 'set', path: ['compatibility'], value: compatibility}]) : body;
+}
 const prerequisiteText = deps => deps.length ? `Tasks ${deps.join(', ')}.` : 'No internal prerequisite.';
 const dodText = (items, checked = new Map()) => (items.length ? items : ['Describe one observable result. Replace this item.']).map(item => `- [${checked.get(item) ? 'x' : ' '}] ${item}`).join('\n');
-function taskFile(id, deps, title, scope, dod) {
-  return editFrontMatter('', [{op: 'set', path: ['id'], value: id}, {op: 'set', path: ['depends_on'], value: deps}]) +
-    `\n# ${title}\n\n## Scope and ownership\n\n${scope || 'Name the files and modules that this task owns. Replace this text.'}\n\n## Governing knowledge\n\nName the requirements and specifications that govern this task. Replace this text.\n\n## Prerequisites\n\n${prerequisiteText(deps)}\n\n## Definition of Done\n\n${dodText(dod)}\n\n## Evidence\n\nImplementation has not started.\n`;
+// depends_on is the only prerequisite record; covers replaces the prose list of governing requirements.
+function taskFile(id, deps, title, scope, dod, covers) {
+  const governing = covers ? '' : '## Governing knowledge\n\nName the requirements and specifications that govern this task. Replace this text.\n\n';
+  return editFrontMatter('', [{op: 'set', path: ['id'], value: id}, {op: 'set', path: ['depends_on'], value: deps}, ...(covers ? [{op: 'set', path: ['covers'], value: covers}] : [])]) +
+    `\n# ${title}\n\n## Scope and ownership\n\n${scope || 'Name the files and modules that this task owns. Replace this text.'}\n\n${governing}## Definition of Done\n\n${dodText(dod)}\n\n## Evidence\n\nImplementation has not started.\n`;
+}
+// Task covers in the reader form; null when absent. An empty list on update removes the field.
+function coversOf(input, path) {
+  if (input.covers === undefined || Array.isArray(input.covers) && !input.covers.length) return null;
+  const {diagnostics} = taskCovers(editFrontMatter('', [{op: 'set', path: ['covers'], value: input.covers}]), path);
+  if (diagnostics.length) fail('covers', diagnostics[0].message);
+  return input.covers;
 }
 
 // --- Context -------------------------------------------------------------------
@@ -120,6 +143,16 @@ function changeOf(ctx, artifact, name, {open = true} = {}) {
   return change;
 }
 const changePrefix = (artifact, change) => `${BASE}${artifact}/changes/${change}/`;
+const TASK_FILE = /\/changes\/change-[^/]+\/tasks\/(?!README\.md$).+\.md$/;
+const TASK_KEYS = ['title', 'id', 'covers', 'dod', 'scope', 'prerequisites'];
+const unitRequired = (ctx, tier) => readConfig(ctx.files.get(CONFIG_PATH)).config.unit_brief.required_for.includes(tier);
+// The context after planned edits of a new change, for operations that compose others.
+function overlay(ctx, edits, artifactId, change) {
+  const files = new Map(ctx.files), artifact = ctx.artifacts.get(artifactId);
+  for (const edit of edits) files.set(edit.path, edit.after);
+  const artifacts = new Map(ctx.artifacts).set(artifactId, {...artifact, changes: [...artifact.changes, {name: change, layout: 'in-place', version: null}]});
+  return {...ctx, files, artifacts, read: async path => files.get(path) || ctx.read(path), exists: path => files.has(path) && (files.get(path) !== '' || !path.endsWith('/README.md'))};
+}
 function unitOf(ctx, id) {
   if (!ids(id)) fail('unit', 'unit must be a unit ID.');
   const path = `${BASE}units-of-work/${id}/README.md`;
@@ -185,11 +218,6 @@ async function claimFile(ctx, input) {
   return {path, current, claims: value.claims || []};
 }
 const claimSection = path => /\/tasks\/(?!README\.md$)[^/]+\.md$/.test(path) ? ['evidence', 'Evidence'] : ['claim-evidence', 'Claim evidence'];
-function nextVersion(current, level) {
-  if (!current) return '1.0.0';
-  const [major, minor, patch] = current.split('.').map(Number);
-  return level === 'major' ? `${major + 1}.0.0` : level === 'minor' ? `${major}.${minor + 1}.0` : `${major}.${minor}.${patch + 1}`;
-}
 function remoteRepository(url) {
   const ssh = url.match(/^(?:ssh:\/\/)?git@([^:/]+)[:/](.+?)(?:\.git)?\/?$/);
   if (ssh) return `https://${ssh[1]}/${ssh[2]}`;
@@ -257,11 +285,14 @@ export const OPERATIONS = {
     const open = artifact.changes.filter(c => c.layout === 'in-place' && !c.version);
     if (open.length) throw new EditError(422, `${artifact.id} already has the open change ${open.map(c => c.name).join(', ')}. Finish it or prepare its version first.`, {code: 'open-change', field: 'artifact'});
     const title = oneLine(input, 'title'), reason = text(input, 'reason'), scope = text(input, 'scope', {required: false});
+    const tier = input.tier ?? 'medium', compatibility = input.compatibility, plan = text(input, 'plan', {required: false, max: 4000});
+    if (!TIERS.includes(tier)) fail('tier', `tier must be ${TIERS.join(', ')}.`);
+    if (compatibility !== undefined && !LEVELS.includes(compatibility)) fail('compatibility', `compatibility must be ${LEVELS.join(', ')}.`);
     const name = identifier(input, 'name', title, artifact.changes.map(c => c.name), {prefix: 'change-'});
     const prefix = changePrefix(artifact.id, name), working = frontValue(await ctx.read(`${BASE}${artifact.id}/README.md`)).current_version;
     const edits = [
-      create(`${prefix}README.md`, changeReadme(title, reason, scope, `Starts from ${artifact.id} ${working || 'with no established version'}. The ${artifact.id} owner owns this change.`)),
-      create(`${prefix}tasks/README.md`, planReadme(title)),
+      create(`${prefix}README.md`, changeReadme(title, reason, scope, `Starts from ${artifact.id} ${working || 'with no established version'}. The ${artifact.id} owner owns this change.`, {tier, plan})),
+      create(`${prefix}tasks/README.md`, planReadme(title, {tier, compatibility, plan})),
     ];
     const result = {artifact: artifact.id, change: name};
     if (input.unit !== undefined) {
@@ -273,6 +304,8 @@ export const OPERATIONS = {
         edits.push(replace(brief.path, editFrontMatter(brief.text, [{op: 'insert', path: ['changes'], value: {artifact: artifact.id, change: name}}])));
         result.unit = unit.id;
       } else {
+        // A new unit has one member: it needs a brief only for the tiers that the configuration names.
+        if (!unitRequired(ctx, tier)) fail('unit', `A ${tier} change with one member has no unit brief.`);
         const unitTitle = oneLine(unit, 'title');
         const taken = [...ctx.files.keys()].filter(p => p.startsWith(`${BASE}units-of-work/`)).map(p => p.split('/')[3]);
         const id = identifier(unit, 'id', unitTitle, taken);
@@ -281,6 +314,28 @@ export const OPERATIONS = {
       }
     }
     return {edits, result};
+  },
+  // change.start and task.add in one plan, so one journal entry undoes every file.
+  async 'change.scaffold'(ctx, input) {
+    const {tasks: _tasks, ...fields} = input, tier = fields.tier ?? 'medium';
+    const tasks = list(input, 'tasks', t => t && typeof t === 'object' && !Array.isArray(t) && Object.keys(t).every(k => TASK_KEYS.includes(k)), {required: true, max: 50});
+    if (tier === 'small' ? tasks.length !== 1 : !tasks.length) fail('tasks', tier === 'small' ? 'A small change has exactly one task.' : 'Add at least one task.');
+    if (fields.unit === undefined && unitRequired(ctx, tier)) fields.unit = {title: fields.title};
+    const started = await OPERATIONS['change.start'](ctx, fields), {artifact, change} = started.result;
+    const edits = [...started.edits], added = [];
+    for (const task of tasks) {
+      const next = await OPERATIONS['task.add'](overlay(ctx, edits, artifact, change), {...task, artifact, change});
+      for (const edit of next.edits) {const i = edits.findIndex(e => e.path === edit.path);if (i < 0) edits.push(edit);else edits[i] = {...edits[i], after: edit.after};}
+      added.push(next.result);
+    }
+    // The shared record checks on the post-image, for the files that the scaffold writes.
+    const files = overlay(ctx, edits, artifact, change).files, written = new Set(edits.map(e => e.path));
+    const snapshot = buildSnapshot(files, ctx.snapshot.repository, [], {layouts: ctx.layouts, baselines: ctx.scan.baselines});
+    const diagnostics = (await recordChecks({root: ctx.root, git: ctx.git, scope: {artifact, change}, scan: {files, snapshot, baselines: ctx.scan.baselines}}))
+      // The scaffold writes placeholders on purpose; the author replaces them before the self-check.
+      .filter(d => d.severity === 'error' && written.has(d.path) && d.code !== 'placeholder-text').map(d => ({...d, state: 'new'}));
+    if (diagnostics.length) throw new EditError(422, diagnostics.map(d => d.message).slice(0, 3).join(' '), {code: 'validation-failed', diagnostics});
+    return {edits, result: {...started.result, tasks: added}};
   },
   async 'document.add'(ctx, input) {
     const artifact = artifactOf(ctx, input.artifact);
@@ -344,10 +399,11 @@ export const OPERATIONS = {
     const deps = [...new Set(list(input, 'prerequisites', ids))];
     for (const dep of deps) if (!tasks.some(t => t.id === dep)) fail('prerequisites', `Task ${dep} does not exist.`);
     const dod = list(input, 'dod', nonempty, {max: 50}).map(item => item.trim().replace(/\s*\n\s*/g, ' '));
+    const covers = coversOf(input, `${prefix}tasks/task.md`);
     const width = Math.max(2, ...listed.map(f => f.match(/^(\d+)-/)?.[1].length || 0));
     const sequence = Math.max(0, ...listed.map(f => Number(f.match(/^(\d+)-/)?.[1] || 0))) + 1;
     const file = `${String(sequence).padStart(width, '0')}-${id}.md`;
-    const edits = [create(`${prefix}tasks/${file}`, taskFile(id, deps, title, text(input, 'scope', {required: false}), dod))];
+    const edits = [create(`${prefix}tasks/${file}`, taskFile(id, deps, title, text(input, 'scope', {required: false}), dod, covers))];
     edits.push(planText ? replace(planPath, editFrontMatter(planText, [{op: 'insert', path: ['tasks'], value: file}])) : create(planPath, editFrontMatter(planReadme(`${change.name}`), [{op: 'set', path: ['tasks'], value: [file]}])));
     return {edits, result: {task: id, path: `${prefix}tasks/${file}`}};
   },
@@ -360,6 +416,10 @@ export const OPERATIONS = {
       for (const dep of deps) if (dep === value.id || !tasks.some(t => t.id === dep)) fail('prerequisites', `Task ${dep} cannot be a prerequisite.`);
       next = editFrontMatter(next, [{op: 'set', path: ['depends_on'], value: deps}]);
       if (readSection(next, 'prerequisites') !== null) next = replaceSection(next, 'prerequisites', prerequisiteText(deps));
+    }
+    if (input.covers !== undefined) {
+      const covers = coversOf(input, path);
+      next = editFrontMatter(next, [covers ? {op: 'set', path: ['covers'], value: covers} : {op: 'delete', path: ['covers']}]);
     }
     if (input.scope !== undefined) next = replaceSection(next, 'scope-and-ownership', text(input, 'scope'), {heading: 'Scope and ownership'});
     if (input.dod !== undefined) {
@@ -393,7 +453,8 @@ export const OPERATIONS = {
     let id;
     if (input.id !== undefined && existing.includes(input.id)) id = input.id;
     else id = identifier(input, 'id', slug(method).split('-').slice(0, 3).join(' '), [...existing, ...sectionAnchors(current).map(h => h.anchor)], {max: 40});
-    const record = {id, method, result: value, source: `${path}#${id}`};
+    // A task record omits source: it defaults to the Evidence section, which holds the detail.
+    const record = {id, method, result: value, ...(TASK_FILE.test(path) ? {} : {source: `${path}#${id}`})};
     const withSection = upsertSubsection(current, 'evidence', 'Evidence', id, detail);
     const index = existing.indexOf(id);
     return {edits: [replace(path, editFrontMatter(withSection, [index >= 0 ? {op: 'set', path: ['evidence_records', index], value: record} : {op: 'insert', path: ['evidence_records'], value: record}]))], result: {path, id}};
@@ -619,22 +680,38 @@ export const OPERATIONS = {
     return {edits: edits.length ? flowPlan(flow, edits) : [], result: {flow: flow.id}};
   },
   async 'version.prepare'(ctx, input) {
-    const artifact = artifactOf(ctx, input.artifact), change = changeOf(ctx, artifact, input.change);
-    if (!['major', 'minor', 'patch'].includes(input.level)) fail('level', 'level must be major, minor or patch.');
+    const artifact = artifactOf(ctx, input.artifact), change = changeOf(ctx, artifact, input.change, {open: false});
+    const prefix = changePrefix(artifact.id, change.name), base = `${BASE}${artifact.id}/`;
+    const level = input.level ?? planCompatibility(ctx.files.get(`${prefix}tasks/README.md`) || '').compatibility;
+    if (!LEVELS.includes(level)) fail('level', input.level === undefined ? 'The plan declares no compatibility. Select major, minor or patch.' : 'level must be major, minor or patch.');
+    // The protected identity record is the base, not the working tree.
+    const established = ctx.scan.baselines?.[artifact.id];
+    if (established?.state !== 'available') throw new EditError(422, `The identity record of ${artifact.id} on the protected branch is unknown. ${established?.reason || 'Create main or master first.'}`, {code: 'unknown-baseline', field: 'level'});
+    const protectedVersion = established.currentVersion ?? null;
+    if (protectedVersion !== null && !VERSION.test(String(protectedVersion))) throw new EditError(422, 'The protected current_version is not a semantic version.', {code: 'invalid-identity'});
+    const records = [...ctx.files.keys()].map(p => p.slice(base.length).match(/^versions\/(\d+\.\d+\.\d+)\/README\.md$/)?.[1]).filter(Boolean)
+      .map(v => {try {return {version: v, change: frontValue(ctx.files.get(`${base}versions/${v}/README.md`)).source_change};} catch {return {version: v, change: null};}});
+    const own = records.filter(r => r.change === change.name), others = records.filter(r => r.change !== change.name).map(r => r.version);
+    for (const r of own) if (established.versionRecords.includes(r.version) && frontValue(await ctx.git(ctx.root, ['show', `${established.oid}:${base}versions/${r.version}/README.md`]).catch(() => '')).source_change === change.name)
+      throw new EditError(422, `${change.name} is established in version ${r.version}; its version cannot change.`, {code: 'protected-record', field: 'change'});
+    const version = nextVersion(protectedVersion, level), path = `${base}versions/${version}/README.md`;
+    const highest = [protectedVersion, ...others].filter(Boolean).reduce((a, b) => versionGreater(b, a) ? b : a, '0.0.0');
+    if (!versionGreater(version, highest)) fail('level', `Version ${version} is not greater than version ${highest}.`, 409);
     const reason = text(input, 'reason', {max: 2000}), summary = text(input, 'summary', {max: 4000});
-    const prefix = changePrefix(artifact.id, change.name), graph = buildTaskGraph(ctx.files, prefix, checklist, ctx.scan.unsafeTaskPaths);
+    const graph = buildTaskGraph(ctx.files, prefix, checklist, ctx.scan.unsafeTaskPaths);
     if (graph.state !== 'available') throw new EditError(422, `The plan of ${change.name} is ${graph.state}. Fix the plan before you prepare a version.`, {code: 'invalid-plan', diagnostics: graph.diagnostics});
     const unchecked = graph.tasks.flatMap(t => checklistItems(t.body).filter(i => !i.checked).map(i => ({task: t.id, path: t.path, item: i.text})));
     if (unchecked.length && input.acknowledgeUnchecked !== true) throw new EditError(422, `${unchecked.length} Definition of Done items are not checked. Check them or acknowledge them.`, {code: 'unchecked-dod', field: 'acknowledgeUnchecked', unchecked});
-    const readmePath = `${BASE}${artifact.id}/README.md`, readme = await ctx.read(readmePath), working = frontValue(readme).current_version ?? null;
-    if (working !== null && !VERSION.test(String(working))) throw new EditError(422, 'current_version is not a semantic version.', {code: 'invalid-identity'});
-    const version = nextVersion(working, input.level), path = `${BASE}${artifact.id}/versions/${version}/README.md`;
-    if (ctx.files.has(path)) fail('level', `Version ${version} already has a record.`, 409);
+    const readmePath = `${base}README.md`, readme = await ctx.read(readmePath);
     const heading = (ctx.files.get(`${prefix}README.md`) || '').match(/^#\s+(.+)$/m)?.[1] || change.name;
-    const compatibility = {major: 'Incompatible major version.', minor: 'Compatible minor version.', patch: 'Compatible patch version.'}[input.level];
+    const compatibility = {major: 'Incompatible major version.', minor: 'Compatible minor version.', patch: 'Compatible patch version.'}[level];
     const record = editFrontMatter('', [{op: 'set', path: ['source_change'], value: change.name}]) +
       `\n# ${artifact.id} ${version} — ${heading}\n\n${compatibility} ${reason}\n\n${summary}\n\nThis record holds no knowledge directories and no tasks. The originating plan and its evidence are in the [retained change](../../changes/${change.name}/tasks/README.md).\n`;
-    return {edits: [create(path, record), replace(readmePath, editFrontMatter(readme, [{op: 'set', path: ['current_version'], value: version}]))], result: {version, path, unchecked}};
+    // An unestablished record of this change with another number is renamed to the computed number.
+    const renamed = own.filter(r => r.version !== version).map(r => `${base}versions/${r.version}/README.md`);
+    const rewrite = own.some(r => r.version === version), identity = editFrontMatter(readme, [{op: 'set', path: ['current_version'], value: version}]);
+    return {edits: [rewrite ? replace(path, record) : create(path, record), ...renamed.map(remove), ...(identity === readme ? [] : [replace(readmePath, identity)])],
+      policy: {allowVersionRecord: rewrite, renameVersions: renamed}, result: {version, base: protectedVersion, level, path, renamed, unchecked}};
   },
   async 'publication.record'(ctx, input) {
     const artifact = artifactOf(ctx, input.artifact);

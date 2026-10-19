@@ -1,3 +1,4 @@
+import {evidenceSource} from '../src/delivery-records.js';
 import {frontMatter, safeKnowledgePath, evidenceDetail} from './units-of-work.js';
 // Claim records of the ADD claim contract (artifact-driven specifications/claim-records.md).
 // Claims are read from files only; a status describes evidence, never approval.
@@ -91,7 +92,7 @@ function negativeSources(files) {
   for (const [path, markdown] of files) {
     if (!path.endsWith('.md') || typeof markdown !== 'string' || !markdown.startsWith('---') || !/^(evidence_records|self_check)\s*:/m.test(markdown)) continue;
     const value = frontMatter(markdown).value || {};
-    const records = [...(Array.isArray(value.evidence_records) ? value.evidence_records : []), value.self_check];
+    const records = [...(Array.isArray(value.evidence_records) ? value.evidence_records.map(r => mapping(r) ? {...r, source: evidenceSource(r, path)} : r) : []), value.self_check];
     for (const r of records) if (mapping(r) && ['failed', 'incomplete'].includes(r.result) && typeof r.source === 'string') result.add(r.source);
   }
   return result;
