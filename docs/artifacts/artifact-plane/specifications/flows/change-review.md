@@ -56,6 +56,10 @@ flow:
         - layout-reading
         - change-page
         - change-unit-tests
+    - id: brief
+      title: Answer the seven review questions and record a person's check
+      supports:
+        - brief-contract
     - id: return
       title: Return to delivery or capture the reviewed context
       supports:
@@ -77,6 +81,8 @@ flow:
     - from: impact
       to: evidence
     - from: evidence
+      to: brief
+    - from: brief
       to: return
     - from: return
       to: select
@@ -177,6 +183,12 @@ flow:
       basis: observed
       evidence:
         - docs/artifacts/artifact-plane/changes/change-workbench-redesign/tasks/07-browser-suites.md
+    - id: brief-contract
+      kind: element
+      artifact: artifact-plane
+      element: specifications/review-brief.md
+      requires: Derive the change brief, the verification ladder and the claim facts from the review and impact services, and record claim checks through the operations.
+      basis: documented
   gaps:
     - Declared current is not a historical code predecessor; recorded
       relationships are not exhaustive impact.

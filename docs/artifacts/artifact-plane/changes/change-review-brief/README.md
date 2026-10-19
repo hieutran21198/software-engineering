@@ -13,3 +13,4 @@ Excluded: learning prompts, risk classes, competence signals, a workflow or appr
 The established baseline is Artifact Plane 1.19.0 on main, with ADD 2.8.1 as its established supplier. The claim contract is proposed by the ADD change change-claim-records in the same unit; tasks that read or write claims wait until that change establishes. Knowledge is edited in place on branch claude/human-cognitive-support. This change belongs to the human-cognitive-support unit.
 
 - [Requirements](../../requirements/review-brief.md)
+- [Contract](../../specifications/review-brief.md)
