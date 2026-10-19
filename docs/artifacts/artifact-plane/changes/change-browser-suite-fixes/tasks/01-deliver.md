@@ -19,7 +19,7 @@ Coordinator, as implementer. apps/artifact-plane/src/editing.jsx, test/browser/f
 - [x] On the Chromium 156 headless shell of Playwright 1.64 (the CI browser): the full browser suite passes, and S4 passes 5 of 5 repeated runs.
 - [x] On the local Chromium 149: the diagram and flow page suites pass.
 - [x] `npm test` and `npm run build` pass, and the validator reports no error for this change.
-- [ ] The CI run of the pull request passes.
+- [x] The CI run of the pull request passes.
 
 ## Evidence
 
@@ -30,5 +30,6 @@ Coordinator, as implementer. apps/artifact-plane/src/editing.jsx, test/browser/f
 | CI browser | Playwright 1.64 headless shell, Chromium 156.0.8078.4: `npx playwright test` 109 passed, 0 failed (4.6 min); S4 with `--repeat-each=5`: 5 passed | Passed |
 | Local browser | Chromium 149.0.7827.55: diagram-rendering.spec.js and flow-page.spec.js, 15 passed | Passed |
 | Unit tests, build, validator | `npm test` 409 tests, 408 passed, 0 failed, 1 skipped; `npm run build` exits 0; `npm run validate` on this repository: `ok: true`, 0 errors; five `open-change-conflict` warnings name local branches of delivered or stale changes. With `--change artifact-plane/change-browser-suite-fixes`: 0 errors, declared small and allowed small, 44 changed code and test lines | Passed |
+| Pull request CI | GitHub Actions run 39213669473 on PR #43 (head c9dd193): artifact-plane, go and docs jobs succeeded; the browser job ran the full suite on the Playwright headless shell | Passed |
 
 Limitations: the single discovery-recorded failure of CI run 39198983185 did not repeat in the five later runs and is not addressed. Before this change, local runs on Chromium 149 hid the CI failures from #38 to #42.
