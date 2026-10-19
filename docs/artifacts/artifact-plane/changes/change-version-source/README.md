@@ -24,3 +24,4 @@ Knowledge is edited in place on this branch. The unit brief is [Plane version so
 
 - [Requirements: version record identity](../../requirements/version-record-identity.md)
 - [Specification: version record identity](../../specifications/version-record-identity.md)
+- [Plan](tasks/README.md)

@@ -5,12 +5,26 @@ changes:
     change: change-version-source
 affected_flows: []
 flow_assessment: Discovery on 19 October 2026 read the eleven Plane flow
-  records and the validator, record-check and baseline modules. Change-review
-  and agent-session-guidance show validator results, and their steps stay the
-  same; only the diagnostics of one scenario change. Knowledge-authoring keeps
-  version preparation unchanged, because that operation is out of scope. No
-  flow is created, modified or removed, and no ADD or Story-Driven flow is
-  affected.
+  records and the validator, record-check and baseline modules, and ran the
+  impact service at depth 2 on the three changed modules. No flow is created,
+  modified or removed; the impact reconciliation explains the eight reached
+  flows. No ADD or Story-Driven flow is affected.
+claims:
+  - id: reached-flows-kept
+    kind: assumption
+    statement: The eight Plane flows that the impact service reaches from the
+      changed modules keep their steps and supports; only the diagnostics of the
+      same-path scenario change.
+    status: open
+    basis: static
+    check: Run the Node and browser suites on the integrated branch and confirm
+      that the existing tests of the reached steps pass without edits.
+    risk_if_wrong: A flow record keeps steps that the delivered Plane no longer
+      follows.
+    about: [flow:artifact-plane:agent-session-guidance, flow:artifact-plane:change-impact,
+      flow:artifact-plane:change-review, flow:artifact-plane:context-handoff,
+      flow:artifact-plane:knowledge-authoring, flow:artifact-plane:repository-exploration,
+      flow:artifact-plane:source-retrieval, flow:artifact-plane:unit-inspection]
 acceptance:
   - id: stale-number
     criterion: The validator reports version-number-invalid for a branch version
@@ -42,3 +56,7 @@ The established-record and delivered-change tests of the validator checks. The [
 ## Excluded scope
 
 The same test in the status views and version preparation of the Plane, and the ADD contract and guidelines.
+
+## Impact reconciliation
+
+The impact service (`get_change_impact`, origins `server/record-checks.js`, `server/knowledge-baseline.js` and `scripts/validate-knowledge.mjs`, depth 2) reported complete and fresh coverage on 19 October 2026: 17 direct and 47 transitive entities, all in artifact-plane, 24 reached steps in 8 flows, and 0 unresolved items. The flows are agent-session-guidance, change-impact, change-review, context-handoff, knowledge-authoring, repository-exploration, source-retrieval and unit-inspection. Each one is reached through an import of the record checks or the baseline reader. The behavior that these steps use stays the same, except for the diagnostics of the same-path scenario (claim reached-flows-kept). Version preparation in knowledge-authoring is out of scope.
