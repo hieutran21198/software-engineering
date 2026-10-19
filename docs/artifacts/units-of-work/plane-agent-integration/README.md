@@ -9,13 +9,13 @@ affected_flows:
     effect: modify
   - artifact: artifact-plane
     flow: agent-session-guidance
-    effect: add
+    effect: create
 flow_assessment: Discovery on 19 October 2026 read the ten Plane flow records,
   the application command line, the runtime CLI and store, the MCP server, the
   integration guide, the README sections on MCP and the observer, the agent
   configuration of this repository, and the hook references of Claude Code and
   Codex. Execution-observation changes because the executable runs the hook and
-  a task file read binds an agent. Agent-session-guidance is new: context at
+  a task file read binds an agent. Agent-session-guidance is new, with context at
   session start, refusal of reserved actions and the record check at stop.
   Context-handoff and source-retrieval keep their steps; their MCP tools keep
   their behavior. Change-review, change-impact, knowledge-authoring,

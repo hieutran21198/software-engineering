@@ -22,6 +22,7 @@ specifications/agent-integration.md: Session context, Reserved actions, Stop che
 - [ ] `sessionContext(status)` returns the text of Session context, at most 4,000 characters, with the truncation line when task lines are removed.
 - [ ] `reservedAction(input)` passes the test table of the specification Validation section, and returns null outside an ADD repository.
 - [ ] `stopCheck(input)` fails only for error diagnostics of a current change, lists at most ten, and returns null when `stop_hook_active` is true.
+- [ ] `validateKnowledge` with a change scope reports the errors of a unit brief whose metadata cannot be parsed.
 - [ ] The time of `worktreeStatus` on this repository is recorded (claim status-latency).
 - [ ] `npm test` passes.
 
