@@ -85,8 +85,9 @@ await check("hook answers a SessionStart input with one JSON object", async () =
 });
 await check("runtime query prints the JSON of the store", async () => {
   const result = await runWith(["runtime", "query", "--root", repository, "--state-dir", state], "").catch((error) => {
-    // The store requires POSIX modes 0700 and 0600, which Windows does not report; the command then exits with status 1.
-    if (process.platform === "win32" && error.code === 1 && /private runtime/.test(error.stderr)) return { windows: error.stderr.trim() };
+    // The store refuses its directory on Windows (agent-integration specification, Hook command): it requires POSIX modes
+    // 0700 and 0600, which Windows does not report, and on some runners its repository check also refuses the temporary directory.
+    if (process.platform === "win32" && error.code === 1 && /private runtime|outside repositories/.test(error.stderr)) return { windows: `${error.stderr.trim()} (state ${state})` };
     throw error;
   });
   if (result.windows) {console.log(`     runtime store unavailable on Windows: ${result.windows}`);return;}
