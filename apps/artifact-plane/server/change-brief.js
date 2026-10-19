@@ -115,7 +115,8 @@ export async function buildBrief({root, worktree, artifact, change, git, impactS
   // Flows: reached, declared and undecided.
   const flowItems = [...(d?.direct || []), ...(d?.transitive || [])].filter(i => i.kind === 'flow');
   const declaredKeys = new Set((owning?.affectedFlows || []).map(f => `${f.artifact}:${f.flow}`));
-  const decidedBy = key => claims.find(c => c.about.some(a => a === key || a.startsWith(key + ':')));
+  // A claim names a flow by its impact entity (flow:<artifact>:<flow>) or without the prefix.
+  const decidedBy = key => claims.find(c => c.about.some(a => {const k = flowKey(a);return k === key || k.startsWith(key + ':');}));
   const reached = flowItems.map(i => {const key = flowKey(i.entity), claim = decidedBy(key);return {flow: key, title: i.title, tier: i.tier, strength: i.strength, steps: (i.steps || []).map(s => s.step ?? s), state: declaredKeys.has(key) ? 'declared' : claim ? 'decided' : 'undecided', decidedBy: declaredKeys.has(key) ? owning.path : claim ? {file: claim.file, id: claim.id} : null};});
   const undecided = [...reached.filter(f => f.state === 'undecided').map(f => ({kind: 'flow', flow: f.flow, tier: f.tier, strength: f.strength})), ...(d?.unresolved || []).map(u => ({kind: 'unresolved', entity: u.entity, for: u.for ?? null, reason: u.reason}))];
   const flows = {reached, declared: owning?.affectedFlows || [], undecided};

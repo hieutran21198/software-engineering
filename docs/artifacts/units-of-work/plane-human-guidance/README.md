@@ -33,6 +33,26 @@ flow_assessment: Discovery on 19 October 2026 read the ten Plane flow records,
   their meaning; their supports change. Change-impact, context-handoff,
   execution-observation, project-tabs and repository-refresh keep their steps
   and supports. No ADD or Story-Driven flow is affected.
+claims:
+  - id: reached-flows-kept
+    kind: assumption
+    statement: The flows project-tabs, repository-refresh, change-impact,
+      context-handoff and execution-observation keep their steps and supports,
+      although the impact service reaches them from this change.
+    status: verified
+    basis: observed
+    verified_by: agent
+    evidence:
+      - docs/artifacts/units-of-work/plane-human-guidance/README.md#impact-reconciliation
+    check: Run the impact service on the branch difference at depth 2 and confirm
+      that each of the five flows is reached only through the origins listed in
+      the reconciliation, each of which changes labels, styles or the location
+      of an unchanged function.
+    risk_if_wrong: A flow record keeps steps that the delivered Plane no longer
+      follows.
+    about: [flow:artifact-plane:project-tabs, flow:artifact-plane:repository-refresh,
+      flow:artifact-plane:change-impact, flow:artifact-plane:context-handoff,
+      flow:artifact-plane:execution-observation]
 acceptance:
   - id: install
     criterion: A person downloads the Linux AMD64 executable built by CI, checks
@@ -76,3 +96,15 @@ The release of the Plane as executable files, and human guidance and visual dist
 ## Excluded scope
 
 ADD bundle and `se-adopt` changes, a requirement-ID coverage view, an Impact page default, History grouping, a dark theme, paid code signing, installers and auto-update. No acceptance criterion is a framework score: the scores stay with independent assessors.
+
+## Impact reconciliation
+
+The impact service on the branch difference at depth 2 (19 October 2026) reaches five flows that the brief does not declare, each directly through one or two origins:
+
+| Flow | Origins | Why the steps stay |
+| --- | --- | --- |
+| project-tabs | specifications/authoring-workbench.md | The amendment changes the Labels table and the empty state only. |
+| repository-refresh | src/main.jsx, src/Sidebar.jsx | Refresh keeps loaded evidence of current changes with `isCurrent`, and the sidebar changes labels and badges; observe and apply keep their meaning. |
+| change-impact | server/flow-mcp.js | `runFlowMcpStdio` moved from flow-mcp-stdio.js into this module; the tools and their behavior are unchanged. |
+| context-handoff | server/flow-mcp.js | The same move. |
+| execution-observation | src/styles.css | The stylesheet changes control and badge styles only. |
