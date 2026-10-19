@@ -1,6 +1,7 @@
 import { createServer } from "node:http";
 import { readFile, realpath } from "node:fs/promises";
-import { resolve, relative, isAbsolute, sep, extname } from "node:path";
+import { existsSync } from "node:fs";
+import { resolve, relative, isAbsolute, sep, extname, dirname, join } from "node:path";
 import { fileURLToPath } from "node:url";
 import { exploreRepository } from "./reader.js";
 import {repositoryService, registeredSourceFingerprint} from './repository-events.js';
@@ -13,7 +14,9 @@ import { runtimeService } from "./runtime-api.js";
 import {createKnowledgeService} from './knowledge-operations.js';
 import {knowledgeGit} from './knowledge-git.js';
 import {errorBody as editError} from './knowledge-writer.js';
-const DIST = fileURLToPath(new URL("../dist/", import.meta.url));
+// A bundled server.mjs has dist/ beside it; a source checkout has it beside server/.
+export const distDirectory = (directory) => existsSync(join(directory, "dist")) ? join(directory, "dist") : resolve(directory, "../dist");
+const DIST = distDirectory(dirname(fileURLToPath(import.meta.url)));
 const mime = {
   ".html": "text/html; charset=utf-8",
   ".js": "text/javascript; charset=utf-8",
@@ -162,5 +165,19 @@ export function createAppServer(options = {}) {
   server.close=(...args)=>{runtime.close();repositories.close();flows?.close();if(!options.impactService)impact?.close();return close(...args);};
   server.runtime = runtime;
   server.repositories=repositories;
+  return server;
+}
+export function startServer(label = "Artifact Plane") {
+  const port = Number(process.env.PORT || 4310);
+  if (!Number.isInteger(port) || port < 1 || port > 65535)
+    throw Error("PORT must be between 1 and 65535.");
+  const server = createAppServer();
+  server.listen(port, "127.0.0.1", () =>
+    console.log(`${label}: http://127.0.0.1:${port}`),
+  );
+  server.on("error", (error) => {
+    console.error(error.message);
+    process.exitCode = 1;
+  });
   return server;
 }

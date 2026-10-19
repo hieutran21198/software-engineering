@@ -208,4 +208,5 @@ async function main() {
     return result.diagnostics.length ? 1 : 0;
   } catch (error) {console.log(JSON.stringify({error: error.message}));return error instanceof MigrationError ? 3 : 2;}
 }
-if (import.meta.url === `file://${process.argv[1]}`) process.exitCode = await main();
+// Match the file name: in a server bundle this module shares import.meta.url with the entry.
+if (process.argv[1]?.endsWith('migrate-layout.mjs')) process.exitCode = await main();
