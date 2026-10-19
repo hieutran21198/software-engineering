@@ -4,6 +4,7 @@ import { existsSync, realpathSync } from "node:fs";
 import { resolve, relative, isAbsolute, sep, extname, dirname, join } from "node:path";
 import { fileURLToPath } from "node:url";
 import { exploreRepository } from "./reader.js";
+import { exploreResponse } from "./explore-response.js";
 import {repositoryService, registeredSourceFingerprint} from './repository-events.js';
 import {createFlowService} from './flow-index.js';
 import {createReviewService} from './change-review.js';
@@ -117,7 +118,7 @@ export function createAppServer(options = {}) {
         if(url.pathname==='/api/impact/query')return json(res,200,await getImpact().query(body));
         if(url.pathname==='/api/flows/query')return json(res,200,await getFlows().query(body));
         if(url.pathname==='/api/repository/query')return json(res,200,await queryRepository(body));
-        return json(res, 200, await exploreRepository(body?.path));
+        return json(res, 200, exploreResponse(await exploreRepository(body?.path)));
       }
       if (!["GET", "HEAD"].includes(req.method))
         return json(res, 405, { error: "Method is not supported." });
