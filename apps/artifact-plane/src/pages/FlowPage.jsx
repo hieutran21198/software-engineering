@@ -1,6 +1,7 @@
 import {useEffect, useMemo, useState} from 'react';
 import {useShell, useDocument} from '../page-data.js';
-import {PageHeader, Section, Notice} from '../ui.jsx';
+import {Icon, KindTag, PageHeader, Section, Notice, StatusBadge} from '../ui.jsx';
+import {termOnce} from './guidance.jsx';
 import {ActionForm, OperationError, useEdit, frontValue, splitFront, lines} from '../editing.jsx';
 import {GraphPanel} from '../GraphPanel.jsx';
 import {flowDiagram, highlightDiagram} from '../flow-canvas.js';
@@ -21,6 +22,10 @@ function shortTitle(title = '') {
 const sentence = text => {const t = String(text || '').trim().replace(/\.$/, '');return t && !/^[A-Z]{2}/.test(t) ? t[0].toLowerCase() + t.slice(1) : t;};
 const plural = (n, word, many = word) => `${n} ${n === 1 ? word : many}`;
 const list = value => Array.isArray(value) ? value : [];
+// A basis of the Kind family (documented, static, observed) is a tag whose first
+// occurrence explains itself; any other basis stays text.
+const BASES = new Set(['documented', 'static', 'observed']);
+const Basis = ({basis, terms}) => BASES.has(String(basis).toLowerCase()) ? <KindTag kind={basis}>{terms(basis.toLowerCase(), basis)}</KindTag> : <span>{basis || 'basis unknown'}</span>;
 
 // One expanded step: grouped supports and the six step actions, one form at a time.
 // The file a support names: its knowledge element, its flow document or its source path.
@@ -38,6 +43,7 @@ function StepDetail({step, index, steps, support, resolved, editable, run, snaps
     : quick('flow.support.remove', {support: id});
   const stepOptions = steps.filter(s => s.id !== step.id).map(s => ({value: s.id, label: `${steps.indexOf(s) + 1}. ${s.title}`}));
   const existing = support.filter(s => !list(step.supports).includes(s.id)).map(s => {const t = supportTarget(snapshot, s);return {value: s.id, label: t.title || t.path};});
+  const terms = termOnce();
   return <div className="step-detail">
     {SUPPORT_GROUPS.map(([group, label]) => {
       const items = supports.filter(s => !s.missing && supportGroup(s) === group);
@@ -46,22 +52,29 @@ function StepDetail({step, index, steps, support, resolved, editable, run, snaps
         <h3>{label}</h3>
         <ul>{items.map(s => {const t = supportTarget(snapshot, s), unresolved = resolved.get(s.id) === false;return <li key={s.id}>
           {t.page ? <button className="link" onClick={() => go(t.page)}>{t.title}</button> : readable(t.path) ? <button className="link mono" onClick={() => go({kind: 'source', artifact: owner, flow: self, flowId, sourceId: readable(t.path).id, path: t.path})}>{t.path}</button> : t.title ? <span>{t.title}</span> : <span className="mono">{t.path}</span>}
-          <span className={`basis ${unresolved ? 'unresolved' : ''}`}>{s.basis || 'basis unknown'}{s.basis === 'observed' && list(s.evidence).length ? ` · ${plural(s.evidence.length, 'evidence file', 'evidence files')}` : ''}{unresolved ? ' · unresolved' : ''}</span>
-          {affected.includes(supportFile(s)) && <span className="badge small new">affected</span>}
-          {editable && <button className="icon support-remove" aria-label={`Remove ${t.title || t.path || s.id} from this step`} title="Remove from this step" onClick={() => removeSupport(s.id)}>×</button>}
+          <span className={`basis ${unresolved ? 'unresolved' : ''}`}><Basis basis={s.basis} terms={terms}/>{s.basis === 'observed' && list(s.evidence).length ? ` · ${plural(s.evidence.length, 'evidence file', 'evidence files')}` : ''}{unresolved && <> <StatusBadge status="unresolved" small>{terms('unresolved')}</StatusBadge></>}</span>
+          {affected.includes(supportFile(s)) && <span className="support-affected">affected</span>}
+          {editable && <button className="danger support-remove" aria-label={`Remove ${t.title || t.path || s.id} from this step`} onClick={() => removeSupport(s.id)}>Remove</button>}
         </li>;})}</ul>
       </div>;
     })}
     {supports.some(s => s.missing) && <p className="tiny">Missing support: {supports.filter(s => s.missing).map(s => s.id).join(', ')}</p>}
     {!supports.length && <p className="muted small">This step has no support yet.</p>}
     {supports.some(s => !s.missing) && <div><button className="link small" onClick={() => go(impactPage({origins: [...new Set(supports.filter(s => !s.missing).map(supportFile).filter(Boolean))].slice(0, 100).map(path => ({path})), title: `step “${step.title}”`}))}>What do this step's sources affect?</button></div>}
+    {/* Three groups: change, order and remove (at the right). */}
     {editable && !action && <div className="step-actions">
-      <button className="quiet" onClick={() => onAction('support')}>+ Add support</button>
-      <button className="quiet" onClick={() => onAction('rename')}>Rename step</button>
-      <button className="quiet" onClick={() => onAction('next')}>Add a next step</button>
-      <button className="quiet" disabled={index === 0} onClick={() => quick('flow.step.move', {step: step.id, to: index - 1})}>Move up</button>
-      <button className="quiet" disabled={index === steps.length - 1} onClick={() => quick('flow.step.move', {step: step.id, to: index + 1})}>Move down</button>
-      <button className="danger" disabled={steps.length === 1} onClick={() => quick('flow.step.remove', {step: step.id})}>Remove step</button>
+      <div className="step-action-group" role="group" aria-label="Change the step">
+        <button className="quiet" onClick={() => onAction('support')}>{Icon.plus}Add support</button>
+        <button className="quiet" onClick={() => onAction('rename')}>{Icon.pen}Rename step</button>
+        <button className="quiet" onClick={() => onAction('next')}>{Icon.plus}Add a next step</button>
+      </div>
+      <div className="step-action-group" role="group" aria-label="Order">
+        <button className="quiet" disabled={index === 0} onClick={() => quick('flow.step.move', {step: step.id, to: index - 1})}>{Icon.up}Move up</button>
+        <button className="quiet" disabled={index === steps.length - 1} onClick={() => quick('flow.step.move', {step: step.id, to: index + 1})}>{Icon.down}Move down</button>
+      </div>
+      <div className="step-action-group remove" role="group" aria-label="Remove">
+        <button className="danger" disabled={steps.length === 1} onClick={() => quick('flow.step.remove', {step: step.id})}>Remove step</button>
+      </div>
     </div>}
     <OperationError error={error}/>
     {action === 'support' && <ActionForm open submitLabel="Add support" title={`Add support to “${step.title}”`} onClose={close}
@@ -179,10 +192,10 @@ export default function FlowPage({page}) {
       ]} onSubmit={v => run('flow.step.add', {title: v.title, ...(v.after ? {after: v.after, position: position(v.after) + 1} : {})})}/></div>}
     </Section>}
 
-    <Section title="Gaps" summary={gaps.length} actions={editable && !editing && <button className="quiet" aria-label="Edit gaps" onClick={() => setEditing('gaps')}>Edit</button>}>
+    <Section title="Gaps" summary={gaps.length} actions={editable && !editing && <button className="quiet" aria-label="Edit gaps" onClick={() => setEditing('gaps')}>{Icon.pen}Edit</button>}>
       {editing === 'gaps' ? listEditor('gaps', 'Gaps', gaps) : gaps.length ? gaps.map((g, i) => <p key={i} className="flow-gap">{g}</p>) : <p className="muted">No gaps are recorded.</p>}
     </Section>
-    <Section title="Exclusions" summary={exclusions.length} actions={editable && !editing && <button className="quiet" aria-label="Edit exclusions" onClick={() => setEditing('exclusions')}>Edit</button>}>
+    <Section title="Exclusions" summary={exclusions.length} actions={editable && !editing && <button className="quiet" aria-label="Edit exclusions" onClick={() => setEditing('exclusions')}>{Icon.pen}Edit</button>}>
       {editing === 'exclusions' ? listEditor('exclusions', 'Exclusions', exclusions) : exclusions.length ? <ul className="flow-exclusions">{exclusions.map((x, i) => <li key={i}>{x}</li>)}</ul> : <p className="muted">No exclusions are recorded.</p>}
     </Section>
 

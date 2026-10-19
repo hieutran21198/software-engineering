@@ -1,11 +1,12 @@
 import React, {useEffect, useMemo, useRef, useState} from 'react';
 import Markdown from '../Markdown.jsx';
 import {useDocument, useShell} from '../page-data.js';
-import {Notice, PageHeader, Section, StateBadge} from '../ui.jsx';
+import {Icon, Notice, PageHeader, Section, StateBadge, StatusBadge} from '../ui.jsx';
+import {termOnce} from './guidance.jsx';
 import {DependencyGraph} from '../GraphPanel.jsx';
 import {ActionForm, OperationError, useEdit} from '../editing.jsx';
 import {edit as previewEdit} from '../knowledge-api.js';
-import {artifactDocuments, artifactTitle, changeTitle, currentChanges, currentUnits, phaseLabel, isError} from '../work-model.js';
+import {artifactDocuments, artifactTitle, changeStatus, changeTitle, currentChanges, currentUnits, phaseLabel, isError} from '../work-model.js';
 import {knowledgeTargets} from '../knowledge-navigation.js';
 import {linkPage, purposeParts} from './DocumentPageParts.jsx';
 import {DependencyExplanation} from './ArtifactPageParts.jsx';
@@ -29,7 +30,7 @@ export default function ArtifactPage({page}) {
 
 function ArtifactView({artifact, page, snapshot, worktree, go, edit}) {
   const [graph, setGraph] = useState(false), [dependency, setDependency] = useState(null), [editingDeps, setEditingDeps] = useState(false);
-  const [depError, setDepError] = useState(null);
+  const [depError, setDepError] = useState(null), [removing, setRemoving] = useState(null);
   const [starting, setStarting] = useState(false), [adding, setAdding] = useState(null), [expanded, setExpanded] = useState(() => new Set(page.section ? [page.section] : []));
   const depsButton = useRef(null), startButton = useRef(null);
   const inPlace = artifact.layout === 'in-place', writable = edit.editable && inPlace;
@@ -40,6 +41,7 @@ function ArtifactView({artifact, page, snapshot, worktree, go, edit}) {
   const docs = useMemo(() => artifactDocuments(artifact), [artifact]);
   const open = openChanges(artifact), current = open[0];
   const working = current && currentChanges(worktree).find(c => c.artifact === artifact.id && c.name === current.name);
+  const waiting = !current && currentChanges(worktree).find(c => c.artifact === artifact.id && c.version);
   const declared = inPlace ? artifact.proposedDependsOn || artifact.dependsOn : artifact.dependsOn;
   const errors = snapshot.diagnostics.filter(d => isError(d) && String(d.path || '').startsWith(`docs/artifacts/${artifact.id}/`));
 
@@ -52,13 +54,18 @@ function ArtifactView({artifact, page, snapshot, worktree, go, edit}) {
   const toggle = kind => setExpanded(value => {const next = new Set(value);next.has(kind) ? next.delete(kind) : next.add(kind);return next;});
   const refocus = ref => requestAnimationFrame(() => ref.current?.focus());
 
-  // One click removes a dependency; Edit chooses several at once.
-  const removeDependency = id => edit.run('artifact.dependencies.set', {artifact: artifact.id, dependsOn: declared.filter(d => d !== id)}).catch(failure => setDepError(failure));
+  // Remove asks for a confirmation in the page; Edit chooses several at once.
+  const removeDependency = id => {setRemoving(null);edit.run('artifact.dependencies.set', {artifact: artifact.id, dependsOn: declared.filter(d => d !== id)}).catch(failure => setDepError(failure));};
+  const keepDependency = id => {setRemoving(null);requestAnimationFrame(() => document.querySelector(`[data-dependency="${CSS.escape(id)}"]`)?.focus());};
+  // Version labels: the established version, and the prepared one with the change that prepared it.
+  const terms = termOnce(), preparedBy = artifact.proposedVersion && (artifact.versions || []).find(v => v.version === artifact.proposedVersion)?.sourceChange;
+  const preparing = preparedBy && (worktree?.changes || []).find(c => c.artifact === artifact.id && c.name === preparedBy);
   const subtitle = <>
-    {artifact.currentVersion ? `Version ${artifact.currentVersion}` : 'No version yet'}
-    {artifact.proposedVersion && ` · ${artifact.proposedVersion} prepared`}
-    {' · '}{declared.length ? <>depends on {declared.map((id, i) => <React.Fragment key={id}>{i > 0 && ', '}<button className="link" onClick={() => go({kind: 'artifact', artifact: id})}>{artifactTitle(snapshot, id)}</button>{writable && !editingDeps && <button className="icon dependency-remove" aria-label={`Remove dependency on ${artifactTitle(snapshot, id)}`} title="Remove dependency" onClick={() => {setDepError(null);removeDependency(id);}}>×</button>}</React.Fragment>)}</> : 'no dependencies'}
-    {writable && !editingDeps && <button ref={depsButton} className="quiet dependency-edit" aria-label="Edit dependencies" onClick={() => setEditingDeps(true)}>Edit</button>}
+    {artifact.currentVersion ? <StatusBadge status="established">Version {artifact.currentVersion} {terms('established')}</StatusBadge> : 'No version yet'}
+    {artifact.proposedVersion && <>{' · '}<StatusBadge status="prepared">{artifact.proposedVersion} {terms('prepared')} by</StatusBadge>{' '}
+      {preparing ? <button className="link" onClick={() => go({kind: 'change', artifact: artifact.id, change: preparedBy})}>{changeTitle(preparing)}</button> : preparedBy || 'an unrecorded change'}</>}
+    {' · '}{declared.length ? <>depends on {declared.map((id, i) => <React.Fragment key={id}>{i > 0 && ', '}<button className="link" onClick={() => go({kind: 'artifact', artifact: id})}>{artifactTitle(snapshot, id)}</button>{writable && !editingDeps && <button className="danger dependency-remove" data-dependency={id} aria-label={`Remove dependency on ${artifactTitle(snapshot, id)}`} aria-expanded={removing === id} onClick={() => {setDepError(null);setRemoving(id);}}>Remove</button>}</React.Fragment>)}</> : 'no dependencies'}
+    {writable && !editingDeps && <button ref={depsButton} className="quiet dependency-edit" aria-label="Edit dependencies" onClick={() => setEditingDeps(true)}>{Icon.pen}Edit</button>}
   </>;
 
   const sections = [...docs.groups.map(g => ({kind: g.kind, label: g.label, documents: g.documents})), {kind: 'flows', label: 'Flows', documents: docs.flows}];
@@ -67,7 +74,11 @@ function ArtifactView({artifact, page, snapshot, worktree, go, edit}) {
 
   return <section className="page artifact-page" aria-label="Artifact page"><div className="column">
     <PageHeader title={artifact.title} subtitle={subtitle}
-      action={<button className="quiet" aria-expanded={graph} onClick={() => {setGraph(value => !value);setDependency(null);}}>{graph ? 'Hide dependencies' : 'Show dependencies'}</button>}/>
+      action={<button className="quiet" aria-expanded={graph} onClick={() => {setGraph(value => !value);setDependency(null);}}>{Icon.graph}{graph ? 'Hide dependencies' : 'Show dependencies'}</button>}/>
+    {removing && declared.includes(removing) && <div className="inline-form dependency-confirm" role="group" aria-label="Remove dependency" onKeyDown={e => {if (e.key === 'Escape') {e.stopPropagation();keepDependency(removing);}}}>
+      <p>Remove the dependency on {artifactTitle(snapshot, removing)}? {artifact.title} then no longer declares that it uses its knowledge.</p>
+      <div className="form-actions"><button className="danger" autoFocus onClick={() => removeDependency(removing)}>Confirm remove</button><button onClick={() => keepDependency(removing)}>Keep dependency</button></div>
+    </div>}
     <OperationError error={depError}/>
     {editingDeps && <ActionForm open title="Dependencies" submitLabel="Save dependencies" note="This artifact uses the knowledge of the selected artifacts."
       onClose={() => {setEditingDeps(false);refocus(depsButton);}}
@@ -106,14 +117,17 @@ function ArtifactView({artifact, page, snapshot, worktree, go, edit}) {
 
     {current ? <Notice><p>Open change: <button className="link" onClick={() => go({kind: 'change', artifact: artifact.id, change: current.name})}>{changeTitle(working || current)}</button>{working && ` · ${phaseLabel(working)}`}</p></Notice>
       : inPlace && <div className="no-change">
-        {!starting && <Notice action={edit.editable && <button ref={startButton} onClick={() => setStarting(true)}>Start a change</button>}><p>No open change.</p></Notice>}
+        {!starting && <Notice action={edit.editable && <button ref={startButton} onClick={() => setStarting(true)}>Start a change</button>}>
+          {/* A change whose version waits for review and merge is still in progress. */}
+          {waiting ? <p>Change in progress: <button className="link" aria-label={`${changeTitle(waiting)}, change in progress`} onClick={() => go({kind: 'change', artifact: artifact.id, change: waiting.name})}>{changeTitle(waiting)}</button> · {changeStatus(waiting, worktree).text}</p> : <p>No change in progress.</p>}
+        </Notice>}
         {starting && <StartChange artifact={artifact} worktree={worktree} go={go} edit={edit} onClose={() => {setStarting(false);refocus(startButton);}}/>}
       </div>}
 
     {sections.map(s => {
       const all = expanded.has(s.kind), shown = all ? s.documents : s.documents.slice(0, 5), singular = SINGULAR[s.kind];
       return <Section key={s.kind} id={`artifact-section-${s.kind}`} label={s.label} title={s.label} summary={s.documents.length}
-        actions={canAdd && adding !== s.kind && <button className="quiet" id={`artifact-add-${s.kind}`} onClick={() => setAdding(s.kind)}>+ New {singular}</button>}>
+        actions={canAdd && adding !== s.kind && <button className="quiet" id={`artifact-add-${s.kind}`} onClick={() => setAdding(s.kind)}>{Icon.plus}New {singular}</button>}>
         {adding === s.kind && <AddDocument artifact={artifact} kind={s.kind} go={go} edit={edit}
           onClose={() => {setAdding(null);requestAnimationFrame(() => document.getElementById(`artifact-add-${s.kind}`)?.focus());}}/>}
         {shown.length ? <ul className="doc-list">{shown.map(d => <li key={d.file}>
@@ -128,7 +142,7 @@ function ArtifactView({artifact, page, snapshot, worktree, go, edit}) {
 }
 
 function Versions({artifact, go}) {
-  const [all, setAll] = useState(false);
+  const [all, setAll] = useState(false), terms = termOnce();
   const versions = [...(artifact.versions || [])].reverse();
   const title = name => {const change = artifact.changes.find(c => c.name === name);return change ? changeTitle(change) : name;};
   const established = versions.find(v => v.version === artifact.currentVersion);
@@ -138,14 +152,14 @@ function Versions({artifact, go}) {
     {!versions.length ? <p className="muted">No version yet.</p> : <>
       <p className="muted">
         {established ? <>Latest: {established.version} from {changeLink(established)}.</> : artifact.currentVersion ? `Latest: ${artifact.currentVersion}.` : 'No established version.'}
-        {artifact.proposedVersion && <> Version {artifact.proposedVersion} is prepared and not on main yet.</>}
+        {artifact.proposedVersion && <> Version {artifact.proposedVersion} is {terms('prepared')} and not on main yet.</>}
         {' '}<button className="link" aria-expanded={all} onClick={() => setAll(value => !value)}>{all ? 'Hide versions' : 'Show versions'}</button>
       </p>
       {all && <ul className="doc-list version-list">{versions.map(v => <li key={v.version}>
         <button className="unstyled" onClick={() => go({kind: 'document', artifact: artifact.id, source: v.path})}>
           <span className="version-number">{v.version}</span>
           <span className="doc-title">{v.sourceChange ? title(v.sourceChange) : 'No source change recorded'}</span>
-          {v.version === artifact.proposedVersion && <span className="badge new">Prepared</span>}
+          {v.version === artifact.proposedVersion && <StatusBadge status="prepared" small>prepared on this branch</StatusBadge>}
         </button>
       </li>)}</ul>}
     </>}

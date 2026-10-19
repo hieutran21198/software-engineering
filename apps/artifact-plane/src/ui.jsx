@@ -1,8 +1,8 @@
 // Shared page parts. Every page uses the same header, sections, badges, phase
 // steps, notices and menus, so pages look and behave the same.
 import React, {useEffect, useId, useLayoutEffect, useRef, useState} from 'react';
-import {badgeOf, phaseLabel, phaseModel, PHASES} from './work-model.js';
-import {difference, glossaryEntry, kindTag, statusFamily, STATUS_FAMILIES} from './glossary.js';
+import {phaseLabel, phaseModel, PHASES} from './work-model.js';
+import {difference, differenceOf, glossaryEntry, kindTag, statusFamily, STATUS_FAMILIES} from './glossary.js';
 
 // Eyebrow, title once, subtitle, at most one action at the right.
 export function PageHeader({eyebrow, title, subtitle, action}) {
@@ -29,12 +29,6 @@ export function Section({title, summary, description, actions, label, id, childr
   </section>;
 }
 
-export const Badge = ({tone = '', children, className = ''}) => <span className={`badge ${tone} ${className}`}>{children}</span>;
-// New, Changed or Removed compared with main; nothing when equal.
-export function StateBadge({state, small}) {
-  const badge = badgeOf(state);
-  return badge ? <Badge tone={badge[0]} className={small ? 'small' : ''}>{badge[1]}</Badge> : null;
-}
 
 // The five phases of a change. onOpen(source) opens the document that completed a step.
 // status replaces the narrow line when no phase is current.
@@ -43,9 +37,9 @@ export function PhaseSteps({change, onOpen, status}) {
   return <>
     <ol className="phase-steps" aria-label="Phases">
       {model.steps.map((step, i) => <li key={step.name} className={`phase-step ${step.state}`} aria-current={step.state === 'current' ? 'step' : undefined}>
-        <span className="phase-mark" aria-hidden="true">{step.state === 'done' ? '✓' : i + 1}</span>
+        <span className="phase-mark" aria-hidden="true">{step.state === 'done' ? '✓' : step.state === 'prepared' ? '◷' : i + 1}</span>
         {step.state === 'done' && step.source && onOpen ? <button className="link" onClick={() => onOpen(step.source)}>{step.name}</button> : <span>{step.name}</span>}
-        <span className="sr-only">{step.state === 'done' ? ' (done)' : step.state === 'current' ? ' (current)' : ''}</span>
+        <span className="sr-only">{STEP_STATES[step.state] || ''}</span>
       </li>)}
     </ol>
     <div className="phase-compact">
@@ -54,6 +48,7 @@ export function PhaseSteps({change, onOpen, status}) {
     </div>
   </>;
 }
+const STEP_STATES = {done: ' (done)', current: ' (current)', incomplete: ' (unchecked items)', prepared: ' (prepared)'};
 // The narrow stepper line: "Phase n of 5: name", or the status text when no phase is current.
 export const phaseText = (model, change, status) => model.current !== null ? `Phase ${model.current + 1} of ${PHASES.length}: ${PHASES[model.current]}`
   : status || (model.state === 'loading' ? 'Reading phases…' : change ? phaseLabel(change) : 'Phases');
@@ -78,6 +73,11 @@ export function DiffBadge({name, small}) {
   return <span className={`diff-badge ${family}${small ? ' small' : ''}`}><span className="diff-sign" aria-hidden="true">{sign}</span><span>{name}</span></span>;
 }
 export const KindTag = ({kind, children}) => <span className="kind-tag" data-kind={kindTag(kind)}>{children ?? kindTag(kind)}</span>;
+// The difference of a server document state (added, modified, removed); nothing when equal.
+export function StateBadge({state, small}) {
+  const name = differenceOf(state);
+  return name ? <DiffBadge name={name} small={small}/> : null;
+}
 
 // One status card: a 4-pixel stripe and badge of the status family, the status
 // and next step texts, at most one action (the page's primary button), and meta.
@@ -134,6 +134,9 @@ export const Icon = {
   pen: <svg width="15" height="15" viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinejoin="round" aria-hidden="true"><path d="M3 13l.6-2.6 7-7 2 2-7 7z"/></svg>,
   up: <svg width="15" height="15" viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><path d="M8 12.5v-9M4.5 7L8 3.5 11.5 7"/></svg>,
   down: <svg width="15" height="15" viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><path d="M8 3.5v9M4.5 9L8 12.5 11.5 9"/></svg>,
+  graph: <svg width="15" height="15" viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.5" aria-hidden="true"><rect x="2" y="2.5" width="4.5" height="4" rx="1"/><rect x="9.5" y="9.5" width="4.5" height="4" rx="1"/><path d="M6.5 4.5h2.5a1.5 1.5 0 0 1 1.5 1.5v3.5"/></svg>,
+  check: <svg width="15" height="15" viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><path d="M3.5 8.5l3 3 6-7"/></svg>,
+  compare: <svg width="15" height="15" viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" aria-hidden="true"><path d="M5 2.5v11M11 2.5v11M2.5 5.5H5M11 10.5h2.5"/></svg>,
   logo: <svg width="20" height="20" viewBox="0 0 20 20" fill="none" stroke="#1F5BD8" strokeWidth="1.6" aria-hidden="true"><rect x="2.5" y="2.5" width="6" height="6" rx="1.5"/><rect x="11.5" y="11.5" width="6" height="6" rx="1.5"/><path d="M8.5 5.5h3a2.5 2.5 0 0 1 2.5 2.5v3.5"/></svg>,
 };
 

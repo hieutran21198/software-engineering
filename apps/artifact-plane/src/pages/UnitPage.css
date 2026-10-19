@@ -7,12 +7,14 @@
 .criteria .criterion.editing { background: var(--selected-bg); }
 .criterion-id { font-family: var(--mono); font-size: 12px; color: var(--muted); padding-top: 2px; overflow-wrap: anywhere; }
 .criterion-text { display: block; min-width: 0; overflow-wrap: anywhere; }
-.criterion-text .badge { margin-left: 6px; vertical-align: 1px; }
+.criterion-flag { margin-left: 8px; font-size: 12px; font-weight: 500; color: var(--muted); white-space: nowrap; }
+.member-state { flex: none; }
 button.criterion-text { width: 100%; border-radius: var(--r-control); padding: 2px 4px; margin: -2px -4px; }
 button.criterion-text:hover { background: var(--subtle); }
 .criterion-evidence { text-align: right; }
 .badge-button { cursor: pointer; }
-.badge-button:hover { box-shadow: inset 0 0 0 1px currentColor; }
+.badge-button { border-radius: 11px; }
+.badge-button:hover .status-badge { box-shadow: inset 0 0 0 1px currentColor; }
 .criterion-edit { min-width: 0; }
 .criterion-edit textarea { border-color: #9db5ec; }
 .criterion-bar { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; margin-top: 8px; }

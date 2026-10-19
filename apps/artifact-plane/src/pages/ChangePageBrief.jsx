@@ -3,9 +3,11 @@
 // tables, a person's check and a challenge. The brief is derived; it stores nothing.
 import React, {useEffect, useState} from 'react';
 import {useShell} from '../page-data.js';
-import {Badge, Section} from '../ui.jsx';
+import {Icon, KindTag, Section, StatusBadge} from '../ui.jsx';
 import {OperationError, useEdit} from '../editing.jsx';
 import {postJSON} from '../request.js';
+import {memberUnit} from '../work-model.js';
+import {termOnce} from './guidance.jsx';
 
 const LADDER_NOTES = {
   'Not analyzed': 'A claim of kind unknown, or an item that the analysis does not cover.',
@@ -20,9 +22,27 @@ const LADDER_NOTES = {
 const LADDER = Object.keys(LADDER_NOTES);
 const KIND = {decision: 'Decision', assumption: 'Assumption', hypothesis: 'Hypothesis', root_cause: 'Root cause', unknown: 'Unknown', risk: 'Risk'};
 const KIND_ORDER = {decision: 0, root_cause: 1, assumption: 2, unknown: 3, risk: 3, hypothesis: 4};
-export const Step = ({step}) => <span className={`ladder-step l${LADDER.indexOf(step)}`} title={LADDER_NOTES[step]}>{step}</span>;
+// Kinds of the Kind family; a hypothesis has no tag in the vocabulary and stays text.
+const KIND_TAG = {decision: 'Decision', assumption: 'Assumption', root_cause: 'Root cause', unknown: 'Unknown', risk: 'Risk'};
+// Claim statuses of the Status family; supported and superseded stay text. family: the stripe of the card.
+const CLAIM_STATUS = {open: 'open', verified: 'verified', refuted: 'refuted'};
+const CLAIM_FAMILY = {open: 'active', supported: 'active', verified: 'done', refuted: 'problem', superseded: 'neutral'};
+// Attention categories in server order and the stripe family of each.
+const CATEGORIES = ['Delivered with unmet evidence', 'Claim with an error', 'Open decision', 'Open root cause', 'Undecided flow or unresolved item', 'Open assumption', 'Unknown or risk'];
+const ATTENTION_FAMILY = ['problem', 'problem', 'active', 'active', 'waiting', 'active', 'neutral'];
+const plainTerms = (term, children) => children ?? term;
+// terms (termOnce of the section) explains the first glossary term of a step.
+export const Step = ({step, terms = plainTerms}) => <span className={`ladder-step l${LADDER.indexOf(step)}`} title={LADDER_NOTES[step]}>
+  {step === 'Fact from Git' ? terms('Fact from Git') : step === 'Re-checked by an agent, not independent' ? <>{terms('Re-checked')} by an agent, {terms('not independent')}</> : step}
+</span>;
 // "verified" never stands alone for an agent record.
-const statusText = claim => claim.status === 'verified' && claim.verifiedBy === 'agent' ? 'verified by an agent, not independent' : claim.status;
+function ClaimStatus({claim, terms = plainTerms}) {
+  const agent = claim.status === 'verified' && claim.verifiedBy === 'agent';
+  return <span className={`claim-status s-${claim.status}`}>
+    {CLAIM_STATUS[claim.status] ? <StatusBadge status={CLAIM_STATUS[claim.status]}>{claim.status === 'open' ? terms('open claim', 'open') : claim.status}</StatusBadge> : <span className="claim-status-text">{claim.status}</span>}
+    {agent && <> {terms('verified by an agent', 'by an agent')}, {terms('not independent')}</>}
+  </span>;
+}
 const short = path => path?.replace(/^docs\/artifacts\//, '') ?? '';
 
 // The brief of one change; it reloads when the repository updates.
@@ -42,29 +62,36 @@ export function useChangeBrief(artifact, change) {
   return {...state, retry: () => setAttempt(n => n + 1)};
 }
 
-function Items({items}) {
+function Items({items, terms}) {
   return <ul className="brief-items">{items.map((item, i) => <li key={i}>
     <span className="grow">{item.claim ? <a href={`#claim-${item.claim}`}>{item.text}</a> : item.text}{item.source && <span className="brief-source"> {short(item.source)}</span>}</span>
-    <Step step={item.step}/>
+    <Step step={item.step} terms={terms}/>
   </li>)}</ul>;
 }
-function Attention({rows, more}) {
+const UNDECIDED = /^(.+) is reached \(([^)]+)\)(, and neither .*)$/;
+// An attention row: a stripe of its family; an undecided flow names the rule and,
+// when the change has a unit, offers its brief.
+function Attention({rows, more, terms, unit, go}) {
   return <>
-    <ul className="brief-attention">{rows.map((row, i) => <li key={i}>
-      <span className="brief-category">{row.category}</span>
-      <span className="grow">{row.claim ? <a href={`#claim-${row.claim}`}>{row.text}</a> : row.text}</span>
-      <Step step={row.step}/>
-    </li>)}</ul>
+    <ul className="brief-attention">{rows.map((row, i) => {
+      const family = ATTENTION_FAMILY[CATEGORIES.indexOf(row.category)] || 'neutral', undecided = !row.claim && UNDECIDED.exec(row.text);
+      return <li key={i} className={`stripe ${family}`}>
+        <span className="brief-category">{row.category === CATEGORIES[4] ? <>{terms('undecided flow', 'Undecided flow')} or unresolved item</> : row.category}</span>
+        <span className="grow">{row.claim ? <a href={`#claim-${row.claim}`}>{row.text}</a> : undecided ? <>{undecided[1]} is {terms('reached')} ({undecided[2]}){undecided[3]}</> : row.text}
+          {undecided && unit && <> <button className="link" aria-label={`Declare ${undecided[1]} in unit brief`} onClick={() => go({kind: 'unit', unit: unit.id})}>Declare in unit brief</button></>}</span>
+        <Step step={row.step} terms={terms}/>
+      </li>;
+    })}</ul>
     {more > 0 && <p className="small muted">{more} more below the first seven.</p>}
   </>;
 }
-function Decision({answer, counts}) {
+function Decision({answer, counts, terms}) {
   const [goal, ...rest] = answer.items;
   const steps = Object.entries(counts.byStep).map(([step, n]) => `${n} ${step}`).join(', ');
   return <div className="brief-decision">
     <p><b>Goal and scope.</b> {goal.text} Accept or amend the goal in the conversation with the coordinator.</p>
     <p><b>Correctness.</b> Claims by step: {steps || 'none'}. Checks by a person: {counts.checksByPerson}. Checks by an agent: {counts.checksByAgent}.</p>
-    {rest.length > 0 && <Items items={rest}/>}
+    {rest.length > 0 && <Items items={rest} terms={terms}/>}
   </div>;
 }
 
@@ -104,15 +131,16 @@ function ChallengeForm({claim, onDone}) {
     <div className="form-actions"><button className="primary" type="submit" disabled={!statement.trim() || busy} aria-busy={busy}>Add open hypothesis</button><button type="button" onClick={onDone}>Cancel</button><span className="small muted">Recorded in {short(claim.file)}.</span></div>
   </form>;
 }
-function ClaimCard({claim, writable}) {
+function ClaimCard({claim, writable, terms}) {
   const [form, setForm] = useState(null);
   const active = !['refuted', 'superseded'].includes(claim.status);
   const errors = claim.diagnostics.filter(d => d.severity === 'error');
-  return <article className="claim-card" id={`claim-${claim.id}`} aria-label={`Claim ${claim.id}`}>
-    <div className="claim-tags"><Badge className={`kind-${claim.kind}`}>{KIND[claim.kind]}</Badge><span className={`claim-status s-${claim.status}`}>{statusText(claim)}</span><Step step={claim.step}/></div>
+  const family = errors.length ? 'problem' : CLAIM_FAMILY[claim.status] || 'neutral';
+  return <article className={`claim-card stripe ${family}`} id={`claim-${claim.id}`} aria-label={`Claim ${claim.id}`}>
+    <div className="claim-tags">{KIND_TAG[claim.kind] ? <KindTag kind={KIND_TAG[claim.kind]}/> : <span className="claim-kind">{KIND[claim.kind] || claim.kind}</span>}<ClaimStatus claim={claim} terms={terms}/><Step step={claim.step} terms={terms}/></div>
     <p className="claim-statement">{claim.statement}</p>
     <dl className="claim-fields">
-      <dt>Basis</dt><dd>{claim.basis}</dd>
+      <dt>Basis</dt><dd>{['documented', 'observed'].includes(claim.basis) ? terms(claim.basis) : claim.basis}</dd>
       <dt>Evidence</dt><dd className="mono">{claim.evidence.length ? claim.evidence.map(short).join(', ') : <span className="muted">None recorded</span>}</dd>
       {claim.about.length > 0 && <><dt>About</dt><dd>{claim.about.join(', ')}</dd></>}
       {claim.riskIfWrong && <><dt>Wrong if</dt><dd>{claim.riskIfWrong}</dd></>}
@@ -125,7 +153,7 @@ function ClaimCard({claim, writable}) {
     {errors.map(d => <p key={d.code + d.message} className="small claim-error" role="note">{d.message}</p>)}
     {writable && active && claim.check && !form && <div className="claim-actions">
       <button aria-expanded="false" onClick={() => setForm('check')}>Record my check</button>
-      <button className="quiet" onClick={() => setForm('challenge')}>Challenge</button>
+      <button className="quiet" onClick={() => setForm('challenge')}>{Icon.plus}Challenge</button>
     </div>}
     {form === 'check' && <CheckForm claim={claim} onDone={() => setForm(null)}/>}
     {form === 'challenge' && <ChallengeForm claim={claim} onDone={() => setForm(null)}/>}
@@ -137,17 +165,17 @@ function Hypotheses({claims}) {
   return [...byFile].filter(([, list]) => list.length >= 2).map(([file, list]) => <div key={file} className="brief-table" role="region" aria-label={`Hypotheses in ${short(file)}`}>
     <h3>Hypotheses <span className="mono small muted">{short(file)}</span></h3>
     <div className="table-scroll"><table><thead><tr><th>Statement</th><th>Status</th><th>Deciding evidence</th><th>Step</th></tr></thead>
-      <tbody>{list.map(c => <tr key={c.id}><td>{c.statement}</td><td><span className={`claim-status s-${c.status}`}>{statusText(c)}</span></td><td className="mono small">{c.evidence.map(short).join(', ') || '—'}</td><td><Step step={c.step}/></td></tr>)}</tbody></table></div>
+      <tbody>{list.map(c => <tr key={c.id}><td>{c.statement}</td><td><ClaimStatus claim={c}/></td><td className="mono small">{c.evidence.map(short).join(', ') || '—'}</td><td><Step step={c.step}/></td></tr>)}</tbody></table></div>
   </div>);
 }
-function Flows({flows, unit}) {
+function Flows({flows, unit, terms}) {
   if (!flows.reached.length) return null;
   const unresolved = flows.undecided.filter(u => u.kind === 'unresolved');
   return <div className="brief-table" role="region" aria-label="Flows">
     <h3>Flows <span className="small muted">reached, declared and undecided</span></h3>
     <div className="table-scroll"><table><thead><tr><th>Flow</th><th>State</th><th>Steps reached</th><th>Decided by</th></tr></thead>
       <tbody>{flows.reached.map(f => <tr key={f.flow}><td className="mono">{f.flow}</td>
-        <td><Badge tone={f.state === 'declared' ? 'ok' : f.state === 'undecided' ? 'incomplete' : ''}>{f.state === 'declared' ? 'Declared' : f.state === 'decided' ? 'Reached, decided' : 'Undecided'}</Badge></td>
+        <td>{f.state === 'undecided' ? <StatusBadge status="Incomplete">{terms('undecided flow', 'Undecided')}</StatusBadge> : <StatusBadge status="Complete">{f.state === 'declared' ? 'Declared' : 'Reached, decided'}</StatusBadge>}</td>
         <td>{f.steps.join(', ') || '—'}</td>
         <td>{f.state === 'declared' ? 'Unit brief' : f.decidedBy ? <a href={`#claim-${f.decidedBy.id}`}>Claim {f.decidedBy.id}</a> : <span className="muted">Nothing; declare it in {unit ? 'the unit brief' : 'a unit'} or name it in a claim</span>}</td></tr>)}</tbody></table></div>
     {unresolved.length > 0 && <p className="small muted">{unresolved.length} unresolved {unresolved.length === 1 ? 'item' : 'items'}: impact unknown, not absent.</p>}
@@ -155,7 +183,7 @@ function Flows({flows, unit}) {
 }
 
 export default function ChangeBrief({artifact, change, writable}) {
-  const brief = useChangeBrief(artifact, change), b = brief.brief;
+  const {worktree, go} = useShell(), brief = useChangeBrief(artifact, change), b = brief.brief, terms = termOnce();
   if (!b) return <Section title="Change brief" label="Change brief" id="change-brief">
     {brief.status === 'error' ? <p className="small" role="alert">{brief.error} <button className="link" onClick={brief.retry}>Retry</button></p> : <p className="muted small" role="status">Reading the change brief…</p>}
   </Section>;
@@ -166,14 +194,14 @@ export default function ChangeBrief({artifact, change, writable}) {
   return <Section title="Change brief" label="Change brief" id="change-brief" summary={<span className="small muted">{origin}{brief.partial ? ' The impact answer is partial.' : ''}</span>}>
     <div className="brief-rows">{b.answers.filter(a => a.summary !== null).map(a => <details key={a.question} open={a.question === 'What should I care about?'}>
       <summary><span className="brief-question">{a.question}</span><span className="brief-answer">{a.summary}</span></summary>
-      <div className="brief-more">{a.question === 'What should I care about?' ? <Attention rows={b.attention.rows} more={b.attention.more}/> : a.question === 'What needs my decision?' ? <Decision answer={a} counts={b.counts}/> : <Items items={a.items}/>}</div>
+      <div className="brief-more">{a.question === 'What should I care about?' ? <Attention rows={b.attention.rows} more={b.attention.more} terms={terms} unit={memberUnit(worktree, artifact, change)} go={go}/> : a.question === 'What needs my decision?' ? <Decision answer={a} counts={b.counts} terms={terms}/> : <Items items={a.items} terms={terms}/>}</div>
     </details>)}</div>
     {claims.length > 0 && <div className="brief-claims" role="region" aria-label="Claims">
       <h3>Claims <span className="small muted">{claims.length} · open first</span></h3>
-      {claims.map(c => <ClaimCard key={`${c.file}#${c.id}`} claim={c} writable={writable}/>)}
+      {claims.map(c => <ClaimCard key={`${c.file}#${c.id}`} claim={c} writable={writable} terms={terms}/>)}
     </div>}
     <Hypotheses claims={b.claims}/>
-    <Flows flows={b.flows} unit={unit}/>
+    <Flows flows={b.flows} unit={unit} terms={terms}/>
     {b.delivery?.wording.length > 0 && <div className="brief-table" role="region" aria-label="Wording notes">
       <h3>Wording notes <span className="small muted">records this change delivered that still say work is pending</span></h3>
       <Items items={b.delivery.wording.map(w => ({text: `“${w.sentence}” Matched by wording.`, source: w.path, step: w.step}))}/>

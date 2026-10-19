@@ -32,9 +32,14 @@ button.flow-box:hover { border-color: var(--control); background: var(--soft); }
 .support-group li .mono { color: var(--text); }
 .support-group .basis { margin-left: auto; font-size: 12px; color: var(--muted); white-space: nowrap; }
 .support-group .basis.unresolved { color: var(--warn-text); }
-.support-group .support-remove { width: 24px; height: 24px; flex: none; color: var(--muted); }
-.support-group .support-remove:hover { color: var(--danger); }
-.step-actions { display: flex; flex-wrap: wrap; gap: 4px; margin: 10px 0 0 -8px; }
+.support-group .basis { display: inline-flex; align-items: center; gap: 4px; }
+.support-group .support-remove { height: 28px; flex: none; font-size: 13px; padding: 0 6px; }
+.support-affected { font-size: 12px; font-weight: 600; color: var(--accent-text); white-space: nowrap; }
+/* Step actions: change, order and remove groups, 16 pixels apart, under a divider. */
+.step-actions { display: flex; flex-wrap: wrap; align-items: center; gap: 8px 16px; margin-top: 12px; padding-top: 10px; border-top: 1px solid #e1e8f8; }
+.step-action-group { display: flex; flex-wrap: wrap; gap: 2px; }
+.step-action-group:first-child { margin-left: -8px; }
+.step-action-group.remove { margin-left: auto; }
 .step-detail .inline-form { margin-top: 10px; background: var(--bg); }
 .step-detail .operation-error { margin-top: 8px; }
 .add-step { margin-left: 46px; }
@@ -61,6 +66,9 @@ button.flow-box:hover { border-color: var(--control); background: var(--soft); }
   .support-group ul { gap: 8px; }
   .support-group li { flex-direction: column; gap: 0; }
   .support-group .basis { margin-left: 0; white-space: normal; }
+  .support-group .support-remove { align-self: flex-start; margin-left: -6px; height: 36px; }
+  .step-action-group { margin-left: -8px; }
+  .step-action-group.remove { margin-left: -8px; }
 }
 .flow-diagram { margin-top: var(--s5); }
 .step-node strong { white-space: normal; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; line-height: 1.3; }

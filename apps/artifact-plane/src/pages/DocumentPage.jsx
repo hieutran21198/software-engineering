@@ -2,7 +2,7 @@ import React, {useEffect, useMemo, useRef, useState} from 'react';
 import Markdown from '../Markdown.jsx';
 import ReviewDiff from '../ReviewDiff.jsx';
 import {useDocument, useQuery, useShell} from '../page-data.js';
-import {Badge, PageHeader} from '../ui.jsx';
+import {DiffBadge, Icon, PageHeader, StatusBadge} from '../ui.jsx';
 import {ActionForm, OperationError, frontValue, splitFront, useEdit} from '../editing.jsx';
 import {sha256} from '../knowledge-api.js';
 import {headingTitle} from '../model.js';
@@ -14,7 +14,7 @@ import {ConflictDialog, FrontMatterEditor, bodyWithoutTitle, linkPage, useMedia}
 import './DocumentPage.css';
 
 const KINDS = {requirements: ['Requirement', 'Requirements'], specifications: ['Specification', 'Specifications'], decisions: ['Decision', 'Decisions']};
-const BRANCH = {added: ['new', 'New', 'not on main'], modified: ['changed', 'Changed', 'differs from main'], removed: ['removed', 'Removed', 'deleted on this branch']};
+const BRANCH = {added: ['New', 'not on main'], modified: ['Changed', 'differs from main'], removed: ['Removed', 'deleted on this branch']};
 const RESULTS = [{value: 'passed', label: 'Passed'}, {value: 'failed', label: 'Failed'}, {value: 'incomplete', label: 'Incomplete'}];
 
 // What the source is: an artifact document, an overview, a change record, a
@@ -107,7 +107,7 @@ export default function DocumentPage({page}) {
   return <section className={`page document-page ${narrow ? 'narrow' : ''}`} aria-label="Document page"><div className="column document-columns">
     <article className="document-main">
       <PageHeader eyebrow={eyebrow} title={title}
-        action={mode === 'view' && writable ? <button ref={editButton} disabled={!loaded} onClick={() => setMode('edit')}>Edit</button> : null}/>
+        action={mode === 'view' && writable ? <button ref={editButton} className="quiet" disabled={!loaded} onClick={() => setMode('edit')}>{Icon.pen}Edit</button> : null}/>
       {narrow && <details className="properties-disclosure"><summary>Properties</summary>{properties}</details>}
       {established && <p className="notice" role="status">{info.removed ? 'This document is removed on this branch. The text below is the version on main.' : 'The text below is the version on main.'}</p>}
       {wording && <p className="notice wording-note" role="note">Inferred from wording: this record of delivered work says “{wording}” The work may be delivered; check before relying on it.</p>}
@@ -176,9 +176,9 @@ function DocumentProperties({heading, info, page, values, loaded, writable, esta
     {heading && <h2 className="properties-title">Properties</h2>}
     <Prop label="Kind">{info.kind}</Prop>
     {info.type === 'element' && <Prop label="In this branch">
-      {BRANCH[state] ? <><Badge tone={BRANCH[state][0]}>{BRANCH[state][1]}</Badge> <span className="muted small">{BRANCH[state][2]}</span></>
+      {BRANCH[state] ? <><DiffBadge name={BRANCH[state][0]}/> <span className="muted small">{BRANCH[state][1]}</span></>
         : state === 'unchanged' ? 'Same as main' : <span className="muted small">Not compared: no main branch is readable.</span>}
-      {['added', 'modified'].includes(state) && <div><button className="link small" aria-expanded={compare} onClick={onCompare}>{compare ? 'Hide comparison' : 'Compare with main'}</button></div>}
+      {['added', 'modified'].includes(state) && <div><button className="quiet small" aria-expanded={compare} onClick={onCompare}>{Icon.compare}{compare ? 'Hide comparison' : 'Compare with main'}</button></div>}
     </Prop>}
     {(isDocument || selfCheck) && <SelfCheck selfCheck={selfCheck} source={page.source} writable={writable && !established} edit={edit} go={go} artifact={info.scope.artifact}/>}
     {isDocument && (canReference || refs.length > 0) && <References refs={refs} canEdit={canReference} source={page.source} snapshot={snapshot} go={go} run={run}/>}
@@ -200,16 +200,16 @@ const Prop = ({label, children, group}) => <div className="prop" {...(group ? {r
 
 function SelfCheck({selfCheck, source, writable, edit, go, artifact}) {
   const [recording, setRecording] = useState(false), opener = useRef(null);
-  const result = selfCheck?.result, tone = result === 'passed' ? 'passed' : result === 'failed' ? 'failed' : 'incomplete';
+  const result = selfCheck?.result, status = result === 'passed' ? 'Passed' : result === 'failed' ? 'Failed' : result === 'incomplete' ? 'Incomplete' : 'error';
   const [path, fragment] = String(selfCheck?.source || '').split('#');
   const openSection = () => {
     if (path && path !== source) {go({kind: 'document', artifact: path.match(/^docs\/artifacts\/([^/]+)\//)?.[1] || artifact, source: path});return;}
     document.getElementById(`knowledge-heading-${fragment}`)?.scrollIntoView({block: 'start', behavior: 'smooth'});
   };
   return <Prop label="Self-check">
-    {selfCheck ? <Badge tone={tone}>{result ? result[0].toUpperCase() + result.slice(1) : 'Invalid'}</Badge> : <span>Not recorded</span>}
+    {selfCheck ? <StatusBadge status={status}>{result ? result[0].toUpperCase() + result.slice(1) : 'Invalid'}</StatusBadge> : <span>Not recorded</span>}
     {selfCheck?.source && <div><button className="link small" onClick={openSection}>Read the self-check</button></div>}
-    {writable && !recording && <div><button ref={opener} className="link small" onClick={() => setRecording(true)}>Record self-check</button></div>}
+    {writable && !recording && <div><button ref={opener} className="quiet small" onClick={() => setRecording(true)}>{Icon.check}Record self-check</button></div>}
     {recording && <ActionForm open submitLabel="Record" title="Record self-check" onClose={() => {setRecording(false);requestAnimationFrame(() => opener.current?.focus());}} fields={[
       {name: 'result', label: 'Result', type: 'select', options: RESULTS, value: 'passed'},
       {name: 'detail', label: 'Detail', type: 'textarea', rows: 3, required: true, value: 'The content is complete and agrees with its governing knowledge.'},
@@ -245,22 +245,22 @@ function References({refs, canEdit, source, snapshot, go, run}) {
       return <li key={r.id}>
         {element && r.resolved ? <button className="link" onClick={() => go({kind: 'document', artifact: element.artifact, source: element.file})}>{label(r)}</button> : <span className="reference-target">{label(r)}</span>}
         {r.reason && <span className="reference-reason">{r.reason}</span>}
-        {!r.resolved && <span className="reference-state"><Badge tone="failed">Unresolved</Badge>{r.diagnostic && <span className="tiny"> {r.diagnostic}</span>}</span>}
+        {!r.resolved && <span className="reference-state"><StatusBadge status="error">Unresolved</StatusBadge>{r.diagnostic && <span className="tiny"> {r.diagnostic}</span>}</span>}
         {canEdit && form !== r.id && <span className="reference-actions">
-          {!r.resolved && <button className="link small" aria-label={`Fix reference to ${label(r)}`} onClick={() => setForm(r.id)}>Fix</button>}
+          {!r.resolved && <button className="quiet small" aria-label={`Fix reference to ${label(r)}`} onClick={() => setForm(r.id)}>{Icon.pen}Fix</button>}
           <RemoveReference label={`Remove reference to ${label(r)}`} onRemove={() => run('reference.remove', {path: source, artifact: r.artifact, element: r.element})}/>
         </span>}
         {form === r.id && <ActionForm open submitLabel="Replace reference" onClose={() => setForm(null)} onSubmit={v => replace(r, v)}
           fields={referenceFields(snapshot, {artifact: snapshot.artifacts.some(a => a.id === r.artifact) ? r.artifact : undefined, requires: r.reason})}/>}
       </li>;
     })}</ul> : <span className="muted small">None</span>}
-    {canEdit && form !== 'add' && <div><button ref={addButton} className="link small" onClick={() => setForm('add')}>+ Add reference</button></div>}
+    {canEdit && form !== 'add' && <div><button ref={addButton} className="quiet small" onClick={() => setForm('add')}>{Icon.plus}Add reference</button></div>}
     {form === 'add' && <ActionForm open submitLabel="Add reference" onClose={close} fields={referenceFields(snapshot)} onSubmit={v => run('reference.add', {path: source, ...v})}/>}
   </Prop>;
 }
 function RemoveReference({label, onRemove}) {
   const [error, setError] = useState(null), [busy, setBusy] = useState(false);
-  return <><button className="link small danger-link" aria-label={label} disabled={busy} onClick={async () => {setBusy(true);setError(null);try {await onRemove();} catch (failure) {setError(failure);setBusy(false);}}}>Remove</button><OperationError error={error}/></>;
+  return <><button className="danger small" aria-label={label} disabled={busy} onClick={async () => {setBusy(true);setError(null);try {await onRemove();} catch (failure) {setError(failure);setBusy(false);}}}>Remove</button><OperationError error={error}/></>;
 }
 
 // Changes, units and documents that name this document.

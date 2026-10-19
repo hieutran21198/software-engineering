@@ -33,4 +33,7 @@
 .notice > .migration:has(.inline-form) { flex-basis: 100%; }
 .migration .inline-form { color: var(--text); max-width: none; }
 @media (max-width: 800px) { .artifact-page .page-header > button.quiet { margin-left: -8px; } .artifact-page .dependency-edit { height: 32px; } }
-.dependency-remove { width: 22px; height: 22px; margin-left: 2px; vertical-align: middle; }
+.artifact-page .dependency-remove { height: 28px; padding: 0 6px; margin-left: 2px; font-size: 13px; }
+.artifact-page .page-header + .dependency-confirm { margin: -4px 0 24px; }
+.dependency-confirm p { margin: 0 0 10px; }
+@media (max-width: 800px) { .artifact-page .dependency-remove { height: 32px; } }

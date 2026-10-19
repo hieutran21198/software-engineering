@@ -28,7 +28,7 @@
   .work-file .grow { display: contents; }
   .work-file .row-title { grid-area: title; }
   .work-file .row-detail { grid-area: detail; }
-  .work-file .badge { grid-area: badge; justify-self: start; }
+  .work-file .diff-badge { grid-area: badge; justify-self: start; }
   .work-file button { grid-area: discard; }
   .work-commit { flex-direction: column; align-items: stretch; }
   .work-commit input { flex: none; width: 100%; }
@@ -36,3 +36,14 @@
   .work-empty button { width: 100%; }
 }
 .work-page #work-uncommitted { scroll-margin-top: 24px; }
+/* A change card is a status card: the 4-pixel stripe of its status family. */
+.work-change.status-card { display: block; padding: 22px 24px; border-left: 4px solid var(--stripe, var(--control)); }
+.work-change.status-card + .work-change.status-card { margin-top: 16px; }
+.work-change-status { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; margin: -6px 0 14px; }
+.work-change-actions { display: flex; gap: 8px; flex-wrap: wrap; align-items: center; }
+.work-change-feedback { margin: 8px 0 0; }
+.work-change-feedback:empty { display: none; }
+@media (max-width: 800px) {
+  .work-change.status-card { padding: 18px 16px; }
+  .work-change-actions { flex-direction: column; align-items: stretch; width: 100%; }
+}

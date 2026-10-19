@@ -3,10 +3,9 @@
 // button. The Plane never pushes or opens a PR; the person pastes the text.
 import React, {useEffect, useState} from 'react';
 import {useShell} from '../page-data.js';
-import {Badge, Section} from '../ui.jsx';
+import {Icon, Section, StatusBadge} from '../ui.jsx';
 import {postJSON} from '../request.js';
-
-const TONE = {pass: 'ok', fail: 'failed', unresolved: 'incomplete', coordinator: ''};
+import {isTerm, termOnce} from './guidance.jsx';
 
 export default function PrDescription({artifact, change}) {
   const {root, worktreePath, epoch} = useShell();
@@ -29,16 +28,16 @@ export default function PrDescription({artifact, change}) {
     try {await navigator.clipboard.writeText(d.markdown);setCopied('Copied. Paste it into the PR.');}
     catch {setCopied('Copy failed. Select the text below and copy it.');}
   }
-  const {tier} = d;
+  const {tier} = d, terms = termOnce();
   return <Section title="PR description" label="PR description" id="change-description"
-    summary={<span className="small muted">Tier {tier.declared} declared; the criteria give {tier.allowed}.</span>}
-    actions={<button className="primary" onClick={copy}>Copy</button>}>
+    summary={<span className="small muted">{terms('tier', 'Tier')} {isTerm(tier.declared) ? terms(tier.declared, tier.declared) : tier.declared} declared; the criteria give {tier.allowed}.</span>}
+    actions={<button onClick={copy}>{Icon.copy}Copy</button>}>
     <p className="small muted description-copied" role="status">{copied}</p>
     {tier.declared === 'small' && tier.allowed !== 'small' && <p className="small claim-note description-mismatch" role="note">The change declares tier small, but the criteria give {tier.allowed}.</p>}
     <ul className="description-criteria" aria-label="Tier criteria">
       {tier.criteria.map(c => <li key={c.id}>
         <span className="mono">{c.id}</span>
-        <Badge tone={TONE[c.result]}>{c.result}</Badge>
+        <StatusBadge status={c.result}>{['coordinator', 'unresolved'].includes(c.result) ? terms(c.result) : c.result}</StatusBadge>
         <span className="grow small">{c.detail}</span>
       </li>)}
     </ul>

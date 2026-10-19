@@ -1,6 +1,6 @@
 import React, {useEffect, useMemo, useRef, useState} from 'react';
 import {sidebarRows, samePage} from './work-model.js';
-import {Icon} from './ui.jsx';
+import {DiffBadge, Icon} from './ui.jsx';
 
 // The sidebar: search, current work, artifacts with their documents, and
 // history behind the Show history switch. Rows open pages; artifact and kind
@@ -53,7 +53,7 @@ export default function Sidebar({snapshot, worktree, page, expanded, onToggle, o
               <span className="tree-title" title={row.label}>{row.label}</span>
               {row.detail && <span className="tree-detail">{row.detail}</span>}
             </span>
-            {row.badge && <span className={`badge small ${row.badge[0]}`}>{row.badge[1]}</span>}
+            {row.badge && <DiffBadge name={row.badge} small/>}
             {row.count !== undefined && <span className="tree-count">{row.count}</span>}
           </div>)}
       </div>

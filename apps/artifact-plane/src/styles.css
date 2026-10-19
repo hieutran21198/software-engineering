@@ -79,7 +79,7 @@ button.danger::before, .btn.danger::before { content: ""; width: 15px; height: 1
 button.danger:hover:not(:disabled) { background: var(--danger-bg); }
 button.full { width: 100%; }
 button:disabled { background: var(--soft); border-color: var(--border); color: var(--muted); cursor: not-allowed; }
-button.quiet:disabled, button.danger:disabled { background: transparent; }
+button.quiet:disabled, button.danger:disabled { background: transparent; border-color: transparent; }
 button.icon { width: 32px; height: 32px; padding: 0; border-color: transparent; background: transparent; color: var(--muted); }
 @media (max-width: 800px) { button.icon { width: 44px; height: 44px; } }
 button.icon:hover:not(:disabled) { background: var(--soft); color: var(--text); }
@@ -113,14 +113,8 @@ fieldset.checks legend { font-size: 13px; font-weight: 500; margin-bottom: 6px; 
 .operation-error p { margin: 0; }
 .operation-error ul { margin: 6px 0 0; padding-left: 18px; }
 
-/* Badges. */
+/* Impact tier badges of the Impact page; the other pages use the status vocabulary below. */
 .badge { display: inline-flex; align-items: center; height: 22px; padding: 0 8px; border-radius: 11px; font-size: 12px; font-weight: 500; white-space: nowrap; background: var(--soft); color: var(--muted); }
-.badge.new { background: var(--accent-soft); color: var(--accent-text); }
-.badge.changed { background: var(--warn-bg); color: var(--warn-text); }
-.badge.removed, .badge.failed { background: var(--danger-bg); color: #8a1c13; }
-.badge.ok, .badge.passed { background: var(--ok-bg); color: var(--ok-text); }
-.badge.incomplete { background: var(--warn-bg); color: var(--warn-text); }
-.badge.integration { background: var(--purple-bg); color: var(--purple-text); }
 .badge.small { height: 18px; padding: 0 6px; font-size: 11px; }
 /* Status vocabulary: status (filled pill, icon), difference (outlined pill, sign), kind (square gray tag). */
 .status-badge { display: inline-flex; align-items: center; gap: 5px; height: 22px; padding: 0 9px 0 7px; border-radius: 11px; font-size: 12px; font-weight: 500; white-space: nowrap; vertical-align: middle; }
@@ -297,10 +291,16 @@ button.term { display: inline; height: auto; padding: 0; border: 0; border-botto
 .phase-step.done .phase-mark { background: var(--ok); border-color: var(--ok); color: #fff; }
 .phase-step.current { color: var(--accent-text); font-weight: 600; }
 .phase-step.current .phase-mark { border-color: var(--accent); box-shadow: 0 0 0 3px var(--accent-ring); color: var(--accent-text); }
+.phase-step.incomplete { color: var(--warn-text); font-weight: 600; }
+.phase-step.incomplete .phase-mark { border-color: var(--warn); color: var(--warn-text); box-shadow: 0 0 0 3px var(--warn-bg); }
+.phase-step.prepared { color: var(--warn-text); }
+.phase-step.prepared .phase-mark { background: var(--warn-bg); border-color: var(--warn); color: var(--warn-text); font-size: 12px; }
 .phase-bar { display: grid; grid-template-columns: repeat(5, minmax(0, 1fr)); gap: 4px; margin: 6px 0 14px; }
 .phase-bar i { height: 4px; border-radius: 2px; background: #e1e0db; }
 .phase-bar i.done { background: var(--ok); }
 .phase-bar i.current { background: var(--accent); }
+.phase-bar i.incomplete { background: repeating-linear-gradient(90deg, var(--warn) 0 6px, var(--warn-bg) 6px 9px); }
+.phase-bar i.prepared { background: var(--warn); }
 .phase-compact { display: none; }
 .phase-compact .phase-bar { margin-bottom: 6px; }
 .phase-text { margin-bottom: 14px; color: var(--text); font-weight: 500; }

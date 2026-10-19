@@ -2,7 +2,8 @@
 // version readiness and preparation, and the delivery of a retained change.
 import React, {useEffect, useId, useMemo, useRef, useState} from 'react';
 import {useQuery, useShell} from '../page-data.js';
-import {Badge, Menu, Section, StateBadge} from '../ui.jsx';
+import {DiffBadge, Icon, Menu, Section, StateBadge} from '../ui.jsx';
+import {termOnce, VersionLabel} from './guidance.jsx';
 import {ActionForm, OperationError, useEdit} from '../editing.jsx';
 import {edit as previewEdit} from '../knowledge-api.js';
 import {postJSON} from '../request.js';
@@ -56,7 +57,7 @@ export function ExportContext({artifact, change, review, onLoad}) {
   }
   return <div className="export-context">
     <span className="tiny" role="status" aria-label="Export feedback">{feedback}</span>
-    <Menu label="Export context" buttonClass="quiet" button="Export context">{close => <>
+    <Menu label="Export context" buttonClass="quiet" button={<>{Icon.copy}Export context</>}>{close => <>
       <Loader onOpen={onLoad}/>
       <p className="export-note">The export holds the loaded records page of the review packet: scope, baseline, records, evidence and limits.</p>
       {packet?.completeness === 'partial' && <p className="export-note"><b>Partial context packet.</b> Missing evidence, remaining pages and omitted text stay explicit in exports.</p>}
@@ -95,13 +96,13 @@ function Comparison({artifact, doc}) {
 export function ChangedKnowledge({change, artifact, review, onLoadReview}) {
   const {go} = useShell(), [open, setOpen] = useState(null), [all, setAll] = useState(false);
   const docs = changedKnowledge(artifact), shown = all ? docs : docs.slice(0, 6);
-  return <Section title="Changed knowledge" label="Changed knowledge" summary="· compared with main"
-    actions={<span className="section-actions"><button className="quiet" onClick={() => go(impactPage({diff: {base: 'protected'}, title: 'this change'}))}>What does this change affect?</button><ExportContext artifact={change.artifact} change={change.name} review={review} onLoad={onLoadReview}/></span>}>
+  return <Section title="Changed knowledge" label="Changed knowledge" id="change-knowledge" summary="· compared with main"
+    actions={<span className="section-actions"><button className="link" onClick={() => go(impactPage({diff: {base: 'protected'}, title: 'this change'}))}>What does this change affect?</button><ExportContext artifact={change.artifact} change={change.name} review={review} onLoad={onLoadReview}/></span>}>
     {docs.length ? <><div className="rows">{shown.map(doc => <React.Fragment key={doc.file}>
       <div className={`row ${open === doc.file ? 'selected' : ''}`}>
         <div className="grow">{doc.removed ? <span className="row-title">{doc.title}</span> : <button className="link doc-link" onClick={() => go({kind: 'document', artifact: change.artifact, source: doc.file})}>{doc.title}</button>} <span className="muted">· {doc.kind}</span></div>
         <StateBadge state={doc.state}/>
-        <button className="quiet" aria-expanded={open === doc.file} aria-label={`Compare ${doc.title}`} onClick={() => setOpen(open === doc.file ? null : doc.file)}>{open === doc.file ? 'Hide' : 'Compare'}</button>
+        <button className="quiet" aria-expanded={open === doc.file} aria-label={`Compare ${doc.title}`} onClick={() => setOpen(open === doc.file ? null : doc.file)}>{Icon.compare}{open === doc.file ? 'Hide' : 'Compare'}</button>
       </div>
       {open === doc.file && <Comparison artifact={change.artifact} doc={doc}/>}
     </React.Fragment>)}</div>
@@ -129,7 +130,7 @@ function PrepareVersion({change, acknowledge, onClose}) {
     {preview && <section className="version-preview" aria-label="Version preview">
       <h3>Version {preview.result.version}</h3>
       {preview.result.unchecked?.length > 0 && <p className="small muted">{preview.result.unchecked.length} unchecked Definition of Done items are acknowledged.</p>}
-      {preview.files.map(f => <div key={f.path} className="preview-file"><div className="preview-path"><span className="mono">{f.path}</span> <Badge>{f.action === 'create' ? 'New file' : 'Changed file'}</Badge></div><pre>{f.after}</pre></div>)}
+      {preview.files.map(f => <div key={f.path} className="preview-file"><div className="preview-path"><span className="mono">{f.path}</span> <DiffBadge name={f.action === 'create' ? 'New' : 'Changed'}/></div><pre>{f.after}</pre></div>)}
     </section>}
     <div className="form-actions">
       {preview ? <button type="button" className="primary" disabled={busy} onClick={apply}>Prepare {preview.result.version}</button> : <button className="primary" disabled={busy}>Preview version</button>}
@@ -138,9 +139,10 @@ function PrepareVersion({change, acknowledge, onClose}) {
   </form>;
 }
 
-export function ReadySection({change, artifact, writable, onFix}) {
+// preparing and onPreparing come from the page; cardPrepares: the status card holds Prepare version.
+export function ReadySection({change, artifact, writable, onFix, preparing, onPreparing: setPreparing, cardPrepares}) {
   const {snapshot, go, editable} = useShell();
-  const [acknowledged, setAcknowledged] = useState(false), [preparing, setPreparing] = useState(false);
+  const [acknowledged, setAcknowledged] = useState(false);
   const prefix = `docs/artifacts/${change.artifact}/`;
   const diagnostics = [...snapshot.diagnostics.filter(d => isError(d) && String(d.path).startsWith(prefix)), ...(change.taskGraph?.diagnostics || [])];
   const items = readiness(change, diagnostics, editable), unmet = items.filter(i => !i.met);
@@ -148,11 +150,11 @@ export function ReadySection({change, artifact, writable, onFix}) {
   const enabled = writable && (!unmet.length || onlyDod && acknowledged);
   const docTitle = path => artifact?.elements.find(e => e.file === path)?.title;
   const FIX = {plan: ['Open the plan', () => onFix('plan')], selfchecks: ['Record the self-checks', () => onFix('selfchecks')], branch: ['Create a branch', () => go({kind: 'work'})]};
-  if (change.version) return <Section title="Ready for a version" label="Version readiness">
-    <p>Version {change.version} prepared. <button className="link" onClick={() => go({kind: 'document', artifact: change.artifact, source: `${prefix}versions/${change.version}/README.md`})}>Open version record</button></p>
+  if (change.version) return <Section title="Ready for a version" label="Version readiness" id="change-ready">
+    <p><VersionLabel version={change.version} established={Boolean(change.delivered)}/> <button className="link" onClick={() => go({kind: 'document', artifact: change.artifact, source: `${prefix}versions/${change.version}/README.md`})}>Open version record</button></p>
     <p className="muted small">Open a pull request for team review and merge. The version is delivered when its record is on main.</p>
   </Section>;
-  return <Section title="Ready for a version" label="Version readiness">
+  return <Section title="Ready for a version" label="Version readiness" id="change-ready">
     <ul className="ready-list">{items.map(item => <li key={item.key} className={item.met ? 'met' : 'unmet'}>
       <span className="ready-mark" aria-hidden="true">{item.met ? '✓' : '○'}</span>
       <div className="grow">
@@ -164,7 +166,7 @@ export function ReadySection({change, artifact, writable, onFix}) {
       </div>
     </li>)}</ul>
     {preparing ? <PrepareVersion change={change} acknowledge={onlyDod && acknowledged} onClose={() => setPreparing(false)}/>
-      : <button disabled={!enabled} onClick={() => setPreparing(true)}>Prepare version</button>}
+      : !cardPrepares && <button disabled={!enabled} onClick={() => setPreparing(true)}>Prepare version</button>}
   </Section>;
 }
 
@@ -178,17 +180,17 @@ export function DeliverySection({change, review, onLoadReview}) {
   useEffect(() => {if (change.version) onLoadReview();}, [change.version]);
   const prefix = `docs/artifacts/${change.artifact}/`;
   const publication = review.packet?.data?.evidence?.publication;
-  const merged = publication ? publication.state !== 'proposed' : /protected ref/.test(change.historyReason || '');
-  const label = change.version ? merged ? `Delivered ${change.version}` : `Version ${change.version} prepared` : 'Retained change record';
+  const merged = change.delivered ?? (publication ? publication.state !== 'proposed' : /protected ref/.test(change.historyReason || ''));
+  const terms = termOnce();
   const commits = (change.steps || []).flatMap(s => [s.completionCommit, ...(s.commits || [])]).filter(Boolean).filter((c, i, all) => all.findIndex(x => x.id === c.id) === i);
   const needsReview = change.version && publication?.state === 'unverified';
-  return <Section title="Delivery" label="Delivery" actions={<ExportContext artifact={change.artifact} change={change.name} review={review} onLoad={onLoadReview}/>}>
+  return <Section title="Delivery" label="Delivery" id="change-delivery" actions={<ExportContext artifact={change.artifact} change={change.name} review={review} onLoad={onLoadReview}/>}>
     <dl className="delivery">
       <dt>Version</dt>
-      <dd><div className="delivery-line"><Badge tone={change.version && merged ? 'ok' : ''}>{label}</Badge>
+      <dd><div className="delivery-line">{change.version ? <VersionLabel version={change.version} established={merged} term={terms}/> : <span>{terms('Retained change')} record</span>}
         {change.version && <button className="link" onClick={() => go({kind: 'document', artifact: change.artifact, source: `${prefix}versions/${change.version}/README.md`})}>Open version record</button>}</div>
         {change.historyReason && <p className="small muted">{change.historyReason}</p>}</dd>
-      {change.version && <><dt>Publication review</dt>
+      {change.version && <><dt>{terms('Publication review')}</dt>
         <dd>{publication ? <>
           <p>{publication.state === 'established' ? 'Recorded' : publication.state === 'unverified' ? 'Not recorded' : 'Not possible yet: the version record is not on main'}</p>
           {publication.reasons.map((reason, i) => <p key={i} className="small muted">{reason}</p>)}
@@ -197,7 +199,7 @@ export function DeliverySection({change, review, onLoadReview}) {
           : <p className="small muted" role="status">Reading the publication evidence…</p>}</dd></>}
       <dt>Commits</dt>
       <dd>{commits.length ? <ul className="commit-list">{commits.map(c => <Commit key={c.id} commit={c}/>)}</ul>
-        : <p className="small muted">{change.layout === 'in-place' ? 'Declared evidence; Git history is not replayed. This record names no commit.' : 'Exact completion commits are unknown.'}</p>}</dd>
+        : <p className="small muted">{change.layout === 'in-place' ? <>{terms('Declared evidence')}; Git history is not replayed. This record names no commit.</> : 'Exact completion commits are unknown.'}</p>}</dd>
     </dl>
       {needsReview && edit.editable && (recording ? <ActionForm open submitLabel="Record publication review" title="Publication review" onClose={() => setRecording(false)} fields={[
         {name: 'pullRequest', label: 'Pull request URL', required: true, placeholder: 'https://…/pull/1', spellCheck: false},

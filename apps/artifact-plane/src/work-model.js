@@ -2,6 +2,7 @@
 // shows; they never infer approval or a running agent.
 import {matchesName} from './names.js';
 import {elementType} from './elements.js';
+import {differenceOf} from './glossary.js';
 
 export const changeKey = (worktreePath, artifact, change) => JSON.stringify([worktreePath, artifact, change]);
 export const unitKeyFor = (worktreePath, unit) => JSON.stringify([worktreePath, unit]);
@@ -113,7 +114,7 @@ export function artifactDocuments(artifact) {
 }
 
 // Sidebar rows: a flat list with levels. Filtering keeps matches and their parents.
-// Row: {key, level, label, detail, badge, count, expandable, open, page, kind, matched}
+// Row: {key, level, label, detail, badge (a difference name), count, expandable, open, page, kind, matched}
 // matched marks rows that match the filter themselves, not only as parents.
 export function sidebarRows({snapshot, worktree, filter = '', expanded, history = false}) {
   if (!snapshot) return [];
@@ -133,7 +134,7 @@ export function sidebarRows({snapshot, worktree, filter = '', expanded, history 
       children.push({key: kindKey, level: 1, label, count: documents.length, expandable: true, open: open(kindKey)});
       if (!open(kindKey)) continue;
       const shown = active ? matching : matching.slice(0, 5);
-      for (const d of shown) children.push({key: `${kindKey}:${d.path}`, level: 2, matched: true, label: d.title || d.path, badge: badgeOf(d.state), page: kind === 'flows' ? {kind: 'flow', artifact: a.id, flow: d.flow} : d.removed ? null : {kind: 'document', artifact: a.id, source: d.file}});
+      for (const d of shown) children.push({key: `${kindKey}:${d.path}`, level: 2, matched: true, label: d.title || d.path, badge: differenceOf(d.state), page: kind === 'flows' ? {kind: 'flow', artifact: a.id, flow: d.flow} : d.removed ? null : {kind: 'document', artifact: a.id, source: d.file}});
       if (!active && documents.length > 5) children.push({key: `${kindKey}:all`, level: 2, kind: 'show-all', label: `Show all ${documents.length}`, page: {kind: 'artifact', artifact: a.id, section: kind}});
     }
     if (active && !children.length && !match(a.title, a.id)) continue;
@@ -144,7 +145,7 @@ export function sidebarRows({snapshot, worktree, filter = '', expanded, history 
     rows.push({key: 'h:history', kind: 'heading', label: 'History'});
     const delivered = (worktree?.changes || []).filter(c => !isCurrent(c)).sort((a, b) => String(b.lastCommitAt || '').localeCompare(String(a.lastCommitAt || '')) || natural.compare(b.name, a.name));
     for (const c of delivered) if (match(changeTitle(c), c.name, c.artifact))
-      rows.push({key: `hc:${c.artifact}/${c.name}`, level: 0, matched: true, label: changeTitle(c), detail: `${artifactTitle(snapshot, c.artifact)}${c.version ? ` · ${c.version}` : ''}`, page: {kind: 'change', artifact: c.artifact, change: c.name}});
+      rows.push({key: `hc:${c.artifact}/${c.name}`, level: 0, matched: true, label: changeTitle(c), detail: `${artifactTitle(snapshot, c.artifact)}${c.version ? ` · ${c.version}${c.delivered ? ' established' : ''}` : ''}`, page: {kind: 'change', artifact: c.artifact, change: c.name}});
     const openUnits = new Set(currentUnits(worktree).map(u => u.id));
     for (const u of worktree?.unitsOfWork || []) if (!openUnits.has(u.id) && match(u.title, u.id))
       rows.push({key: `hu:${u.id}`, level: 0, matched: true, label: u.title, detail: `Unit of work · ${u.members.length} ${u.members.length === 1 ? 'change' : 'changes'}`, page: {kind: 'unit', unit: u.id}});

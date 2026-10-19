@@ -40,7 +40,7 @@ test('create a flow; add, edit, move and remove steps, transitions and supports'
   try {
     await openRepository(page, f.root);
     const artifact = await openArtifact(page, 'Tenant');
-    await artifact.getByRole('button', {name: '+ New flow', exact: true}).click();
+    await artifact.getByRole('button', {name: 'New flow', exact: true}).click();
     const create = artifact.getByRole('form', {name: 'Create flow'});
     await create.getByLabel('Title', {exact: true}).fill('Member login');await create.getByLabel('Starts when').fill('A member signs in.');
     await create.getByLabel('Ends with').fill('A session exists.');await create.getByLabel('First step').fill('Check member');await create.getByLabel('First step').press('Enter');
@@ -65,10 +65,10 @@ test('create a flow; add, edit, move and remove steps, transitions and supports'
     await expect(flowPage(page).getByRole('region', {name: 'Steps'}).getByRole('heading', {level: 2})).toHaveText('Steps 3');
     // The six step actions; the first step cannot move up.
     let detail = await expand(page, 1);
-    for (const name of ['+ Add support', 'Rename step', 'Add a next step', 'Move down', 'Remove step']) await expect(detail.getByRole('button', {name, exact: true})).toBeEnabled();
+    for (const name of ['Add support', 'Rename step', 'Add a next step', 'Move down', 'Remove step']) await expect(detail.getByRole('button', {name, exact: true})).toBeEnabled();
     await expect(detail.getByRole('button', {name: 'Move up', exact: true})).toBeDisabled();
     // Add support: a knowledge document, then a code file.
-    await detail.getByRole('button', {name: '+ Add support', exact: true}).click();
+    await detail.getByRole('button', {name: 'Add support', exact: true}).click();
     let support = detail.getByRole('form', {name: 'Add support'});
     await expect(support.getByLabel('Artifact', {exact: true})).toHaveValue('tenant');
     await support.getByLabel('Document', {exact: true}).selectOption('requirements/need.md');
@@ -76,7 +76,7 @@ test('create a flow; add, edit, move and remove steps, transitions and supports'
     await support.getByRole('button', {name: 'Add support', exact: true}).click();
     await expect(detail.getByRole('heading', {name: 'Knowledge', level: 3})).toBeVisible();
     await expect(detail.getByRole('button', {name: 'Need', exact: true})).toBeVisible();
-    await detail.getByRole('button', {name: '+ Add support', exact: true}).click();
+    await detail.getByRole('button', {name: 'Add support', exact: true}).click();
     support = detail.getByRole('form', {name: 'Add support'});
     await support.getByLabel('Support', {exact: true}).selectOption('implementation');
     await support.getByLabel('File in the repository').fill('src/login.js');
@@ -88,7 +88,7 @@ test('create a flow; add, edit, move and remove steps, transitions and supports'
     await expect(stepHead(page, 1)).toContainText('1 knowledge');await expect(stepHead(page, 1)).toContainText('1 code');
     // A support of this flow joins step 2, so the two steps share it.
     detail = await expand(page, 2);
-    await detail.getByRole('button', {name: '+ Add support', exact: true}).click();
+    await detail.getByRole('button', {name: 'Add support', exact: true}).click();
     support = detail.getByRole('form', {name: 'Add support'});
     await support.getByLabel('Support', {exact: true}).selectOption('existing');
     await support.getByLabel('Support of this flow').selectOption({label: 'src/login.js'});
@@ -229,7 +229,7 @@ test('read only on main: loops, shared support, evidence and the source page wit
     const first = await expand(page, 1);
     await expect(first.getByRole('heading', {level: 3})).toHaveText(['Knowledge', 'Code']);
     await expect(first.locator('.support-group').filter({hasText: 'Code'}).getByRole('listitem')).toHaveCount(2);
-    await expect(first.getByRole('button', {name: /^Remove |^Rename step$|^Move |^\+ Add support$|^Add a next step$/})).toHaveCount(0);
+    await expect(first.getByRole('button', {name: /^Remove |^Rename step$|^Move |^Add support$|^Add a next step$/})).toHaveCount(0);
     const second = await expand(page, 2);
     await expect(second.getByRole('heading', {level: 3})).toHaveText(['Code', 'Tests']);
     await expect(second.locator('.support-group').filter({hasText: 'Code'})).toContainText('src/session.js');
