@@ -48,7 +48,13 @@ The live-reload.md contract in this specification directory defines automatic re
 
 ## Deferred exploration
 
-The lazy-loading.md contract in this directory defines on-demand views and detail. Deferred evidence remains Not loaded and never substitutes for complete establishment or completion checks. Existing complete response shapes remain available through the legacy explore endpoint.
+The lazy-loading.md contract in this directory defines on-demand views and detail. Deferred evidence remains Not loaded and never substitutes for complete establishment or completion checks. Existing complete response shapes remain available through the legacy explore endpoint, with these exceptions (ES1 to ES3 in requirements/explore-scale.md):
+
+- `artifactGraph` of every unit is `{state: "not-loaded", established: {nodes: [], edges: []}, planning: {nodes: [], edges: []}}`;
+- in a worktree that is not selected, `implementationGraph` of every unit is `{state: "not-loaded", nodes: [], edges: [], diagnostics: []}`, and each member's `knowledge` keeps its records without `markdown`;
+- the top-level `unitsOfWork` follows the selected worktree.
+
+The HTTP route applies these exceptions when it writes the response. The server-side readers, the runtime binding and POST /api/repository/query keep complete records; the unit page reads its graphs through the repository query as before.
 
 ## Selected-unit presentation
 
