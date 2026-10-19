@@ -25,7 +25,7 @@ function TaskDetails({node}) {
     <div className="eyebrow">{node.artifact}{node.change ? ` · ${node.change}` : ''}</div>
     <h3 className="section-title">{node.title}</h3>
     <p>{stateLabels[runtime.state] || 'Unknown'}</p>
-    {runtime.attempts.length ? <ul>{runtime.attempts.map(a => <li key={a.id}>{a.agent || a.session} · {stateLabels[a.state] || 'Unknown'} · {elapsedLabel(a.elapsedMs)}{a.stale ? ` · last observed ${a.lastObservedState}` : ''}</li>)}</ul>
+    {runtime.attempts.length ? <ul>{runtime.attempts.map(a => <li key={a.id}>{a.agent || a.session} · {stateLabels[a.state] || 'Unknown'} · {elapsedLabel(a.elapsedMs)}{a.stale ? ` · last observed ${a.lastObservedState}` : ''}{a.binding === 'inferred' ? ' · Inferred from a task file read' : ' · Bound explicitly'}</li>)}</ul>
       : <p className="muted">No execution attempt was recorded for this task.</p>}
     <p className="tiny">Observations and reported validation do not establish versions.</p>
   </div>;

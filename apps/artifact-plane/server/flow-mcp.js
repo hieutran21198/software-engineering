@@ -9,6 +9,18 @@ import {createImpactService} from './impact.js';
 import {readFlowRepository} from './flow-reader.js';
 import {createKnowledgeService, OPERATION_NAMES} from './knowledge-operations.js';
 import {errorBody as editError} from './knowledge-writer.js';
+import {ExploreError,git} from './reader.js';
+import {parseWorktrees} from './workflow.js';
+import {worktreeStatus} from './agent-guidance.js';
+import {validateKnowledge,UsageError} from '../scripts/validate-knowledge.mjs';
+import pkg from '../package.json' with {type:'json'};
+
+// The instructions of specifications/agent-integration.md (MCP), sent on initialize.
+export const INSTRUCTIONS=`Artifact Plane reads ADD knowledge and Git. It never approves, pushes, merges or establishes versions.
+Resume or start: get_change_status. Discover flows and specifications: search_flows, get_flow, read_flow_source.
+Specification and Plan: get_impact_context, get_change_impact. Review and context: get_change_review, get_change_context, read_change_context_source.
+Before a self-check or the PR: check_records, get_change_brief, get_change_description.`;
+const USAGE='Configure at least one --repository root.';
 
 // Both adapters pass selectors through the same read-only query service.
 export function createFlowMcpServer({service,reviewService,impactService,knowledgeService,roots=[],stateDir,allowWrites=false}={}){
@@ -18,7 +30,7 @@ export function createFlowMcpServer({service,reviewService,impactService,knowled
  const getImpact=()=>impact??=createImpactService({roots,stateDir,loader:sharedLoad});
  const getService=()=>flows??=createFlowService({roots,stateDir,impactService:getImpact()});
  const getReviews=()=>reviews??=createReviewService({roots,impactService:getImpact()});
- const server=new McpServer({name:'artifact-plane-flows',version:'1.12.2'});
+ const server=new McpServer({name:'artifact-plane-flows',version:pkg.version},{instructions:INSTRUCTIONS});
  const common={path:z.string().optional(),worktree:z.string().optional(),knowledge:z.enum(['planning','established','all']).optional(),limit:z.number().int().min(1).max(100).optional(),budget:z.number().int().min(0).max(100000).optional(),cursor:z.string().max(10000).optional()};
  const tools=[
   ['search_flows','Filter flow titles and IDs, or rank by exact ID, keywords and local semantic similarity.','search',{query:z.string().max(4000).optional(),match:z.enum(['title','discovery']).optional(),artifact:z.string().optional()}],
@@ -58,6 +70,34 @@ export function createFlowMcpServer({service,reviewService,impactService,knowled
    return {content:[{type:'text',text:result.text??JSON.stringify(result)}],structuredContent:result};
   }catch(error){return {isError:true,content:[{type:'text',text:JSON.stringify({error:error.status?error.message:'Impact retrieval failed.',status:error.status||500})}]};}
  });
+ // Agent guidance: a configured repository root and, as in the review tools, one of its registered worktrees.
+ const readOnly={readOnlyHint:true,destructiveHint:false,idempotentHint:true,openWorldHint:false};
+ const selectWorktree=async args=>{
+  for(const value of [args.path,args.worktree])if(value!==undefined&&(!isAbsolute(value)||value.includes('\0')))throw new ExploreError(400,'Supply absolute repository and worktree paths.');
+  const path=args.path??(roots.length===1?roots[0]:undefined);
+  if(!path)throw new ExploreError(400,'Select one configured repository path.');
+  const root=await realpath(path).catch(()=>{throw new ExploreError(404,'Repository is unavailable.');});
+  const configured=await Promise.all(roots.map(r=>realpath(r).catch(()=>null)));
+  if(!configured.includes(root))throw new ExploreError(403,'Repository is not configured.');
+  const top=await git(root,['rev-parse','--show-toplevel']).catch(()=>null);
+  if(!top||await realpath(top)!==root)throw new ExploreError(422,'Select a Git worktree root.');
+  const target=args.worktree?await realpath(args.worktree).catch(()=>null):root;
+  const trees=parseWorktrees(await git(root,['worktree','list','--porcelain','-z'],true));
+  if(!target||!trees.some(t=>t.path===target))throw new ExploreError(422,'Select a registered worktree.');
+  return target;
+ };
+ const guidanceTool=(name,description,input,read)=>server.registerTool(name,{description,inputSchema:z.strictObject(input),annotations:readOnly},async args=>{
+  try{
+   const result=await read(await selectWorktree(args),args);
+   return {content:[{type:'text',text:JSON.stringify(result)}],structuredContent:result};
+  }catch(error){const status=error instanceof UsageError?400:error.status;return {isError:true,content:[{type:'text',text:JSON.stringify({error:status?error.message:'Guidance retrieval failed.',status:status||500})}]};}
+ });
+ guidanceTool('get_change_status','Read the ADD state of one worktree: its branch, the status, next step, tier, unit, version and unchecked DoD items of each current change, and the session context text.',{path:common.path,worktree:common.worktree},async target=>{
+  const status=await worktreeStatus(target);
+  if(!status)throw new ExploreError(422,'Select a worktree with docs/artifacts.');
+  return status;
+ });
+ guidanceTool('check_records','Run the ADD record validator on one worktree of the repository, or on one change given as <artifact>/<change>, and return its add-validate.result.v1 result.',{path:common.path,worktree:common.worktree,change:z.string().min(1).max(10000).optional()},(target,args)=>validateKnowledge(target,{change:args.change??null}));
  // Write tools exist only with --allow-writes. They share the HTTP operation service.
  if(allowWrites){
   let knowledge=knowledgeService;const getKnowledge=async()=>knowledge??=createKnowledgeService({roots:await Promise.all(roots.map(r=>realpath(r).catch(()=>r)))});
@@ -85,7 +125,8 @@ export async function runFlowMcpStdio(args){
   if(!['--repository','--state-dir'].includes(flag)||!value||!isAbsolute(value))throw Error('Use --repository /absolute/root (repeatable), optional --state-dir /absolute/private/state and optional --allow-writes.');
   if(flag==='--repository')roots.push(resolve(value));else stateDir=resolve(value);
  }
- if(!roots.length)throw Error('Configure at least one --repository root.');
+ // Without --repository: the Git top level of the working directory.
+ if(!roots.length){const top=await git(process.cwd(),['rev-parse','--show-toplevel']).catch(()=>null);if(!top)throw Error(USAGE);roots.push(top);}
  const app=createFlowMcpServer({roots,stateDir,allowWrites});
  await app.server.connect(new StdioServerTransport());
  const close=async()=>{await app.close();process.exit(0);};

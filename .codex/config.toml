@@ -1,2 +1,6 @@
 [agents]
 enabled = true
+
+[mcp_servers.artifact-plane]
+command = "artifact-plane"
+args = ["mcp"]

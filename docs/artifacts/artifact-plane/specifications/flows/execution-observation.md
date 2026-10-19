@@ -1,8 +1,8 @@
 ---
 flow:
   id: execution-observation
-  title: Observe an explicitly bound execution attempt
-  trigger: A configured observer binds an existing agent attempt to a declared
+  title: Observe a bound execution attempt
+  trigger: A configured observer binds, or infers the binding of, an existing agent attempt to a declared
     delivery task.
   outcome: Local observation and captured graph context are inspectable without
     authorizing or independently verifying implementation.
@@ -16,10 +16,14 @@ flow:
         - ux-browser-checks
         - store
         - worktree-checks
+        - agent-integration-contract
+        - inferred-binding
+        - binding-tests
     - id: observe
       title: Record allowlisted lifecycle observations
       supports:
         - store
+        - hook-command
     - id: query
       title: Retrieve attempts and local SSE updates
       supports:
@@ -42,7 +46,8 @@ flow:
   transitions:
     - from: bind
       to: observe
-      condition: Task membership is valid and explicit binding is supplied.
+      condition: Task membership is valid and an explicit binding is supplied or
+        a task file read infers one.
     - from: observe
       to: query
     - from: query
@@ -54,6 +59,35 @@ flow:
       to: retain
       condition: Observation ends, disconnects or becomes stale.
   support:
+    - id: agent-integration-contract
+      kind: element
+      artifact: artifact-plane
+      element: specifications/agent-integration.md
+      requires: Infer a binding only from one task file read under the identity
+        rules, and label each binding explicit or inferred.
+      basis: documented
+    - id: inferred-binding
+      kind: implementation
+      path: apps/artifact-plane/server/runtime-store.js
+      symbol: inferredBinding
+      requires: Return bind arguments only for a task file read of a current change
+        by a subagent or in a linked worktree.
+      basis: static
+    - id: hook-command
+      kind: implementation
+      path: apps/artifact-plane/server/agent-hook.js
+      symbol: hookOutput
+      requires: Record the allowlisted observation of each hook input and start
+        an inferred binding without waiting for it.
+      basis: static
+    - id: binding-tests
+      kind: test
+      path: apps/artifact-plane/test/runtime-binding.test.js
+      requires: Exercise explicit and inferred bindings, supersession and the
+        identity rules.
+      basis: observed
+      evidence:
+        - docs/artifacts/artifact-plane/changes/change-agent-integration/tasks/02-inferred-binding.md
     - id: ux-browser-checks
       kind: test
       path: apps/artifact-plane/test/browser/discovery-recorded.spec.js
@@ -127,7 +161,7 @@ flow:
   artifact: artifact-plane
 ---
 
-# Observe an explicitly bound execution attempt
+# Observe a bound execution attempt
 
 ## Coverage
 

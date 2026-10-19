@@ -88,7 +88,8 @@ function inScope(d, {artifact, change}, files, baselines) {
   if (path.startsWith(`${prefix}changes/${change}/`) || path === `${prefix}README.md` || path === 'docs/artifacts/add.config.yaml') return true;
   if (['added', 'modified'].includes(baselines[artifact]?.status?.get(path))) return true;
   if (path.startsWith(`${prefix}versions/`) && frontMatter(files.get(path) || '').value?.source_change === change) return true;
-  if (/^docs\/artifacts\/units-of-work\//.test(path)) return (frontMatter(files.get(path) || '').value?.changes || []).some(m => m?.artifact === artifact && m?.change === change);
+  // A brief whose metadata cannot be parsed has no readable members, so every change scope keeps it.
+  if (/^docs\/artifacts\/units-of-work\//.test(path)) {const metadata = frontMatter(files.get(path) || '');return !!metadata.error || (metadata.value?.changes || []).some(m => m?.artifact === artifact && m?.change === change);}
   return false;
 }
 

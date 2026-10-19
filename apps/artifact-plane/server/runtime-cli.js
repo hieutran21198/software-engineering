@@ -18,7 +18,7 @@ export async function run(args,input){
  const store=new RuntimeStore({stateDir:options['state-dir'],roots:options.root?repositoryIdentity(options.root).roots:[]});
  try{
   if(command==='register'){if(!options.root)throw Error('--root required');return store.repository(options.root,true);}
-  if(command==='bind')return await store.bind({root:options.root,unit:options.unit||null,artifact:options.artifact,change:options.change,task:options.task,session:options.session,agent:options.agent||''});
+  if(command==='bind')return await store.bind({root:options.root,unit:options.unit||null,artifact:options.artifact,change:options.change,task:options.task,session:options.session,agent:options.agent||'',binding:options.binding||'explicit'});
   if(command==='report')return store.report({attempt:options.attempt,state:options.state,root:options.root,method:options.method,source:options.source,reason:options.reason});
   if(command==='query')return store.query(options.root);
   throw Error('Commands: register, bind, report, query, hook');
