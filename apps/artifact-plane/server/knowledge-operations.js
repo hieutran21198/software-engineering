@@ -1,4 +1,3 @@
-import {readClaims, CLAIM_WARNINGS} from './claims.js';
 // Domain operations over ADD knowledge. Each operation derives paths and
 // identifiers, plans file edits, validates the post-image with the readers and
 // writes through knowledge-writer.js. The repository stays the only state.
@@ -13,6 +12,7 @@ import {buildFlowGraph, safeFlowID, safeFlowSource} from './flow-model.js';
 import {planMigration, MigrationError} from '../scripts/migrate-layout.mjs';
 import {EditError, editFrontMatter, setFrontMatterText, replaceBody, replaceSection, readSection, sectionAnchors, setCheckbox, checklistItems, splitDocument, frontValue, writePlan, readPlan, undoPlan, createJournal, serialize, requireEditableBranch, digestOf, anchorOf} from './knowledge-writer.js';
 import {resolveWorktree, gitStatus} from './knowledge-git.js';
+import {readClaims, claimRecord, CLAIM_WARNINGS, CLAIM_KINDS, CLAIM_BASES} from './claims.js';
 
 const BASE = 'docs/artifacts/';
 const VERSION = /^\d+\.\d+\.\d+$/;
@@ -176,6 +176,15 @@ function upsertSubsection(text, parent, parentHeading, child, detail) {
   const kept = !current || /^Implementation has not started\.?$/i.test(current) || /^No evidence is recorded yet\.?$/i.test(current) ? '' : current + '\n\n';
   return replaceSection(text, parent, `${kept}### ${child}\n\n${detail.trim()}`, {heading: parentHeading});
 }
+// Claims live in the front matter of records that the ADD claim contract allows.
+// Their detail goes under Evidence in a task, or under Claim evidence elsewhere.
+async function claimFile(ctx, input) {
+  const path = documentPath(ctx, input.path), current = await ctx.read(path), value = frontValue(current);
+  if (!claimRecord(path, value)) fail('path', 'Claims belong in a requirement, specification, decision, plan, task or unit brief.');
+  if (value.claims !== undefined && !Array.isArray(value.claims)) throw new EditError(422, 'claims is not a list. Use the advanced front-matter editor.', {code: 'invalid-claim'});
+  return {path, current, claims: value.claims || []};
+}
+const claimSection = path => /\/tasks\/(?!README\.md$)[^/]+\.md$/.test(path) ? ['evidence', 'Evidence'] : ['claim-evidence', 'Claim evidence'];
 function nextVersion(current, level) {
   if (!current) return '1.0.0';
   const [major, minor, patch] = current.split('.').map(Number);
@@ -388,6 +397,54 @@ export const OPERATIONS = {
     const withSection = upsertSubsection(current, 'evidence', 'Evidence', id, detail);
     const index = existing.indexOf(id);
     return {edits: [replace(path, editFrontMatter(withSection, [index >= 0 ? {op: 'set', path: ['evidence_records', index], value: record} : {op: 'insert', path: ['evidence_records'], value: record}]))], result: {path, id}};
+  },
+  async 'claim.record'(ctx, input) {
+    const {path, current, claims} = await claimFile(ctx, input);
+    for (const field of ['verifiedBy', 'verified_by']) if (input[field] !== undefined) fail(field, 'Only claim.verify records a check; the interface sets verified_by.');
+    if (input.status === 'verified') fail('status', 'Only claim.verify sets status verified, with an observed result.');
+    const existing = claims.map(c => c?.id), statement = oneLine(input, 'statement', {max: 1000});
+    let id;
+    if (input.id !== undefined && existing.includes(input.id)) id = input.id;
+    else id = identifier(input, 'id', statement.split(/\s+/).slice(0, 4).join(' '), [...existing, ...sectionAnchors(current).map(h => h.anchor)], {max: 40});
+    if (!CLAIM_KINDS.includes(input.kind)) fail('kind', `kind must be ${CLAIM_KINDS.join(', ')}.`);
+    if (!CLAIM_BASES.includes(input.basis)) fail('basis', `basis must be ${CLAIM_BASES.join(', ')}.`);
+    const supersededBy = input.supersededBy === undefined ? null : input.supersededBy;
+    if (supersededBy !== null && (typeof supersededBy !== 'string' || supersededBy === id || !existing.includes(supersededBy))) fail('supersededBy', 'supersededBy must name another claim of this file.');
+    if (supersededBy !== null && input.status !== undefined) fail('status', 'A superseded claim takes no other status.');
+    const status = supersededBy !== null ? 'superseded' : input.status ?? 'open';
+    if (!['open', 'supported', 'refuted', 'superseded'].includes(status)) fail('status', 'status must be open, supported or refuted.');
+    const evidence = [...list(input, 'evidence', s => typeof s === 'string' && s.length <= 1000, {max: 20})];
+    const detail = text(input, 'detail', {required: false});
+    let next = current;
+    if (detail) {const [parent, heading] = claimSection(path);next = upsertSubsection(current, parent, heading, id, detail);evidence.push(`${path}#${id}`);}
+    const check = text(input, 'check', {required: false, max: 2000}), risk = input.riskIfWrong === undefined ? '' : oneLine(input, 'riskIfWrong');
+    const rejected = list(input, 'rejected', r => r && typeof r === 'object' && !Array.isArray(r) && Object.keys(r).every(k => k === 'option' || k === 'reason') && nonempty(r.option) && nonempty(r.reason), {max: 20});
+    if (rejected.length && input.kind !== 'decision') fail('rejected', 'Only a decision claim lists rejected options.');
+    const about = list(input, 'about', a => nonempty(a) && a.length <= 1000 && !/\s/.test(a), {max: 50});
+    const claim = {id, kind: input.kind, statement, status, basis: input.basis,
+      ...(evidence.length ? {evidence: [...new Set(evidence)]} : {}), ...(check ? {check} : {}),
+      ...(rejected.length ? {rejected: rejected.map(r => ({option: r.option.trim(), reason: r.reason.trim()}))} : {}),
+      ...(risk ? {risk_if_wrong: risk} : {}), ...(about.length ? {about} : {}), ...(supersededBy ? {superseded_by: supersededBy} : {})};
+    const index = existing.indexOf(id);
+    return {edits: [replace(path, editFrontMatter(next, [index >= 0 ? {op: 'set', path: ['claims', index], value: claim} : {op: 'insert', path: ['claims'], value: claim}]))], result: {path, id}};
+  },
+  async 'claim.verify'(ctx, input) {
+    const {path, current, claims} = await claimFile(ctx, input);
+    const index = claims.findIndex(c => c?.id === input.id);
+    if (typeof input.id !== 'string' || index < 0) missing(`Claim ${input.id} does not exist in ${path}.`);
+    const claim = claims[index];
+    if (claim.status === 'superseded') fail('id', 'A superseded claim cannot be checked; check the claim that replaces it.');
+    const ran = text(input, 'ran', {max: 2000}), observed = text(input, 'observed', {max: 5000});
+    if (!['holds', 'fails'].includes(input.outcome)) fail('outcome', 'outcome must be holds or fails.');
+    const anchor = uniqueId(`${claim.id}-check`, sectionAnchors(current).map(h => h.anchor));
+    const date = new Date().toISOString().slice(0, 10);
+    const detail = `Ran: ${ran}\n\nObserved: ${observed}\n\nOutcome: the claim ${input.outcome}. Recorded through the ${ctx.channel} interface on ${date}.`;
+    const [parent, heading] = claimSection(path);
+    const next = upsertSubsection(current, parent, heading, anchor, detail);
+    const evidence = [...new Set([...(Array.isArray(claim.evidence) ? claim.evidence : []), `${path}#${anchor}`])];
+    const {verified_by: _previous, ...rest} = claim;
+    const updated = input.outcome === 'holds' ? {...rest, status: 'verified', evidence, verified_by: ctx.channel} : {...rest, status: 'refuted', evidence};
+    return {edits: [replace(path, editFrontMatter(next, [{op: 'set', path: ['claims', index], value: updated}]))], result: {path, id: claim.id, status: updated.status, verifiedBy: updated.verified_by ?? null, source: `${path}#${anchor}`}};
   },
   async 'plan.selfcheck.record'(ctx, input) {
     const artifact = artifactOf(ctx, input.artifact), change = changeOf(ctx, artifact, input.change);
@@ -726,7 +783,10 @@ const keyOf = d => JSON.stringify([d.code, d.path, d.message]);
 // --- Service ---------------------------------------------------------------------
 const REQUEST_KEYS = ['path', 'worktree', 'operation', 'input', 'expected', 'dryRun'];
 export const OPERATION_NAMES = [...Object.keys(OPERATIONS), 'undo'];
-export function createKnowledgeService({journal = createJournal(), git = runGit, roots = null} = {}) {
+// channel names the interface that writes: 'person' for the browser, 'agent' for MCP.
+// No request field can choose it.
+export function createKnowledgeService({journal = createJournal(), git = runGit, roots = null, channel = 'agent'} = {}) {
+  if (!['person', 'agent'].includes(channel)) throw new TypeError('channel must be person or agent.');
   // Pre-image diagnostics by worktree and content revision: a preview and its apply validate once.
   const baseline = new Map();
   const preDiagnostics = ctx => {
@@ -753,6 +813,7 @@ export function createKnowledgeService({journal = createJournal(), git = runGit,
     return serialize(target, async () => {
       const branch = await requireEditableBranch(target, git);
       const ctx = await context(target, git);
+      ctx.channel = channel;
       const input = request.input || {};
       const planned = await plan(ctx, {...request, input});
       const edits = planned.edits;

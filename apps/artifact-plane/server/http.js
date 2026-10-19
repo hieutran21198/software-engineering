@@ -49,7 +49,7 @@ export function createAppServer(options = {}) {
   let reviews=options.reviewService;
   const getReviews=()=>reviews??=createReviewService({roots:options.reviewRoots||options.flowRoots||[],impactService:getImpact()});
   let knowledge=options.knowledgeService;
-  const getKnowledge=()=>knowledge??=createKnowledgeService();
+  const getKnowledge=()=>knowledge??=createKnowledgeService({channel:'person'});
   const observation=options.repositoryObservation||{};
   const repositories=repositoryService({...observation,sample:async(root,settings)=>{const base=observation.sample?await observation.sample(root,settings):await settings.base(settings);return registeredSourceFingerprint(root,base,[...(flows?.observedSources(root)||[]),...(reviews?.observedSources(root)||[])],settings);}});
   const server = createServer(async (req, res) => {
