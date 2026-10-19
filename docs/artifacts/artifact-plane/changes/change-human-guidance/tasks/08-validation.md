@@ -24,8 +24,8 @@ The unit brief docs/artifacts/units-of-work/plane-human-guidance/README.md; both
 - [x] The six file sizes are recorded and compared with the claim bundled-onnx-runtime.
 - [x] The supports of repository-exploration, change-review, knowledge-authoring, unit-inspection and source-retrieval name the new modules and tests; their steps keep their meaning.
 - [x] `npm test`, both browser runs, `go test ./...` and `npm run validate` pass; the validator reports no error for this change.
-- [ ] The owner looked at the screenshots and at the downloaded executable before the version.
-- [ ] The unit brief has evidence for every criterion; the version record and `current_version` are prepared with the number computed from the protected branch and the minor level.
+- [x] The owner looked at the screenshots and at the downloaded executable before the version.
+- [x] The unit brief has evidence for every criterion; the version record and `current_version` are prepared with the number computed from the protected branch and the minor level.
 
 ## Evidence
 
@@ -35,5 +35,5 @@ The unit brief docs/artifacts/units-of-work/plane-human-guidance/README.md; both
 | Sizes | darwin-amd64 183.0 MB, darwin-arm64 174.3 MB, linux-amd64 169.6 MB, linux-arm64 161.7 MB, windows-amd64 150.8 MB, windows-arm64 137.8 MB; all below the 200 MB of claim bundled-onnx-runtime | Passed |
 | Flow supports | repository-exploration (select: app-entry, app-smoke, app-release-contract; overview: human-guidance-contract, guidance-pages, human-guidance-browser, explore-response, explore-response-tests), change-review (select and brief: change-status-model, change-status-tests, human-guidance-contract, human-guidance-browser), knowledge-authoring (edit), unit-inspection (brief: status-vocabulary) and source-retrieval (discover: model-install, app-release-contract); steps unchanged; the five reached flows are reconciled in the unit brief, claim reached-flows-kept | Passed |
 | Suites | `npm test` 430 tests, 429 passed, 0 failed, 1 skipped; browser suite 117 of 117 on Chromium 149 and on the Playwright headless shell (task guidance-validation); pull request run 39229768458 at head 0b6cac0: artifact-plane, go (`go test`, `go vet`, binaries), docs, six plane-app jobs and plane-sums passed; `npm run validate` on this repository: `ok: true`, 0 errors | Passed |
-
-Open until the owner look: the owner looks at the screenshots and at the downloaded executable; then the version record and the unit evidence follow.
+| Owner look | On 19 October 2026 the owner looked at the screenshots and at the executable checks of the owner-look page (https://claude.ai/artifact/8nBqgYhS9SCbGmobvwF82N) and answered "accepted" | Passed |
+| Unit evidence and version | The unit brief has evidence for every criterion; `versions/1.22.0/README.md` names `source_change: change-human-guidance`; `current_version` is 1.22.0, computed from 1.21.1 on `main` (91e82e0) and the minor level approved with the plan; `package.json` and `package-lock.json` name 1.22.0 | Passed |

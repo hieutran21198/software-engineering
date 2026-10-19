@@ -80,7 +80,39 @@ acceptance:
     criterion: The Node, browser and Go suites pass, and the release workflow
       check refuses a plane-v tag that differs from current_version.
     integration: true
-evidence: []
+evidence:
+  - criterion: install
+    method: Download the CI artifact, check SHA256SUMS and run the Linux AMD64 file without Node.js; every target passes its start check in CI.
+    result: passed
+    source: docs/artifacts/artifact-plane/changes/change-human-guidance/tasks/08-validation.md#evidence
+  - criterion: next-step
+    method: Browser tests of statuses, next steps and Current work membership on the work and change pages.
+    result: passed
+    source: docs/artifacts/artifact-plane/changes/change-human-guidance/tasks/04-guidance-validation.md#evidence
+  - criterion: consistent
+    method: Node and browser tests of the stepper rule, named counts and version labels.
+    result: passed
+    source: docs/artifacts/artifact-plane/changes/change-human-guidance/tasks/01-status-model.md#evidence
+  - criterion: consistent
+    method: Browser tests of prepared and established labels and the stepper with an unchecked item.
+    result: passed
+    source: docs/artifacts/artifact-plane/changes/change-human-guidance/tasks/04-guidance-validation.md#evidence
+  - criterion: distinct
+    method: Browser tests of control styles, badges and glossary terms on the six pages.
+    result: passed
+    source: docs/artifacts/artifact-plane/changes/change-human-guidance/tasks/04-guidance-validation.md#evidence
+  - criterion: owner-look
+    method: The owner looked at screenshots and executable checks and answered accepted.
+    result: passed
+    source: docs/artifacts/artifact-plane/changes/change-human-guidance/tasks/08-validation.md#evidence
+  - criterion: many-worktrees
+    method: POST /api/explore on a 12-worktree fixture and on this repository.
+    result: passed
+    source: docs/artifacts/artifact-plane/changes/change-human-guidance/tasks/09-explore-scale.md#evidence
+  - criterion: integration
+    method: Node, browser and Go suites in the pull request CI run, and the release version check tests.
+    result: passed
+    source: docs/artifacts/artifact-plane/changes/change-human-guidance/tasks/08-validation.md#evidence
 ---
 
 # Plane human guidance
