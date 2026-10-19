@@ -1,6 +1,6 @@
 import { createServer } from "node:http";
 import { readFile, realpath } from "node:fs/promises";
-import { existsSync } from "node:fs";
+import { existsSync, realpathSync } from "node:fs";
 import { resolve, relative, isAbsolute, sep, extname, dirname, join } from "node:path";
 import { fileURLToPath } from "node:url";
 import { exploreRepository } from "./reader.js";
@@ -16,7 +16,9 @@ import {knowledgeGit} from './knowledge-git.js';
 import {errorBody as editError} from './knowledge-writer.js';
 // A bundled server.mjs has dist/ beside it; a source checkout has it beside server/.
 export const distDirectory = (directory) => existsSync(join(directory, "dist")) ? join(directory, "dist") : resolve(directory, "../dist");
-const DIST = distDirectory(dirname(fileURLToPath(import.meta.url)));
+// The real path, so that the containment check compares like with like: on
+// Windows a module path can hold 8.3 short names that realpath expands.
+const DIST = (dir => {try {return realpathSync.native(dir);} catch {return dir;}})(distDirectory(dirname(fileURLToPath(import.meta.url))));
 const mime = {
   ".html": "text/html; charset=utf-8",
   ".js": "text/javascript; charset=utf-8",
