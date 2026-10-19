@@ -157,6 +157,35 @@ test('create a flow; add, edit, move and remove steps, transitions and supports'
   } finally {await f.cleanup();}
 });
 
+test('a step form whose reply arrives after another step opened leaves the form of that step open', async ({page}) => {
+  const files = editingFiles();files.set(flowPath, loginFlow());
+  const f = await editingRepository(files);
+  try {
+    await openRepository(page, f.root);await openFlow(page, 'Tenant', 'Member login');
+    // A successful edit reply waits until the test releases it; the repository events show the new step before that.
+    let release;const held = new Promise(resolve => {release = resolve;});
+    await page.route('**/api/knowledge/edit', async route => {const response = await route.fetch();if (response.ok()) await held;await route.fulfill({response});});
+    const first = await expand(page, 1);
+    await first.getByRole('button', {name: 'Add a next step', exact: true}).click();
+    const next = first.getByRole('form', {name: 'Add the next step'});
+    await next.getByLabel('Title of the new step').fill('Verify member');
+    await next.getByRole('button', {name: 'Add the next step', exact: true}).click();
+    await expect(stepHead(page, 2)).toContainText('Verify member');
+    const added = await expand(page, 2);
+    await added.getByRole('button', {name: 'Rename step', exact: true}).click();
+    const rename = added.getByRole('form', {name: 'Rename step'});
+    await rename.getByLabel('Step title').fill('Verify the member');
+    release();
+    await expect(page.locator('.status-line')).toBeVisible();
+    // The late reply closes only its own form, which another step already replaced.
+    await page.waitForTimeout(1000);
+    await expect(rename.getByLabel('Step title')).toHaveValue('Verify the member');
+    await rename.getByRole('button', {name: 'Rename step', exact: true}).click();
+    await expect(stepHead(page, 2)).toContainText('Verify the member');
+    expect((await flowValue(f.root)).steps.map(s => s.title)).toEqual(['Check member', 'Verify the member', 'Issue session']);
+  } finally {await f.cleanup();}
+});
+
 test('the Model disclosure shows participants and interactions; comments, model layer and unknown keys survive step edits', async ({page}) => {
   const files = editingFiles();
   files.set(tenant + 'specifications/domain-model.md', '---\nmodels:\n  - id: member\n    title: Member\n    description: The member who signs in.\n    sources: [requirements/need.md]\n---\n# Models\n');

@@ -186,6 +186,7 @@ The rules are CSS only and use the existing `level-N` row classes and aria attri
   - a numbered list in step order;
   - each step shows its title, its support counts by knowledge, code and tests, and its outgoing transitions as "→ <n> <short title> when <condition>". A transition to an earlier step uses "↩".
   - Selecting a step expands it. The expanded step lists its supports grouped as Knowledge, Code and Tests, with their basis and evidence state, and the actions Add support, Rename step, Add a next step, Move up, Move down and Remove step.
+  - One step form is open at a time. A form closes when its own operation succeeds. When the form left the page before the reply arrived, for example because another step was opened, the reply closes no form, and the open form keeps its input (W11).
   - "+ Add step" is the last item.
 - Gaps and exclusions: gaps in a warning tone and exclusions in plain text, each with Edit.
 - Models, participants and interactions: read only, behind a Model disclosure, with the advanced front matter editor.
@@ -284,4 +285,5 @@ The steps of knowledge-authoring, repository-exploration, source-retrieval, unit
   - three font packages and no framework.
 - STE: each control has an exact label.
 - The superseded requirement statements are amended in place.
+- change-browser-suite-fixes: the step form rule maps to W11 and to the browser test of a late reply in flow-page.spec.js.
 - No blocker prevents Plan.

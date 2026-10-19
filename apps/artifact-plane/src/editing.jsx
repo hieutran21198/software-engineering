@@ -58,12 +58,16 @@ export function ActionForm({label, submitLabel, fields, onSubmit, open: initiall
   // Focus moves once, at once, so it never lands in a field the person already left.
   useEffect(() => {if (open) first.current?.focus();}, [open]);
   useEffect(() => {if (initiallyOpen) setOpen(true);}, [initiallyOpen]);
+  // A form that left the page while its operation ran does not call onClose: the
+  // reply would otherwise close the form that replaced it, such as one on another step.
+  const mounted = useRef(false);
+  useEffect(() => {mounted.current = true;return () => {mounted.current = false;};}, []);
   const close = () => {setOpen(false);onClose?.();requestAnimationFrame(() => opener.current?.focus());};
   if (!open) return label ? <button ref={opener} className={openerClass} disabled={disabled} onClick={() => setOpen(true)}>{label}</button> : null;
   async function submit(event) {
     event.preventDefault();if (busy) return;
     setBusy(true);setError(null);
-    try {await onSubmit(values);setOpen(false);onClose?.();}
+    try {await onSubmit(values);if (mounted.current) {setOpen(false);onClose?.();}}
     catch (failure) {setError(failure);}
     finally {setBusy(false);}
   }
