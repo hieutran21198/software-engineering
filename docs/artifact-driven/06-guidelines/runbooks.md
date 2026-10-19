@@ -28,7 +28,7 @@ Each runbook has five parts. **When** names the trigger. **Inputs** names what y
 4. Reassess the unit. Report completion only with the evidence that [establishment and completion](units-of-work.md#establishment-and-completion) requires.
 5. Find the plans that wait for this version. Release them through the [implementation gates](../02-methodology/dependencies.md#preparation-and-implementation-gates): compare the established contract with the contract that the plan used.
 6. When the project publishes releases, tell the owner that the release can start. After the owner creates it, confirm that the release names the merge revision and that its assets and checksums are complete.
-7. List the worktrees and branches of the change. For each one, confirm that it has no uncommitted work and no commit whose content is missing from the protected branch. A squash merge changes commit identities, so compare content, not only ancestry. Ask the owner, then remove the ones that the owner releases.
+7. List the worktrees and branches of the change. Stop the processes that run from a worktree. For each one, confirm that it has no uncommitted work and no commit whose content is missing from the protected branch. A squash merge changes commit identities, so compare content, not only ancestry. Ask the owner, then remove the ones that the owner releases.
 
 ```text
 git worktree list
@@ -49,7 +49,7 @@ git cherry -v origin/main <branch> # "-" lines are already on main
 **Steps.**
 
 1. Merge the protected branch into the change branch. Do not force-push a branch that has a PR.
-2. When the merge conflicts in knowledge of the same artifact, stop. Two changes of one artifact are active, and the owner decides their order ([lifecycle](../02-methodology/workflow.md#change-lifecycle)).
+2. When another change of the artifact merged first, the version record or the identity record conflicts. Keep the version record of the protected branch, and resolve the identity record with the number of step 3. When other knowledge of the artifact conflicts, stop: two changes of one artifact are active, and the owner decides their order ([lifecycle](../02-methodology/workflow.md#change-lifecycle)).
 3. Compute the number again from the confirmed level and the new `current_version`. Rename the version record and set `current_version` in the identity record ([version number](change-tiers.md#compatibility-level-and-version-number)).
 4. When the new commits establish an upstream version that the change uses, recheck the specifications and the plan against it ([implementation gates](../02-methodology/dependencies.md#preparation-and-implementation-gates)). A material result goes to [Amendment](#amendment).
 5. Run the validator and the required checks on the new head.
