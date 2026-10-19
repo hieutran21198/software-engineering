@@ -72,7 +72,7 @@ export function createFlowMcpServer({service,reviewService,impactService,knowled
  });
  // Agent guidance: a configured repository root and, as in the review tools, one of its registered worktrees.
  const readOnly={readOnlyHint:true,destructiveHint:false,idempotentHint:true,openWorldHint:false};
- const selectRoot=async args=>{
+ const selectWorktree=async args=>{
   for(const value of [args.path,args.worktree])if(value!==undefined&&(!isAbsolute(value)||value.includes('\0')))throw new ExploreError(400,'Supply absolute repository and worktree paths.');
   const path=args.path??(roots.length===1?roots[0]:undefined);
   if(!path)throw new ExploreError(400,'Select one configured repository path.');
@@ -81,23 +81,23 @@ export function createFlowMcpServer({service,reviewService,impactService,knowled
   if(!configured.includes(root))throw new ExploreError(403,'Repository is not configured.');
   const top=await git(root,['rev-parse','--show-toplevel']).catch(()=>null);
   if(!top||await realpath(top)!==root)throw new ExploreError(422,'Select a Git worktree root.');
-  return root;
- };
- const guidanceTool=(name,description,input,read)=>server.registerTool(name,{description,inputSchema:z.strictObject(input),annotations:readOnly},async args=>{
-  try{
-   const result=await read(await selectRoot(args),args);
-   return {content:[{type:'text',text:JSON.stringify(result)}],structuredContent:result};
-  }catch(error){const status=error instanceof UsageError?400:error.status;return {isError:true,content:[{type:'text',text:JSON.stringify({error:status?error.message:'Guidance retrieval failed.',status:status||500})}]};}
- });
- guidanceTool('get_change_status','Read the ADD state of one worktree: its branch, the status, next step, tier, unit, version and unchecked DoD items of each current change, and the session context text.',{path:common.path,worktree:common.worktree},async(root,args)=>{
   const target=args.worktree?await realpath(args.worktree).catch(()=>null):root;
   const trees=parseWorktrees(await git(root,['worktree','list','--porcelain','-z'],true));
   if(!target||!trees.some(t=>t.path===target))throw new ExploreError(422,'Select a registered worktree.');
+  return target;
+ };
+ const guidanceTool=(name,description,input,read)=>server.registerTool(name,{description,inputSchema:z.strictObject(input),annotations:readOnly},async args=>{
+  try{
+   const result=await read(await selectWorktree(args),args);
+   return {content:[{type:'text',text:JSON.stringify(result)}],structuredContent:result};
+  }catch(error){const status=error instanceof UsageError?400:error.status;return {isError:true,content:[{type:'text',text:JSON.stringify({error:status?error.message:'Guidance retrieval failed.',status:status||500})}]};}
+ });
+ guidanceTool('get_change_status','Read the ADD state of one worktree: its branch, the status, next step, tier, unit, version and unchecked DoD items of each current change, and the session context text.',{path:common.path,worktree:common.worktree},async target=>{
   const status=await worktreeStatus(target);
   if(!status)throw new ExploreError(422,'Select a worktree with docs/artifacts.');
   return status;
  });
- guidanceTool('check_records','Run the ADD record validator on the repository, or on one change given as <artifact>/<change>, and return its add-validate.result.v1 result.',{path:common.path,change:z.string().min(1).max(10000).optional()},(root,args)=>validateKnowledge(root,{change:args.change??null}));
+ guidanceTool('check_records','Run the ADD record validator on one worktree of the repository, or on one change given as <artifact>/<change>, and return its add-validate.result.v1 result.',{path:common.path,worktree:common.worktree,change:z.string().min(1).max(10000).optional()},(target,args)=>validateKnowledge(target,{change:args.change??null}));
  // Write tools exist only with --allow-writes. They share the HTTP operation service.
  if(allowWrites){
   let knowledge=knowledgeService;const getKnowledge=async()=>knowledge??=createKnowledgeService({roots:await Promise.all(roots.map(r=>realpath(r).catch(()=>r)))});

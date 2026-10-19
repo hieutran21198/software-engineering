@@ -71,6 +71,11 @@ test('AI8: get_change_status equals worktreeStatus and check_records equals vali
   assert.deepEqual(checked.structuredContent, result);
   assert.deepEqual(JSON.parse(checked.content[0].text), result);
   assert.deepEqual((await client.callTool({name: 'check_records', arguments: {path: root}})).structuredContent, await validateKnowledge(root));
+  const linkedCheck = await client.callTool({name: 'check_records', arguments: {path: root, worktree: other, change: 'authentication/change-login'}});
+  const linkedResult = await validateKnowledge(other, {change: 'authentication/change-login'});
+  assert.equal(linkedResult.repository, other);
+  assert.deepEqual(linkedCheck.structuredContent, linkedResult);
+  assert.equal(error(await client.callTool({name: 'check_records', arguments: {worktree: await temporary(t)}})).status, 422);
   assert.deepEqual(error(await client.callTool({name: 'check_records', arguments: {change: 'authentication/change-missing'}})), {error: 'authentication/change-missing has no change record.', status: 400});
   assert.equal(error(await client.callTool({name: 'check_records', arguments: {path: other}})).status, 403);
 });
