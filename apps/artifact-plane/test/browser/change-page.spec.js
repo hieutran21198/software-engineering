@@ -56,7 +56,7 @@ test('start a change, write a requirement, plan tasks, check DoD, record evidenc
     await ready.getByRole('button', {name: 'Open the plan', exact: true}).click();await expect(plan(page).getByRole('button', {name: '+ Add task', exact: true})).toBeFocused();
     // A requirement is added on the artifact page; its self-check is recorded from the phase line.
     await change.getByRole('button', {name: 'Billing', exact: true}).click();
-    const artifact = region(page, 'Artifact page');await artifact.getByRole('button', {name: '+ New requirement', exact: true}).click();
+    const artifact = region(page, 'Artifact page');await artifact.getByRole('button', {name: 'New requirement', exact: true}).click();
     const add = artifact.getByRole('form', {name: 'Add requirement'});await add.getByLabel('Title').fill('Invoice tenancy');await add.getByLabel('Text (optional)').fill('# Invoice tenancy\n\nEvery invoice names one tenant.\n');
     await add.getByRole('button', {name: 'Add requirement', exact: true}).click();
     await expect(region(page, 'Document page').getByRole('heading', {name: 'Invoice tenancy', level: 1})).toBeVisible();
@@ -317,19 +317,20 @@ test('Prepare version needs the acknowledgment, previews both files, then the ch
     await form.getByRole('button', {name: 'Preview version', exact: true}).click();
     const preview = form.getByRole('region', {name: 'Version preview'});
     await expect(preview.getByRole('heading', {name: 'Version 1.1.0'})).toBeVisible();await expect(preview).toContainText('1 unchecked Definition of Done items are acknowledged.');
-    await expect(preview.locator('.preview-path')).toHaveText([`${billing}README.md Changed file`, `${billing}versions/1.1.0/README.md New file`]);
+    await expect(preview.locator('.preview-path')).toHaveText([`${billing}README.md ~Changed`, `${billing}versions/1.1.0/README.md +New`]);
     expect(git(f.root, 'status', '--porcelain', '--', 'docs')).toBe('');
     await form.getByRole('button', {name: 'Prepare 1.1.0', exact: true}).click();
     // A version record that is not on main is prepared, not delivered.
     const delivery = change.getByRole('region', {name: 'Delivery'});
-    await expect(delivery.getByText('Version 1.1.0 prepared', {exact: true})).toBeVisible();await expect(delivery.getByText(/^Delivered \d/)).toHaveCount(0);
+    await expect(delivery.getByText('1.1.0 prepared on this branch', {exact: true})).toBeVisible();await expect(delivery.getByText(/^Delivered \d|established/)).toHaveCount(0);
     await expect(delivery).toContainText('Not possible yet: the version record is not on main');
     await expect(change.getByRole('region', {name: 'Version readiness'})).toHaveCount(0);await expect(plan(page).getByRole('button', {name: '+ Add task', exact: true})).toHaveCount(0);
     expect(await read(f.root, billing + 'versions/1.1.0/README.md')).toContain('source_change: change-next');expect(await read(f.root, billing + 'README.md')).toContain('current_version: 1.1.0');
-    await setHistory(page, true);await expect(treeItem(page, /^Invoice rules Billing/)).toHaveAccessibleName('Invoice rules Billing · 1.1.0');
+    // HG2: the prepared, unmerged change stays under Current work.
+    await setHistory(page, true);await expect(treeItem(page, /^Invoice rules Billing/)).toHaveAccessibleName('Invoice rules Billing · Unchecked items');
     // After the record is on main the change is delivered and needs a publication review.
     git(f.root, 'add', '-A', 'docs');commitAs(f.root, 'Prepare billing 1.1.0');git(f.root, 'branch', '-f', 'main', 'HEAD');await refresh(page);
-    await expect(delivery.getByText('Delivered 1.1.0', {exact: true})).toBeVisible();await expect(delivery).not.toContainText(/prepared|proposed/);
+    await expect(delivery.getByText('1.1.0 established', {exact: true})).toBeVisible();await expect(delivery).not.toContainText(/prepared|proposed/);
     await expect(delivery).toContainText('Its version record is on the protected ref.');await expect(delivery).toContainText('Approval not verified by this reader.');
     await delivery.getByRole('button', {name: 'Record publication review', exact: true}).click();
     const review = delivery.getByRole('form', {name: 'Record publication review'});
@@ -337,12 +338,12 @@ test('Prepare version needs the acknowledgment, previews both files, then the ch
     await review.getByRole('button', {name: 'Record publication review', exact: true}).click();
     await expect.poll(() => read(f.root, billing + 'README.md')).toContain('pull_request: https://example.invalid/org/repo/pull/7');
     expect(await read(f.root, unitDir + 'invoice-rules/README.md')).toContain('## Publication review');
-    await expect(delivery.getByText('Delivered 1.1.0', {exact: true})).toBeVisible();await expect(delivery).toContainText('Publication reviewRecorded');
+    await expect(delivery.getByText('1.1.0 established', {exact: true})).toBeVisible();await expect(delivery).toContainText('Publication reviewRecorded');
     await expect(delivery.getByRole('button', {name: 'Record publication review', exact: true})).toHaveCount(0);
     // The delivered change of 1.0.0 carries the same label without a proposal.
     await treeItem(page, /^Initial Billing/).click();
     const initial = changePage(page).getByRole('region', {name: 'Delivery'});
-    await expect(initial.getByText('Delivered 1.0.0', {exact: true})).toBeVisible();await expect(initial).not.toContainText(/prepared|proposed/);
+    await expect(initial.getByText('1.0.0 established', {exact: true})).toBeVisible();await expect(initial).not.toContainText(/prepared|proposed/);
     await expect(initial).toContainText('Declared evidence; Git history is not replayed. This record names no commit.');
     expect(errors).toEqual([]);
   } finally {await f.cleanup();}
@@ -566,7 +567,7 @@ test('Compare shows the line comparison of new, changed and removed documents as
   try {
     await openRepository(page, f.root);await openChange(page, 'Invoice rules');
     const section = changed(page), comparison = title => section.getByRole('region', {name: `Comparison of ${title} with main`});
-    await expect(section.locator('.row')).toHaveText([/^Huge · requirement\s*New/, /^Invoice · requirement\s*Changed/, /^New rule · requirement\s*New/, /^retired-rule · requirement\s*Removed/]);
+    await expect(section.locator('.row')).toHaveText([/^Huge · requirement\s*\+New/, /^Invoice · requirement\s*~Changed/, /^New rule · requirement\s*\+New/, /^retired-rule · requirement\s*−Removed/]);
     await section.getByRole('button', {name: 'Compare Invoice', exact: true}).click();
     await expect(section.getByRole('button', {name: 'Compare Invoice', exact: true})).toHaveAttribute('aria-expanded', 'true');
     await expect(comparison('Invoice').locator('.diff-line.remove')).toHaveText([/Invoices exist\./]);await expect(comparison('Invoice').locator('.diff-line.add')).toHaveText([/Invoices name a tenant\./]);

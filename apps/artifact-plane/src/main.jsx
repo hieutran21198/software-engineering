@@ -18,9 +18,9 @@ import {usePageVisible} from './page-visible.js';
 import {taskSelection} from './task-canvas.js';
 import {gitAction, unavailable, knowledgeStatus, operate, protectedBranch} from './knowledge-api.js';
 import {EditContext, OperationStatus} from './editing.jsx';
-import {changeKey, currentChanges, samePage} from './work-model.js';
+import {changeKey, currentChanges, isCurrent, samePage} from './work-model.js';
 import {ShellContext} from './page-data.js';
-import {PageHeader} from './ui.jsx';
+import {PageHeader, TermScope} from './ui.jsx';
 import WorkPage from './pages/WorkPage.jsx';
 import ArtifactPage from './pages/ArtifactPage.jsx';
 import DocumentPage from './pages/DocumentPage.jsx';
@@ -106,7 +106,7 @@ export function ProjectExplorer({active: isActive = true, initialPath = '', onOp
     // Keep loaded evidence of current work until its reload settles.
     if (refresh) for (const w of previous?.workflow?.worktrees || []) for (const c of w.changes) {
       const key = changeKey(w.path, c.artifact, c.name);
-      if (c.loadState !== 'not-loaded' && !c.history && taskSelection(base.workflow, key)?.change.loadState === 'not-loaded') base = mergeChange(base, key, c);
+      if (c.loadState !== 'not-loaded' && isCurrent(c) && taskSelection(base.workflow, key)?.change.loadState === 'not-loaded') base = mergeChange(base, key, c);
     }
     overviewRef.current = base;setSnapshot(base);setOverviewEpoch(value => value + 1);
   }
@@ -276,7 +276,7 @@ export function ProjectExplorer({active: isActive = true, initialPath = '', onOp
               </div>
               {busy && <p className="muted" role="status">Reading repository…</p>}
             </form>
-          </section> : <Page key={pageKey} page={page}/>}
+          </section> : <TermScope key={pageKey}><Page page={page}/></TermScope>}
         </main>
       </div>
     </div>

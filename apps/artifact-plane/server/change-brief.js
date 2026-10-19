@@ -5,6 +5,7 @@ import {buildTaskGraph} from './task-graph.js';
 import {checklist} from './workflow.js';
 import {unitBriefs, versionClaims, versionSnapshot, frontMatter, anchor} from './units-of-work.js';
 import {readClaims, changeClaimPaths} from './claims.js';
+import {protectedRefs} from './knowledge-baseline.js';
 // The change brief (specifications/review-brief.md): seven answers, claims, flows,
 // attention, delivery facts and counts, derived from Git, the knowledge and the
 // impact service. It stores nothing and grants no approval.
@@ -59,8 +60,10 @@ const inScope = (path, scope) => [...scope].some(t => path === t || path.endsWit
 const aboutPaths = claim => [...claim.about.map(a => a.includes(':') ? (a.split(':')[1]?.endsWith('.md') ? `docs/artifacts/${a.split(':')[0]}/${a.split(':')[1]}` : null) : a), ...claim.evidence.map(e => e.split('#')[0])].filter(Boolean);
 const flowKey = entity => entity.replace(/^flow:/, '');
 
-// Origin of the impact answer for the change (Origins table).
-async function originOf(root, git, artifact, change, files, snapshotArtifact) {
+// Origin of the impact answer for the change (Origins table). Only an
+// established version uses the commit that introduced its record; an open
+// change and a version prepared on the branch use the branch difference.
+async function originOf(root, git, artifact, change, files, snapshotArtifact, baselines) {
   const claims = versionClaims(files, artifact, change);
   if (snapshotArtifact?.layout !== 'in-place') return {kind: 'none', reason: 'The artifact uses the legacy layout; impact is not computed for its changes.'};
   if (claims.length === 1) {
@@ -71,8 +74,14 @@ async function originOf(root, git, artifact, change, files, snapshotArtifact) {
       if (snapshot.state === 'available') return {kind: 'delivery-commit', commit: snapshot.commit, ref};
     }
   }
-  if (snapshotArtifact.activeChange === change) return {kind: 'protected-diff'};
+  const established = claims.length === 1 && !!baselines?.[artifact]?.versionRecords?.includes(claims[0].version);
+  if (snapshotArtifact.activeChange === change || claims.length === 1 && !established) return {kind: 'protected-diff'};
   return {kind: 'none', reason: claims.length ? 'No introducing commit of the version record was found on the protected ref.' : 'The change is neither open nor delivered.'};
+}
+async function mergeBase(root, git) {
+  const oid = (await protectedRefs(root, git).catch(() => []))[0]?.oid;
+  const head = oid ? await git(root, ['rev-parse', '--verify', '-q', 'HEAD']).catch(() => null) : null;
+  return head ? await git(root, ['merge-base', oid, head]).catch(() => null) || null : null;
 }
 export async function buildBrief({root, worktree, artifact, change, git, impactService, records = []}) {
   const scan = await scanRepository(worktree, {git});
@@ -82,11 +91,13 @@ export async function buildBrief({root, worktree, artifact, change, git, impactS
   const owning = unit.length === 1 ? unit[0] : null;
   const prefix = `docs/artifacts/${artifact}/changes/${change}/`;
   const diagnostics = [];
-  const origin = await originOf(root, git, artifact, change, files, owner);
+  const origin = await originOf(root, git, artifact, change, files, owner, baselines);
+  // The branch difference starts at the merge base with the protected branch.
+  const base = origin.kind === 'protected-diff' ? await mergeBase(worktree, git) : null;
   let impact = null;
   if (origin.kind !== 'none') {
     try {
-      impact = await impactService.query({path: root, ...(worktree !== root ? {worktree} : {}), ...(origin.kind === 'delivery-commit' ? {commit: origin.commit} : {diff: {base: 'protected'}}), depth: 2, limit: 100, ...(owning ? {unit: owning.id} : {})});
+      impact = await impactService.query({path: root, ...(worktree !== root ? {worktree} : {}), ...(origin.kind === 'delivery-commit' ? {commit: origin.commit} : {diff: {base: base ?? 'protected'}}), depth: 2, limit: 100, ...(owning ? {unit: owning.id} : {})});
       if (impact.completeness === 'partial' || impact.freshness === 'stale') diagnostics.push({code: 'partial-impact', path: prefix, message: 'The impact answer is partial; the brief is partial.'});
     } catch (error) {diagnostics.push({code: 'unavailable-impact', path: prefix, message: error.status ? error.message : 'Change impact could not be computed.'});}
   }
@@ -104,7 +115,8 @@ export async function buildBrief({root, worktree, artifact, change, git, impactS
   // Flows: reached, declared and undecided.
   const flowItems = [...(d?.direct || []), ...(d?.transitive || [])].filter(i => i.kind === 'flow');
   const declaredKeys = new Set((owning?.affectedFlows || []).map(f => `${f.artifact}:${f.flow}`));
-  const decidedBy = key => claims.find(c => c.about.some(a => a === key || a.startsWith(key + ':')));
+  // A claim names a flow by its impact entity (flow:<artifact>:<flow>) or without the prefix.
+  const decidedBy = key => claims.find(c => c.about.some(a => {const k = flowKey(a);return k === key || k.startsWith(key + ':');}));
   const reached = flowItems.map(i => {const key = flowKey(i.entity), claim = decidedBy(key);return {flow: key, title: i.title, tier: i.tier, strength: i.strength, steps: (i.steps || []).map(s => s.step ?? s), state: declaredKeys.has(key) ? 'declared' : claim ? 'decided' : 'undecided', decidedBy: declaredKeys.has(key) ? owning.path : claim ? {file: claim.file, id: claim.id} : null};});
   const undecided = [...reached.filter(f => f.state === 'undecided').map(f => ({kind: 'flow', flow: f.flow, tier: f.tier, strength: f.strength})), ...(d?.unresolved || []).map(u => ({kind: 'unresolved', entity: u.entity, for: u.for ?? null, reason: u.reason}))];
   const flows = {reached, declared: owning?.affectedFlows || [], undecided};
@@ -127,7 +139,7 @@ export async function buildBrief({root, worktree, artifact, change, git, impactS
     ...[...claims.filter(c => !c.available).map(c => ({category: CATEGORIES[1], text: `Claim ${c.id}: ${c.diagnostics.find(x => x.severity === 'error')?.message}`, source: c.file, step: c.step, claim: c.id})), ...droppedClaimErrors.map(x => ({category: CATEGORIES[1], text: x.message, source: x.path, step: EXPLAINED}))],
     ...claims.filter(c => c.kind === 'decision' && c.status === 'open').sort((a, b) => rank(a).localeCompare(rank(b))).map(c => ({category: CATEGORIES[2], text: c.statement, source: c.file, step: c.step, claim: c.id})),
     ...claims.filter(c => c.kind === 'root_cause' && c.status === 'open').map(c => ({category: CATEGORIES[3], text: c.statement, source: c.file, step: c.step, claim: c.id})),
-    ...undecided.map(u => u.kind === 'flow' ? {category: CATEGORIES[4], text: `${u.flow} is reached (${u.tier}) and neither declared nor named by a claim.`, source: owning?.path ?? null, step: GIT} : {category: CATEGORIES[4], text: `${u.entity}: ${u.reason}`, source: owning?.path ?? null, step: NOT_ANALYZED}),
+    ...undecided.map(u => u.kind === 'flow' ? {category: CATEGORIES[4], text: `${u.flow} is reached (${u.tier}), and neither the unit brief's affected_flows nor a claim's about list names it.`, source: owning?.path ?? null, step: GIT} : {category: CATEGORIES[4], text: `${u.entity}: ${u.reason}`, source: owning?.path ?? null, step: NOT_ANALYZED}),
     ...claims.filter(c => c.kind === 'assumption' && c.status === 'open' && c.riskIfWrong).map(c => ({category: CATEGORIES[5], text: c.statement, source: c.file, step: c.step, claim: c.id})),
     ...claims.filter(c => ['unknown', 'risk'].includes(c.kind) && live(c)).map(c => ({category: CATEGORIES[6], text: c.statement, source: c.file, step: c.step, claim: c.id})),
   ];
@@ -141,15 +153,19 @@ export async function buildBrief({root, worktree, artifact, change, git, impactS
   const memberTasks = (owning?.members || [{artifact, change}]).flatMap(m => m.artifact === artifact && m.change === change ? tasks : buildTaskGraph(files, `docs/artifacts/${m.artifact}/changes/${m.change}/`, checklist, scan.unsafeTaskPaths).tasks || []);
   const scope = scopeTokens(memberTasks);
   const changedRecords = records.filter(r => r.status !== 'unchanged');
+  // Named counts: governed documents, other knowledge files and code and test files.
+  const recordPaths = new Set(changedRecords.map(r => `docs/artifacts/${artifact}/${r.path}`));
+  const otherKnowledge = (d?.changed || []).filter(c => c.path.startsWith('docs/artifacts/') && !recordPaths.has(c.path));
   const codeFiles = (d?.changed || []).filter(c => !c.path.startsWith('docs/artifacts/'));
   const changedItems = [...changedRecords.map(r => ({text: `${r.status} ${r.path}`, source: `docs/artifacts/${artifact}/${r.path}`, step: GIT})),
+    ...otherKnowledge.map(c => ({text: `${c.status ?? 'changed'} ${c.path}`, source: c.path, step: GIT})),
     ...codeFiles.map(c => ({text: `${c.status ?? 'changed'} ${c.path}${c.symbols?.length ? ` (${c.symbols.slice(0, 6).join(', ')})` : ''}${tasks.length && !inScope(c.path, scope) ? ' — not in any task scope' : ''}`, source: c.path, step: tasks.length && !inScope(c.path, scope) ? INFERRED : GIT}))];
   const why = reason(files.get(`${prefix}README.md`));
   const decisions = claims.filter(c => c.kind === 'decision');
   const steps = (d?.steps || []).map(s => ({text: `${s.entity.replace(/^step:/, '')}${s.title ? ` — ${s.title}` : ''}`, source: null, step: GIT}));
   const evidenceRecords = tasks.flatMap(t => {const list = frontMatter(t.body).value?.evidence_records;return Array.isArray(list) ? list.filter(r => r && typeof r === 'object').map(r => ({text: `${r.method} (${r.result})`, source: evidenceSource(r, t.path), step: EXPERIMENT})) : [];});
   const answers = [
-    [`${plural(changedRecords.length, 'knowledge record')} and ${plural(codeFiles.length, 'other file')}${changedItems.some(i => i.text.endsWith('not in any task scope')) ? `; ${changedItems.filter(i => i.text.endsWith('not in any task scope')).length} not in any task scope` : ''}.`, changedItems],
+    [`${plural(changedRecords.length, 'requirement, specification or decision document')}, ${plural(otherKnowledge.length, 'other knowledge file')} and ${plural(codeFiles.length, 'code and test file')}${changedItems.some(i => i.text.endsWith('not in any task scope')) ? `; ${changedItems.filter(i => i.text.endsWith('not in any task scope')).length} not in any task scope` : ''}.`, changedItems],
     [(why && firstSentence(why)) ?? (decisions.length ? `${plural(decisions.length, 'decision claim')}; the change README states no reason.` : null), [...(why ? [{text: why, source: `${prefix}README.md`, step: EXPLAINED}] : []), ...decisions.map(c => ({text: `Decision ${c.id}: ${c.statement}${c.rejected.length ? ` Rejected: ${c.rejected.map(r => `${r.option} (${r.reason})`).join('; ')}.` : ''}`, source: c.file, step: c.step, claim: c.id}))]],
     [d ? `${plural(reached.length, 'flow')} reached: ${reached.filter(f => f.state === 'declared').length} declared, ${reached.filter(f => f.state === 'decided').length} decided by a claim, ${reached.filter(f => f.state === 'undecided').length} undecided. ${plural(d.unresolved.length, 'unresolved item')}.` : null,
       d ? [...reached.map(f => ({text: `${f.flow} — ${f.state}${f.steps.length ? ` (steps ${f.steps.join(', ')})` : ''}`, source: f.decidedBy?.file ?? (typeof f.decidedBy === 'string' ? f.decidedBy : null), step: GIT})),
@@ -160,7 +176,7 @@ export async function buildBrief({root, worktree, artifact, change, git, impactS
       [...claims.filter(live).map(c => ({text: c.statement, source: c.file, step: c.step, claim: c.id})), ...steps, ...changedRecords.map(r => ({text: `Governed document ${r.path}`, source: `docs/artifacts/${artifact}/${r.path}`, step: GIT}))]],
     [null, [...claims.filter(c => c.check && live(c)).map(c => ({text: c.check, source: c.file, step: c.step, claim: c.id})), ...(d?.verify || []).map(v => ({text: `Run ${v.test}${v.flow ? ` (${v.flow}${v.step ? `:${v.step}` : ''})` : ''}`, source: v.test, step: GIT})), ...evidenceRecords]],
     [null, [goal, ...claims.filter(c => c.kind === 'decision' && c.status === 'open').map(c => ({text: `Open decision ${c.id}: edit ${c.file}`, source: c.file, step: c.step, claim: c.id})),
-      ...undecided.filter(u => u.kind === 'flow').map(u => ({text: `Undecided flow ${u.flow}: declare it or name it in a claim in ${owning?.path ?? 'the unit brief'}`, source: owning?.path ?? null, step: GIT})),
+      ...undecided.filter(u => u.kind === 'flow').map(u => ({text: `Undecided flow ${u.flow}: add it to affected_flows in ${owning?.path ?? 'the unit brief'} or to the about list of a claim`, source: owning?.path ?? null, step: GIT})),
       ...claims.filter(c => ['risk', 'unknown'].includes(c.kind) && live(c)).map(c => ({text: `Limit ${c.id}: ${c.statement}`, source: c.file, step: c.step, claim: c.id}))]],
   ].map(([summary, items], i) => ({question: QUESTIONS[i], summary: items.length ? summary : null, items}));
   answers[5].summary = answers[5].items.length ? `${plural(answers[5].items.length, 'check')}.` : null;

@@ -2,7 +2,7 @@
 // the plan self-check and the task canvas on request.
 import React, {useEffect, useId, useMemo, useRef, useState} from 'react';
 import {useDocument, useShell} from '../page-data.js';
-import {Badge, Section} from '../ui.jsx';
+import {Icon, Section, StatusBadge} from '../ui.jsx';
 import {GraphPanel, Handles} from '../GraphPanel.jsx';
 import {ActionForm, OperationError, useEdit, checklistItems, sectionText, frontValue, lines} from '../editing.jsx';
 import {useTaskRuntime} from '../Runtime.jsx';
@@ -12,7 +12,9 @@ import {afterLabel, planSelfCheckMissing, taskGraphLayout, taskNumber, taskState
 const RESULTS = [{value: 'passed', label: 'Passed'}, {value: 'failed', label: 'Failed'}, {value: 'incomplete', label: 'Incomplete'}];
 export const resultField = {name: 'result', label: 'Result', type: 'select', options: RESULTS, value: 'passed'};
 export const detailField = (value = '', label = 'Detail') => ({name: 'detail', label, type: 'textarea', rows: 3, required: true, value});
-const RESULT_TONE = {passed: 'passed', failed: 'failed', incomplete: 'incomplete'};
+// Recorded results and observed execution states as status names of the vocabulary.
+const RESULT_STATUS = {passed: 'Passed', failed: 'Failed', incomplete: 'Incomplete'};
+const RUNTIME_STATUS = {done: 'Passed', failed: 'Failed', blocked: 'Failed', interrupted: 'Failed', processing: 'open', validating: 'open'};
 
 function StatusDot({state}) {
   return <span className={`task-dot ${state}`} title={TASK_STATES[state]}/>;
@@ -22,7 +24,7 @@ function StatusDot({state}) {
 function TaskRuntime({change, task, worktreePath}) {
   const value = useTaskRuntime(change.artifact, change.name, task.path, undefined, worktreePath, task);
   const attempt = value.attempts[0];
-  return <p className="task-runtime"><span className="muted">Execution</span> <Badge tone={['done'].includes(value.state) ? 'ok' : ['failed', 'blocked', 'interrupted'].includes(value.state) ? 'failed' : ''}>{stateLabels[value.state] || 'Unknown'}</Badge>
+  return <p className="task-runtime"><span className="muted">Execution</span> <StatusBadge status={RUNTIME_STATUS[value.state] || 'Unknown'}>{stateLabels[value.state] || 'Unknown'}</StatusBadge>
     {attempt && <span className="muted"> {value.attempts.length > 1 ? `${value.attempts.length} agents` : attempt.agent || attempt.session} · {elapsedLabel(Math.max(...value.attempts.map(a => a.elapsedMs)))}{attempt.stale ? ` · stale, last observed ${attempt.lastObservedState}` : ''}</span>}
     {!value.attempts.length && <span className="muted"> · Observations do not verify completion.</span>}
   </p>;
@@ -47,7 +49,7 @@ function EditTaskForm({change, task, tasks, numbers, dod, onClose}) {
     <div className="form-actions">
       <button className="primary" disabled={busy}>Save task</button><button type="button" onClick={onClose}>Cancel</button>
       <span className="spacer"/>
-      {confirm ? <><span className="small">Remove this task file?</span><button type="button" className="danger" disabled={busy} onClick={() => act(() => edit.run('task.remove', target))}>Confirm remove</button><button type="button" className="quiet" onClick={() => setConfirm(false)}>Keep task</button></>
+      {confirm ? <><span className="small">Remove this task file?</span><button type="button" className="danger" disabled={busy} onClick={() => act(() => edit.run('task.remove', target))}>Confirm remove</button><button type="button" onClick={() => setConfirm(false)}>Keep task</button></>
         : <button type="button" className="danger" disabled={busy} onClick={() => setConfirm(true)}>Remove task</button>}
     </div>
   </form>;
@@ -70,7 +72,7 @@ function TaskDetail({change, task, tasks, numbers, writable}) {
     <OperationError error={failure}/>
     <h3>Evidence</h3>
     {text && (records.length ? <ul className="evidence-list">{records.map((r, i) => {const anchor = r?.source === undefined ? 'evidence' : String(r?.source || '').split('#')[1];const detail = anchor ? sectionText(text, anchor) : null;return <li key={r?.id || i}>
-      <div><span className="evidence-method">{r?.method || r?.id}</span> <Badge tone={RESULT_TONE[r?.result] || ''}>{RESULTS.find(x => x.value === r?.result)?.label || 'Unknown'}</Badge></div>
+      <div><span className="evidence-method">{r?.method || r?.id}</span> <StatusBadge status={RESULT_STATUS[r?.result] || 'Unknown'}>{RESULTS.find(x => x.value === r?.result)?.label || 'Unknown'}</StatusBadge></div>
       {detail && <p className="evidence-detail">{detail}</p>}
     </li>;})}</ul> : <p className="muted">No evidence recorded.</p>)}
     <TaskRuntime change={change} task={task} worktreePath={worktreePath}/>
@@ -78,9 +80,9 @@ function TaskDetail({change, task, tasks, numbers, writable}) {
       onSubmit={v => edit.run('evidence.record', {path: task.path, ...v})}/>}
     {mode === 'edit' && <EditTaskForm change={change} task={task} tasks={tasks} numbers={numbers} dod={dod} onClose={() => setMode(null)}/>}
     {!mode && <div className="task-actions">
-      {writable && <button className="quiet" disabled={!text} onClick={() => setMode('evidence')}>Record evidence</button>}
-      {writable && <button className="quiet" disabled={!text} onClick={() => setMode('edit')}>Edit task</button>}
-      <button className="quiet" onClick={() => go({kind: 'document', artifact: change.artifact, source: task.path, scope})}>Open task document</button>
+      {writable && <button className="quiet" disabled={!text} onClick={() => setMode('evidence')}>{Icon.check}Record evidence</button>}
+      {writable && <button className="quiet" disabled={!text} onClick={() => setMode('edit')}>{Icon.pen}Edit task</button>}
+      <button className="link" onClick={() => go({kind: 'document', artifact: change.artifact, source: task.path, scope})}>Open task document</button>
     </div>}
   </div>;
 }
@@ -108,7 +110,7 @@ export default function PlanSection({change, writable}) {
   const showSelfCheck = writable && planSelfCheckMissing(change);
   return <Section title="Plan" label="Plan" id="change-plan" summary={tasks.length ? `· ${tasks.length} ${tasks.length === 1 ? 'task' : 'tasks'} · ${done} done` : null}
     actions={<div className="plan-actions">
-      {showSelfCheck && !selfCheck && <button className="quiet" onClick={() => setSelfCheck(true)}>Record plan self-check</button>}
+      {showSelfCheck && !selfCheck && <button className="quiet" onClick={() => setSelfCheck(true)}>{Icon.check}Record plan self-check</button>}
       {tasks.length > 1 && <div className="segmented" role="group" aria-label="Plan view">{[['list', 'List'], ['graph', 'Graph']].map(([value, label]) => <button key={value} aria-pressed={view === value} onClick={() => setView(value)}>{label}</button>)}</div>}
     </div>}>
     {selfCheck && <ActionForm open className="plan-selfcheck" submitLabel="Record plan self-check" title="Plan self-check" onClose={() => setSelfCheck(false)}

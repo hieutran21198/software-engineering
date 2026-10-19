@@ -1,12 +1,16 @@
 // Derived work labels for the shell and pages. Labels state what the evidence
 // shows; they never infer approval or a running agent.
-import {matchesName} from './SearchField.jsx';
+import {matchesName} from './names.js';
 import {elementType} from './elements.js';
+import {differenceOf} from './glossary.js';
 
 export const changeKey = (worktreePath, artifact, change) => JSON.stringify([worktreePath, artifact, change]);
 export const unitKeyFor = (worktreePath, unit) => JSON.stringify([worktreePath, unit]);
 export const selectedWorktree = snapshot => snapshot?.workflow?.worktrees.find(w => w.path === snapshot.repository.path) || snapshot?.workflow?.worktrees.find(w => w.selected) || null;
-export const currentChanges = worktree => (worktree?.changes || []).filter(c => !c.history);
+// Current work: every change that is not delivered, including a change whose
+// version record waits on this branch. History holds delivered and retained changes.
+export const isCurrent = change => !change.delivered && (!change.history || !!change.version);
+export const currentChanges = worktree => (worktree?.changes || []).filter(isCurrent);
 export const memberUnit = (worktree, artifact, change) => (worktree?.unitsOfWork || []).find(u => u.members.some(m => m.artifact === artifact && m.change === change)) || null;
 export const currentUnits = worktree => (worktree?.unitsOfWork || []).filter(u => u.members.some(m => currentChanges(worktree).some(c => c.artifact === m.artifact && c.name === m.change)));
 export const completionLabel = completion => !completion || completion.derivation === 'not-loaded' ? 'Completion not loaded' : completion.derivation === 'documented-complete' ? 'Complete' : completion.derivation === 'incomplete' ? 'Incomplete' : 'Unknown';
@@ -28,14 +32,21 @@ const HINTS = [
   'complete the Definition of Done items and record evidence.',
   'prepare the version record.',
 ];
-// {state: 'loading'|'open'|'review'|'closed', current: index or null, steps, hint}
+const uncheckedItems = change => (change?.tasks || []).reduce((n, t) => n + (t.unchecked || 0), 0);
+// {state: 'loading'|'unread'|'open'|'review'|'prepared'|'closed', current: index or null, steps, hint}
+// Step states: done, current, todo; with a version, Implementation is
+// 'incomplete' while a DoD item is unchecked and Version is 'prepared' until established.
 export function phaseModel(change) {
   if (!change) return {state: 'closed', current: null, steps: PHASES.map(name => ({name, state: 'todo'})), hint: ''};
-  if (change.loadState === 'not-loaded') return change.layout === 'in-place'
+  if (change.loadState === 'not-loaded' && !change.delivered) return change.layout === 'in-place'
     ? {state: 'loading', current: null, steps: PHASES.map(name => ({name, state: 'todo'})), hint: 'Reading declared evidence…'}
     : {state: 'unread', current: null, steps: PHASES.map(name => ({name, state: 'todo'})), hint: 'open the change to read its phase evidence.'};
   const sources = Object.fromEntries((change.steps || []).filter(s => s.state === 'documented-complete').map(s => [DISPLAY[s.name], s.evidence?.find(e => e.file)?.file || null]));
-  if (change.history || change.version) return {state: 'closed', current: null, steps: PHASES.map((name, i) => ({name, state: 'done', source: sources[i] || null})), hint: ''};
+  if (change.version && !change.delivered) {
+    const unchecked = uncheckedItems(change) > 0;
+    return {state: 'prepared', current: null, steps: PHASES.map((name, i) => ({name, state: i === 4 ? 'prepared' : i === 3 && unchecked ? 'incomplete' : 'done', source: i === 3 && unchecked ? null : sources[i] || null})), hint: changeStatus(change).next};
+  }
+  if (change.history || change.version || change.delivered) return {state: 'closed', current: null, steps: PHASES.map((name, i) => ({name, state: 'done', source: sources[i] || null})), hint: ''};
   if (change.currentStep && DISPLAY[change.currentStep] !== undefined) {
     const current = DISPLAY[change.currentStep];
     return {state: 'open', current, steps: PHASES.map((name, i) => ({name, state: i < current ? 'done' : i === current ? 'current' : 'todo', source: sources[i] || null})), hint: HINTS[current]};
@@ -44,12 +55,36 @@ export function phaseModel(change) {
     return {state: 'review', current: null, steps: PHASES.map((name, i) => ({name, state: 'done', source: sources[i] || null})), hint: 'open a pull request for team review and merge.'};
   return {state: 'open', current: null, steps: PHASES.map(name => ({name, state: 'todo'})), hint: change.inferenceReason || 'no current phase can be derived from the evidence.'};
 }
+const sentence = text => text ? text[0].toUpperCase() + text.slice(1) : '';
+const status = (name, text, next, action, family) => ({name, text, next, action, family});
+// One status of a change (human-guidance specification, Change status).
+// context: the worktree or any object with the branch name.
+// Returns {name, text, next, action, family}; family is done, waiting, active, problem or neutral.
+export function changeStatus(change, context = {}) {
+  if (!change) return status('Unknown', 'Unknown', '', null, 'neutral');
+  if (change.delivered) return status('Delivered', `Delivered${change.version ? ` ${change.version}` : ''}`, '', null, 'done');
+  const branch = context?.branch || null;
+  if (change.version) {
+    if (change.loadState === 'not-loaded') return status('Reading', 'Reading…', 'Reading declared evidence…', null, 'neutral');
+    const n = uncheckedItems(change);
+    if (n) return status('Unchecked items', 'Unchecked items', `Check or explain ${n} unchecked DoD ${n === 1 ? 'item' : 'items'} before team review.`, 'Open plan', 'waiting');
+    if (change.upstream === 'same') return status('Waiting for merge', 'Waiting for merge', `Team review and the merge of ${branch || 'this branch'} establish version ${change.version}.`, null, 'waiting');
+    return status('Ready for team review', 'Ready for team review', `Push ${branch ? `branch ${branch}` : 'this branch'} and open a pull request with the PR description. The Plane never pushes.`, 'Copy PR description', 'waiting');
+  }
+  if (change.history) return status('Retained', 'Retained change', '', null, 'neutral');
+  const model = phaseModel(change);
+  if (model.state === 'loading') return status('Reading', 'Reading…', model.hint, null, 'neutral');
+  if (model.state === 'unread') return status('In progress', 'Phase not read', sentence(model.hint), 'Continue', 'active');
+  if (model.current === 4) return status('Ready for version', 'Ready for version', 'Prepare the version record.', 'Prepare version', 'active');
+  return status('In progress', model.current === null ? 'Phase unknown' : PHASES[model.current], sentence(model.hint), 'Continue', 'active');
+}
 // The short phase label the sidebar and cards show.
 export function phaseLabel(change) {
   const model = phaseModel(change);
   if (model.state === 'loading') return 'Reading…';
   if (model.state === 'unread') return 'Phase not read';
   if (model.state === 'review') return 'Team review';
+  if (model.state === 'prepared') return changeStatus(change).text;
   if (model.state === 'closed') return change.version ? `Version ${change.version}` : 'Retained';
   return model.current === null ? 'Phase unknown' : PHASES[model.current];
 }
@@ -79,7 +114,7 @@ export function artifactDocuments(artifact) {
 }
 
 // Sidebar rows: a flat list with levels. Filtering keeps matches and their parents.
-// Row: {key, level, label, detail, badge, count, expandable, open, page, kind, matched}
+// Row: {key, level, label, detail, badge (a difference name), count, expandable, open, page, kind, matched}
 // matched marks rows that match the filter themselves, not only as parents.
 export function sidebarRows({snapshot, worktree, filter = '', expanded, history = false}) {
   if (!snapshot) return [];
@@ -99,7 +134,7 @@ export function sidebarRows({snapshot, worktree, filter = '', expanded, history 
       children.push({key: kindKey, level: 1, label, count: documents.length, expandable: true, open: open(kindKey)});
       if (!open(kindKey)) continue;
       const shown = active ? matching : matching.slice(0, 5);
-      for (const d of shown) children.push({key: `${kindKey}:${d.path}`, level: 2, matched: true, label: d.title || d.path, badge: badgeOf(d.state), page: kind === 'flows' ? {kind: 'flow', artifact: a.id, flow: d.flow} : d.removed ? null : {kind: 'document', artifact: a.id, source: d.file}});
+      for (const d of shown) children.push({key: `${kindKey}:${d.path}`, level: 2, matched: true, label: d.title || d.path, badge: differenceOf(d.state), page: kind === 'flows' ? {kind: 'flow', artifact: a.id, flow: d.flow} : d.removed ? null : {kind: 'document', artifact: a.id, source: d.file}});
       if (!active && documents.length > 5) children.push({key: `${kindKey}:all`, level: 2, kind: 'show-all', label: `Show all ${documents.length}`, page: {kind: 'artifact', artifact: a.id, section: kind}});
     }
     if (active && !children.length && !match(a.title, a.id)) continue;
@@ -108,9 +143,9 @@ export function sidebarRows({snapshot, worktree, filter = '', expanded, history 
   }
   if (history) {
     rows.push({key: 'h:history', kind: 'heading', label: 'History'});
-    const delivered = (worktree?.changes || []).filter(c => c.history).sort((a, b) => String(b.lastCommitAt || '').localeCompare(String(a.lastCommitAt || '')) || natural.compare(b.name, a.name));
+    const delivered = (worktree?.changes || []).filter(c => !isCurrent(c)).sort((a, b) => String(b.lastCommitAt || '').localeCompare(String(a.lastCommitAt || '')) || natural.compare(b.name, a.name));
     for (const c of delivered) if (match(changeTitle(c), c.name, c.artifact))
-      rows.push({key: `hc:${c.artifact}/${c.name}`, level: 0, matched: true, label: changeTitle(c), detail: `${artifactTitle(snapshot, c.artifact)}${c.version ? ` · ${c.version}` : ''}`, page: {kind: 'change', artifact: c.artifact, change: c.name}});
+      rows.push({key: `hc:${c.artifact}/${c.name}`, level: 0, matched: true, label: changeTitle(c), detail: `${artifactTitle(snapshot, c.artifact)}${c.version ? ` · ${c.version}${c.delivered ? ' established' : ''}` : ''}`, page: {kind: 'change', artifact: c.artifact, change: c.name}});
     const openUnits = new Set(currentUnits(worktree).map(u => u.id));
     for (const u of worktree?.unitsOfWork || []) if (!openUnits.has(u.id) && match(u.title, u.id))
       rows.push({key: `hu:${u.id}`, level: 0, matched: true, label: u.title, detail: `Unit of work · ${u.members.length} ${u.members.length === 1 ? 'change' : 'changes'}`, page: {kind: 'unit', unit: u.id}});

@@ -11,6 +11,9 @@ flow:
     - id: brief
       title: Read the unit brief and unique membership
       supports:
+        - human-guidance-contract
+        - status-vocabulary
+        - human-guidance-browser
         - authoring-contract
         - ux-simplification-contract
         - ux-browser-checks
@@ -78,6 +81,27 @@ flow:
       to: criteria
       condition: Review returns to the unit evidence.
   support:
+    - id: human-guidance-contract
+      kind: element
+      artifact: artifact-plane
+      element: specifications/human-guidance.md
+      requires: Show the status and next step of each change, version labels,
+        one status vocabulary, the control grammar and the glossary.
+      basis: documented
+    - id: status-vocabulary
+      kind: implementation
+      path: apps/artifact-plane/src/glossary.js
+      requires: Hold the status families, kinds, differences and glossary terms
+        that every page uses.
+      basis: static
+    - id: human-guidance-browser
+      kind: test
+      path: apps/artifact-plane/test/browser/human-guidance.spec.js
+      requires: Prove statuses, version labels, the stepper rule, named counts,
+        glossary terms, control styles and status badges on the pages.
+      basis: observed
+      evidence:
+        - docs/artifacts/artifact-plane/changes/change-human-guidance/tasks/04-guidance-validation.md
     - id: authoring-contract
       kind: element
       artifact: artifact-plane

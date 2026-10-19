@@ -12,6 +12,10 @@ flow:
     - id: select
       title: Select the registered worktree and artifact change
       supports:
+        - human-guidance-contract
+        - change-status-model
+        - change-status-tests
+        - human-guidance-browser
         - authoring-contract
         - ux-simplification-contract
         - ux-browser-checks
@@ -59,6 +63,8 @@ flow:
     - id: brief
       title: Answer the seven review questions and record a person's check
       supports:
+        - change-status-model
+        - change-status-tests
         - delivery-support-contract
         - brief-contract
     - id: return
@@ -90,6 +96,36 @@ flow:
       to: select
       condition: The source selection changes or a stale/error reply requires a new read.
   support:
+    - id: human-guidance-contract
+      kind: element
+      artifact: artifact-plane
+      element: specifications/human-guidance.md
+      requires: Show the status and next step of each change, version labels,
+        one status vocabulary, the control grammar and the glossary.
+      basis: documented
+    - id: change-status-model
+      kind: implementation
+      path: apps/artifact-plane/src/work-model.js
+      symbol: changeStatus
+      requires: Derive one status and next step for each change from records and
+        local Git.
+      basis: static
+    - id: change-status-tests
+      kind: test
+      path: apps/artifact-plane/test/change-status.test.js
+      requires: Prove each change status, Current work membership, the stepper
+        rule and the brief difference.
+      basis: observed
+      evidence:
+        - docs/artifacts/artifact-plane/changes/change-human-guidance/tasks/01-status-model.md
+    - id: human-guidance-browser
+      kind: test
+      path: apps/artifact-plane/test/browser/human-guidance.spec.js
+      requires: Prove statuses, version labels, the stepper rule, named counts,
+        glossary terms, control styles and status badges on the pages.
+      basis: observed
+      evidence:
+        - docs/artifacts/artifact-plane/changes/change-human-guidance/tasks/04-guidance-validation.md
     - id: impact-contract
       kind: element
       artifact: artifact-plane

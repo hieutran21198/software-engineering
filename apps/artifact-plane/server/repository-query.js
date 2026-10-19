@@ -51,7 +51,8 @@ async function worktreeList(root,run){
  }
  return list;
 }
-function changeSummaries(snapshot){return snapshot.artifacts.flatMap(a=>a.changes.map(c=>({artifact:a.id,name:c.name,title:c.title??null,layout:a.layout,version:c.version??null,declaredActive:a.activeChange===c.name,history:a.activeChange!==c.name,currentStep:null,lastCommitAt:null,inferenceReason:'Phase evidence not loaded.',historyReason:'Retained change; evidence not loaded.',steps:[],tasks:[],taskGraph:pending(),loadState:'not-loaded'})));}
+// delivered: the version record is on the protected ref; upstream is read with the workflow section.
+function changeSummaries(snapshot,baselines={}){return snapshot.artifacts.flatMap(a=>a.changes.map(c=>({artifact:a.id,name:c.name,title:c.title??null,layout:a.layout,version:c.version??null,delivered:!!c.version&&!!baselines[a.id]?.versionRecords?.includes(c.version),upstream:null,declaredActive:a.activeChange===c.name,history:a.activeChange!==c.name,currentStep:null,lastCommitAt:null,inferenceReason:'Phase evidence not loaded.',historyReason:'Retained change; evidence not loaded.',steps:[],tasks:[],taskGraph:pending(),loadState:'not-loaded'})));}
 const flights=new Map();
 export async function queryRepository(input){
  const validated=validateQuery(input);const root=await realpath(validated.path).catch(()=>validated.path);const body=Object.fromEntries(keys.filter(k=>validated[k]!==undefined).map(k=>[k,validated[k]]));body.path=root;if(body.worktree)body.worktree=await realpath(body.worktree).catch(()=>body.worktree);const key=JSON.stringify(keys.map(k=>[k,body[k]??(k==='worktree'?root:k==='dependencyMode'&&body.section==='artifacts'?'established':null)]));
@@ -67,7 +68,7 @@ async function readQuery(body){
   if(!target||!worktrees.some(w=>w.path===target))throw new ExploreError(422,'Select a currently registered worktree.');
   const initialRefs=await Promise.all(['main','master'].map(ref=>run(target,['rev-parse','--verify','refs/heads/'+ref]).catch(()=>null)));
   let overview=target===root?initial:await scanRepository(target,{metadata:true,indexOnly:body.section!=='overview',git:run});
-  const entry=worktrees.find(w=>w.path===target);entry.changes=changeSummaries(overview.snapshot);
+  const entry=worktrees.find(w=>w.path===target);entry.changes=changeSummaries(overview.snapshot,overview.baselines);
   entry.unitsOfWork=unitBriefs(overview.files).map(unit=>unitSummary(unit,overview.snapshot,target,overview.files,false));entry.loadState='loaded';
   const context=Object.fromEntries(Object.entries(body).filter(([key])=>!['path','section'].includes(key)));
   let data,readState=overview,readFull=null,documentBytes=null;

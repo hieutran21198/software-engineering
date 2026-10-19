@@ -1,10 +1,11 @@
 import React, {useEffect, useRef, useState} from 'react';
 import {useShell} from '../page-data.js';
-import {PageHeader, Section, Badge, PhaseSteps, Notice} from '../ui.jsx';
+import {PageHeader, Section, PhaseSteps, Notice, DiffBadge, StatusBadge, Icon} from '../ui.jsx';
 import {DependencyGraph} from '../GraphPanel.jsx';
 import {useEdit, OperationError} from '../editing.jsx';
 import {knowledgeEntries} from '../knowledge-api.js';
-import {artifactTitle, changeTitle, currentChanges, memberUnit, phaseLabel, phaseModel} from '../work-model.js';
+import {artifactTitle, changeStatus, changeTitle, currentChanges, memberUnit, phaseLabel, phaseModel} from '../work-model.js';
+import {copyPrDescription, StatusText, statusMember, termOnce, VersionLabel} from './guidance.jsx';
 import {StartChangeCard, NewUnitCard} from './WorkPageForms.jsx';
 import './WorkPage.css';
 
@@ -17,20 +18,39 @@ function useNarrow() {
   return narrow;
 }
 
-// One open change: where it belongs, its title, its phases and the next step.
-function ChangeCard({change, snapshot, worktree, go}) {
-  const model = phaseModel(change), unit = memberUnit(worktree, change.artifact, change.name), title = changeTitle(change);
-  return <article className="card work-change" aria-label={title}>
+const lowerFirst = text => text ? text[0].toLowerCase() + text.slice(1) : '';
+// One change in progress as a status card: where it belongs, its title, its
+// status, its phases, the next step and its action. primary marks the page's
+// only primary button; terms wraps the first glossary term of the page.
+function ChangeCard({change, snapshot, worktree, go, primary, terms}) {
+  const shell = useShell(), [feedback, setFeedback] = useState('');
+  const model = phaseModel(change), status = changeStatus(change, worktree), unit = memberUnit(worktree, change.artifact, change.name), title = changeTitle(change);
+  const open = focus => go({kind: 'change', artifact: change.artifact, change: change.name, ...(focus ? {focus} : {})});
+  const cls = primary ? 'primary' : '';
+  const action = status.action === 'Continue' ? <button className={cls} aria-label={`Continue ${title}`} onClick={() => open()}>Continue</button>
+    : status.action === 'Prepare version' ? <button className={cls} aria-label={`Prepare version of ${title}`} onClick={() => open('ready')}>Prepare version</button>
+    : status.action === 'Open plan' ? <button className={cls} aria-label={`Open plan of ${title}`} onClick={() => open('plan')}>Open plan</button>
+    : status.action === 'Copy PR description' ? <button className={cls} aria-label={`Copy PR description of ${title}`} onClick={async () => setFeedback(await copyPrDescription(shell, change.artifact, change.name))}>{Icon.copy}Copy PR description</button>
+    : null;
+  return <article className={`card work-change status-card ${status.family}`} aria-label={title}>
     <div className="eyebrow">
       {artifactTitle(snapshot, change.artifact)} · {change.name}
       {unit && <> · unit <button className="link" aria-label={`${unit.title}, unit of ${title}`} onClick={() => go({kind: 'unit', unit: unit.id})}>{unit.title}</button></>}
     </div>
     <h2 className="card-title">{title}</h2>
-    <PhaseSteps change={change}/>
-    <div className="next-line">
-      {model.state === 'loading' ? <p className="muted" role="status">Reading phases…</p> : <p><span className="muted">Next:</span> {model.hint}</p>}
-      <button className="primary" aria-label={`Continue ${title}`} onClick={() => go({kind: 'change', artifact: change.artifact, change: change.name})}>Continue</button>
+    <div className="work-change-status">
+      <StatusBadge status={statusMember(status)}><StatusText text={status.text} term={terms}/></StatusBadge>
+      {change.version && !change.delivered && <VersionLabel version={change.version} term={terms}/>}
     </div>
+    <PhaseSteps change={change} status={status.text}/>
+    <div className="next-line">
+      {model.state === 'loading' || status.name === 'Reading' ? <p className="muted" role="status">Reading phases…</p> : <p>{status.next && <><span className="muted">Next:</span> {lowerFirst(status.next)}</>}</p>}
+      <div className="work-change-actions">
+        {action}
+        {status.action !== 'Continue' && <button aria-label={`Open ${title}`} onClick={() => open()}>Open change</button>}
+      </div>
+    </div>
+    <p className="small muted work-change-feedback" role="status">{feedback}</p>
   </article>;
 }
 
@@ -55,8 +75,8 @@ function describeFile(path, snapshot, worktree) {
   if (kind === 'version record') return {title: `Version ${parts[4]}`, kind, short};
   return {title: short, kind, short};
 }
-// Git porcelain letters: untracked or added is New, deleted is Deleted, the rest Changed.
-const fileBadge = (code = '') => code.includes('?') || code[0] === 'A' ? ['new', 'New'] : code.includes('D') ? ['removed', 'Deleted'] : ['changed', 'Changed'];
+// Git porcelain letters: untracked or added is New, deleted is Removed, the rest Changed.
+const fileBadge = (code = '') => code.includes('?') || code[0] === 'A' ? 'New' : code.includes('D') ? 'Removed' : 'Changed';
 
 // The commit message of 1.16.0: the change and its phase when one open change owns every file.
 function commitMessage(entries, changes) {
@@ -106,8 +126,8 @@ function UncommittedSection({entries, changes, snapshot, worktree, focus, at}) {
           <div className="row-title">{r.title}</div>
           <div className="row-detail">{r.kind}{r.title !== r.short && <span className="work-path"> · <span className="mono">{r.short}</span></span>}</div>
         </div>
-        <Badge tone={r.badge[0]}>{r.badge[1]}</Badge>
-        {edit.editable && <button className="quiet" aria-label={`Discard ${r.name}`} onClick={() => discard(r)}>Discard</button>}
+        <DiffBadge name={r.badge}/>
+        {edit.editable && <button className="danger" aria-label={`Discard ${r.name}`} onClick={() => discard(r)}>Discard</button>}
       </div>)}
       {edit.editable && <form className="work-commit" aria-label="Commit" onSubmit={commit}>
         <label className="sr-only" htmlFor="work-commit-message">Commit message</label>
@@ -140,24 +160,25 @@ export default function WorkPage({page}) {
   // Start a change sits in the empty state when there is no open change; on a
   // phone the page actions follow the content, as in the phone mockup.
   const startButton = cls => <button ref={openers.start} className={cls} aria-expanded={form === 'start'} onClick={() => toggleForm('start')}>Start a change</button>;
-  const unitButton = cls => <button ref={openers.unit} className={cls} aria-expanded={form === 'unit'} onClick={() => toggleForm('unit')}>New unit</button>;
+  const unitButton = cls => <button ref={openers.unit} className={cls} aria-expanded={form === 'unit'} onClick={() => toggleForm('unit')}>{Icon.plus}New unit</button>;
   const card = form === 'start' ? <StartChangeCard snapshot={snapshot} worktree={worktree} onClose={closeForm} onOpen={go}/>
     : form === 'unit' ? <NewUnitCard snapshot={snapshot} worktree={worktree} onClose={closeForm} onOpen={go}/> : null;
   // Without an open change, Start a change opens its card in place of the empty state.
-  const empty = !changes.length, inPlace = empty && form === 'start';
+  const empty = !changes.length, inPlace = empty && form === 'start', terms = termOnce();
   return <section className="page work-page" aria-label="Work page"><div className="column">
-    <PageHeader title="Current work" subtitle={`${repository} · ${plural(changes.length, 'open change')}`}
+    <PageHeader title="Current work" subtitle={`${repository} · ${plural(changes.length, 'change')} in progress`}
       action={editable && !narrow ? <div className="work-actions">{!empty && startButton('')}{unitButton('quiet')}</div> : null}/>
     {!editable && <Notice action={<div className="work-branch"><CreateBranchForm onCreate={edit.createBranch} idPrefix="work-branch"/></div>}>
       {branch && branch !== 'detached' ? <>This branch is <span className="mono">{branch}</span>. Create a branch to edit knowledge.</> : 'This is a detached HEAD. Create a branch to edit knowledge.'}
     </Notice>}
     {card && !narrow && !inPlace && <div className="work-form">{card}</div>}
     {inPlace ? <div className="work-form">{card}</div> : empty ? <div className="empty-state work-empty">
-      <h2>No open change.</h2>
+      <h2>No change in progress.</h2>
       {editable && startButton('primary')}
-    </div> : changes.map(c => <ChangeCard key={`${c.artifact}/${c.name}`} change={c} snapshot={snapshot} worktree={worktree} go={go}/>)}
+    </div> : changes.map((c, i) => <ChangeCard key={`${c.artifact}/${c.name}`} change={c} snapshot={snapshot} worktree={worktree} go={go} terms={terms}
+      primary={i === changes.findIndex(x => changeStatus(x, worktree).action)}/>)}
     <UncommittedSection entries={entries} changes={changes} snapshot={snapshot} worktree={worktree} focus={page.focus} at={page.at}/>
-    <Section title="Dependencies" actions={<button className="quiet" aria-expanded={graph} onClick={() => setGraph(value => !value)}>{graph ? 'Hide graph' : 'Show graph'}</button>}>
+    <Section title="Dependencies" actions={<button className="quiet" aria-expanded={graph} onClick={() => setGraph(value => !value)}>{Icon.graph}{graph ? 'Hide graph' : 'Show graph'}</button>}>
       <p className="muted">{dependencySentence(snapshot)}</p>
       {graph && <DependencyGraph snapshot={snapshot} onOpen={go}/>}
     </Section>

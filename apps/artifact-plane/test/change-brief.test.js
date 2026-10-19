@@ -155,6 +155,20 @@ test('B5: a claim that names a reached flow decides it', async t => {
   assert.deepEqual(b.flows.undecided.map(u => u.flow ?? u.entity), ['artifact:c']);
 });
 
+test('B5: a claim names a reached flow by its impact entity identity', async t => {
+  const about = `  - id: report-unchanged
+    kind: assumption
+    statement: The report keeps its steps.
+    status: open
+    basis: inferred
+    check: Run the report tests.
+    about: [flow:b:report]
+`;
+  const repo = await openChange(t, {taskClaims: 'claims:\n' + about}), {brief} = await services(t, repo.root, repo.stateDir);
+  const b = (await brief()).data;
+  assert.deepEqual(b.flows.reached.map(f => [f.flow, f.state]), [['a:login', 'declared'], ['b:report', 'decided']]);
+});
+
 test('B8: brief of a delivered change lists unmet evidence, unchecked DoD and wording notes', async t => {
   const files = impactFiles();
   files.set(UNIT, unit());

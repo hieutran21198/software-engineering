@@ -29,7 +29,7 @@ test('change cards show the eyebrow, phases, the next step and Continue without 
   try {
     await openRepository(page, f.root);
     await expect(work(page).getByRole('heading', {level: 1})).toHaveText('Current work');
-    await expect(work(page).locator('.subtitle')).toHaveText(`${f.root.split('/').at(-1)} · 1 open change`);
+    await expect(work(page).locator('.subtitle')).toHaveText(`${f.root.split('/').at(-1)} · 1 change in progress`);
     // No protected-branch notice on a work branch; both actions are in the header.
     await expect(work(page)).not.toContainText('Create a branch to edit knowledge.');
     await expect(work(page).getByRole('button', {name: 'Start a change', exact: true})).toBeVisible();
@@ -68,7 +68,7 @@ test('Start a change opens a change of an artifact with a new unit, and "A new a
   try {
     await openRepository(page, f.root);
     // Without an open change the empty state holds the only Start a change.
-    await expect(work(page).getByRole('heading', {name: 'No open change.', exact: true})).toBeVisible();
+    await expect(work(page).getByRole('heading', {name: 'No change in progress.', exact: true})).toBeVisible();
     const start = work(page).getByRole('button', {name: 'Start a change', exact: true});
     await expect(start).toHaveCount(1);
     await start.click();
@@ -91,7 +91,7 @@ test('Start a change opens a change of an artifact with a new unit, and "A new a
     // Back on the work page the new change has a card and Billing is no longer a choice.
     await openWork(page);
     await expect(work(page).getByRole('article', {name: 'Invoice rules', exact: true})).toBeVisible();
-    await expect(work(page).locator('.subtitle')).toContainText('1 open change');
+    await expect(work(page).locator('.subtitle')).toContainText('1 change in progress');
     await work(page).getByRole('button', {name: 'Start a change', exact: true}).click();
     form = work(page).getByRole('form', {name: 'Start change'});
     await expect(form.getByLabel('Artifact', {exact: true}).locator('option')).toHaveText(['Tenant', 'A new artifact']);
@@ -147,9 +147,9 @@ test('uncommitted rows name documents; Commit takes the selected files and Disca
     const section = work(page).getByRole('region', {name: 'Uncommitted knowledge'});
     await expect(section).toContainText('3 files');
     const row = name => section.locator('.work-file').filter({has: page.getByText(name, {exact: true})});
-    await expect(row('Need')).toContainText('requirement');await expect(row('Need').locator('.badge')).toHaveText('Changed');
-    await expect(row('Invoice').locator('.badge')).toHaveText('Changed');
-    await expect(row('Sessions')).toContainText('specification');await expect(row('Sessions').locator('.badge')).toHaveText('New');
+    await expect(row('Need')).toContainText('requirement');await expect(row('Need').locator('.diff-badge')).toHaveText('~Changed');
+    await expect(row('Invoice').locator('.diff-badge')).toHaveText('~Changed');
+    await expect(row('Sessions')).toContainText('specification');await expect(row('Sessions').locator('.diff-badge')).toHaveText('+New');
     await expect(row('Sessions')).toContainText('tenant/specifications/sessions.md');
     const commit = section.getByRole('form', {name: 'Commit'});
     await expect(commit.getByLabel('Commit message')).toHaveValue(/^Update knowledge of (tenant, billing|billing, tenant)$/);
@@ -241,7 +241,7 @@ test('an invalid path is refused and an empty artifact directory opens an empty 
     await page.getByRole('button', {name: 'Open repository', exact: true}).click();
     await expect(page.getByRole('alert')).toContainText('does not exist');
     await openRepository(page, f.root);
-    await expect(work(page).getByRole('heading', {name: 'No open change.', exact: true})).toBeVisible();
+    await expect(work(page).getByRole('heading', {name: 'No change in progress.', exact: true})).toBeVisible();
     const dependencies = work(page).getByRole('region', {name: 'Dependencies'});
     await expect(dependencies).toContainText('No artifact depends on another artifact.');
     await dependencies.getByRole('button', {name: 'Show graph', exact: true}).click();

@@ -28,6 +28,8 @@ flow:
     - id: discover
       title: Filter named flows, discover behavior or expand explicit participation
       supports:
+        - model-install
+        - app-release-contract
         - impact-contract
         - flow-contract
         - index
@@ -88,6 +90,20 @@ flow:
     - from: freshness
       to: return
   support:
+    - id: model-install
+      kind: implementation
+      path: apps/artifact-plane/server/flow-model-install.js
+      symbol: installFlowModel
+      requires: Install and verify the pinned semantic model from the source
+        script and the executable.
+      basis: static
+    - id: app-release-contract
+      kind: element
+      artifact: artifact-plane
+      element: specifications/app-release.md
+      requires: Release the Plane as one executable for each target with a
+        command line, a payload cache and a plane-v release.
+      basis: documented
     - id: impact-contract
       kind: element
       artifact: artifact-plane

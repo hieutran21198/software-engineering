@@ -1,23 +1,25 @@
 import React, {useId, useMemo, useRef, useState} from 'react';
 import {useShell, useQuery, useDocument} from '../page-data.js';
-import {PageHeader, Section, Badge} from '../ui.jsx';
+import {Icon, KindTag, PageHeader, Section, StatusBadge} from '../ui.jsx';
+import {SectionLinks, StatusText, statusMember, termOnce, VersionLabel} from './guidance.jsx';
 import {ActionForm, OperationError, useEdit, sectionText, splitFront} from '../editing.jsx';
 import {GraphPanel} from '../GraphPanel.jsx';
 import {unitCanvas} from '../unit-canvas.js';
-import {artifactDocuments, artifactTitle, changeTitle, completionLabel, currentChanges, phaseLabel} from '../work-model.js';
+import {artifactDocuments, artifactTitle, changeStatus, changeTitle, completionLabel, currentChanges} from '../work-model.js';
 import {artifactNodeTypes, lightEdges} from './UnitPageGraph.jsx';
 import './UnitPage.css';
 
 const RESULTS = [{value: 'passed', label: 'Passed'}, {value: 'failed', label: 'Failed'}, {value: 'incomplete', label: 'Incomplete'}];
 const EFFECTS = [{value: 'modify', label: 'Modify'}, {value: 'create', label: 'Create'}, {value: 'remove', label: 'Remove'}];
-const COMPLETION_TONE = {Complete: 'passed', Incomplete: 'incomplete'};
+// Completion labels as status names; "Completion not loaded" is not loaded.
+const completionStatus = label => ['Complete', 'Incomplete', 'Unknown'].includes(label) ? label : 'not loaded';
 const REVIEW = /publication_reviews|publication review/i;
 const plainCriteria = acceptance => acceptance.map(c => ({id: c.id, criterion: c.criterion, ...(c.integration ? {integration: true} : {})}));
 
-// The evidence of a criterion: the result of its last recorded entry.
+// The evidence of a criterion: the result of its last recorded entry, as a status name and a label.
 function evidenceBadge(unit, id) {
-  const last = unit.evidence.filter(e => e.criterion === id).at(-1);
-  return last ? (RESULTS.find(r => r.value === last.result) || {value: '', label: last.result}) : {value: 'none', label: 'No evidence'};
+  const last = unit.evidence.filter(e => e.criterion === id).at(-1), result = last && RESULTS.find(r => r.value === last.result);
+  return result ? {status: result.label, label: result.label} : {status: 'Unknown', label: last ? last.result : 'No evidence'};
 }
 
 // Completion: the label and the first reason. A missing publication review links to the change that records it.
@@ -28,7 +30,7 @@ function CompletionLine({unitId, members, go}) {
   const label = completionLabel(completion), reason = completion.reasons?.[0];
   const review = (query.data.members || members).find(m => m.establishmentEvidence?.reasons?.some(r => REVIEW.test(r)));
   return <p className="unit-completion">
-    <Badge tone={COMPLETION_TONE[label] || ''}>{label}</Badge>
+    <StatusBadge status={completionStatus(label)}>{label}</StatusBadge>
     {reason && <span className="muted">{reason}</span>}
     {review && <button className="link" onClick={() => go({kind: 'change', artifact: review.artifact, change: review.change})}>Record publication review</button>}
   </p>;
@@ -62,11 +64,11 @@ function CriterionRow({unit, criterion, index, mode, onMode, editable, sources})
         <button className="primary" disabled={busy} aria-busy={busy}>Save</button>
       </div>
     </form> : editable ? <button className="unstyled criterion-text" aria-label={`Edit criterion ${criterion.id}`} aria-describedby={descId} onClick={() => open('text')}>
-      <span id={descId}>{criterion.criterion}</span>{criterion.integration && <Badge tone="integration">Integration</Badge>}
-    </button> : <span className="criterion-text">{criterion.criterion}{criterion.integration && <Badge tone="integration">Integration</Badge>}</span>}
+      <span id={descId}>{criterion.criterion}</span>{criterion.integration && <KindTag kind="Integration">Integration criterion</KindTag>}
+    </button> : <span className="criterion-text">{criterion.criterion}{criterion.integration && <KindTag kind="Integration">Integration criterion</KindTag>}</span>}
     <span className="criterion-evidence">
-      {editable ? <button className={`unstyled badge-button badge ${badge.value}`} aria-label={`Record evidence for ${criterion.id}`} title="Record evidence" aria-expanded={mode === 'evidence'} onClick={() => open(mode === 'evidence' ? null : 'evidence')}>{badge.label}</button>
-        : <Badge tone={badge.value}>{badge.label}</Badge>}
+      {editable ? <button className="unstyled badge-button" aria-label={`Record evidence for ${criterion.id}`} title="Record evidence" aria-expanded={mode === 'evidence'} onClick={() => open(mode === 'evidence' ? null : 'evidence')}><StatusBadge status={badge.status}>{badge.label}</StatusBadge></button>
+        : <StatusBadge status={badge.status}>{badge.label}</StatusBadge>}
     </span>
     {mode === 'evidence' && <div className="criterion-form">
       <ActionForm open submitLabel="Record evidence" title={`Evidence for ${criterion.id}`} onClose={() => onMode(null)} fields={[
@@ -104,7 +106,16 @@ export default function UnitPage({page}) {
   const editable = edit.editable;
   const changes = worktree.changes || [];
   const changeOf = m => changes.find(c => c.artifact === m.artifact && c.name === m.change);
-  const memberState = m => {const c = changeOf(m);return m.deliveredVersion ? `Delivered ${m.deliveredVersion}` : c?.version ? `Version ${c.version} prepared` : c ? phaseLabel(c) : 'Not found';};
+  // A member's state: Delivered, its prepared version, or its change status.
+  const terms = termOnce();
+  const memberState = m => {
+    const c = changeOf(m);
+    if (m.deliveredVersion) return <StatusBadge status="Delivered">{terms('Delivered')} {m.deliveredVersion}</StatusBadge>;
+    if (c?.version && !c.delivered) return <VersionLabel version={c.version} term={terms}/>;
+    if (!c) return <StatusBadge status="Unknown">Not found</StatusBadge>;
+    const status = changeStatus(c, worktree);
+    return <StatusBadge status={statusMember(status)}><StatusText text={status.text} term={terms}/></StatusBadge>;
+  };
   const claimed = new Set((worktree.unitsOfWork || []).filter(u => u.id !== unit.id).flatMap(u => u.members.map(m => `${m.artifact}/${m.change}`)));
   const joinable = currentChanges(worktree).filter(c => !unit.members.some(m => m.artifact === c.artifact) && !claimed.has(`${c.artifact}/${c.name}`))
     .map(c => ({value: `${c.artifact}/${c.name}`, label: `${changeTitle(c)} · ${artifactTitle(snapshot, c.artifact)}`}));
@@ -122,18 +133,20 @@ export default function UnitPage({page}) {
 
   return <section className="page unit-page" aria-label="Unit page"><div className="column">
     <PageHeader eyebrow={`Unit of work · ${unit.id}`} title={unit.title}
-      action={<button className="quiet" onClick={() => go({kind: 'document', source: unit.path, scope: {unit: unit.id}})}>{editable ? 'Edit brief' : 'Read brief'}</button>}/>
+      action={editable ? <button className="quiet" onClick={() => go({kind: 'document', source: unit.path, scope: {unit: unit.id}})}>{Icon.pen}Edit brief</button>
+        : <button className="link" onClick={() => go({kind: 'document', source: unit.path, scope: {unit: unit.id}})}>Read brief</button>}/>
     {purpose ? <p className="lead">{purpose}</p> : !brief.ready && <p className="lead muted">Reading the brief…</p>}
     <CompletionLine unitId={unit.id} members={unit.members} go={go}/>
+    <SectionLinks sections={[['unit-changes', 'Changes'], ['unit-criteria', 'Acceptance criteria'], ['unit-flows', 'Affected flows']]}/>
 
-    <Section title="Changes" summary={unit.members.length} actions={<button className="quiet" aria-expanded={graph} onClick={() => setGraph(v => !v)}>{graph ? 'Hide graph' : 'Show graph'}</button>}>
+    <Section title="Changes" id="unit-changes" summary={unit.members.length} actions={<button className="quiet" aria-expanded={graph} onClick={() => setGraph(v => !v)}>{Icon.graph}{graph ? 'Hide graph' : 'Show graph'}</button>}>
       <div className="rows">
         {unit.members.map(m => {const c = changeOf(m), title = changeTitle(c) || m.change;
           // Members of different artifacts can share a title; their controls still need distinct names.
           const name = unit.members.filter(x => (changeTitle(changeOf(x)) || x.change) === title).length > 1 ? `${title} · ${artifactTitle(snapshot, m.artifact)}` : title;
           return <div className="row" key={`${m.artifact}/${m.change}`}>
           <div className="grow"><button className="link" aria-label={name} onClick={() => go({kind: 'change', artifact: m.artifact, change: m.change})}>{title}</button> <span className="muted">· {artifactTitle(snapshot, m.artifact)} · {m.change}</span></div>
-          <span className="muted">{memberState(m)}</span>
+          <span className="member-state">{memberState(m)}</span>
           {editable && several && <button className="danger" aria-label={`Remove ${name} from the unit`} onClick={() => {setRemoveError(null);edit.run('unit.member.remove', {unit: unit.id, artifact: m.artifact, change: m.change}).catch(setRemoveError);}}>Remove</button>}
         </div>;})}
         {editable && (joinable.length ? <ActionForm label="+ Add a change" opener="add-row" submitLabel="Add the change"
@@ -149,7 +162,7 @@ export default function UnitPage({page}) {
         legend={<><span><i/>Dependency</span><span>Arrows point from prerequisite to dependent. Dashed nodes are prerequisites outside the unit.</span></>}/>}
     </Section>
 
-    <Section title="Acceptance criteria" summary={`· ${withEvidence} of ${unit.acceptance.length} have evidence`}>
+    <Section title="Acceptance criteria" id="unit-criteria" summary={`· ${withEvidence} of ${unit.acceptance.length} have evidence`}>
       <div className="rows criteria">
         {unit.acceptance.map((c, i) => <CriterionRow key={`${c.id}:${c.criterion}:${c.integration}`} unit={unit} criterion={c} index={i} editable={editable} sources={sources}
           mode={rowMode?.id === c.id ? rowMode.mode : null} onMode={mode => setRowMode(mode ? {id: c.id, mode} : null)}/>)}
@@ -161,7 +174,7 @@ export default function UnitPage({page}) {
       {editable && unit.acceptance.length > 0 && <p className="section-note">Select a criterion to edit it. Record evidence from its evidence badge.</p>}
     </Section>
 
-    <Section title="Affected flows" summary={affected.length} actions={editable && !flowsOpen && <button ref={flowsButton} className="quiet" aria-label="Edit affected flows" onClick={() => setFlowsOpen(true)}>Edit</button>}>
+    <Section title="Affected flows" id="unit-flows" summary={affected.length} actions={editable && !flowsOpen && <button ref={flowsButton} className="quiet" aria-label="Edit affected flows" onClick={() => setFlowsOpen(true)}>{Icon.pen}Edit</button>}>
       {flowsOpen ? <ActionForm open submitLabel="Save affected flows" onClose={closeFlows} fields={[
         {name: 'flows', label: 'Flows', type: 'checks', options: allFlows, value: affected.map(f => `${f.artifact}:${f.flow}`), empty: 'No flow records exist.'},
         {name: 'effect', label: 'Effect on the selected flows', type: 'select', options: EFFECTS, value: affected[0]?.effect || 'modify'},

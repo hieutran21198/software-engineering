@@ -49,7 +49,7 @@ test('read-only unit page shows the brief, completion, members, criteria and gra
     await expect(memberRow(page, 'authentication · change-login')).toContainText('Delivered 1.0.0');
     await expect(criteria(page).getByRole('heading', {level: 2})).toHaveText('Acceptance criteria · 2 of 2 have evidence');
     await expect(criteria(page).locator('.criterion').filter({hasText: 'integration'})).toContainText('Integration');
-    await expect(criteria(page).locator('.criterion .badge.passed')).toHaveCount(2);
+    await expect(criteria(page).locator('.criterion .status-badge[data-status="Passed"]')).toHaveCount(2);
     await expect(flows(page)).toContainText('No flow is affected.');
     // Main is read only: no edit controls.
     await expect(unit.getByRole('button', {name: /^Edit criterion|^Record evidence for|^Remove|Add a change|Add criterion|Edit affected flows|Edit brief/})).toHaveCount(0);
@@ -87,7 +87,7 @@ test('incomplete evidence and invalid membership stay readable', async ({page}) 
     await expect(completion(page)).toContainText('Incomplete');
     await expect(completion(page)).toContainText('Shared criteria lack passing delivered evidence: login, integration.');
     await expect(criteria(page).getByRole('heading', {level: 2})).toHaveText('Acceptance criteria · 0 of 2 have evidence');
-    await expect(criteria(page).locator('.criterion .badge.none')).toHaveCount(2);
+    await expect(criteria(page).locator('.criterion .status-badge[data-status="Unknown"]')).toHaveCount(2);
     await writeFile(join(f.root, unitPath), unitBrief(undefined, false).replace('artifact: tenant', 'artifact: absent'));
     await refresh(page);
     await expect(memberRow(page, 'absent · change-login')).toContainText('Not found');

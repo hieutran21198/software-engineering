@@ -49,7 +49,7 @@ test('S1: create a single-artifact change with a requirement, a task and a unit,
     await expect(change(p).getByRole('heading', {level: 1})).toHaveText('Invoice rules');
     // Knowledge is added on its artifact's page; the new document opens in edit mode.
     await change(p).getByRole('button', {name: 'Billing', exact: true}).click();
-    await region(p, 'Artifact page').getByRole('button', {name: '+ New requirement', exact: true}).click();
+    await region(p, 'Artifact page').getByRole('button', {name: 'New requirement', exact: true}).click();
     const add = region(p, 'Artifact page').getByRole('form', {name: 'Add requirement'});
     await add.getByLabel('Title', {exact: true}).fill('Invoice tenancy');
     await add.getByRole('button', {name: 'Add requirement', exact: true}).click();
@@ -100,7 +100,7 @@ test('S1 by keyboard alone: start a change and add a requirement without the mou
     await expect(change(page).getByRole('heading', {level: 1})).toHaveText('Keyboard rules');
     await tabTo('Billing');await page.keyboard.press('Enter');
     await expect(region(page, 'Artifact page')).toBeVisible();
-    await tabTo('+ New requirement');await page.keyboard.press('Enter');
+    await tabTo('New requirement');await page.keyboard.press('Enter');
     await page.keyboard.type('Keyboard need');await page.keyboard.press('Enter');
     await expect(doc(page).getByRole('textbox', {name: 'Document text'})).toBeFocused();
     await page.keyboard.press('Control+End');await page.keyboard.type('\nTyped without a mouse.\n');await page.keyboard.press('Control+s');
@@ -145,7 +145,7 @@ test('S3: add, explain and remove a dependency; a cycle is refused with its path
     await deps.getByRole('button', {name: 'Save dependencies', exact: true}).click();
     await expect.poll(() => read(f.root, audit + 'README.md')).toContain('depends_on: [tenant]');
     await artifact.getByRole('button', {name: /^Trail/}).click();
-    await doc(p).getByRole('button', {name: '+ Add reference', exact: true}).click();
+    await doc(p).getByRole('button', {name: 'Add reference', exact: true}).click();
     const ref = doc(p).getByRole('form', {name: 'Add reference'});
     await ref.getByLabel('Target artifact').selectOption('tenant');
     await ref.getByLabel('Target document').selectOption('specifications/identity.md');
@@ -155,7 +155,9 @@ test('S3: add, explain and remove a dependency; a cycle is refused with its path
     const added = await m.finish('S3-add');
     // Remove the dependency again from the artifact page.
     await doc(p).getByRole('button', {name: 'Audit', exact: true}).click();
+    // HG9: removing a dependency asks for a confirmation in the page.
     await artifact.getByRole('button', {name: 'Remove dependency on Tenant', exact: true}).click();
+    await artifact.getByRole('group', {name: 'Remove dependency'}).getByRole('button', {name: 'Confirm remove', exact: true}).click();
     await expect.poll(() => read(f.root, audit + 'README.md')).toContain('depends_on: []');
     await finish(m, 'S3', 'audit README depends_on, trail.md references', {addActions: added.actions, addOtherActions: added.otherActions});
     // A cycle is refused before writing and names the path.
@@ -180,7 +182,7 @@ test('S4: create a flow with three steps, two transitions and two supports, modi
   // Expanding a step that is already open would close it.
   const expand = async (flow, title) => {if ((await step(flow, title).getAttribute('aria-expanded')) !== 'true') await step(flow, title).click();};
   async function addSupport(flow, document) {
-    await flow.getByRole('button', {name: '+ Add support', exact: true}).click();
+    await flow.getByRole('button', {name: 'Add support', exact: true}).click();
     const support = flow.getByRole('form', {name: 'Add support'});
     await support.getByLabel('Document', {exact: true}).selectOption({label: document === 'Identity' ? 'Identity · specification' : 'Need · requirement'});
     await support.getByLabel('What the step needs from it').fill(`Uses ${document}.`);
@@ -198,7 +200,7 @@ test('S4: create a flow with three steps, two transitions and two supports, modi
     await openRepository(page, f.root);
     const m = measure(page, f.root), p = m.page;await m.begin();
     const artifact = await openArtifact(p, 'Tenant');
-    await artifact.getByRole('button', {name: '+ New flow', exact: true}).click();
+    await artifact.getByRole('button', {name: 'New flow', exact: true}).click();
     const create = artifact.getByRole('form', {name: 'Create flow'});
     await create.getByLabel('Title', {exact: true}).fill('Tenant onboarding');
     await create.getByLabel('Starts when').fill('An admin adds a tenant.');

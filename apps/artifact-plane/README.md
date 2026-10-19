@@ -2,9 +2,66 @@
 
 Explore and author a local Artifact-Driven Development repository. The application reads Git and Markdown, derives dependency and behavior graphs and stores a rebuildable flow index outside inspected repositories. Opening, reading and refreshing change nothing. Explicit edit operations write ADD records in `docs/artifacts` of a worktree with a non-protected branch; see [Edit knowledge](#edit-knowledge).
 
+## Install
+
+Each Plane release has one executable file for each computer. The file needs Git, but not Node.js, npm or a source checkout.
+
+1. Open the [GitHub release](https://github.com/hieutran21198/software-engineering/releases) with the tag `plane-v<version>`. Download the file of your computer and `SHA256SUMS` into one directory.
+
+   | Computer | File |
+   | --- | --- |
+   | Linux AMD64 | `artifact-plane-linux-amd64` |
+   | Linux ARM64 | `artifact-plane-linux-arm64` |
+   | macOS Apple silicon | `artifact-plane-darwin-arm64` |
+   | macOS Intel | `artifact-plane-darwin-amd64` |
+   | Windows AMD64 | `artifact-plane-windows-amd64.exe` |
+   | Windows ARM64 | `artifact-plane-windows-arm64.exe` |
+
+2. Check the file in that directory. On Linux:
+
+   ```sh
+   sha256sum --check --ignore-missing SHA256SUMS
+   ```
+
+   On macOS, use `shasum -a 256 --check --ignore-missing SHA256SUMS` when `sha256sum` is not available. Each downloaded file must show `OK`. On Windows, in PowerShell, compare the hash with the line of the file in `SHA256SUMS` (the case of the letters does not matter):
+
+   ```powershell
+   Get-FileHash .\artifact-plane-windows-amd64.exe -Algorithm SHA256
+   Select-String artifact-plane-windows-amd64.exe SHA256SUMS
+   ```
+
+3. On Linux and macOS, make the file executable and start it:
+
+   ```sh
+   chmod +x artifact-plane-linux-amd64
+   ./artifact-plane-linux-amd64
+   ```
+
+   On Windows, start `.\artifact-plane-windows-amd64.exe`. The server prints its address, for example `Artifact Plane <version>: http://127.0.0.1:4310`. Open it as in [Run](#run).
+
+The files are not signed by a publisher, so the operating system can block the first start:
+
+- **macOS**: run `xattr -d com.apple.quarantine artifact-plane-darwin-<arch>`, or open the file with **Open** in the Finder context menu and confirm.
+- **Windows**: in the SmartScreen message, select **More info**, then **Run anyway**.
+
+Commands of the file:
+
+| Command | Effect |
+| --- | --- |
+| none, or `serve` | Starts the server, as `npm start` does. |
+| `mcp` | Runs the stdio MCP server, as `npm run mcp` does. Options: `--repository /absolute/root` (repeatable), `--state-dir /absolute/private/state`, `--allow-writes`. |
+| `model-install` | Downloads and verifies the pinned semantic discovery model, as `npm run flow:model-install` does. |
+| `--version` | Prints the version. |
+| `--help` | Prints the commands and the environment variables. |
+
+Environment variables:
+
+- `PORT`: the server port, 1 to 65535 (default 4310).
+- `ARTIFACT_PLANE_STATE_DIR`: the private state directory (default `$XDG_STATE_HOME/artifact-plane` or `~/.local/state/artifact-plane`). The file also extracts its application files into this directory and keeps the two newest versions.
+
 ## Run
 
-Install Node.js 24 or later and Git. From this directory:
+To run from a source checkout, install Node.js 24 or later and Git. From this directory:
 
 ```sh
 npm ci

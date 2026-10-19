@@ -63,7 +63,7 @@ export async function tierCheck({root, scan, git, artifact, change, impactServic
     const second = members.filter(([, m]) => m.some(x => !(x?.artifact === artifact && x?.change === change))).map(([p]) => p);
     if (outside.length) set('one-artifact', 'fail', `Knowledge of other artifacts changes: ${list(outside)}.`);
     else if (second.length) set('one-artifact', 'fail', `A unit brief names a second member: ${list(second)}.`);
-    else {const n = diff.status.filter(s => s.path.startsWith(BASE)).length;set('one-artifact', 'pass', n ? `${n === 1 ? 'The changed knowledge file is' : `All ${n} changed knowledge files are`} under ${prefix}.` : 'No knowledge file changes.');}
+    else {const n = diff.status.filter(s => s.path.startsWith(BASE)).length;set('one-artifact', 'pass', n ? `${count(n, 'changed knowledge file')} under docs/artifacts, ${n === 1 ? 'in' : 'all in'} ${prefix}.` : 'No knowledge file under docs/artifacts changes.');}
     // no-contract
     const mine = diff.status.filter(s => s.path.startsWith(prefix));
     const problems = [], referenced = [];

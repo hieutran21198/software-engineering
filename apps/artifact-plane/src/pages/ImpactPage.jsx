@@ -3,7 +3,7 @@
 // groups them, filters them and explains one selected entity at a time.
 import {useEffect, useId, useMemo, useRef, useState} from 'react';
 import {useShell} from '../page-data.js';
-import {PageHeader, Notice} from '../ui.jsx';
+import {DiffBadge, KindTag, PageHeader, Notice, StatusBadge} from '../ui.jsx';
 import {postJSON} from '../request.js';
 import {GraphPanel, Handles} from '../GraphPanel.jsx';
 import {impactCanvas} from '../impact-canvas.js';
@@ -13,6 +13,13 @@ import './ImpactPage.css';
 const KIND_NAMES = {flow: 'flow', step: 'step', document: 'knowledge', element: 'knowledge', module: 'code', test: 'test', model: 'model', 'go-package': 'package', build: 'build', file: 'file', unresolved: 'unknown'};
 const kindName = item => KIND_NAMES[item.kind] || (kindGroup(item) === 'knowledge' ? 'knowledge' : item.kind || 'file');
 const plural = (n, one, many = one + 's') => `${n} ${n === 1 ? one : many}`;
+// A tier name: the Kind family for direct, transitive, potential and verify, the
+// Status family for unresolved; investigate is not in the vocabulary and stays text.
+const TierName = ({tier, children = tier, small}) => tier === 'unresolved' ? <StatusBadge status="unresolved" small={small}>{children}</StatusBadge>
+  : tier === 'investigate' ? <span className="tier-name">{children}</span> : <KindTag kind={tier}>{children}</KindTag>;
+// The state of a changed entity: New, Removed or Unknown; a rename stays text.
+const OriginState = ({status}) => status === 'added' ? <DiffBadge name="New" small/> : status === 'deleted' ? <DiffBadge name="Removed" small/>
+  : status === 'unknown' ? <StatusBadge status="Unknown" small/> : <span className="muted small">{status}</span>;
 const SHOWN = {direct: true, transitive: true, potential: true, verify: true, investigate: false, unresolved: true};
 
 function useImpact(context, depth) {
@@ -91,7 +98,7 @@ function Detail({item, data, snapshot, go, onClose}) {
   const isPath = parsed.type === 'path' || parsed.type === 'knowledge';
   return <aside className="impact-detail" aria-label="Selected entity">
     <div className="impact-detail-head">
-      <div><span className={`badge small tier-${item.tier}`}>{item.tier}</span> <span className="muted small">{kindName(item)}</span></div>
+      <div><TierName tier={item.tier} small/> <span className="muted small">{kindName(item)}</span></div>
       <button className="icon" aria-label="Close details" onClick={onClose}>×</button>
     </div>
     <h3>{name}</h3>
@@ -167,7 +174,7 @@ export default function ImpactPage({page}) {
         <span className="impact-origins-label">Changed</span>
         {visibleOrigins.map(c => <span key={c.path} className="impact-origin" title={c.path}>
           <span className="mono">{c.path}</span>
-          {c.status && c.status !== 'modified' && <span className="badge small">{c.status}</span>}
+          {c.status && c.status !== 'modified' && <OriginState status={c.status}/>}
           {c.symbols?.length > 0 && <span className="impact-origin-detail" title={c.symbols.join(', ')}>{c.symbols.slice(0, 3).join(', ')}{c.symbols.length > 3 ? ` +${c.symbols.length - 3}` : ''}</span>}
         </span>)}
         {changed.length > 6 && <button className="link small" onClick={() => setAllOrigins(v => !v)}>{allOrigins ? 'Show fewer' : `and ${changed.length - 6} more`}</button>}
@@ -203,7 +210,7 @@ export default function ImpactPage({page}) {
             const items = sectionItems(data, tier, {kind, origin: origin || null});
             if (!items.length) return null;
             return <section key={tier} className="impact-section" aria-label={label}>
-              <h2 className="section-title"><span className={`badge tier-${tier}`}>{label}</span> <span className="summary">{items.length}{omitted[tier] ? ` of ${omitted[tier]}` : ''}</span></h2>
+              <h2 className="section-title"><TierName tier={tier}>{label}</TierName> <span className="summary">{items.length}{omitted[tier] ? ` of ${omitted[tier]}` : ''}</span></h2>
               <p className="tiny">{note}</p>
               {groupRows(items).map(({group, rows}) => <div key={group} className="impact-group">
                 <h3>{snapshot.artifacts.find(a => a.id === group)?.title || group}</h3>

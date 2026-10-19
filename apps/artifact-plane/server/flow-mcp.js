@@ -1,4 +1,6 @@
 import {McpServer} from '@modelcontextprotocol/sdk/server/mcp.js';
+import {StdioServerTransport} from '@modelcontextprotocol/sdk/server/stdio.js';
+import {resolve,isAbsolute} from 'node:path';
 import {realpath} from 'node:fs/promises';
 import {z} from 'zod/v4';
 import {createFlowService} from './flow-index.js';
@@ -73,4 +75,19 @@ export function createFlowMcpServer({service,reviewService,impactService,knowled
   });
  }
  return {server,get service(){return flows;},get impactService(){return impact;},async close(){await server.close();await flows?.close();if(!impactService)await impact?.close();}};
+}
+// Runs the stdio server for command-line arguments; throws a usage error.
+export async function runFlowMcpStdio(args){
+ const roots=[];let stateDir,allowWrites=false;
+ for(let i=0;i<args.length;i++){
+  if(args[i]==='--allow-writes'){allowWrites=true;continue;}
+  const flag=args[i],value=args[++i];
+  if(!['--repository','--state-dir'].includes(flag)||!value||!isAbsolute(value))throw Error('Use --repository /absolute/root (repeatable), optional --state-dir /absolute/private/state and optional --allow-writes.');
+  if(flag==='--repository')roots.push(resolve(value));else stateDir=resolve(value);
+ }
+ if(!roots.length)throw Error('Configure at least one --repository root.');
+ const app=createFlowMcpServer({roots,stateDir,allowWrites});
+ await app.server.connect(new StdioServerTransport());
+ const close=async()=>{await app.close();process.exit(0);};
+ process.once('SIGINT',close);process.once('SIGTERM',close);
 }

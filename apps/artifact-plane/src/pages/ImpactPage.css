@@ -27,12 +27,6 @@
 .impact-controls { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; margin-bottom: var(--s4); }
 .impact-controls select { min-width: 0; max-width: 100%; }
 
-.badge.tier-direct { background: var(--accent-soft); color: var(--accent-text); }
-.badge.tier-transitive { background: var(--purple-bg); color: var(--purple-text); }
-.badge.tier-potential { background: var(--warn-bg); color: var(--warn-text); }
-.badge.tier-verify { background: var(--ok-bg); color: var(--ok-text); }
-.badge.tier-unresolved { background: var(--danger-bg); color: #8a1c13; }
-
 .impact-body { display: grid; grid-template-columns: minmax(0, 1fr); gap: var(--s5); align-items: start; }
 .impact-body.with-detail { grid-template-columns: minmax(0, 1.35fr) minmax(0, 1fr); }
 .impact-lists { min-width: 0; }

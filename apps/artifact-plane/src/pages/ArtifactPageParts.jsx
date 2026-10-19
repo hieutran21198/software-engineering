@@ -1,5 +1,6 @@
 import React from 'react';
 import {artifactTitle} from '../work-model.js';
+import {Icon} from '../ui.jsx';
 
 const STATUS = {established: 'Established', 'proposed-add': 'Addition proposed on this branch', 'proposed-remove': 'Removal proposed on this branch'};
 
@@ -13,7 +14,7 @@ export function DependencyExplanation({snapshot, dependency, onOpen, onClose}) {
   return <section className="dependency-explanation" aria-label="Dependency explanation">
     <div className="section-head">
       <h3 className="section-title">{title(dependency.target)} depends on {title(dependency.source)}</h3>
-      <button className="quiet" onClick={onClose}>Close explanation</button>
+      <button className="quiet" onClick={onClose}>{Icon.close}Close explanation</button>
     </div>
     {!edges.length && <p className="muted">This dependency is not declared on the working branch.</p>}
     {edges.map(edge => {

@@ -1,8 +1,10 @@
 import { createServer } from "node:http";
 import { readFile, realpath } from "node:fs/promises";
-import { resolve, relative, isAbsolute, sep, extname } from "node:path";
+import { existsSync, realpathSync } from "node:fs";
+import { resolve, relative, isAbsolute, sep, extname, dirname, join } from "node:path";
 import { fileURLToPath } from "node:url";
 import { exploreRepository } from "./reader.js";
+import { exploreResponse } from "./explore-response.js";
 import {repositoryService, registeredSourceFingerprint} from './repository-events.js';
 import {createFlowService} from './flow-index.js';
 import {createReviewService} from './change-review.js';
@@ -13,7 +15,11 @@ import { runtimeService } from "./runtime-api.js";
 import {createKnowledgeService} from './knowledge-operations.js';
 import {knowledgeGit} from './knowledge-git.js';
 import {errorBody as editError} from './knowledge-writer.js';
-const DIST = fileURLToPath(new URL("../dist/", import.meta.url));
+// A bundled server.mjs has dist/ beside it; a source checkout has it beside server/.
+export const distDirectory = (directory) => existsSync(join(directory, "dist")) ? join(directory, "dist") : resolve(directory, "../dist");
+// The real path, so that the containment check compares like with like: on
+// Windows a module path can hold 8.3 short names that realpath expands.
+const DIST = (dir => {try {return realpathSync.native(dir);} catch {return dir;}})(distDirectory(dirname(fileURLToPath(import.meta.url))));
 const mime = {
   ".html": "text/html; charset=utf-8",
   ".js": "text/javascript; charset=utf-8",
@@ -112,7 +118,7 @@ export function createAppServer(options = {}) {
         if(url.pathname==='/api/impact/query')return json(res,200,await getImpact().query(body));
         if(url.pathname==='/api/flows/query')return json(res,200,await getFlows().query(body));
         if(url.pathname==='/api/repository/query')return json(res,200,await queryRepository(body));
-        return json(res, 200, await exploreRepository(body?.path));
+        return json(res, 200, exploreResponse(await exploreRepository(body?.path)));
       }
       if (!["GET", "HEAD"].includes(req.method))
         return json(res, 405, { error: "Method is not supported." });
@@ -162,5 +168,19 @@ export function createAppServer(options = {}) {
   server.close=(...args)=>{runtime.close();repositories.close();flows?.close();if(!options.impactService)impact?.close();return close(...args);};
   server.runtime = runtime;
   server.repositories=repositories;
+  return server;
+}
+export function startServer(label = "Artifact Plane") {
+  const port = Number(process.env.PORT || 4310);
+  if (!Number.isInteger(port) || port < 1 || port > 65535)
+    throw Error("PORT must be between 1 and 65535.");
+  const server = createAppServer();
+  server.listen(port, "127.0.0.1", () =>
+    console.log(`${label}: http://127.0.0.1:${port}`),
+  );
+  server.on("error", (error) => {
+    console.error(error.message);
+    process.exitCode = 1;
+  });
   return server;
 }

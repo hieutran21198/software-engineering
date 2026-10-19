@@ -12,7 +12,7 @@
 .prop { padding: 12px 0; border-top: 1px solid var(--divider); }
 .prop-key { font-size: 12px; color: var(--muted); margin-bottom: 4px; }
 .prop-value { font-size: 14px; display: flex; flex-direction: column; align-items: flex-start; gap: 4px; min-width: 0; }
-.prop-value > .badge + .muted { margin-top: -2px; }
+.prop-value > .diff-badge + .muted { margin-top: -2px; }
 .prop .inline-form { padding: 14px; gap: 10px; width: 100%; margin-top: 4px; }
 .prop button.link { font-weight: 400; text-align: left; white-space: normal; }
 .file-path { overflow-wrap: anywhere; }
@@ -21,7 +21,8 @@
 .reference-list li { display: flex; flex-direction: column; align-items: flex-start; gap: 2px; }
 .reference-reason { font-size: 13px; color: var(--muted); }
 .reference-actions { display: flex; gap: 12px; }
-.danger-link, button.link.danger-link { color: var(--danger); }
+.prop button.quiet.small, .prop button.danger.small { height: 28px; padding: 0 6px; margin-left: -6px; font-size: 13px; }
+.reference-actions button.danger.small { margin-left: 0; }
 .delete-document { padding: 0; height: 32px; }
 .delete-confirm p { font-size: 13px; }
 button.primary.danger-primary { background: var(--danger); border-color: var(--danger); }

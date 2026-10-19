@@ -38,20 +38,20 @@ test('artifact page: subtitle, purpose, kind sections with badges, Show all and 
     await openRepository(page, f.root);
     const tenantPage = await openArtifact(page, 'Tenant');
     await expect(tenantPage.getByRole('heading', {level: 1})).toHaveText('Tenant');
-    await expect(tenantPage.locator('.subtitle')).toContainText('Version 1.1.0 · 1.2.0 prepared · no dependencies');
+    await expect(tenantPage.locator('.subtitle')).toContainText('Version 1.1.0 established · 1.2.0 prepared by Third tenant · no dependencies');
     await expect(tenantPage.getByRole('button', {name: 'Edit dependencies', exact: true})).toBeVisible();
     await expect(tenantPage.locator('.purpose .lead')).toHaveText('Tenant knowledge.');
     await expect(tenantPage.locator('.purpose')).toContainText('Scope · Owners.');
-    // Without an open change: Start a change, and no "+ New" actions.
-    await expect(tenantPage).toContainText('No open change.');
+    // Without an open change: Start a change, and no "New" actions; the change of 1.2.0 is still in progress (HG2).
+    await expect(tenantPage).toContainText('Change in progress: Third tenant · ');
     await expect(tenantPage.getByRole('button', {name: 'Start a change', exact: true})).toBeVisible();
-    await expect(tenantPage.getByRole('button', {name: /^\+ New/})).toHaveCount(0);
+    await expect(tenantPage.getByRole('button', {name: /^New (requirement|specification|decision|flow)$/})).toHaveCount(0);
     // Kind sections: counts, the first 5 by title with badges, Show all in place.
     const specs = tenantPage.getByRole('region', {name: 'Specifications', exact: true});
     await expect(specs.getByRole('heading', {level: 2})).toHaveText('Specifications 7');
-    await expect(docRows(specs)).toHaveText(['AccessChanged', 'Billing rules', 'claimsRemoved', 'Domains', 'Exports']);
+    await expect(docRows(specs)).toHaveText(['Access~Changed', 'Billing rules', 'claims−Removed', 'Domains', 'Exports']);
     await specs.getByRole('button', {name: 'Show all 7 specifications', exact: true}).click();
-    await expect(docRows(specs)).toHaveText(['AccessChanged', 'Billing rules', 'claimsRemoved', 'Domains', 'Exports', 'Identity', 'SessionsNew']);
+    await expect(docRows(specs)).toHaveText(['Access~Changed', 'Billing rules', 'claims−Removed', 'Domains', 'Exports', 'Identity', 'Sessions+New']);
     await expect(specs.getByRole('button', {name: 'Show first 5 specifications', exact: true})).toHaveAttribute('aria-expanded', 'true');
     await expect(tenantPage.getByRole('region', {name: 'Requirements', exact: true})).toContainText('Need');
     await expect(tenantPage.getByRole('region', {name: 'Decisions', exact: true})).toContainText('No decisions yet.');
@@ -60,7 +60,7 @@ test('artifact page: subtitle, purpose, kind sections with badges, Show all and 
     const versions = tenantPage.getByRole('region', {name: 'Versions', exact: true});
     await expect(versions).toContainText('Latest: 1.1.0 from Second tenant. Version 1.2.0 is prepared and not on main yet.');
     await versions.getByRole('button', {name: 'Show versions', exact: true}).click();
-    await expect(docRows(versions)).toHaveText(['1.2.0Third tenantPrepared', '1.1.0Second tenant', '1.0.0Initial']);
+    await expect(docRows(versions)).toHaveText(['1.2.0Third tenantprepared on this branch', '1.1.0Second tenant', '1.0.0Initial']);
     await docRows(versions).nth(1).getByRole('button').click();
     await expect(documentPage(page).locator('.eyebrow')).toHaveText('Tenant / Versions');
     await expect(prop(page, 'Kind')).toContainText('Version record');
@@ -79,7 +79,7 @@ test('artifact page: subtitle, purpose, kind sections with badges, Show all and 
     await expect(documentPage(page).locator('.eyebrow')).toHaveText('Tenant / Overview');
     await expect(documentPage(page)).toContainText('Owner text.');
     const billingPage = await openArtifact(page, 'Billing');
-    await expect(billingPage.locator('.subtitle')).toContainText('Version 1.0.0 · depends on Tenant');
+    await expect(billingPage.locator('.subtitle')).toContainText('Version 1.0.0 established · depends on Tenant');
     await billingPage.locator('.subtitle').getByRole('button', {name: 'Tenant', exact: true}).click();
     await expect(artifactPage(page).getByRole('heading', {level: 1})).toHaveText('Tenant');
     for (const width of [1440, 851, 700, 390]) {await page.setViewportSize({width, height: 900});expect(await noOverflow(page)).toBe(true);}
@@ -109,7 +109,7 @@ test('dependency Edit refuses a cycle with its path and saves a valid set', asyn
     await expect(form.getByRole('checkbox', {name: 'Tenant', exact: true})).toBeChecked();
     await form.getByRole('checkbox', {name: 'Tenant', exact: true}).uncheck();
     await form.getByRole('button', {name: 'Save dependencies', exact: true}).click();
-    await expect(billingPage.locator('.subtitle')).toContainText('Version 1.0.0 · no dependencies');
+    await expect(billingPage.locator('.subtitle')).toContainText('Version 1.0.0 established · no dependencies');
     expect(await read(f.root, billing + 'README.md')).toContain('depends_on: []');
     expect(git(f.root, 'status', '--porcelain', '--', 'docs')).toBe('M ' + billing + 'README.md');
   } finally {await f.cleanup();}
@@ -120,7 +120,7 @@ test('Show dependencies: selecting an edge explains the dependency and opens the
   try {
     await openRepository(page, f.root);
     // The front matter, not a body heading, gives the version.
-    await expect((await openArtifact(page, 'Tenant')).locator('.subtitle')).toContainText('Version 1.0.0 · no dependencies');
+    await expect((await openArtifact(page, 'Tenant')).locator('.subtitle')).toContainText('Version 1.0.0 established · no dependencies');
     const authentication = await openArtifact(page, 'Authentication');
     const show = authentication.getByRole('button', {name: 'Show dependencies', exact: true});
     await show.click();
@@ -147,7 +147,7 @@ test('Show dependencies: selecting an edge explains the dependency and opens the
   } finally {await f.cleanup();}
 });
 
-test('"+ New <kind>" adds documents and flows to the open change; without one, Start a change', async ({page}) => {
+test('"New <kind>" adds documents and flows to the open change; without one, Start a change', async ({page}) => {
   const files = editingFiles();
   files.set(tenant + 'changes/change-next/README.md', '# Next identity rules\n\nPropose identity rules.\n');
   files.set(tenant + 'changes/change-next/tasks/README.md', '---\ntasks: []\n---\n# Plan\n');
@@ -156,9 +156,9 @@ test('"+ New <kind>" adds documents and flows to the open change; without one, S
     await openRepository(page, f.root);
     let tenantPage = await openArtifact(page, 'Tenant');
     await expect(tenantPage).toContainText('Open change: Next identity rules · Requirement');
-    for (const kind of ['requirement', 'specification', 'decision', 'flow']) await expect(tenantPage.getByRole('button', {name: `+ New ${kind}`, exact: true})).toBeVisible();
+    for (const kind of ['requirement', 'specification', 'decision', 'flow']) await expect(tenantPage.getByRole('button', {name: `New ${kind}`, exact: true})).toBeVisible();
     // An empty text opens the new document in the editor.
-    await tenantPage.getByRole('button', {name: '+ New requirement', exact: true}).click();
+    await tenantPage.getByRole('button', {name: 'New requirement', exact: true}).click();
     let form = tenantPage.getByRole('form', {name: 'Add requirement'});
     await expect(form.getByLabel('Title')).toBeFocused();
     await form.getByLabel('Title').fill('Session limits');await form.getByLabel('Title').press('Enter');
@@ -170,14 +170,14 @@ test('"+ New <kind>" adds documents and flows to the open change; without one, S
     // A text opens the document to read.
     tenantPage = await openArtifact(page, 'Tenant');
     await expect(tenantPage.getByRole('region', {name: 'Requirements', exact: true}).getByRole('button', {name: /^Session limits/})).toContainText('New');
-    await tenantPage.getByRole('button', {name: '+ New decision', exact: true}).click();
+    await tenantPage.getByRole('button', {name: 'New decision', exact: true}).click();
     form = tenantPage.getByRole('form', {name: 'Add decision'});
     await form.getByLabel('Title').fill('Session store');await form.getByLabel('Text (optional)').fill('# Session store\n\nSessions live in the tenant store.\n');
     await form.getByRole('button', {name: 'Add decision', exact: true}).click();
     await expect(documentPage(page).locator('.document-reader')).toContainText('Sessions live in the tenant store.');
     await expect(documentPage(page).locator('.eyebrow')).toHaveText('Tenant / Decisions');
     tenantPage = await openArtifact(page, 'Tenant');
-    await tenantPage.getByRole('button', {name: '+ New flow', exact: true}).click();
+    await tenantPage.getByRole('button', {name: 'New flow', exact: true}).click();
     form = tenantPage.getByRole('form', {name: 'Create flow'});
     await form.getByLabel('Title').fill('Sign in');await form.getByLabel('Starts when').fill('A member signs in.');
     await form.getByLabel('Ends with').fill('A session exists.');await form.getByLabel('First step').fill('Check member');
@@ -186,7 +186,7 @@ test('"+ New <kind>" adds documents and flows to the open change; without one, S
     expect(existsSync(join(f.root, tenant + 'specifications/flows/sign-in.md'))).toBe(true);
     // Billing has no open change: Start a change opens the change page.
     const billingPage = await openArtifact(page, 'Billing');
-    await expect(billingPage.getByRole('button', {name: /^\+ New/})).toHaveCount(0);
+    await expect(billingPage.getByRole('button', {name: /^New (requirement|specification|decision|flow)$/})).toHaveCount(0);
     await billingPage.getByRole('button', {name: 'Start a change', exact: true}).click();
     form = billingPage.getByRole('form', {name: 'Start change'});
     await expect(form).toContainText('Start a change of Billing');
@@ -316,7 +316,7 @@ test('references add, remove and Fix; self-check, front matter and delete', asyn
     const doc = await openDocument(page, 'Tenant', 'Specifications', 'Identity');
     const refs = doc.getByRole('group', {name: 'References'});
     await expect(refs).toContainText('Billing / requirements/missing.md');await expect(refs).toContainText('Old invoice rules');
-    await expect(refs.locator('.badge')).toHaveText('Unresolved');
+    await expect(refs.locator('.status-badge')).toHaveText('Unresolved');
     await refs.getByRole('button', {name: 'Fix reference to Billing / requirements/missing.md', exact: true}).click();
     const fix = refs.getByRole('form', {name: 'Replace reference'});
     await expect(fix.getByLabel('Target artifact')).toHaveValue('billing');
@@ -325,7 +325,7 @@ test('references add, remove and Fix; self-check, front matter and delete', asyn
     await fix.getByRole('button', {name: 'Replace reference', exact: true}).click();
     await expect(refs.getByRole('button', {name: 'Invoice', exact: true})).toBeVisible();await expect(refs).not.toContainText('Unresolved');
     expect(await read(f.root, spec)).toContain('element: requirements/invoice.md\n    requires: Old invoice rules');
-    await refs.getByRole('button', {name: '+ Add reference', exact: true}).click();
+    await refs.getByRole('button', {name: 'Add reference', exact: true}).click();
     const add = refs.getByRole('form', {name: 'Add reference'});
     await add.getByLabel('Target artifact').selectOption({label: 'Tenant'});await add.getByLabel('Target document').selectOption({label: 'Need'});
     await add.getByLabel('Reason').fill('The need it serves');await add.getByLabel('Reason').press('Enter');
@@ -342,7 +342,7 @@ test('references add, remove and Fix; self-check, front matter and delete', asyn
     await expect(prop(page, 'Self-check')).toContainText('Not recorded');
     await doc.getByRole('button', {name: 'Record self-check', exact: true}).click();
     await doc.getByRole('form', {name: 'Record'}).getByRole('button', {name: 'Record', exact: true}).click();
-    await expect(prop(page, 'Self-check').locator('.badge')).toHaveText('Passed');
+    await expect(prop(page, 'Self-check').locator('.status-badge')).toHaveText('Passed');
     await expect(prop(page, 'Self-check').getByRole('button', {name: 'Read the self-check', exact: true})).toBeVisible();
     const text = await read(f.root, spec);expect(text).toMatch(/self_check:\n  result: passed\n  source: .*#self-check/);
     // Invalid front matter stays inline; valid front matter saves.
