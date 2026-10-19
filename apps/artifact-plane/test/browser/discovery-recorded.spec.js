@@ -252,19 +252,26 @@ test('Recorded executions show a failed read with Retry, and the entry returns w
   } finally {store.close();await page.unrouteAll({behavior: 'ignoreErrors'});await f.cleanup();}
 });
 
-test('the attempt list of a recorded task labels an inferred binding', async ({page}) => {
+test('the attempt list of a recorded task labels inferred and explicit bindings', async ({page}) => {
   // The store persists across tests, so each run uses new session names.
   const f = await runtimeFixture(), store = new RuntimeStore({stateDir: stateDir()}), run = Date.now().toString(36);
-  const inferred = 'inferred-' + run, child = 'child-' + run, explicit = 'explicit-' + run;
+  const inferred = 'inferred-' + run, child = 'child-' + run, explicit = 'explicit-' + run, legacy = 'legacy-' + run;
   try {
     await store.bind({root: f.root, artifact: 'demo', change: 'change-live', task: 'a.md', session: inferred, agent: child, unit: 'live', binding: 'inferred'});
     await bind(store, f.root, 'a.md', explicit);
+    // An attempt without the binding field is explicit.
+    const old = await bind(store, f.root, 'a.md', legacy), record = JSON.parse(store.db.prepare('SELECT json FROM attempts WHERE id=?').get(old.attempt).json);
+    delete record.binding;store.saveAttempt(record);
     hook(f.root, inferred, 'PreToolUse', {agent_id: child, tool_name: 'Read'});hook(f.root, explicit, 'UserPromptSubmit');
     await openRepository(page, f.root);
     await openMore(page, 'Recorded executions');await recorded(page).getByRole('button', {name: /^Live execution/}).click();
     await recorded(page).getByRole('group', {name: 'Captured implementation graph'}).locator('.react-flow__node').filter({hasText: 'Task A'}).click();
     const attempts = recorded(page).locator('.recorded-task li');
     await expect(attempts.filter({hasText: child + ' ·'})).toContainText('Inferred from a task file read');
-    await expect(attempts.filter({hasText: explicit + ' ·'})).not.toContainText('Inferred');
+    await expect(attempts.filter({hasText: child + ' ·'})).not.toContainText('Bound explicitly');
+    for (const session of [explicit, legacy]) {
+      await expect(attempts.filter({hasText: session + ' ·'})).toContainText('Bound explicitly');
+      await expect(attempts.filter({hasText: session + ' ·'})).not.toContainText('Inferred');
+    }
   } finally {store.close();await f.cleanup();}
 });
