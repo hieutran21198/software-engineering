@@ -13,10 +13,12 @@ claims:
     statement: The validator misses the stale number because it counts a
       working version record as established when the protected branch has any
       file at the same path.
-    status: supported
+    status: verified
     basis: observed
+    verified_by: agent
     evidence:
       - docs/artifacts/artifact-plane/requirements/version-record-identity.md#need
+      - docs/artifacts/artifact-plane/changes/change-version-source/tasks/01-established-versions.md#evidence
     check: Run the new same-path fixture test on the code without the fix and
       confirm that it fails because no version-number-invalid diagnostic
       appears.

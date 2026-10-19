@@ -15,8 +15,11 @@ claims:
     statement: The eight Plane flows that the impact service reaches from the
       changed modules keep their steps and supports; only the diagnostics of the
       same-path scenario change.
-    status: open
-    basis: static
+    status: verified
+    basis: observed
+    verified_by: agent
+    evidence:
+      - docs/artifacts/artifact-plane/changes/change-version-source/tasks/02-validation.md#evidence
     check: Run the Node and browser suites on the integrated branch and confirm
       that the existing tests of the reached steps pass without edits.
     risk_if_wrong: A flow record keeps steps that the delivered Plane no longer
@@ -40,7 +43,23 @@ acceptance:
       repository, and the disposable-clone scenario of change-runbooks gives
       the expected error.
     integration: true
-evidence: []
+evidence:
+  - criterion: stale-number
+    method: Fixture test of a branch record at the path of a protected record of another change, failing before the fix.
+    result: passed
+    source: docs/artifacts/artifact-plane/changes/change-version-source/tasks/01-established-versions.md#evidence
+  - criterion: delivered-change
+    method: The same fixture gives requirement-uncovered for an added ID and tier-mismatch from the tier check.
+    result: passed
+    source: docs/artifacts/artifact-plane/changes/change-version-source/tasks/01-established-versions.md#evidence
+  - criterion: bundle-parity
+    method: The built add-validate.mjs and validate-knowledge.mjs compared on both fixtures and in the live check.
+    result: passed
+    source: docs/artifacts/artifact-plane/changes/change-version-source/tasks/02-validation.md#evidence
+  - criterion: integration
+    method: Node and browser suites, the repository validator and the change-runbooks scenario in a disposable clone.
+    result: passed
+    source: docs/artifacts/artifact-plane/changes/change-version-source/tasks/02-validation.md#evidence
 ---
 
 # Plane version source
