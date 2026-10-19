@@ -115,7 +115,7 @@ An ADD repository is a Git work tree whose top level has `docs/artifacts`. The p
 
 The hook reads the worktree of `cwd` only: the Git top level, its branch, and the changes that `evidenceFor` derives for it. It does not read the other worktrees. For each current change (`isCurrent` of src/work-model.js) it takes the status of `changeStatus`, the tier, the member unit and the unchecked DoD items of each task. server code imports src/work-model.js; the change page and the hook use the same functions.
 
-The text has at most 4,000 characters. When it is longer, the hook removes task lines from the end and adds "More in get_change_status.". The format:
+The text has at most 4,000 characters. When it is longer, the hook removes task lines from the end, then change lines from the end, and adds the line "More in get_change_status." after the last change line. The format:
 
 ```text
 Artifact Plane <version>: ADD state of <worktree path> on branch <branch>.
@@ -134,16 +134,16 @@ The hook reads `tool_input.command` of every tool, as a string or an array of wo
 | Action | Words | Condition |
 | --- | --- | --- |
 | Commit | `git [global options] commit ...` | The branch of the effective directory is `main` or `master`. |
-| Push | `git [global options] push ...` | A refspec argument names `main` or `master` as its destination (`main`, `HEAD:main`, `+main`, `refs/heads/main`), or the push has no refspec and the branch is `main` or `master`. |
+| Push | `git [global options] push ...` | A refspec argument names `main` or `master` as its destination (`main`, `HEAD:main`, `+main`, `refs/heads/main`); or the branch is `main` or `master` and the push has no refspec or the refspec `HEAD`; or the push has `--all` or `--mirror`. |
 | Merge | `gh pr merge ...` | Always. |
 
-Global options are `-C <dir>`, `-c <name=value>`, `--git-dir=...`, `--work-tree=...`, `--no-pager` and other words that start with `-` before the subcommand. `-C` changes the effective directory, relative to `cwd`. Words inside quotes are arguments and never start a simple command, so `echo "git commit"` is not reserved. The check runs only in an ADD repository.
+Global options are `-C <dir>`, `-c <name=value>`, `--git-dir=...`, `--work-tree=...`, `--no-pager` and other words that start with `-` before the subcommand. `-C` changes the effective directory, relative to `cwd`. A simple command `cd <dir>` changes the effective directory of the simple commands after it. The hook compares the last path part of the command word, so `/usr/bin/git` is `git`. When the words are `sh`, `bash` or `zsh` with an option that contains `c` (`-c`, `-lc`), the hook checks the script argument in the same way; Codex can send a command in this form. Words inside quotes are arguments and never start a simple command, so `echo "git commit"` is not reserved. Subshells, command substitution, aliases and scripts are not inspected. The check runs only in an ADD repository.
 
 The reason names the action and the rule: "ADD reserves <action> for people (AGENTS.md). Work on a change branch and stop for team review." The hook does not refuse other actions.
 
 ## Stop check
 
-On Stop and SubagentStop with `stop_hook_active` false, the hook runs `validateKnowledge` (scripts/validate-knowledge.mjs) on the Git top level of `cwd` once for each current change of that worktree. It fails when a result has a diagnostic of severity error. The reason lists at most ten diagnostics as "<artifact>/<change>: <code> <message>" and ends with "Fix the records, or say why they stay, before you stop." Warnings never fail the check. With `stop_hook_active` true, or with no current change, the hook returns `{}`.
+On Stop and SubagentStop with `stop_hook_active` false, the hook runs `validateKnowledge` (scripts/validate-knowledge.mjs) on the Git top level of `cwd` once for each current change of that worktree. It fails when a result has a diagnostic of severity error. The reason lists at most ten diagnostics as "<artifact>/<change>: <code> <message>" and ends with "Fix the records, or say why they stay, before you stop." Warnings never fail the check. With `stop_hook_active` true, or with no current change, the hook returns `{}`. The scope of a change in `validateKnowledge` includes each unit brief whose metadata cannot be parsed, because such a brief has no readable member list; its errors therefore fail the check.
 
 ## Inferred binding
 
@@ -165,7 +165,7 @@ New read-only tools, with the annotations of the existing read tools:
 
 | Tool | Input | Result |
 | --- | --- | --- |
-| `get_change_status` | `path`, `worktree` (optional, as in the review tools) | `{repository, worktree, branch, changes: [{artifact, change, title, tier, unit, status: {name, text, next, family}, version, unchecked: [{task, count}]}], text}`; `text` is the session context. |
+| `get_change_status` | `path`, `worktree` (optional, as in the review tools) | `{repository, worktree, branch, changes: [{artifact, change, title, tier, unit, status: {name, text, next, family}, version, unchecked: [{task, count}]}], text}`; `repository` is the path of the main worktree, `changes` holds the current changes only, and `text` is the session context. |
 | `check_records` | `path`, `change` as `<artifact>/<change>` (optional) | The `add-validate.result.v1` object of `validateKnowledge` for that root and change. |
 
 The server sends these instructions on initialize:

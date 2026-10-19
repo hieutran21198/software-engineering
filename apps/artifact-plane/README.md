@@ -51,6 +51,8 @@ Commands of the file:
 | none, or `serve` | Starts the server, as `npm start` does. |
 | `mcp` | Runs the stdio MCP server, as `npm run mcp` does. Options: `--repository /absolute/root` (repeatable), `--state-dir /absolute/private/state`, `--allow-writes`. |
 | `model-install` | Downloads and verifies the pinned semantic discovery model, as `npm run flow:model-install` does. |
+| `hook` | Reads one hook input of Claude Code or Codex on standard input and writes the hook answer. Always exits with status 0. See [agent setup](integration/README.md). |
+| `runtime <register\|bind\|report\|query>` | Runs the observer commands, as `node server/runtime-cli.js` does. |
 | `--version` | Prints the version. |
 | `--help` | Prints the commands and the environment variables. |
 
@@ -284,9 +286,9 @@ Completion is supported by documented evidence only when every member has a matc
 
 A scoped publication-review paragraph in the brief can name an artifact and delivered version, followed by an explicit assertion that all required knowledge and implementation changes have landed on main/master. This supplies review evidence without changing an established snapshot; it cannot replace protected-ref verification. No outcome status or aggregate DAG is written to disk.
 
-## Codex execution observer
+## Agent integration
 
-Implementation nodes show artifact/change ownership. An optional local Codex hook observer adds execution state, agents, elapsed time, and concurrent activity. See [observer setup and semantics](integration/README.md). Recorded execution history persists outside worktrees; current knowledge remains read-only. The observer does not launch agents, approve tasks, or establish versions.
+Claude Code and Codex connect to the executable through its MCP server and one hook command. At session start, the hook gives the agent the state of its change. Before a tool call, it refuses a commit or push to `main` or `master` and `gh pr merge`. Before the agent stops, it asks once for a fix of record errors. It also binds an agent to a task when the agent reads the task file, so implementation nodes show execution state, agents, elapsed time and concurrent activity. See [agent setup and semantics](integration/README.md). Recorded execution history persists outside worktrees; current knowledge remains read-only. The Plane does not launch agents, approve tasks, push, merge or establish versions.
 
 ## Automatic updates and lazy loading
 
@@ -338,23 +340,20 @@ The response has repository, worktree, context, revision, generation, freshness,
 The derived index is impact-index.sqlite in the same private state directory as the flow index. The flow query operation impact and the MCP tool get_impact_context use the same service: their ids become origins (flow, step and model IDs, element IDs and files of known nodes, `artifact:<id>`, or repository paths), traversal uses depth 4, and the result keeps its shape: reached flows with paths from the first explanation path, unresolved IDs, artifactOptions, the artifact scope, newest-first ordering and cursors.
 
 
-Use stdio MCP from an explicitly configured client. Example registration (replace both absolute paths):
+Use stdio MCP from an explicitly configured client. Example registration with the executable on the path:
 
 ```json
 {
   "mcpServers": {
-    "artifact-plane-flows": {
-      "command": "node",
-      "args": [
-        "/absolute/software-engineering/apps/artifact-plane/server/flow-mcp-stdio.js",
-        "--repository", "/absolute/knowledge-repository"
-      ]
+    "artifact-plane": {
+      "command": "artifact-plane",
+      "args": ["mcp"]
     }
   }
 }
 ```
 
-Repeat --repository for multiple roots; pass --state-dir for a private cache directory. With one configured root, tools can omit path. With several roots, select path explicitly. The existing flow tools are search_flows, get_flow, get_impact_context and read_flow_source. get_change_impact takes the inputs of POST /api/impact/query; it returns the envelope as structured content and, unless format is json, the compact answer as text. The same server also supplies get_change_review, get_change_context, read_change_context_source, get_change_brief and get_change_description. They use the same query service as HTTP, carry read-only annotations, and write only protocol traffic to stdout. Diagnostics go to stderr. Client registration does not grant ADD approval, launch agents or establish versions. Only a server started with `--allow-writes` can edit knowledge; see [Edit knowledge](#edit-knowledge).
+Without --repository, the server reads the Git top level of its working directory. From a source checkout, use `node /absolute/software-engineering/apps/artifact-plane/server/flow-mcp-stdio.js --repository /absolute/knowledge-repository`. [Agent setup](integration/README.md) shows the registration for Claude Code and Codex. Repeat --repository for multiple roots; pass --state-dir for a private cache directory. With one configured root, tools can omit path. With several roots, select path explicitly. The existing flow tools are search_flows, get_flow, get_impact_context and read_flow_source. get_change_impact takes the inputs of POST /api/impact/query; it returns the envelope as structured content and, unless format is json, the compact answer as text. The same server also supplies get_change_review, get_change_context, read_change_context_source, get_change_brief and get_change_description, and get_change_status and check_records return the change state of the session start hook and the validator result. They use the same query service as HTTP, carry read-only annotations, and write only protocol traffic to stdout. Diagnostics go to stderr. Client registration does not grant ADD approval, launch agents or establish versions. Only a server started with `--allow-writes` can edit knowledge; see [Edit knowledge](#edit-knowledge).
 
 Run node scripts/benchmark-flows.mjs /absolute/repository to measure retrieval against the initial inventory. The benchmark reports hardware, dataset size, latency, response bytes and expected-query ranks. These measurements do not estimate hidden reasoning or token savings.
 
