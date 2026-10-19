@@ -8,11 +8,13 @@ import {buildTaskGraph} from '../server/task-graph.js';
 import {checklist} from '../server/workflow.js';
 import {unitBriefs} from '../server/units-of-work.js';
 import {buildFlowGraph} from '../server/flow-model.js';
+import {readClaims} from '../server/claims.js';
 
-// Informational codes and reported gaps do not fail validation.
+// Informational codes, reported gaps and claim warnings do not fail validation;
+// claim diagnostics carry their own severity.
 const NOT_ERRORS = new Set(['flow-evidence-gap']);
 export async function validateKnowledge(path) {
-  const {snapshot, files, unsafeTaskPaths} = await scanRepository(resolve(path));
+  const {snapshot, files, unsafeTaskPaths, baselines} = await scanRepository(resolve(path));
   const diagnostics = snapshot.diagnostics.map(d => ({...d, source: 'snapshot'}));
   for (const artifact of snapshot.artifacts) for (const change of artifact.changes) {
     const graph = buildTaskGraph(files, `docs/artifacts/${artifact.id}/changes/${change.name}/`, checklist, unsafeTaskPaths);
@@ -24,6 +26,7 @@ export async function validateKnowledge(path) {
     for (const member of unit.members) if (!snapshot.artifacts.find(a => a.id === member.artifact)?.changes.some(c => c.name === member.change))
       diagnostics.push({code: 'missing-member', path: unit.path, message: `${member.artifact}/${member.change} has no change record.`, source: 'unit'});
   }
+  diagnostics.push(...readClaims(files, {snapshot, baselines, units}).diagnostics.map(d => ({...d, source: 'claims'})));
   const flows = buildFlowGraph(snapshot, {context: snapshot.repository.path, knowledge: 'planning'});
   diagnostics.push(...flows.diagnostics.map(d => ({...d, source: 'flow'})));
   for (const d of diagnostics) d.severity ??= NOT_ERRORS.has(d.code) ? 'warning' : 'error';

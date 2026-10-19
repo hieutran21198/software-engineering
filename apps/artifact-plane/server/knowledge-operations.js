@@ -1,3 +1,4 @@
+import {readClaims, CLAIM_WARNINGS} from './claims.js';
 // Domain operations over ADD knowledge. Each operation derives paths and
 // identifiers, plans file edits, validates the post-image with the readers and
 // writes through knowledge-writer.js. The repository stays the only state.
@@ -691,7 +692,7 @@ function unitBrief(id, title, {purpose = '', included = '', excluded = '', chang
 }
 
 // --- Validation ------------------------------------------------------------------
-const NOT_ERRORS = new Set(['flow-evidence-gap']);
+const NOT_ERRORS = new Set(['flow-evidence-gap', ...CLAIM_WARNINGS]);
 export function diagnose(files, ctx, layouts = ctx.layouts) {
   const snapshot = buildSnapshot(files, ctx.snapshot.repository, [], {layouts, baselines: ctx.scan.baselines});
   const result = snapshot.diagnostics.map(d => ({...d, source: 'snapshot'}));
@@ -715,6 +716,7 @@ export function diagnose(files, ctx, layouts = ctx.layouts) {
     }
   }
   for (const [key, paths] of owners) if (paths.length > 1) for (const path of paths) result.push({code: 'duplicate-membership', path, message: `${key} is claimed by several units of work.`, source: 'unit'});
+  add(readClaims(files, {snapshot, baselines: ctx.scan.baselines, units}).diagnostics, 'claims');
   add(buildFlowGraph(snapshot, {context: ctx.root, knowledge: 'planning'}).diagnostics, 'flow');
   const seen = new Set();
   return result.filter(d => d.severity !== 'info').map(d => ({...d, severity: NOT_ERRORS.has(d.code) ? 'warning' : 'error'})).filter(d => {const key = JSON.stringify([d.code, d.path, d.message]);return !seen.has(key) && seen.add(key);});
