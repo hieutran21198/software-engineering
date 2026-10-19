@@ -14,3 +14,4 @@ The established baseline is Artifact Plane 1.19.0 on main, with ADD 2.8.1 as its
 
 - [Requirements](../../requirements/review-brief.md)
 - [Contract](../../specifications/review-brief.md)
+- [Plan](tasks/README.md)
