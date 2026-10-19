@@ -13,6 +13,7 @@ export const gitMetrics = {commands:0};
 export const scanMetrics={files:0,fullBodies:0,scans:0};
 import {frontMatter,unitBriefs, versionClaims, safeKnowledgePath} from "./units-of-work.js";
 import { readWorkflow } from "./workflow.js";
+import { recordChecks } from "./record-checks.js";
 export class ExploreError extends Error {
   constructor(status, message) {
     super(message);
@@ -294,7 +295,9 @@ export async function exploreRepository(path, {legacy=false}={}) {
     const reads=legacy?git:gitReads(git,()=>gitMetrics.commands++);
     try{
       const scan=root=>scanRepository(root,{git:reads});
-      const {snapshot,files,unsafeTaskPaths}=await scan(path);
+      const {snapshot,files,unsafeTaskPaths,baselines}=await scan(path);
+      // Record checks of ADD 3.0.0 join the reader diagnostics that the views show.
+      snapshot.diagnostics.push(...await recordChecks({root:snapshot.repository.path,scan:{snapshot,files,baselines},git:reads}));
       snapshot.workflow=await readWorkflow(snapshot.repository.path,{snapshot,files,unsafeTaskPaths},scan,reads);
       snapshot.unitsOfWork=snapshot.workflow.worktrees.find(w=>w.selected)?.unitsOfWork||[];
       return snapshot;
