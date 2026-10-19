@@ -7,6 +7,7 @@ import {flowDiagram, highlightDiagram} from '../flow-canvas.js';
 import {impactPage} from '../impact-model.js';
 import {sha256} from '../knowledge-api.js';
 import {artifactDocuments} from '../work-model.js';
+import {pendingSentence} from '../wording-note.js';
 import {useFlowDetail, useTrackedFiles, SUPPORT_GROUPS, supportGroup, supportTarget, supportFields, supportOperation, TextEditor, FrontMatterEditor, flowNodeTypes} from './FlowPageParts.jsx';
 import './FlowPage.css';
 
@@ -138,8 +139,11 @@ export default function FlowPage({page}) {
   const listEditor = (key, label, items) => <TextEditor label={`${label}, one per line`} value={items.join('\n')} rows={4} onSave={text => run('flow.meta.set', {[key]: lines(text)})} onClose={() => setEditing(null)}/>;
   const participants = list(flow.participants), interactions = steps.flatMap(s => list(s.interactions).map((x, i) => ({step: s, x, i}))), models = list(detail.data?.models);
 
+  // An established flow record that still says work is pending gets an inferred note.
+  const wording = entry.source === 'working' && entry.state === 'unchanged' && doc.ready ? pendingSentence(doc.markdown, {frontMatter: true}) : null;
   return <section className="page flow-page" aria-label="Flow page"><div className="column">
     {header}
+    {wording && <p className="notice wording-note" role="note">Inferred from wording: this established record says “{wording}” The work may be delivered; check before relying on it.</p>}
     {!valid && doc.ready && <Notice tone="warning">The flow front matter cannot be read. Correct it in Model, below.</Notice>}
     <div className="flow-boxes">
       {box('trigger', 'Starts when', flow.trigger)}

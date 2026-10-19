@@ -1,4 +1,4 @@
-// The change page: header with the change's parents, phase steps, the plan,
+// The change page: header with the change's parents, phase steps, the change brief, the plan,
 // the changed knowledge and the version readiness. A retained change is read
 // only and shows its delivery instead of readiness.
 import React, {useCallback, useState} from 'react';
@@ -9,6 +9,7 @@ import {changeTitle, memberUnit, phaseModel, PHASES} from '../work-model.js';
 import PlanSection, {detailField, resultField} from './ChangePagePlan.jsx';
 import {ChangedKnowledge, DeliverySection, ReadySection, useReviewPacket} from './ChangePageReview.jsx';
 import {missingSelfChecks, planSelfCheckMissing} from './ChangePageModel.js';
+import ChangeBrief from './ChangePageBrief.jsx';
 import './ChangePage.css';
 
 // Record self-check for the documents of the current Requirement or Specification phase.
@@ -71,6 +72,7 @@ export default function ChangePage({page}) {
     <PhaseSteps change={change} onOpen={source => go({kind: 'document', artifact: change.artifact, source, scope})}/>
     {workflow.status === 'error' && !workflow.data && <p className="small" role="alert">{workflow.error} <button className="link" onClick={workflow.retry}>Retry</button></p>}
     {writable && phase && <SelfCheckLine change={change} artifact={artifact} phase={phase}/>}
+    {artifact?.layout === 'in-place' && <ChangeBrief artifact={change.artifact} change={change.name} writable={edit.editable && !retained}/>}
     {retained && <DeliverySection change={change} review={review} onLoadReview={loadReview}/>}
     <PlanSection change={change} writable={writable}/>
     {!retained && <ChangedKnowledge change={change} artifact={artifact} review={review} onLoadReview={loadReview}/>}

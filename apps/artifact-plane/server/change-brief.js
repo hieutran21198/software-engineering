@@ -36,6 +36,7 @@ function section(markdown, test) {
   for (let i = start + 1; i < list.length; i++) if (list[i].type === 'heading' && list[i].depth <= 2) {end = i;break;}
   return {anchor: anchor(list[start].text), text: list.slice(start + 1, end).map(t => t.raw).join('').trim()};
 }
+const firstSentence = text => text.match(/^.+?[.!?](?=\s|$)/)?.[0] ?? text;
 const firstParagraph = text => text?.split(/\n\s*\n/).find(p => p.trim() && !/^\s*[-*#|]/.test(p))?.trim().replace(/\s+/g, ' ') ?? null;
 function reason(readme) {
   if (!readme) return null;
@@ -114,7 +115,7 @@ export async function buildBrief({root, worktree, artifact, change, git, impactS
   if (origin.kind === 'delivery-commit') {
     const evidence = (owning?.evidence || []).filter(e => ['failed', 'incomplete'].includes(e.result)).map(e => ({criterion: e.criterion, result: e.result, method: e.method, source: e.source}));
     const unchecked = tasks.flatMap(t => [...t.body.matchAll(/^\s*[-*] \[ \] (.+)$/gm)].map(m => ({task: t.id ?? t.path, item: m[1].trim(), source: t.path})));
-    const wording = [...changedPaths].filter(p => p.endsWith('.md') && files.has(p)).flatMap(p => {const m = String(files.get(p)).match(new RegExp(`[^.\\n]*${PENDING.source}[^.\\n]*\\.?`, 'i'));return m ? [{path: p, sentence: m[0].trim(), step: INFERRED, note: 'Matched by wording.'}] : [];});
+    const wording = [...changedPaths].filter(p => p.endsWith('.md') && files.has(p)).flatMap(p => {const m = String(files.get(p)).replace(/\r?\n[ \t]+(?![-*] )/g, ' ').match(new RegExp(`[^.\\n]*${PENDING.source}[^.\\n]*\\.?`, 'i'));return m ? [{path: p, sentence: m[0].replace(/^\s*(?:[-*]\s+|[\w-]+:\s+)+/, '').trim(), step: INFERRED, note: 'Matched by wording.'}] : [];});
     delivery = {version: versionClaims(files, artifact, change)[0]?.version ?? null, commit: origin.commit, evidence, unchecked, wording};
   }
 
@@ -148,7 +149,7 @@ export async function buildBrief({root, worktree, artifact, change, git, impactS
   const evidenceRecords = tasks.flatMap(t => {const list = frontMatter(t.body).value?.evidence_records;return Array.isArray(list) ? list.filter(r => r && typeof r === 'object').map(r => ({text: `${r.method} (${r.result})`, source: r.source ?? t.path, step: EXPERIMENT})) : [];});
   const answers = [
     [`${plural(changedRecords.length, 'knowledge record')} and ${plural(codeFiles.length, 'other file')}${changedItems.some(i => i.text.endsWith('not in any task scope')) ? `; ${changedItems.filter(i => i.text.endsWith('not in any task scope')).length} not in any task scope` : ''}.`, changedItems],
-    [why ?? (decisions.length ? `${plural(decisions.length, 'decision claim')}; the change README states no reason.` : null), [...(why ? [{text: why, source: `${prefix}README.md`, step: EXPLAINED}] : []), ...decisions.map(c => ({text: `Decision ${c.id}: ${c.statement}${c.rejected.length ? ` Rejected: ${c.rejected.map(r => `${r.option} (${r.reason})`).join('; ')}.` : ''}`, source: c.file, step: c.step, claim: c.id}))]],
+    [(why && firstSentence(why)) ?? (decisions.length ? `${plural(decisions.length, 'decision claim')}; the change README states no reason.` : null), [...(why ? [{text: why, source: `${prefix}README.md`, step: EXPLAINED}] : []), ...decisions.map(c => ({text: `Decision ${c.id}: ${c.statement}${c.rejected.length ? ` Rejected: ${c.rejected.map(r => `${r.option} (${r.reason})`).join('; ')}.` : ''}`, source: c.file, step: c.step, claim: c.id}))]],
     [d ? `${plural(reached.length, 'flow')} reached: ${reached.filter(f => f.state === 'declared').length} declared, ${reached.filter(f => f.state === 'decided').length} decided by a claim, ${reached.filter(f => f.state === 'undecided').length} undecided. ${plural(d.unresolved.length, 'unresolved item')}.` : null,
       d ? [...reached.map(f => ({text: `${f.flow} — ${f.state}${f.steps.length ? ` (steps ${f.steps.join(', ')})` : ''}`, source: f.decidedBy?.file ?? (typeof f.decidedBy === 'string' ? f.decidedBy : null), step: GIT})),
         ...d.unresolved.map(u => ({text: `${u.entity}: ${u.reason}`, source: null, step: NOT_ANALYZED})),
