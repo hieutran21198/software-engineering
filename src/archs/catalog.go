@@ -4,7 +4,7 @@ package archs
 import (
 	"io/fs"
 
-	artifactdriven "software-engineering/src/archs/artifact-driven"
+	artifactdriven "software-engineering/docs/artifact-driven"
 	storydriven "software-engineering/src/archs/story-driven"
 )
 

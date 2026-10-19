@@ -12,7 +12,7 @@ import (
 	"testing"
 	"testing/fstest"
 
-	artifactdriven "software-engineering/src/archs/artifact-driven"
+	artifactdriven "software-engineering/docs/artifact-driven"
 )
 
 const DefaultOutput = "docs/artifact-driven"
@@ -471,5 +471,28 @@ func TestWriteFailureIsMarkedAfterPreflight(t *testing.T) {
 	}
 	if entries, err := os.ReadDir(dest); err != nil || len(entries) != 0 {
 		t.Fatalf("write failure left files: %v, %v", entries, err)
+	}
+}
+
+// The release may add the validator to tools/; adoption copies it when present
+// and succeeds without it.
+func TestAdoptOptionalValidator(t *testing.T) {
+	for _, withValidator := range []bool{false, true} {
+		bundle := fstest.MapFS{
+			"README.md":       {Data: []byte("overview")},
+			"tools/README.md": {Data: []byte("tools")},
+		}
+		if withValidator {
+			bundle["tools/add-validate.mjs"] = &fstest.MapFile{Data: []byte("export {}")}
+		}
+		workspace := t.TempDir()
+		result, err := Copy(bundle, workspace, DefaultOutput, false)
+		if err != nil || result.Created != len(bundle) {
+			t.Fatalf("validator %v: %+v, %v", withValidator, result, err)
+		}
+		_, err = os.Stat(filepath.Join(result.Destination, "tools/add-validate.mjs"))
+		if (err == nil) != withValidator {
+			t.Fatalf("validator %v: copied file state %v", withValidator, err)
+		}
 	}
 }

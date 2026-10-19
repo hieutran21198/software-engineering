@@ -11,7 +11,10 @@ import (
 	"software-engineering/src/utils/agents/skills"
 )
 
-//go:embed README.md 01-foundation 02-methodology 03-execution 04-patterns 05-adoption 06-guidelines
+// The Go files beside the bundle are not listed, so consumers never receive
+// them. The tools directory holds add-validate.mjs only when a build supplies it.
+//
+//go:embed README.md 01-foundation 02-methodology 03-execution 04-patterns 05-adoption 06-guidelines tools
 var knowledge embed.FS
 
 // Bundle mounts canonical utility skills inside the adopted ADD directory.

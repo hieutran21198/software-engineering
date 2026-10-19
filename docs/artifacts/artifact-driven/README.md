@@ -11,7 +11,7 @@ ADD supplies a reusable method and bundle for artifact-governed software develop
 
 The repository maintainers own ADD knowledge, the five-phase method, role skills, patterns, adoption contracts, and documentation delivery. Foundation, methodology, execution, adoption and publishing are responsibilities within this cohesive technical capability. Utility skills are reused supporting assets. Artifact Plane retains its separate exploration and visualization boundary.
 
-Project knowledge lives here. The canonical local method remains in docs/artifact-driven; packaged implementation inputs remain in src/archs/artifact-driven and src/utils/agents/skills. Adoption implementation lives in cmd/se-adopt and internal/adopt; documentation delivery lives in website and the repository CI configuration. Do not treat these project artifacts as another copy of the bundle guidance.
+Project knowledge lives here. The canonical method is in docs/artifact-driven, which also holds the Go package that embeds it; the required skills come from src/utils/agents/skills. Adoption implementation lives in cmd/se-adopt and internal/adopt; documentation delivery lives in website and the repository CI configuration. Do not treat these project artifacts as another copy of the bundle guidance.
 
 ## Knowledge
 

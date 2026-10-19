@@ -128,12 +128,12 @@ func TestMinimalChangeScaffold(t *testing.T) {
 // The adopted and published bundle must preserve the canonical method, including
 // new guidance pages and their relative links, rather than omit them from embed.
 func TestCanonicalBundleFidelity(t *testing.T) {
-	canonical := os.DirFS("../../../docs/artifact-driven")
+	canonical := os.DirFS(".")
 	err := fs.WalkDir(canonical, ".", func(name string, entry fs.DirEntry, err error) error {
 		if err != nil {
 			return err
 		}
-		if entry.IsDir() {
+		if entry.IsDir() || path.Ext(name) == ".go" {
 			return nil
 		}
 		want, err := fs.ReadFile(canonical, name)
@@ -151,5 +151,27 @@ func TestCanonicalBundleFidelity(t *testing.T) {
 	})
 	if err != nil {
 		t.Fatal(err)
+	}
+}
+
+// One source: the embedded bundle holds no Go file, always holds the tools
+// guide, and holds the validator exactly when the build supplied it.
+func TestBundleContents(t *testing.T) {
+	err := fs.WalkDir(Bundle, ".", func(name string, entry fs.DirEntry, err error) error {
+		if err == nil && path.Ext(name) == ".go" {
+			t.Errorf("bundle delivers a Go file: %s", name)
+		}
+		return err
+	})
+	if err != nil {
+		t.Fatal(err)
+	}
+	if _, err := fs.Stat(Bundle, "tools/README.md"); err != nil {
+		t.Fatalf("bundle lacks the tools guide: %v", err)
+	}
+	_, built := os.Stat("tools/add-validate.mjs")
+	_, embedded := fs.Stat(Bundle, "tools/add-validate.mjs")
+	if (built == nil) != (embedded == nil) {
+		t.Fatalf("validator presence differs: build %v, bundle %v", built, embedded)
 	}
 }

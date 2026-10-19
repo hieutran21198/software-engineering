@@ -149,7 +149,7 @@ flow:
       basis: documented
     - id: minimal-scaffold-check
       kind: test
-      path: src/archs/artifact-driven/bundle_test.go
+      path: docs/artifact-driven/bundle_test.go
       symbol: TestMinimalChangeScaffold
       requires: Validate copied scaffold files, references, task structure and absent
         initial completion claims.
