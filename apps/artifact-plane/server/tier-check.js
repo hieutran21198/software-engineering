@@ -13,6 +13,7 @@ const BASE = 'docs/artifacts/';
 const LOCKFILES = new Set(['package-lock.json', 'npm-shrinkwrap.json', 'yarn.lock', 'pnpm-lock.yaml', 'go.sum', 'Cargo.lock', 'poetry.lock', 'Gemfile.lock', 'composer.lock']);
 export const CRITERIA = ['one-artifact', 'one-repository', 'patch-level', 'no-contract', 'upstream-established', 'code-limit', 'impact-contained'];
 const codePath = path => !path.startsWith(BASE) && !path.startsWith('docs/artifact-driven/') && !LOCKFILES.has(path.split('/').at(-1)) && !path.split('/').includes('dist');
+const count = (n, one, many = `${one}s`) => `${n} ${n === 1 ? one : many}`;
 const list = (items, n = 5) => items.slice(0, n).join(', ') + (items.length > n ? ` and ${items.length - n} more` : '');
 // The artifact that owns an impact entity, or null for code paths.
 const owner = id => typeof id !== 'string' ? null : id.match(/^(?:flow|step|model):([^:]+):/)?.[1] ?? id.match(/^docs\/artifacts\/([^/]+)\//)?.[1] ?? null;
@@ -62,7 +63,7 @@ export async function tierCheck({root, scan, git, artifact, change, impactServic
     const second = members.filter(([, m]) => m.some(x => !(x?.artifact === artifact && x?.change === change))).map(([p]) => p);
     if (outside.length) set('one-artifact', 'fail', `Knowledge of other artifacts changes: ${list(outside)}.`);
     else if (second.length) set('one-artifact', 'fail', `A unit brief names a second member: ${list(second)}.`);
-    else set('one-artifact', 'pass', `All ${diff.status.filter(s => s.path.startsWith(BASE)).length} changed knowledge files are under ${prefix}.`);
+    else {const n = diff.status.filter(s => s.path.startsWith(BASE)).length;set('one-artifact', 'pass', n ? `${n === 1 ? 'The changed knowledge file is' : `All ${n} changed knowledge files are`} under ${prefix}.` : 'No knowledge file changes.');}
     // no-contract
     const mine = diff.status.filter(s => s.path.startsWith(prefix));
     const problems = [], referenced = [];
@@ -84,7 +85,7 @@ export async function tierCheck({root, scan, git, artifact, change, impactServic
     results.get('no-contract').referenced = referenced.length > 0;
     // code-limit
     const lines = diff.numstat.filter(r => codePath(r.path)).reduce((n, r) => n + r.lines, 0), max = config.tiers.small.max_code_lines;
-    set('code-limit', lines < max ? 'pass' : 'fail', `${lines} changed code and test lines; the limit is fewer than ${max}.`);
+    set('code-limit', lines < max ? 'pass' : 'fail', `${count(lines, 'changed code and test line')}; the limit is fewer than ${max}.`);
   }
   set('one-repository', 'coordinator', 'The coordinator decides whether a companion change in another repository is needed.');
   const compatibility = planCompatibility(files.get(`${prefix}changes/${change}/tasks/README.md`) || '').compatibility;
@@ -97,7 +98,7 @@ export async function tierCheck({root, scan, git, artifact, change, impactServic
     const version = baselines[dependency]?.state === 'available' ? baselines[dependency].currentVersion : protectedOid ? await git(root, ['show', `${protectedOid}:${BASE}${dependency}/README.md`]).then(text => parseArtifact(dependency, text, [], 'legacy').currentVersion, () => null) : null;
     if (!version) missing.push(dependency);
   }
-  set('upstream-established', missing.length ? 'fail' : 'pass', missing.length ? `No established version on the protected branch: ${list(missing)}.` : `${(working.dependsOn || []).length} upstream artifacts have an established version.`);
+  set('upstream-established', missing.length ? 'fail' : 'pass', missing.length ? `No established version on the protected branch: ${list(missing)}.` : (working.dependsOn || []).length ? `${count(working.dependsOn.length, 'upstream artifact')} with an established version.` : 'The artifact has no upstream artifact.');
   // impact-contained
   if (standalone) set('impact-contained', 'coordinator', 'The standalone validator builds no impact index; the coordinator records the impact assessment in the change README.');
   else if (!impactService) set('impact-contained', 'unresolved', 'No impact index is available.');
@@ -109,7 +110,7 @@ export async function tierCheck({root, scan, git, artifact, change, impactServic
       const unresolved = answer.data?.unresolved || [];
       if (foreign.length) set('impact-contained', 'fail', `The impact reaches entities of other artifacts: ${list(foreign)}.`);
       else if (unresolved.length) set('impact-contained', 'unresolved', `${unresolved.length} reached items are unresolved in the coverage statement.`);
-      else set('impact-contained', 'pass', `${reached.length} reached entities, none outside ${artifact}; completeness ${answer.completeness}.`);
+      else set('impact-contained', 'pass', `${count(reached.length, 'reached entity', 'reached entities')}, none outside ${artifact}; completeness ${answer.completeness}.`);
     } catch (error) {set('impact-contained', 'unresolved', `The impact index is not available: ${error.message}`);}
   }
   const criteria = CRITERIA.map(id => results.get(id));

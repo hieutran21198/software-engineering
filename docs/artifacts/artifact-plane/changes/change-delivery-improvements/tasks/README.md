@@ -7,6 +7,7 @@ tasks:
   - 05-operations.md
   - 06-description.md
   - 07-validation.md
+compatibility: minor
 self_check:
   result: passed
   source: docs/artifacts/artifact-plane/changes/change-delivery-improvements/tasks/README.md#plan-self-check

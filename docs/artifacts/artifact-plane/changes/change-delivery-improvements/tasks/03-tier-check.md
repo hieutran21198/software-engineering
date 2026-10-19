@@ -1,6 +1,9 @@
 ---
 id: tier-check
 depends_on: [record-checks]
+covers:
+  - element: requirements/delivery-improvements.md
+    ids: [PI5, PA4]
 ---
 
 # Tier check

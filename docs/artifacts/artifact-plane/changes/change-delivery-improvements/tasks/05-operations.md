@@ -1,6 +1,9 @@
 ---
 id: operations
 depends_on: [record-checks]
+covers:
+  - element: requirements/delivery-improvements.md
+    ids: [PI3, PI4, PA2, PA3]
 ---
 
 # Operations

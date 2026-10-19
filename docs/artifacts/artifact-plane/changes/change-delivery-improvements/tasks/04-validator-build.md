@@ -1,6 +1,9 @@
 ---
 id: validator-build
 depends_on: [tier-check]
+covers:
+  - element: requirements/delivery-improvements.md
+    ids: [PI2, PA1]
 ---
 
 # Validator build

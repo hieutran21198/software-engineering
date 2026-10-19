@@ -1,6 +1,9 @@
 ---
 id: record-checks
 depends_on: [readers]
+covers:
+  - element: requirements/delivery-improvements.md
+    ids: [PI2, PA1]
 ---
 
 # Record checks

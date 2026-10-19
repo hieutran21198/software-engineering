@@ -1,6 +1,9 @@
 ---
 id: validation
 depends_on: [readers, record-checks, tier-check, validator-build, operations, description]
+covers:
+  - element: requirements/delivery-improvements.md
+    ids: [PI8, PA6]
 ---
 
 # Validation

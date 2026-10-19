@@ -1,6 +1,9 @@
 ---
 id: readers
 depends_on: []
+covers:
+  - element: requirements/delivery-improvements.md
+    ids: [PI1, PI7, PI8]
 ---
 
 # Readers
