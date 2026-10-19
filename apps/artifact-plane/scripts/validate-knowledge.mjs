@@ -13,7 +13,7 @@ import {checklist} from '../server/workflow.js';
 import {unitBriefs, frontMatter} from '../server/units-of-work.js';
 import {buildFlowGraph} from '../server/flow-model.js';
 import {readClaims} from '../server/claims.js';
-import {recordChecks} from '../server/record-checks.js';
+import {recordChecks, establishedVersions} from '../server/record-checks.js';
 import {tierCheck} from '../server/tier-check.js';
 
 export const SCHEMA = 'add-validate.result.v1';
@@ -64,7 +64,7 @@ export async function validateKnowledge(path, {change = null} = {}) {
   // Tier: the scoped change, or every undelivered change that declares small.
   let tier = null;
   const delivered = new Set();
-  for (const [path, body] of files) {const m = path.match(/^docs\/artifacts\/([^/]+)\/versions\/(\d+\.\d+\.\d+)\/README\.md$/);const source = m && frontMatter(body).value?.source_change;if (source && baselines[m[1]]?.versionRecords?.includes(m[2])) delivered.add(`${m[1]}/${source}`);}
+  for (const path of await establishedVersions({root, git, files, baselines})) delivered.add(`${path.split('/')[2]}/${frontMatter(files.get(path)).value.source_change}`);
   const targets = scope ? [scope] : snapshot.artifacts.flatMap(a => a.changes.filter(c => c.tierDeclared && c.tier === 'small' && !delivered.has(`${a.id}/${c.name}`)).map(c => ({artifact: a.id, change: c.name})));
   for (const target of targets) {
     const result = await tierCheck({root, scan, git, ...target, standalone: true});

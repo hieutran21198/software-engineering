@@ -9,7 +9,7 @@ import {marked} from 'marked';
 import {parseArtifact} from '../src/model.js';
 import {planCompatibility, taskCovers, requirementIds, evidenceSource} from '../src/delivery-records.js';
 import {frontMatter, evidenceDetail, safeKnowledgePath} from './units-of-work.js';
-import {protectedRefs} from './knowledge-baseline.js';
+import {protectedRefs, blobId} from './knowledge-baseline.js';
 
 const BASE = 'docs/artifacts/';
 const mapping = v => v !== null && typeof v === 'object' && !Array.isArray(v);
@@ -29,6 +29,25 @@ export function nextVersion(current, level) {
 }
 const later = (a, b) => {const x = a.split('.').map(Number), y = b.split('.').map(Number);for (let i = 0; i < 3; i++) if (x[i] !== y[i]) return x[i] > y[i];return false;};
 export {later as versionGreater};
+
+// The working version-record paths that are established: the protected
+// branch has a record at the same path that names the same source_change
+// (specifications/version-record-identity.md). Equal bytes need no Git read.
+export async function establishedVersions({root, git, files, baselines = {}}) {
+  const established = new Set();
+  for (const [path, body] of files) {
+    const match = path.match(/^docs\/artifacts\/([^/]+)\/versions\/(\d+\.\d+\.\d+)\/README\.md$/);
+    const baseline = match && baselines[match[1]];
+    const oid = baseline?.state === 'available' && baseline.versionBlobs?.get(match[2]);
+    if (!oid || typeof body !== 'string') continue;
+    const change = frontMatter(body).value?.source_change;
+    if (typeof change !== 'string') continue;
+    if (blobId(Buffer.from(body), oid.length) === oid) {established.add(path);continue;}
+    const protectedBody = await git(root, ['show', `${baseline.oid}:${path}`]).catch(() => null);
+    if (protectedBody !== null && frontMatter(protectedBody).value?.source_change === change) established.add(path);
+  }
+  return established;
+}
 
 // One check run. `scope` ({artifact, change}) keeps the diagnostics of one
 // change, its identity record and the records that it touches.
@@ -95,6 +114,7 @@ export async function recordChecks({root, scan, git, scope = null}) {
     if (!protectedIdentity.has(id)) protectedIdentity.set(id, baselines[id]?.state === 'available' ? {currentVersion: baselines[id].currentVersion} : await showProtected(`${BASE}${id}/README.md`).then(text => text === null ? null : parseArtifact(id, text, [], 'legacy')));
     return protectedIdentity.get(id);
   };
+  const establishedPaths = await establishedVersions({root, git, files, baselines});
   for (const artifact of snapshot.artifacts) {
     const prefix = `${BASE}${artifact.id}/`;
     const working = parseArtifact(artifact.id, files.get(`${prefix}README.md`) || '', [], artifact.layout);
@@ -108,7 +128,7 @@ export async function recordChecks({root, scan, git, scope = null}) {
         const change = frontMatter(files.get(path)).value?.source_change;
         if (typeof change !== 'string') continue;
         if (![...files.keys()].some(p => p.startsWith(`${prefix}changes/${change}/`))) add('version-identity-mismatch', 'error', path, `source_change ${change} has no change directory.`);
-        if (established?.state !== 'available' || established.versionRecords.includes(version)) continue;
+        if (established?.state !== 'available' || establishedPaths.has(path)) continue;
         const level = planCompatibility(files.get(`${prefix}changes/${change}/tasks/README.md`) || '').compatibility;
         const expected = established.currentVersion ? nextVersion(established.currentVersion, level) : '1.0.0';
         if (expected && expected !== version) add('version-number-invalid', 'error', path, `Version ${version} is not ${expected}, the number that ${level ?? 'a first version'} gives from ${established.currentVersion ?? 'no protected version'}.`);
@@ -148,9 +168,9 @@ export async function recordChecks({root, scan, git, scope = null}) {
   for (const artifact of snapshot.artifacts.filter(a => a.layout === 'in-place')) {
     const status = baselines[artifact.id]?.status;
     if (!status) continue;
-    // The undelivered changes: no version record on the protected branch names them.
-    const prefix = `${BASE}${artifact.id}/`, delivered = new Set(baselines[artifact.id].versionRecords || []);
-    const deliveredChanges = new Set([...files.keys()].map(p => p.slice(prefix.length).match(/^versions\/(\d+\.\d+\.\d+)\/README\.md$/)?.[1]).filter(v => v && delivered.has(v)).map(v => frontMatter(files.get(`${prefix}versions/${v}/README.md`)).value?.source_change));
+    // The undelivered changes: no established version record names them.
+    const prefix = `${BASE}${artifact.id}/`;
+    const deliveredChanges = new Set([...establishedPaths].filter(p => p.startsWith(prefix)).map(p => frontMatter(files.get(p)).value?.source_change));
     const open = artifact.changes.map(c => c.name).filter(name => !deliveredChanges.has(name));
     const covered = new Set(open.flatMap(name => coversByChange.get(`${artifact.id}/${name}`) || []).filter(c => c.artifact === artifact.id).flatMap(c => c.ids.map(id => `${c.element}#${id}`)));
     for (const [path, state] of status) {

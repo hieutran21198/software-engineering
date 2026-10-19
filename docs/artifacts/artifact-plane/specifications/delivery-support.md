@@ -72,7 +72,7 @@ Existing records without these fields read as before. The diagnostic codes are t
 
 ## Shared checks
 
-`server/record-checks.js` implements every check of the record-checks contract that is not already a reader diagnostic. Readers, the validator entry point and the review service call it; no second implementation exists. Checks that need Git use the existing read-only Git helpers and local refs. `placeholder-text` is an error for the ADD scaffold placeholder `REPLACE` and a warning for the prompts of the Plane templates, such as "Replace this text." (claim template-prompts-warn).
+`server/record-checks.js` implements every check of the record-checks contract that is not already a reader diagnostic. Readers, the validator entry point and the review service call it; no second implementation exists. Checks that need Git use the existing read-only Git helpers and local refs. `placeholder-text` is an error for the ADD scaffold placeholder `REPLACE` and a warning for the prompts of the Plane templates, such as "Replace this text." (claim template-prompts-warn). The [version record identity contract](version-record-identity.md) defines when a working version record is established.
 
 ## Tier check
 

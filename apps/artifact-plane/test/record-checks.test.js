@@ -3,6 +3,8 @@ import assert from 'node:assert/strict';
 import {scanRepository, exploreRepository, git} from '../server/reader.js';
 import {recordChecks, nextVersion} from '../server/record-checks.js';
 import {recordRepository, SEEDED, CHANGE} from './record-fixtures.js';
+import {sameNumberRepository} from './record-fixtures.js';
+import {validateKnowledge} from '../scripts/validate-knowledge.mjs';
 
 const SEVERITY = {'upstream-unestablished': 'warning', 'requirement-ids-missing': 'info', 'requirement-uncovered': 'warning', 'open-change-conflict': 'warning'};
 const RECORD_CODES = new Set([...Object.keys(SEEDED), 'tier-mismatch']);
@@ -60,4 +62,24 @@ test('record diagnostics appear in the knowledge views with the reader diagnosti
   const snapshot = await exploreRepository(f.root);
   const codes = new Set(snapshot.diagnostics.map(d => d.code));
   for (const code of Object.keys(SEEDED)) assert.ok(codes.has(code), code);
+});
+
+test('a protected record at the same path of another change does not establish the branch record', async t => {
+  const f = await sameNumberRepository(); t.after(f.cleanup);
+  const found = await checks(f.root), record = 'docs/artifacts/app/versions/1.1.0/README.md';
+  const number = found.filter(d => d.code === 'version-number-invalid');
+  assert.deepEqual(number.map(d => d.path), [record]);
+  assert.match(number[0].message, /Version 1\.1\.0 is not 1\.2\.0/);
+  assert.ok(found.some(d => d.code === 'requirement-uncovered' && /L3 is added/.test(d.message)), JSON.stringify(found));
+  assert.deepEqual((await checks(f.root, CHANGE)).filter(d => d.code === 'version-number-invalid').map(d => d.path), [record]);
+  // The change stays undelivered, so the tier check of the whole repository selects it.
+  const result = await validateKnowledge(f.root);
+  assert.ok(result.diagnostics.some(d => d.code === 'tier-mismatch' && d.path.startsWith('docs/artifacts/app/changes/change-fix/')), JSON.stringify(result.diagnostics.map(d => [d.code, d.path])));
+});
+
+test('after the renumber the branch record has no version diagnostic', async t => {
+  const f = await sameNumberRepository({renumbered: true}); t.after(f.cleanup);
+  const found = await checks(f.root);
+  assert.deepEqual(found.filter(d => d.code.startsWith('version-')), []);
+  assert.ok(found.some(d => d.code === 'requirement-uncovered' && /L3 is added/.test(d.message)));
 });

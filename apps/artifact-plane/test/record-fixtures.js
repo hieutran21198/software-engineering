@@ -87,3 +87,32 @@ export async function recordRepository({seeded = false} = {}) {
   return {root, cleanup: () => rm(root, {recursive: true, force: true})};
 }
 export const CHANGE = {artifact: 'app', change: 'change-fix'};
+// Another change of app took 1.1.0 on main after the branch started; the
+// branch prepared 1.1.0 for its own minor change. `renumbered` moves the
+// branch record to 1.2.0, the number that the protected 1.1.0 gives.
+export async function sameNumberRepository({renumbered = false} = {}) {
+  const root = await mkdtemp(join(tmpdir(), 'artifact-plane-records-'));
+  await put(root, main);
+  git(root, 'init', '-q', '-b', 'main');commit(root, 'main');
+  git(root, 'checkout', '-q', '-b', 'change-fix');
+  const version = renumbered ? '1.2.0' : '1.1.0';
+  await put(root, {
+    ...change,
+    [`${A}README.md`]: identity(version, ['core']),
+    [`${A}requirements/login.md`]: '# Login need\n\n- L1: A member with an active membership signs in.\n- L2: A nonmember is denied.\n- L3: A locked member is denied.\n',
+    [`${C}tasks/README.md`]: '---\ntasks: [01-fix.md]\ncompatibility: minor\n---\n\n# Plan\n\n1. [Fix](01-fix.md)\n',
+    [`${A}versions/1.0.1/README.md`]: null,
+    [`${A}versions/${version}/README.md`]: `---\nsource_change: change-fix\n---\n# App ${version}\n\nMinor: locked members are denied.\n`,
+  });
+  commit(root, 'change');
+  git(root, 'checkout', '-q', 'main');
+  await put(root, {
+    [`${A}README.md`]: identity('1.1.0', ['core']),
+    [`${A}changes/change-other/README.md`]: '# Other app change\n\nReason and scope.\n',
+    [`${A}changes/change-other/tasks/README.md`]: '---\ntasks: []\ncompatibility: minor\n---\n\n# Plan\n',
+    [`${A}versions/1.1.0/README.md`]: '---\nsource_change: change-other\n---\n# App 1.1.0\n\nMinor: another change.\n',
+  });
+  commit(root, 'other');
+  git(root, 'checkout', '-q', 'change-fix');
+  return {root, cleanup: () => rm(root, {recursive: true, force: true})};
+}
