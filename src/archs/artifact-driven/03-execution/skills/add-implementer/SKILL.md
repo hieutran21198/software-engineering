@@ -44,3 +44,7 @@ Read the [system-flow format](../../../06-guidelines/system-flows.md) when the c
 ## Representations
 
 Read the [visual representation guide](../../../06-guidelines/visual-representations.md) when a task changes behavior that a diagram of the governing specification shows. During the existing task self-check, record evidence as a table of DoD item, check, result and source. Recheck the behavior diagrams of the governing specification against the implemented behavior, and report a stale diagram to the coordinator. Do not edit a governing diagram to match the code; return the contract change to its owning phase.
+
+## Claims
+
+Read the [claim rules](../../../06-guidelines/evidence-records.md#claims). Record a claim only when it is consequential: it selects between options that change a contract, a flow, a dependency or files outside the task scope; if it is wrong, a DoD item, an acceptance criterion or a declared flow is wrong; it dismisses a computed impact item or a tested hypothesis; or it names a limit that the version ships with. Record hypothesis and root-cause claims in the task, including refuted hypotheses with the measurement that decided them. Record a limit of the delivered behavior as a `risk` or `unknown` claim. A root-cause check is a test that fails without the fix; record that run in the task evidence. Report a claim that changes a contract to the coordinator. Set `verified` only with the recorded check detail. Write `verified_by: agent`, never `person`. Do not add a step, a gate or a claim registry.

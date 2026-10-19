@@ -29,7 +29,9 @@ For example, after stakeholder confirmation: “A user can sign in to a tenant o
 
 Under `specifications/`, the TL defines precise behavior, owned domain terms/models, and all applicable interface contracts. Specify inputs, outputs, error behavior, and relevant lifecycle or consistency rules. Reference governing requirements.
 
-Create an ADR in `decisions/` only for a necessary architectural choice involving multiple options. Record the context, alternatives, chosen option, reasoning, and consequences. A routine specification statement does not need an ADR.
+Create an ADR in `decisions/` only for a necessary architectural choice involving multiple options. Record the context, alternatives, chosen option, reasoning, and consequences. Give one reason for each rejected alternative. A routine specification statement does not need an ADR.
+
+Record a consequential decision, assumption, hypothesis or root cause as an optional [claim](evidence-records.md#claims) in the front matter of the document that owns it. Keep the check detail in that document's body.
 
 ## Representations
 

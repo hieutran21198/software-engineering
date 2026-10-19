@@ -23,6 +23,7 @@
 | Implementation plan | Change-owned tasks that describe implementation work and the checks needed to establish its completion. The delivered plan remains with that change. |
 | Definition of Done (DoD) | A checklist inside each implementation task. All applicable criteria must be satisfied before the change becomes an established version. |
 | Validation evidence | Results recorded with implementation tasks that show how their DoD criteria were checked. |
+| Claim | An optional front-matter record of one consequential assertion, such as a decision, assumption, hypothesis or root cause, with its status, evidence basis and the cheapest check. Its status describes evidence, never approval. See [claims](../06-guidelines/evidence-records.md#claims). |
 | Domain language | The defined business terms used consistently within a domain context. |
 | Domain model | The concepts, relationships, and rules used to describe a domain. Requirements, specifications, and decisions record the model; implementation expresses it in software. |
 | Bounded context | A boundary within which a domain model and its language have consistent meanings. Strategic Domain-Driven Design helps identify these boundaries. |
