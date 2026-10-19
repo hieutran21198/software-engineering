@@ -2,7 +2,7 @@ name: Build and deploy
 on:
   push:
     branches: [main, master]
-    tags: ['v*']
+    tags: ['v*', 'plane-v*']
   pull_request:
   workflow_dispatch:
 permissions:
@@ -27,6 +27,42 @@ jobs:
         working-directory: apps/artifact-plane
       - run: npm run test:browser
         working-directory: apps/artifact-plane
+  plane-app:
+    # One single executable application of the Plane for each target, built and
+    # started on its own runner.
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - { target: linux-amd64, runner: ubuntu-24.04, file: artifact-plane-linux-amd64 }
+          - { target: linux-arm64, runner: ubuntu-24.04-arm, file: artifact-plane-linux-arm64 }
+          - { target: darwin-arm64, runner: macos-15, file: artifact-plane-darwin-arm64 }
+          - { target: darwin-amd64, runner: macos-15-intel, file: artifact-plane-darwin-amd64 }
+          - { target: windows-amd64, runner: windows-2025, file: artifact-plane-windows-amd64.exe }
+          - { target: windows-arm64, runner: windows-11-arm, file: artifact-plane-windows-arm64.exe }
+    runs-on: ${{ matrix.runner }}
+    defaults:
+      run:
+        shell: bash
+        working-directory: apps/artifact-plane
+    steps:
+      - uses: actions/checkout@v6
+      - uses: actions/setup-node@v6
+        with:
+          node-version: '24.21.0'
+          cache: npm
+          cache-dependency-path: apps/artifact-plane/package-lock.json
+      - run: npm ci
+        env:
+          ONNXRUNTIME_NODE_INSTALL_CUDA: skip
+      - run: npm run build:app
+      # The smoke check opens this checkout (the repository root) with the explore route.
+      - run: node scripts/app-smoke.mjs "release/${{ matrix.file }}"
+      - uses: actions/upload-artifact@v4
+        with:
+          name: artifact-plane-${{ matrix.target }}
+          path: apps/artifact-plane/release/${{ matrix.file }}
+          if-no-files-found: error
   go:
     runs-on: ubuntu-latest
     steps:
@@ -116,3 +152,30 @@ jobs:
           RELEASE_TAG: ${{ github.ref_name }}
         run: |
           gh release create "$RELEASE_TAG" dist/* --verify-tag --generate-notes --title "se-adopt $RELEASE_TAG"
+  plane-release:
+    if: github.event_name == 'push' && startsWith(github.ref, 'refs/tags/plane-v')
+    needs: [artifact-plane, plane-app]
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/checkout@v6
+      - uses: actions/setup-node@v6
+        with:
+          node-version: '24.21.0'
+      - name: Check the tag against the package version and current_version
+        run: node apps/artifact-plane/scripts/check-release-version.mjs "$GITHUB_REF_NAME"
+      - uses: actions/download-artifact@v4
+        with:
+          pattern: artifact-plane-*
+          path: plane-release
+          merge-multiple: true
+      - name: Write checksums
+        working-directory: plane-release
+        run: sha256sum artifact-plane-* > SHA256SUMS
+      - name: Publish the Plane files and checksums
+        env:
+          GH_TOKEN: ${{ github.token }}
+          GH_REPO: ${{ github.repository }}
+        run: |
+          gh release create "$GITHUB_REF_NAME" plane-release/* --verify-tag --generate-notes --title "Artifact Plane ${GITHUB_REF_NAME#plane-v}"
