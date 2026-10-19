@@ -63,7 +63,7 @@ Round-trip preservation has no baseline because the Plane writes nothing today.
 - W8: Offer the same operations to agents. Expose preview and apply operations over HTTP and, behind an explicit opt-in flag, as MCP tools. The Plane contains no AI inference; AI assistance is optional and external.
 - W9: Preserve compatibility. Existing read endpoints, MCP read tools, packet schemas, legacy reading and the observation and runtime services stay unchanged. Legacy snapshot artifacts stay read-only and offer the migration operation.
 - W10: Show honest state. Replace `Ambiguous` with `None` when no change is open; explain unknown completion with the missing record and its recording action; keep every existing uncertainty label.
-- W11: Keep editing usable on every supported width and by keyboard. No horizontal page overflow at 390, 700, 851 and 1440 pixels. Unsaved edits survive repository refresh and are protected on navigation with a confirmation.
+- W11: Keep editing usable on every supported width and by keyboard. No horizontal page overflow at 390, 700, 851 and 1440 pixels. Unsaved edits survive repository refresh and the late reply of an earlier operation, and are protected on navigation with a confirmation.
 - W12: Measure the result. Scenario tests record user actions, manual YAML lines, files written, validation results and round-trip preservation for the eight benchmark scenarios and compare them with the baseline above.
 
 ## Benchmark scenarios
@@ -109,3 +109,5 @@ Artifact Plane is the only affected artifact; its `depends_on` stays `[artifact-
 ## Requirement self-check
 
 The findings name root causes with evidence from source, records and rendered screens. Each requirement states what and why; acceptance criteria are observable and tied to scenario measurements with recorded baselines. The read-only constraint in requirements/explorer.md is amended to reading operations. KISS keeps one operation service over the existing readers, no new storage and no AI dependency. STE keeps obligations and exclusions explicit. No unresolved blocker prevents Specification.
+
+change-browser-suite-fixes amends W11 and keeps its ID. The added failure case is observable: a late reply of an earlier operation closed the form of another step and lost its input. No requirement ID is added.
