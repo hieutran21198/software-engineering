@@ -23,3 +23,4 @@ Excluded, for later changes: an ADD bundle or `se-adopt` change, hooks of other 
 Knowledge is edited in place on this branch. The unit brief is [Plane agent integration](../../../units-of-work/plane-agent-integration/README.md).
 
 - [Requirements: agent integration](../../requirements/agent-integration.md)
+- [Specification: agent integration](../../specifications/agent-integration.md)
