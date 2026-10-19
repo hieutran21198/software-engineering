@@ -94,7 +94,15 @@ acceptance:
       change, the release archive holds the full bundle from one source, and
       existing knowledge stays valid without edits.
     integration: true
-evidence: []
+evidence:
+  - criterion: reading
+    method: wc -w on each role skill core and on the coordinator core with its Read-when table
+    result: passed
+    source: docs/artifacts/artifact-driven/changes/change-delivery-improvements/tasks/03-role-skills.md#evidence
+  - criterion: guarantees
+    method: one contract statement or check for each guarantee and tier
+    result: passed
+    source: docs/artifacts/artifact-driven/changes/change-delivery-improvements/tasks/06-validation.md#evidence
 ---
 
 # Make delivery cost scale with the change
