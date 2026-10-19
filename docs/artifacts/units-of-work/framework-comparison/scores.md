@@ -146,6 +146,27 @@ This criterion measures how well a person can understand what agents produced an
 - OpenSpec 3: `propose` stops for review; a two-minute review checklist; `show --diff`; `design.md` keeps decisions with alternatives and open questions. Approval is a convention, and issue #2032 reports agents that approve without checking purpose (§2, §8, §14).
 - BMAD 4: open questions must be answered before the plan checkpoint, and the approved intent is frozen so "only the human can change it"; review triage logs a verdict for every finding and sends intent gaps back to the person; `bmad-walkthrough` guides a human review; routing by size shortens review for small work. Anchor 5 is not met: there is no review view of its own, only HTML reports and chat (§2, §8, §10, §12).
 
+## Rescore after delivery
+
+On 19 October 2026, after ADD 3.0.0 (merged in #41) and with Artifact Plane 1.21.0 prepared, ADD was scored again with the anchors above. Only ADD changed. Each raised score names the delivered mechanism that meets its anchor.
+
+| Criterion | Before | After | Mechanism |
+| --- | --- | --- | --- |
+| Requirements | 4 | 5 | Requirement IDs (list items and paragraph labels) and task `covers`; the validator reports `covers-unknown-id` and `requirement-uncovered` (record-checks.md, Covers). |
+| Living knowledge | 4 | 5 | The validator in the default install (`tools/add-validate.mjs`, built by the release) checks the knowledge of the whole repository. |
+| Change management | 4 | 5 | `open-change-conflict` reports another branch with an open change on the same artifact or an edit of the same knowledge file. |
+| Traceability | 3 | 4 | Requirement to task is structured (`covers`) and checked by a tool; flow supports and references link knowledge to code. Specification to requirement and code to reason stay prose, so anchor 5 is not met. |
+| Impact analysis | 4 | 4 | No change in language coverage. |
+| Validation and review | 3 | 4 | A deterministic validator in the default install. Anchor 5 needs a required independent review as well; release R4 was excluded. |
+| Workflow | 5 | 5 | No change. |
+| Extensibility | 2 | 3 | `docs/artifacts/add.config.yaml` overrides the code limit, the tiers that need a unit brief and the reading of each role; change.scaffold writes the record set of a tier. |
+| Low overhead | 1 | 3 | The small tier is an optional light path: one knowledge commit, approval by request, one human gate (the #37 replay: 9 files, 130 lines, 2 commits). Anchor 4 needs a documented skip for trivial changes; the owner deferred a code-only tier. |
+| Human interface | 5 | 5 | No change. |
+| Human comprehension and control | 4 | 5 | Review effort now scales with size and risk (tiers), and the Plane adds the PR description with the tier criteria next to the change brief. |
+| **Total (of 55)** | **39** | **48** | |
+
+The total meets the unit criterion of at least 48 of 55. The same session that built the improvements gave these scores; the independent review prompt can challenge them.
+
 ## Notes
 
 - The total gives each criterion the same weight. A team that needs governed knowledge across capabilities would weight living knowledge, change management, traceability and impact more. A team that ships many small changes would weight low overhead more.
