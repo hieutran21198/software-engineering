@@ -1,0 +1,104 @@
+---
+unit_of_work: delivery-improvements
+changes:
+  - artifact: artifact-driven
+    change: change-delivery-improvements
+  - artifact: artifact-plane
+    change: change-delivery-improvements
+affected_flows:
+  - artifact: artifact-driven
+    flow: change-delivery
+    effect: modify
+  - artifact: artifact-driven
+    flow: version-publication
+    effect: modify
+  - artifact: artifact-driven
+    flow: adoption
+    effect: modify
+  - artifact: artifact-driven
+    flow: unit-validation
+    effect: modify
+  - artifact: artifact-plane
+    flow: knowledge-authoring
+    effect: modify
+  - artifact: artifact-plane
+    flow: change-review
+    effect: modify
+  - artifact: artifact-plane
+    flow: context-handoff
+    effect: modify
+flow_assessment: Discovery on 19 October 2026 read the 15 flow records of ADD
+  and the Plane, the ADD workflow, validation, writing, unit and minimal-change
+  guidance, the role skills, AGENTS.md, the Plane validator script, knowledge
+  operations and change review, and the measurement and optimization records
+  of the framework-comparison investigation. ADD change-delivery changes
+  because tiers, the small-tier path, one knowledge commit and the level
+  confirmed with plan approval change its requirement, plan, approval and
+  publication steps. Version-publication changes because the number is
+  computed at Version and the validator checks the record. Adoption changes
+  because the install adds the validator and the bundle copy is generated at
+  build. Unit-validation changes because small outcomes need no brief and
+  evidence is referenced, not copied. Plane knowledge-authoring changes
+  because of the scaffold operation and the computed number; change-review
+  because of the tier check and the PR description; context-handoff because
+  the packet gains the description. Dependency-gates keeps its steps; the
+  validator only checks its existing rule. Change-impact keeps its steps; the
+  tier check calls it. The other Plane flows and the Story-Driven flows keep
+  their steps. Gap - the impact service covers JS, JSX and Go imports only, so
+  the small-tier impact criterion is unresolved for other languages and such
+  changes cannot be small. Specification reconciles this list with the impact
+  service on the branch difference.
+acceptance:
+  - id: small-path
+    criterion: Replayed on the knowledge of change-hidden-tab-streams, the
+      small-tier path produces at most 7 knowledge files, at most 160
+      knowledge lines, 2 commits and 1 human gate, and the validator reports
+      no error.
+  - id: validator
+    criterion: The default-install validator and the Plane validator report the
+      same diagnostics on a fixture with one seeded defect per check and no
+      error on this repository.
+  - id: guarantees
+    criterion: For each of the five owner-fixed guarantees, a check or a
+      contract statement shows that it holds for small, medium and large
+      changes.
+  - id: reading
+    criterion: Each role skill core has at most 400 words and the coordinator's
+      unconditional reading has at most 3,000 words.
+  - id: review
+    criterion: The Plane renders a PR description with tier, changed knowledge,
+      DoD and evidence, requirement coverage, validator result, impact coverage,
+      proposed level and open claims, and the page, HTTP and MCP agree.
+  - id: scores
+    criterion: Rescored with the anchors of the framework-comparison scores,
+      ADD reaches at least 48 of 55, and each raised score names the delivered
+      mechanism that meets its anchor.
+  - id: integration
+    criterion: Go, Node, browser and website checks pass for the combined
+      change, the release archive holds the full bundle from one source, and
+      existing knowledge stays valid without edits.
+    integration: true
+evidence: []
+---
+
+# Make delivery cost scale with the change
+
+## Purpose
+
+Make the cost of delivering a change with ADD scale with its size and risk. A small fix gets few records, one knowledge commit and one human gate. A medium or large change keeps its phases and plan approval, with less restated text, less mandatory reading, a deterministic validator and one review description for its PR. The five guarantees that the owner fixed hold for every size.
+
+## Included scope
+
+The ADD rules of artifact-driven change-delivery-improvements: tiers, the small-tier path, gate changes, the computed version number, single-source facts, requirement IDs with `covers`, the default-install validator, progressive guidance, implementer context rules, impact-selected local tests, the configuration file, Claude Code profiles, the owner look for UI changes, the generated bundle copy and the matching `AGENTS.md` instructions. The Plane support of artifact-plane change-delivery-improvements: readers, shared checks, scaffold, computed version, tier check and PR description.
+
+## Excluded scope
+
+A code-only maintenance tier without records (deferred by the owner until new measurements exist), a required independent review for large changes, migration of existing requirement files to IDs, and any change to the five guarantees.
+
+## Basis
+
+The investigation, scores, measurements and optimization options are in the framework-comparison unit directory: [research](../framework-comparison/research.md), [scores](../framework-comparison/scores.md), [optimization](../framework-comparison/optimization.md). The owner decided on 19 October 2026: releases R1 to R3 in this unit; tier limits as proposed, without a code-only tier; unit brief optional for small outcomes; approval by request, level with plan approval and one knowledge commit for small changes; a validator in the default install; the bundle copy generated at build; requirement IDs and `covers` for new and edited files only.
+
+## Order
+
+Requirement, Specification and Plan of both members are prepared together. Plane implementation waits until ADD 3.0.0 is established on main, because the Plane depends on artifact-driven.
