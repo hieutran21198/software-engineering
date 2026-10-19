@@ -70,7 +70,7 @@ flowchart LR
 flowchart LR
   accTitle: Markup labels
   accDescr: Labels that contain HTML and a script stay text.
-  A["<img src=x onerror=alert(1)>"] --> B["<script>alert(2)</script>"]
+  A["<img src=x onerror=window.diagramHandlerRan=true>"] --> B["<script>alert(2)</script>"]
   B --> C["<a href='https://example.com'>link</a>"]
 ```
 
