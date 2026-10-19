@@ -4,6 +4,7 @@
 // worktree only. It never executes a checked command and never writes.
 import pkg from '../package.json' with {type: 'json'};
 import {stat} from 'node:fs/promises';
+import {homedir} from 'node:os';
 import {basename, dirname, join, resolve} from 'node:path';
 import {scanRepository, git as readerGit} from './reader.js';
 import {evidenceFor} from './workflow.js';
@@ -89,15 +90,12 @@ export function simpleCommands(text) {
 
 const GIT_VALUE = new Set(['-C', '-c', '--git-dir', '--work-tree', '--namespace', '--config-env', '--super-prefix']);
 const PUSH_VALUE = new Set(['-o', '--push-option', '--repo', '--receive-pack', '--exec']);
-const destination = refspec => {const ref = refspec.replace(/^\+/, '');return ref.slice(ref.indexOf(':') + 1).replace(/^refs\/heads\//, '');};
+const SHELLS = new Set(['sh', 'bash', 'zsh']);
+// The destination branch of a refspec; `HEAD` pushes to the branch of the same name.
+const destination = (refspec, branch) => {const ref = refspec.replace(/^\+/, ''), dst = ref.slice(ref.indexOf(':') + 1).replace(/^refs\/heads\//, '');return dst === 'HEAD' ? branch : dst;};
 const reserved = (action, what) => ({action, reason: `ADD reserves ${what} for people (AGENTS.md). Work on a change branch and stop for team review.`});
-// One simple command: null or the reserved action. Git reads happen only for git and gh words.
-async function reservedCommand(words, cwd, git) {
-  let i = 0;
-  while (i < words.length && /^[A-Za-z_][A-Za-z0-9_]*=/.test(words[i])) i++;
-  const [command, ...rest] = words.slice(i);
-  if (command === 'gh') return rest[0] === 'pr' && rest[1] === 'merge' && await addRoot(cwd, git) ? reserved('merge', 'the merge of a pull request') : null;
-  if (command !== 'git') return null;
+// One git command in dir: null or the reserved action.
+async function reservedGit(rest, cwd, git) {
   let dir = cwd, j = 0;
   for (; j < rest.length && rest[j].startsWith('-'); j++) if (GIT_VALUE.has(rest[j])) {if (rest[j] === '-C') dir = resolve(dir, rest[j + 1] ?? '');j++;}
   const sub = rest[j], args = rest.slice(j + 1);
@@ -105,23 +103,46 @@ async function reservedCommand(words, cwd, git) {
   if (!await addRoot(dir, git)) return null;
   const branch = await branchOf(dir, git);
   if (sub === 'commit') return PROTECTED.includes(branch) ? reserved('commit', `commits to ${branch}`) : null;
-  const positional = [];
+  const positional = [];let all = false;
   for (let k = 0; k < args.length; k++) {
     if (args[k] === '--') {positional.push(...args.slice(k + 1));break;}
-    if (args[k].startsWith('-')) {if (PUSH_VALUE.has(args[k])) k++;}
+    if (args[k] === '--all' || args[k] === '--mirror') all = true;
+    else if (args[k].startsWith('-')) {if (PUSH_VALUE.has(args[k])) k++;}
     else positional.push(args[k]);
   }
+  if (all) return reserved('push', 'pushes to main or master');
   const refspecs = positional.slice(1);
-  const target = refspecs.length ? refspecs.map(destination).find(d => PROTECTED.includes(d)) : PROTECTED.includes(branch) ? branch : null;
+  const target = refspecs.length ? refspecs.map(r => destination(r, branch)).find(d => PROTECTED.includes(d)) : PROTECTED.includes(branch) ? branch : null;
   return target ? reserved('push', `pushes to ${target}`) : null;
+}
+// Simple commands in order: `cd` changes the effective directory of the
+// commands after it; a shell with a `c` option has its script checked.
+async function reservedCommands(commands, cwd, git, depth = 0) {
+  let dir = cwd;
+  for (const words of commands) {
+    let i = 0;
+    while (i < words.length && /^[A-Za-z_][A-Za-z0-9_]*=/.test(words[i])) i++;
+    const [word, ...rest] = words.slice(i), command = word === undefined ? '' : basename(word);
+    let result = null;
+    if (command === 'cd') {const target = rest.find(w => w === '-' || !w.startsWith('-'));if (target !== '-') dir = target === undefined ? homedir() : resolve(dir, target);}
+    else if (command === 'gh') result = rest[0] === 'pr' && rest[1] === 'merge' && await addRoot(dir, git) ? reserved('merge', 'the merge of a pull request') : null;
+    else if (command === 'git') result = await reservedGit(rest, dir, git);
+    else if (SHELLS.has(command) && depth < 3) {
+      let k = 0, script = false;
+      for (; k < rest.length && rest[k].startsWith('-') && rest[k] !== '--'; k++) if (/^-[A-Za-z]*c/.test(rest[k])) script = true;
+      if (rest[k] === '--') k++;
+      if (script && typeof rest[k] === 'string') result = await reservedCommands(simpleCommands(rest[k]), dir, git, depth + 1);
+    }
+    if (result) return result;
+  }
+  return null;
 }
 // The reserved action of a hook input ({cwd, tool_input: {command}}), or null.
 export async function reservedAction(input, {git = readerGit} = {}) {
   const cwd = input?.cwd, command = input?.tool_input?.command;
   if (typeof cwd !== 'string' || !cwd) return null;
   const commands = typeof command === 'string' ? simpleCommands(command) : Array.isArray(command) && command.every(w => typeof w === 'string') ? [command] : [];
-  for (const words of commands) {const result = await reservedCommand(words, resolve(cwd), git);if (result) return result;}
-  return null;
+  return reservedCommands(commands, resolve(cwd), git);
 }
 
 // The stop check of a hook input ({cwd, stop_hook_active}): null, or {reason}

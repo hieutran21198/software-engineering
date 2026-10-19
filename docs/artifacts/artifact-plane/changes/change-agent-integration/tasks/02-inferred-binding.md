@@ -21,7 +21,7 @@ specifications/agent-integration.md: Inferred binding; specifications/codex-exec
 - [ ] `bind` stores `binding: explicit` by default and `inferred` with `--binding inferred`; it rejects an inferred binding when the session and agent have an open attempt.
 - [ ] `inferredBinding(input, store)` returns the bind arguments for a subagent read and for a linked worktree read, and null for a read in the main worktree without agent_id, for a session with a SubagentStart event, for `tasks/README.md` and for a change that is not current.
 - [ ] An explicit bind supersedes an open inferred attempt; existing attempts without the field read as explicit.
-- [ ] The attempt inspector shows "Inferred from a task file read" for an inferred binding (browser test).
+- [ ] The attempt inspector shows "Inferred from a task file read" for an inferred binding and "Bound explicitly" for an explicit binding (browser test).
 - [ ] `npm test` and the runtime browser tests pass.
 
 ## Evidence

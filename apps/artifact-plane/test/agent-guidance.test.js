@@ -161,10 +161,34 @@ test('AIA2: reservedAction passes the test table of the specification', async t 
     [root, 'git commit -m x 2>&1 | tee log', 'commit'],
     [root, 'git\\ commit', null],
     [wt, 'npm test\ngit push origin main', 'push'],
+    // Amended rows: HEAD, --all and --mirror, cd, the command basename and shell scripts.
+    [root, 'git push origin HEAD', 'push'],
+    [root, 'git push origin +HEAD', 'push'],
+    [wt, 'git push origin HEAD', null],
+    [wt, 'git push --all origin', 'push'],
+    [wt, 'git push --mirror', 'push'],
+    [wt, `cd ${root} && git commit -m x`, 'commit'],
+    [root, `cd ${wt} && git commit -m x`, null],
+    [wt, `cd ${root}; cd ${wt}; git commit -m x`, null],
+    [join(root, 'docs'), 'cd .. && git commit -m x', 'commit'],
+    [wt, `cd ${root} && gh pr merge 3`, 'merge'],
+    [root, '/usr/bin/git commit -m x', 'commit'],
+    [wt, '/usr/local/bin/gh pr merge 1', 'merge'],
+    [root, 'bash -lc "git commit -m x"', 'commit'],
+    [root, 'sh -c \'echo "git commit"\'', null],
+    [wt, `zsh -c "cd ${root} && git commit -m x"`, 'commit'],
+    [wt, `bash -c "cd ${root}" && git commit -m x`, null],
+    [root, 'bash -l script.sh', null],
+    [root, '(git commit -m x)', null],
+    [root, 'echo $(git commit -m x)', null],
   ];
   for (const [cwd, command, action] of table)
     assert.equal((await reservedAction({cwd, tool_input: {command}}))?.action ?? null, action, `${cwd === root ? 'main' : 'branch'}: ${command}`);
   assert.equal((await reservedAction({cwd: root, tool_input: {command: ['git', 'commit', '-m', 'x']}}))?.action, 'commit');
+  // The Codex form of a command: a shell with -lc and the script.
+  assert.equal((await reservedAction({cwd: root, tool_input: {command: ['bash', '-lc', 'git commit -m x']}}))?.action, 'commit');
+  assert.equal(await reservedAction({cwd: wt, tool_input: {command: ['bash', '-lc', 'git commit -m x']}}), null);
+  assert.equal((await reservedAction({cwd: wt, tool_input: {command: 'git push --all origin'}})).reason, 'ADD reserves pushes to main or master for people (AGENTS.md). Work on a change branch and stop for team review.');
   assert.deepEqual(await reservedAction({cwd: root, tool_input: {command: 'git commit -m x'}}),
     {action: 'commit', reason: 'ADD reserves commits to main for people (AGENTS.md). Work on a change branch and stop for team review.'});
   assert.equal((await reservedAction({cwd: wt, tool_input: {command: 'gh pr merge 44'}})).reason, 'ADD reserves the merge of a pull request for people (AGENTS.md). Work on a change branch and stop for team review.');
@@ -210,4 +234,19 @@ test('AI4: stopCheck fails only for error diagnostics of a current change and li
   for (const change of current) errors.push(...(await validateKnowledge(root, {change})).diagnostics.filter(d => d.severity === 'error'));
   const real = await stopCheck({cwd: root});
   assert.equal(real === null, errors.length === 0);
+});
+
+test('validateKnowledge with a change scope reports the errors of a unit brief whose metadata cannot be parsed', async t => {
+  const {root} = await fixture(t);
+  const broken = 'docs/artifacts/units-of-work/broken/README.md', other = 'docs/artifacts/units-of-work/other/README.md';
+  await put(root, broken, '---\nunit_of_work: broken\nflow_assessment: The flow is new: context at start.\n  More text.\n---\n# Broken\n');
+  await put(root, other, '---\nunit_of_work: other\nchanges:\n  - artifact: tenant\n    change: change-initial\n---\n# Other\n');
+  commit(root, 'unit briefs');
+  const scoped = await validateKnowledge(root, {change: 'authentication/change-login'});
+  const paths = scoped.diagnostics.filter(d => d.severity === 'error').map(d => [d.path, d.code]);
+  assert.ok(paths.some(([path, code]) => path === broken && code === 'invalid-unit'), JSON.stringify(paths));
+  assert.ok(!paths.some(([path]) => path === other), 'a parsed brief of another change stays out of scope');
+  assert.equal(scoped.ok, false);
+  // The stop check fails on that error.
+  assert.match((await stopCheck({cwd: root})).reason, /^authentication\/change-login: invalid-unit /m);
 });

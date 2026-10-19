@@ -21,6 +21,6 @@ specifications/agent-integration.md: MCP; specifications/record-checks.md of art
 - [ ] An MCP client lists the two new tools with read-only annotations and receives the instructions text and the package version.
 - [ ] `get_change_status` equals `worktreeStatus` and `check_records` equals `validateKnowledge` for one change of the fixture.
 - [ ] Without `--repository`, the server uses the Git top level of its working directory, and fails with the usage error outside a Git work tree.
-- [ ] The existing MCP tests pass without edits; `npm test` passes.
+- [ ] The existing MCP tools keep their inputs and results: the existing MCP tests pass, and only their lists and counts of tool names change; `npm test` passes.
 
 ## Evidence
