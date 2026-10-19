@@ -37,6 +37,7 @@ export function createFlowMcpServer({service,reviewService,impactService,knowled
   ['get_change_context','Capture source-backed change context with evidence limits and explicit omissions.','packet',{}],
   ['read_change_context_source','Read bounded source pages registered to a captured change context.','source',{source:z.string().min(1).max(10000)}],
   ['get_change_brief','Summarize a change for review: seven answers, its claims with a verification step each, reached, declared and undecided flows, attention items and delivery facts. Approval is not verified by this reader.','brief',{}],
+  ['get_change_description','Write the PR description of a change as Markdown: summary, tier with criteria results, plan, changed knowledge, requirement coverage, DoD and evidence, validator, impact, compatibility and open claims. The Plane never pushes or opens a PR; approval is not recorded by this description.','description',{}],
  ])server.registerTool(name,{description,inputSchema:z.strictObject({...reviewCommon,...selectors}),annotations:{readOnlyHint:true,destructiveHint:false,idempotentHint:true,openWorldHint:false}},async args=>{
   try{
    if(!roots.length)return {isError:true,content:[{type:'text',text:JSON.stringify({error:'Configure at least one repository root.',status:403})}]};

@@ -168,5 +168,5 @@ export async function buildBrief({root, worktree, artifact, change, git, impactS
 
   const count = key => claims.reduce((m, c) => ({...m, [c[key]]: (m[c[key]] || 0) + 1}), {});
   const counts = {claims: claims.length, byStep: count('step'), byKind: count('kind'), byStatus: count('status'), checksByPerson: claims.filter(c => c.verifiedBy === 'person').length, checksByAgent: claims.filter(c => c.verifiedBy === 'agent').length};
-  return {brief: {schema: 'artifact-plane.change-brief.v1', origin, answers, claims, flows, attention, delivery, counts}, diagnostics, partial: !impact && origin.kind !== 'none' || diagnostics.length > 0};
+  return {brief: {schema: 'artifact-plane.change-brief.v1', origin, answers, claims, flows, attention, delivery, counts}, diagnostics, partial: !impact && origin.kind !== 'none' || diagnostics.length > 0, scan};
 }
