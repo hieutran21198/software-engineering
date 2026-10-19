@@ -3,6 +3,8 @@ unit_of_work: human-cognitive-support
 changes:
   - artifact: artifact-driven
     change: change-claim-records
+  - artifact: artifact-plane
+    change: change-review-brief
 affected_flows:
   - artifact: artifact-driven
     flow: change-delivery
@@ -77,6 +79,35 @@ evidence:
       parse of the guideline examples and validate-knowledge.
     result: passed
     source: docs/artifacts/artifact-driven/changes/change-claim-records/tasks/02-validation.md#evidence
+  - criterion: brief
+    method: Repository probe of the brief operation on change-hidden-tab-streams,
+      change-impact-intelligence and the delivered changes of four units.
+    result: passed
+    source: docs/artifacts/artifact-plane/changes/change-review-brief/tasks/03-brief-service.md#evidence
+  - criterion: checks
+    method: Node tests of claim.verify through the knowledge service, HTTP and
+      MCP, and the browser check form.
+    result: passed
+    source: docs/artifacts/artifact-plane/changes/change-review-brief/tasks/02-claim-operations.md#evidence
+  - criterion: interfaces
+    method: Parity test of the brief operation, data.brief and get_change_brief;
+      existing review, packet and adapter suites.
+    result: passed
+    source: docs/artifacts/artifact-plane/changes/change-review-brief/tasks/03-brief-service.md#evidence
+  - criterion: performance
+    method: Warm brief timing on this repository.
+    result: passed
+    source: docs/artifacts/artifact-plane/changes/change-review-brief/tasks/03-brief-service.md#evidence
+  - criterion: usability
+    method: Owner approval of the mockup, screenshots of the built page at 1440
+      and 390 pixels, and the owner's acceptance of the built page.
+    result: passed
+    source: docs/artifacts/units-of-work/human-cognitive-support/README.md#owner-acceptance
+  - criterion: integration
+    method: npm test, the browser suite twice, go test, the website build, the
+      bundle copy comparison and validate-knowledge.
+    result: passed
+    source: docs/artifacts/artifact-plane/changes/change-review-brief/tasks/06-validation.md#evidence
 ---
 
 # Help people understand and check agent work
@@ -99,8 +130,12 @@ The [investigation record](research.md) holds the current-state map, the researc
 
 ## Members
 
-ADD change-claim-records delivers the claim contract and the bundle guidance as version 2.9.0. Artifact Plane change-review-brief joins this unit when its knowledge lands, after ADD 2.9.0 establishes; until then the Plane criteria have no evidence.
+ADD change-claim-records delivered the claim contract and the bundle guidance as version 2.9.0, established on main. Artifact Plane change-review-brief implements the contract: the claim reader, the claim operations, the change brief and the change page.
 
 ## Validation evidence
 
-The claims-contract criterion passed; the detail is in task validation of change-claim-records. The other criteria wait for the Plane change.
+The claims-contract criterion passed; the detail is in task validation of change-claim-records. The other criteria passed with change-review-brief; each entry names the task evidence that holds its detail.
+
+### Owner acceptance
+
+The owner approved the change brief mockup on 19 October 2026 without amendments. After the build, the owner opened the change brief on changes of this repository and accepted the page on 19 October 2026.

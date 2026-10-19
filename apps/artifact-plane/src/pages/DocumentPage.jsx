@@ -9,6 +9,7 @@ import {headingTitle} from '../model.js';
 import {knowledgeTargets} from '../knowledge-navigation.js';
 import {artifactTitle, changeTitle, isFlow, memberUnit} from '../work-model.js';
 import {impactPage} from '../impact-model.js';
+import {pendingSentence} from '../wording-note.js';
 import {ConflictDialog, FrontMatterEditor, bodyWithoutTitle, linkPage, useMedia} from './DocumentPageParts.jsx';
 import './DocumentPage.css';
 
@@ -93,6 +94,9 @@ export default function DocumentPage({page}) {
   const overwrite = async text => save(await sha256(text));
 
   const title = info.element?.title || (doc.ready && headingTitle(doc.markdown)) || info.fallback;
+  // Records of delivered work that still say work is pending get an inferred note.
+  const delivered = info.element?.source === 'working' && info.element?.state === 'unchanged' || info.type === 'change' && Boolean(info.change?.history);
+  const wording = mode === 'view' && !established && delivered && doc.ready ? pendingSentence(doc.markdown) : null;
   const eyebrow = <Eyebrow info={info} snapshot={snapshot} go={go}/>;
   const values = useMemo(() => frontValue(loaded?.markdown ?? doc.markdown), [loaded, doc.markdown]);
   const body = useMemo(() => bodyWithoutTitle(doc.markdown), [doc.markdown]);
@@ -106,6 +110,7 @@ export default function DocumentPage({page}) {
         action={mode === 'view' && writable ? <button ref={editButton} disabled={!loaded} onClick={() => setMode('edit')}>Edit</button> : null}/>
       {narrow && <details className="properties-disclosure"><summary>Properties</summary>{properties}</details>}
       {established && <p className="notice" role="status">{info.removed ? 'This document is removed on this branch. The text below is the version on main.' : 'The text below is the version on main.'}</p>}
+      {wording && <p className="notice wording-note" role="note">Inferred from wording: this record of delivered work says “{wording}” The work may be delivered; check before relying on it.</p>}
       {compare && mode === 'view' && <Comparison info={info} source={page.source} after={doc.markdown}/>}
       {mode === 'edit' ? <section className="document-editor" aria-label="Document editor"
         onKeyDown={event => {if ((event.ctrlKey || event.metaKey) && event.key.toLowerCase() === 's') {event.preventDefault();save();}}}>

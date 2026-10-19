@@ -291,3 +291,62 @@ test('W4: every operation refuses protected branches and unregistered worktrees'
   await assert.rejects(service.apply({path: f.root, operation: 'nope'}), e => e.status === 400);
   await assert.rejects(service.apply({path: f.root, operation: 'undo', extra: 1}), e => e.status === 400);
 });
+
+test('B7: claim.record and claim.verify write only the claim list and its detail section', async t => {
+  const f = await editable();t.after(f.cleanup);
+  const run = operator(f.root), task = 'docs/artifacts/authentication/changes/change-login/tasks/01-login.md', spec = 'docs/artifacts/authentication/specifications/login.md';
+  const before = await fingerprint(f.root);
+  const hypothesis = await run('claim.record', {path: task, kind: 'hypothesis', statement: 'Login fails because tokens expire early.', status: 'refuted', basis: 'observed', detail: 'Tokens lived the full 30 minutes in the trace.'});
+  assert.deepEqual(hypothesis.result, {path: task, id: 'login-fails-because-tokens'});
+  const changed = diff(before, await fingerprint(f.root));
+  assert.deepEqual(Object.keys(changed), [task]);
+  assert.deepEqual(changed[task].removed, ['Implementation has not started.']);
+  const text = await read(f.root, task);
+  assert.match(text, /claims:\n  - id: login-fails-because-tokens\n    kind: hypothesis\n/);
+  assert.match(text, /evidence:\n      - docs\/artifacts\/authentication\/changes\/change-login\/tasks\/01-login.md#login-fails-because-tokens\n/);
+  assert.match(text, /## Evidence\n\n### login-fails-because-tokens\n\nTokens lived the full 30 minutes in the trace\.\n/);
+
+  const decision = await run('claim.record', {path: spec, id: 'cookie-session', kind: 'decision', statement: 'Keep the session in a cookie.', basis: 'inferred', check: 'Open two tabs and sign out in one.', rejected: [{option: 'Local storage', reason: 'Scripts can read it.'}], riskIfWrong: 'Sessions leak across tabs.', about: ['authentication:specifications/login.md']});
+  assert.equal(decision.result.id, 'cookie-session');
+  const specText = await read(f.root, spec);
+  assert.match(specText, /status: open\n    basis: inferred\n    check: Open two tabs and sign out in one\.\n    rejected:\n      - option: Local storage\n        reason: Scripts can read it\.\n    risk_if_wrong: Sessions leak across tabs\.\n/);
+  assert.ok(!specText.includes('## Claim evidence'));
+
+  for (const input of [{status: 'verified'}, {verifiedBy: 'person'}, {verified_by: 'agent'}]) await assert.rejects(run('claim.record', {path: spec, kind: 'assumption', statement: 'Tokens are signed.', basis: 'inferred', ...input}), e => e.status === 422);
+  await assert.rejects(run('claim.record', {path: spec, kind: 'risk', statement: 'x y', basis: 'inferred', rejected: [{option: 'a', reason: 'b'}]}), e => e.status === 422 && e.field === 'rejected');
+  await assert.rejects(run('claim.record', {path: spec, kind: 'guess', statement: 'x y', basis: 'inferred'}), e => e.status === 422 && e.field === 'kind');
+  await assert.rejects(run('claim.record', {path: 'docs/artifacts/authentication/README.md', kind: 'risk', statement: 'x y', basis: 'inferred'}), e => e.status === 422 && e.field === 'path');
+  // The post-image passes the claim diagnostics: an unresolved source is refused.
+  await assert.rejects(run('claim.record', {path: spec, kind: 'assumption', statement: 'Tokens are signed.', status: 'supported', basis: 'observed', evidence: [`${spec}#no-such-heading`]}), e => e.status === 422 && e.diagnostics.some(d => d.code === 'claim-evidence-missing'));
+
+  await assert.rejects(run('claim.verify', {path: spec, id: 'cookie-session', ran: 'Two tabs', observed: '   ', outcome: 'holds'}), e => e.status === 422 && e.field === 'observed');
+  await assert.rejects(run('claim.verify', {path: spec, id: 'cookie-session', ran: 'Two tabs', observed: 'Signed out in both.', outcome: 'maybe'}), e => e.status === 422 && e.field === 'outcome');
+  await assert.rejects(run('claim.verify', {path: spec, id: 'nope', ran: 'x', observed: 'y', outcome: 'holds'}), e => e.status === 404);
+  const held = await run('claim.verify', {path: spec, id: 'cookie-session', ran: 'Open two tabs and sign out in one.', observed: 'The second tab showed the sign-in page after reload.', outcome: 'holds'});
+  assert.deepEqual({status: held.result.status, verifiedBy: held.result.verifiedBy}, {status: 'verified', verifiedBy: 'agent'});
+  const verified = await read(f.root, spec);
+  assert.match(verified, /status: verified\n/);
+  assert.match(verified, /evidence:\n      - docs\/artifacts\/authentication\/specifications\/login.md#cookie-session-check\n/);
+  assert.match(verified, /verified_by: agent\n/);
+  assert.match(verified, /## Claim evidence\n\n### cookie-session-check\n\nRan: Open two tabs and sign out in one\.\n\nObserved: The second tab showed the sign-in page after reload\.\n\nOutcome: the claim holds\. Recorded through the agent interface on \d{4}-\d{2}-\d{2}\.\n/);
+  const failed = await run('claim.verify', {path: spec, id: 'cookie-session', ran: 'Open two tabs in two browsers.', observed: 'The second browser stayed signed in.', outcome: 'fails'});
+  assert.equal(failed.result.status, 'refuted');
+  const refuted = await read(f.root, spec);
+  assert.ok(!refuted.includes('verified_by'));
+  assert.match(refuted, /#cookie-session-check-2\n/);
+  assert.deepEqual(await errors(f.root), []);
+
+  // Undo and digest checks work as for evidence.record.
+  await run('undo', {operationId: failed.operationId});
+  assert.equal(await read(f.root, spec), verified);
+  const preview = await run.service.apply({path: f.root, operation: 'claim.verify', input: {path: spec, id: 'cookie-session', ran: 'x', observed: 'y', outcome: 'fails'}, dryRun: true});
+  assert.equal(preview.applied, false);
+  assert.equal(await read(f.root, spec), verified);
+  await assert.rejects(run.service.apply({path: f.root, operation: 'claim.verify', input: {path: spec, id: 'cookie-session', ran: 'x', observed: 'y', outcome: 'fails'}, expected: {[spec]: 'f'.repeat(64)}}), e => e.status === 409 && e.code === 'digest-mismatch');
+
+  const person = operator(f.root, createKnowledgeService({channel: 'person'}));
+  const byPerson = await person('claim.verify', {path: spec, id: 'cookie-session', ran: 'Two browsers', observed: 'Both signed out.', outcome: 'holds'});
+  assert.equal(byPerson.result.verifiedBy, 'person');
+  await assert.rejects(run.service.apply({path: f.root, operation: 'claim.verify', input: {path: spec, id: 'cookie-session', ran: 'x', observed: 'y', outcome: 'holds'}, channel: 'person'}), e => e.status === 400);
+  assert.throws(() => createKnowledgeService({channel: 'admin'}), TypeError);
+});

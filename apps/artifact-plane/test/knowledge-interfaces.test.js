@@ -89,3 +89,29 @@ test('W8: MCP write tools exist only with --allow-writes and match the HTTP resu
   const shape = response => ({operation: response.operation, applied: response.applied, result: response.result, files: response.files.map(({path, action, after}) => ({path, action, after})), diagnostics: response.diagnostics});
   assert.deepEqual(shape(viaMcp.structuredContent), shape(viaHttp));
 });
+
+test('B7: the browser route records a person and MCP records an agent; no request chooses the channel', async t => {
+  const a = await fixtureRepository(inPlaceFixture()), b = await fixtureRepository(inPlaceFixture());
+  t.after(a.cleanup);t.after(b.cleanup);
+  for (const f of [a, b]) git(f.root, 'switch', '-q', '-c', 'work');
+  const spec = 'docs/artifacts/tenant/specifications/identity.md';
+  const record = {operation: 'claim.record', input: {path: spec, id: 'stable-ids', kind: 'assumption', statement: 'Tenant IDs never change.', basis: 'inferred', check: 'Rename a tenant and compare its ID.'}};
+  const verify = {operation: 'claim.verify', input: {path: spec, id: 'stable-ids', ran: 'Renamed a tenant.', observed: 'The ID stayed the same.', outcome: 'holds'}};
+  const post = await server(t);
+  const http = async request => {const preview = await (await post('/api/knowledge/edit', {...request, dryRun: true})).json();return post('/api/knowledge/edit', {...request, expected: preview.expected});};
+  assert.equal((await http({path: a.root, ...record})).status, 200);
+  const viaHttp = await (await http({path: a.root, ...verify})).json();
+  assert.equal(viaHttp.result.verifiedBy, 'person');
+  assert.match(await readFile(join(a.root, spec), 'utf8'), /verified_by: person\n/);
+  const chosen = await post('/api/knowledge/edit', {path: a.root, ...verify, channel: 'agent'});
+  assert.equal(chosen.status, 400);
+
+  const client = await mcp(t, {roots: [b.root], allowWrites: true});
+  const tool = async request => {const preview = await client.callTool({name: 'preview_knowledge_operation', arguments: request});return client.callTool({name: 'apply_knowledge_operation', arguments: {...request, expected: preview.structuredContent.expected}});};
+  assert.equal((await tool(record)).isError, undefined);
+  const viaMcp = await tool(verify);
+  assert.equal(viaMcp.structuredContent.result.verifiedBy, 'agent');
+  assert.match(await readFile(join(b.root, spec), 'utf8'), /verified_by: agent\n/);
+  const refused = await client.callTool({name: 'apply_knowledge_operation', arguments: {...verify, channel: 'person'}}).catch(error => ({isError: true, error}));
+  assert.equal(refused.isError, true);
+});

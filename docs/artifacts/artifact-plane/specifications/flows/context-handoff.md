@@ -40,6 +40,7 @@ flow:
         - adapter-checks
         - evidence-usability-contract
         - layout-reading
+        - brief-contract
     - id: deliver
       title: Copy or download locally, or return through configured MCP
       supports:
@@ -179,6 +180,12 @@ flow:
       artifact: artifact-plane
       element: specifications/knowledge-layout-reading.md
       requires: List each in-place knowledge file once from the Git comparison.
+      basis: documented
+    - id: brief-contract
+      kind: element
+      artifact: artifact-plane
+      element: specifications/review-brief.md
+      requires: Derive the change brief, the verification ladder and the claim facts from the review and impact services, and record claim checks through the operations.
       basis: documented
   gaps:
     - A captured packet cannot prove continuing freshness or authorize

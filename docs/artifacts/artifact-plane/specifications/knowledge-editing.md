@@ -146,6 +146,7 @@ Inputs name domain objects; the service derives every path and record. Each row 
 | task.remove | artifact, change, id | the task file; tasks/README.md | No other task depends on it; the change is not delivered |
 | task.checklist.set | path, index, checked | the task file | Only `- [ ]` and `- [x]` characters change |
 | evidence.record | path, method, result, detail, id (optional) | evidence_records front matter and the Evidence section | source derived as path#evidence; id unique in file; detail replaces or appends under a sub-heading named by the id |
+| claim.record / claim.verify | see review-brief.md | claims front matter and the claim detail subsection | Claim contract of ADD; verify needs an observed result and sets verified_by from the service channel |
 | plan.selfcheck.record | artifact, change, result, detail | tasks/README.md | source derived as tasks/README.md#plan-self-check |
 | unit.create | title, purpose, included, excluded, changes, acceptance, affectedFlows, flowAssessment | units-of-work/<id>/README.md | ID from title; members exist and are claimed by no other unit; acceptance IDs unique; integration criterion for several members; empty affectedFlows needs a reason |
 | unit.member.add / unit.member.remove | unit, artifact, change | the brief | Same membership rules |
@@ -162,7 +163,7 @@ Inputs name domain objects; the service derives every path and record. Each row 
 | artifact.migrate | artifact, version (optional) | the migrate-layout plan | Reuses planMigration and applyMigration; dry run returns the plan |
 | undo | operationId | the journal pre-images | Post-image digests still current |
 
-Operations not listed, such as renames, are not supported; the raw front-matter editor and external tools remain available.
+The service channel is person for the HTTP route and agent for MCP; no request field selects it. Operations not listed, such as renames, are not supported; the raw front-matter editor and external tools remain available.
 
 ## Git lifecycle
 

@@ -63,3 +63,7 @@ Apply ux-simplification.md for purpose-first review, complete bounded line compa
 ## Evidence and comparison extension
 
 [evidence-and-comparison.md](evidence-and-comparison.md) defines optional structured evidence and explicit comparison selectors. It refines baseline selection while preserving the omitted-selector contract and source safety.
+
+## Change brief extension
+
+[review-brief.md](review-brief.md) adds the brief operation, the additive packet field `data.brief` and the Change brief section of the change page. It reuses this service, its request fields and its envelope.

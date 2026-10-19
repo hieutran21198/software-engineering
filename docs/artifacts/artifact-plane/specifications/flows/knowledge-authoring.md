@@ -40,6 +40,7 @@ flow:
         - scenario-tests
         - document-tests
         - flow-page-tests
+        - brief-contract
     - id: validate
       title: Validate the post-image with the readers and preview the files
       supports:
@@ -249,6 +250,12 @@ flow:
       basis: observed
       evidence:
         - docs/artifacts/artifact-plane/changes/change-workbench-redesign/tasks/07-browser-suites.md
+    - id: brief-contract
+      kind: element
+      artifact: artifact-plane
+      element: specifications/review-brief.md
+      requires: Derive the change brief, the verification ladder and the claim facts from the review and impact services, and record claim checks through the operations.
+      basis: documented
   gaps:
     - The scenario tests limit user actions to the 1.16.0 measurements; the
       workbench redesign replaced the earlier action targets.
