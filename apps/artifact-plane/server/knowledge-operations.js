@@ -332,7 +332,8 @@ export const OPERATIONS = {
     const files = overlay(ctx, edits, artifact, change).files, written = new Set(edits.map(e => e.path));
     const snapshot = buildSnapshot(files, ctx.snapshot.repository, [], {layouts: ctx.layouts, baselines: ctx.scan.baselines});
     const diagnostics = (await recordChecks({root: ctx.root, git: ctx.git, scope: {artifact, change}, scan: {files, snapshot, baselines: ctx.scan.baselines}}))
-      .filter(d => d.severity === 'error' && written.has(d.path)).map(d => ({...d, state: 'new'}));
+      // The scaffold writes placeholders on purpose; the author replaces them before the self-check.
+      .filter(d => d.severity === 'error' && written.has(d.path) && d.code !== 'placeholder-text').map(d => ({...d, state: 'new'}));
     if (diagnostics.length) throw new EditError(422, diagnostics.map(d => d.message).slice(0, 3).join(' '), {code: 'validation-failed', diagnostics});
     return {edits, result: {...started.result, tasks: added}};
   },

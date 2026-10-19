@@ -81,7 +81,12 @@ export async function recordChecks({root, scan, git, scope = null}) {
       const joined = target.startsWith('/') ? target.slice(1) : posix.join(posix.dirname(path), target);
       if (!(await onDisk(joined))) add('link-broken', 'error', path, `Link ${href} does not resolve to a file.`);
     }
-    if (/\bREPLACE\b/.test(withoutCode(body))) add('placeholder-text', 'error', path, 'The record contains scaffold placeholder text.');
+    // The ADD scaffold placeholder REPLACE is an error. The prompts of the Plane templates
+    // (Replace this text.) are warnings, because the existing operations write them and
+    // their records stay valid. A quoted mention or code is not a placeholder.
+    const plain = withoutCode(body);
+    if (/\bREPLACE\b/.test(plain)) add('placeholder-text', 'error', path, 'The record contains the scaffold placeholder REPLACE.');
+    else if (/(?<!["“'‘])\bReplace this (?:text|item)\./.test(plain)) add('placeholder-text', 'warning', path, 'The record contains a template prompt (Replace this text.).');
   }
 
   // Identity, versions and upstream establishment

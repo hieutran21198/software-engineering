@@ -19,6 +19,17 @@ test('the version number follows the level from the protected version', () => {
   assert.equal(nextVersion('1.2.3', 'major'), '2.0.0');assert.equal(nextVersion(null, 'minor'), '1.0.0');assert.equal(nextVersion('1.2.3', null), null);
 });
 
+test('placeholder text: the ADD and Plane scaffold placeholders, not a quoted mention or code', async t => {
+  const f = await recordRepository(); t.after(f.cleanup);
+  const scan = await scanRepository(f.root), spec = 'docs/artifacts/app/specifications/login.md';
+  const run = async body => {scan.files.set(spec, body);return (await recordChecks({root: f.root, scan, git})).filter(d => d.code === 'placeholder-text').map(d => d.severity).join();};
+  assert.equal(await run('# C\n\nDescribe the behavior. Replace this text.\n'), 'warning');
+  assert.equal(await run('# C\n\n1. State one criterion. Replace this item.\n'), 'warning');
+  assert.equal(await run('# C\n\nREPLACE with the contract.\n'), 'error');
+  assert.equal(await run('# C\n\nPlaceholder text, such as "Replace this text.", is an error.\n'), '');
+  assert.equal(await run('# C\n\nThe scaffold uses `REPLACE` and `Replace this text.`\n'), '');
+});
+
 test('a clean change has no record diagnostic', async t => {
   const f = await recordRepository(); t.after(f.cleanup);
   assert.deepEqual(await checks(f.root), []);
