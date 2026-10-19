@@ -31,6 +31,23 @@ acceptance:
     criterion: Links resolve without parent links, the Go tests pass, the
       website builds and the validator reports no new diagnostic.
     integration: true
+evidence:
+  - criterion: runbooks-complete
+    method: Reading check of the guide against the seven contract rows, and of the Read-when rows and the core size of the coordinator skill.
+    result: passed
+    source: docs/artifacts/artifact-driven/changes/change-runbooks/tasks/01-runbook-guide.md#evidence
+  - criterion: runbooks-complete
+    method: Reading check of the lifecycle rules, the Corrections link and the seven coordinator rows.
+    result: passed
+    source: docs/artifacts/artifact-driven/changes/change-runbooks/tasks/02-rule-guidance.md#evidence
+  - criterion: replay
+    method: Replay on four recorded situations of this repository and on renumber, stop and reverse in a disposable clone.
+    result: passed
+    source: docs/artifacts/artifact-driven/changes/change-runbooks/tasks/03-validation.md#evidence
+  - criterion: integration
+    method: Link script, Go tests, website build and the validator on the change and the repository.
+    result: passed
+    source: docs/artifacts/artifact-driven/changes/change-runbooks/tasks/03-validation.md#evidence
 ---
 
 # ADD runbooks

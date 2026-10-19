@@ -21,3 +21,5 @@ Excluded: hooks or Plane features that run a runbook, runbooks for other roles, 
 Knowledge is edited in place on this branch. The unit brief is [ADD runbooks](../../../units-of-work/add-runbooks/README.md).
 
 - [Requirements: runbooks](../../requirements/runbooks.md)
+- [Specification: runbooks](../../specifications/runbooks.md)
+- [Plan](tasks/README.md)

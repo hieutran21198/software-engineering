@@ -25,8 +25,11 @@ claims:
     statement: A change that stops before merge leaves no record on the
       protected branch; the reason goes in the closing PR comment, and its
       branch stays until the owner allows its removal.
-    status: open
-    basis: inferred
+    status: verified
+    basis: observed
+    verified_by: agent
+    evidence:
+      - docs/artifacts/artifact-driven/changes/change-runbooks/tasks/03-validation.md#evidence
     check: Withdraw a test change in a disposable clone by the runbook and
       confirm that the protected branch has no file of it, the validator
       reports no diagnostic, and the branch still exists.
@@ -43,8 +46,11 @@ claims:
     statement: A reversal of an established version is a new change with a
       higher version number; the reversed version record and its change
       directory stay unchanged on the protected branch.
-    status: open
-    basis: documented
+    status: verified
+    basis: observed
+    verified_by: agent
+    evidence:
+      - docs/artifacts/artifact-driven/changes/change-runbooks/tasks/03-validation.md#evidence
     check: Apply the runbook to a test reversal in a disposable clone and
       confirm that the validator reports no version or retention diagnostic,
       and that the old version record and change directory are byte-identical.
