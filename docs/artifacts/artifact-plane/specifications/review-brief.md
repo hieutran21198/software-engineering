@@ -81,7 +81,7 @@ Every claim and every check row carries exactly one step. The table lists the st
 | Re-checked by an agent | A verified claim with `verified_by: agent`; shown as "Re-checked by an agent, not independent" |
 | Checked by a person | A verified claim with `verified_by: person` |
 
-A test that the change adds stays a recorded experiment. It counts as a check of a root cause only when the claim's evidence records a run that fails without the fix. No row shows the word verified for an agent record without the qualifier.
+An open or superseded claim takes the step of its basis: `observed` with evidence is a recorded experiment, `inferred` is inferred, and `documented` or `static` is explained. A test that the change adds stays a recorded experiment. It counts as a check of a root cause only when the claim's evidence records a run that fails without the fix. No row shows the word verified for an agent record without the qualifier.
 
 ## Claim reader and diagnostics
 

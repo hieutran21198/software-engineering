@@ -45,6 +45,7 @@ export function formatContextMarkdown(envelope) {
   const {tiers, ...recorded} = data.impact || {};
   section('Recorded flow impact', data.impact ? recorded : data.impact);
   if (tiers) section('Change impact', tiers);
+  if (data.brief) section('Change brief', data.brief);
   section('Evidence and unresolved facts', {evidence: data.evidence, unresolvedFacts: data.unresolvedFacts, diagnostics: envelope.diagnostics});
   lines.push('', '## Sources', '');
   if (!data.sources?.length) lines.push('No source excerpts recorded.');
