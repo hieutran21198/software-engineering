@@ -307,7 +307,9 @@ function checkPolicy(edit, policy) {
   if (artifact !== 'units-of-work' && policy.layouts?.[artifact] === 'legacy' && !policy.allowLegacy) refuse(`${artifact} uses the legacy layout. Migrate it to the in-place layout before you edit it.`);
   if (rest[0] === 'versions') {
     const record = rest.length === 3 && /^\d+\.\d+\.\d+$/.test(rest[1]) && rest[2] === 'README.md';
-    if (!record || edit.action === 'delete' || edit.action === 'replace' && !policy.allowVersionRecord) refuse('Version records are created once and never changed or deleted.');
+    // version.prepare renames an unestablished record of its change; it names each path.
+    const renamed = edit.action === 'delete' && policy.renameVersions?.includes(edit.path);
+    if (!record || edit.action === 'delete' && !renamed || edit.action === 'replace' && !policy.allowVersionRecord) refuse('Version records are created once and never changed or deleted.');
   }
   if (rest[0] === 'changes' && rest[2] === 'tasks' && policy.delivered?.has(`${artifact}/${rest[1]}`)) refuse(`${rest[1]} is named by a version record; its tasks are delivered and cannot change.`);
   if (edit.path.endsWith('.yaml') && !(policy.allowLegacy && edit.action === 'delete')) refuse('Only Markdown knowledge can be written.');
