@@ -3,6 +3,7 @@ import { effectiveEdges } from "./graph.js";
 export { effectiveEdges, relationships } from "./graph.js";
 import { parseDocument } from "yaml";
 import { marked } from "marked";
+import { changeTier, planCompatibility, taskCovers, requirementIds, duplicateIds, readConfig, CONFIG_PATH } from "./delivery-records.js";
 const BASE = "docs/artifacts/";
 const VERSION = /^\d+\.\d+\.\d+$/;
 const record = (v) => v !== null && typeof v === "object" && !Array.isArray(v);
@@ -327,13 +328,21 @@ export function buildSnapshot(files, repository = {}, inputDiagnostics = [], opt
         .match(/^changes\/(change-[^/]+)\//);
       if (match) changes.add(match[1]);
     }
-    a.changes = [...changes].sort().map((name) => ({
-      name,
-      title: headingTitle(files.get(`${prefix}changes/${name}/README.md`) || ""),
-      readme: files.get(`${prefix}changes/${name}/README.md`) || "",
-    }));
+    a.changes = [...changes].sort().map((name) => {
+      const readme = files.get(`${prefix}changes/${name}/README.md`) || "";
+      // ADD 3.0.0 delivery fields: tier, plan compatibility and task covers.
+      const tier = changeTier(readme, `${prefix}changes/${name}/README.md`);
+      const planPath = `${prefix}changes/${name}/tasks/README.md`;
+      const plan = files.has(planPath) ? planCompatibility(files.get(planPath), planPath) : { compatibility: null, diagnostics: [] };
+      diagnostics.push(...tier.diagnostics, ...plan.diagnostics);
+      for (const [path, body] of files)
+        if (path.startsWith(`${prefix}changes/${name}/tasks/`) && path !== planPath && path.endsWith(".md")) diagnostics.push(...taskCovers(body, path).diagnostics);
+      return { name, title: headingTitle(readme), readme, tier: tier.tier, tierDeclared: tier.declared, compatibility: plan.compatibility };
+    });
     if (a.layout === "in-place") {
       inPlaceArtifact(a, files, options.baselines?.[a.id], diagnostics, options.copied?.[a.id]);
+      for (const e of a.elements)
+        if (e.source === WORKING && e.path.startsWith("requirements/") && e.markdown) diagnostics.push(...duplicateIds(requirementIds(e.markdown), e.file));
       for (const source of a.dependsOn) {
         edges.push({ source, target: a.id, status: "established" });
         if (!a.proposedDependsOn.includes(source)) edges.push({ source, target: a.id, status: "proposed-remove" });
@@ -642,6 +651,7 @@ export function buildSnapshot(files, repository = {}, inputDiagnostics = [], opt
   }
   checkCycles(effectiveEdges(edges), "established", diagnostics);
   checkCycles(effectiveEdges(edges, true), "planning", diagnostics);
+  diagnostics.push(...readConfig(files.get(CONFIG_PATH)).diagnostics);
   // Diagnostics name the layout of the artifact they apply to.
   for (const d of diagnostics) {
     const owner = typeof d.path === "string" ? byId.get(d.path.slice(BASE.length).split("/")[0]) : null;

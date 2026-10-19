@@ -69,7 +69,7 @@ function TaskDetail({change, task, tasks, numbers, writable}) {
       <input key={`${attempt}-${item.checked}`} type="checkbox" defaultChecked={item.checked} disabled={!writable} onChange={e => toggle(index, e.target.checked)}/>{item.text}</label></li>)}</ul> : <p className="muted">No checklist items.</p>}
     <OperationError error={failure}/>
     <h3>Evidence</h3>
-    {text && (records.length ? <ul className="evidence-list">{records.map((r, i) => {const anchor = String(r?.source || '').split('#')[1];const detail = anchor ? sectionText(text, anchor) : null;return <li key={r?.id || i}>
+    {text && (records.length ? <ul className="evidence-list">{records.map((r, i) => {const anchor = r?.source === undefined ? 'evidence' : String(r?.source || '').split('#')[1];const detail = anchor ? sectionText(text, anchor) : null;return <li key={r?.id || i}>
       <div><span className="evidence-method">{r?.method || r?.id}</span> <Badge tone={RESULT_TONE[r?.result] || ''}>{RESULTS.find(x => x.value === r?.result)?.label || 'Unknown'}</Badge></div>
       {detail && <p className="evidence-detail">{detail}</p>}
     </li>;})}</ul> : <p className="muted">No evidence recorded.</p>)}

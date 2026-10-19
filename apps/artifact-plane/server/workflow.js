@@ -1,3 +1,4 @@
+import {evidenceSource} from '../src/delivery-records.js';
 import {readUnitsOfWork, deliverySource, publication, frontMatter, safeKnowledgePath, evidenceDetail} from './units-of-work.js';
 import { buildTaskGraph } from './task-graph.js';
 import { parseArtifact } from "../src/model.js";
@@ -110,7 +111,7 @@ export function declaredChange(artifact, name, files, data, diagnostics) {
       const list = frontMatter(files.get(t.path)).value?.evidence_records;
       if (list === undefined) continue;
       if (!Array.isArray(list)) {diagnostics.push({code: 'invalid-evidence-record', path: t.path, message: 'evidence_records must be a list.'});continue;}
-      for (const value of list) {const checked = declaredRecord(value, t.path, files, diagnostics, 'evidence_records entry');if (checked) {records.push(checked);step('Validation').evidence.push(note('declared', t.path, `Check ${checked.result}; source ${checked.source}.`));}}
+      for (const value of list) {const checked = declaredRecord(value && typeof value === 'object' && !Array.isArray(value) ? {...value, source: evidenceSource(value, t.path)} : value, t.path, files, diagnostics, 'evidence_records entry');if (checked) {records.push(checked);step('Validation').evidence.push(note('declared', t.path, `Check ${checked.result}; source ${checked.source}.`));}}
     }
     if (records.length) step('Validation').state = records.every(r => r.result === 'passed') && complete ? 'documented-complete' : 'declared-incomplete';
   }

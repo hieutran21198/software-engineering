@@ -186,6 +186,7 @@ export async function scanRepository(path, options = {}) {
       "Repository has no readable docs/artifacts directory.",
     );
   await load(`${base}/dag.yaml`);
+  await load(`${base}/add.config.yaml`);
   for (const entry of await directory(base)) {
     const prefix = `${base}/${entry.name}`;
     if (entry.name === "units-of-work") continue;

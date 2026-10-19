@@ -1,3 +1,4 @@
+import {evidenceSource} from '../src/delivery-records.js';
 import {marked} from 'marked';
 import {scanRepository} from './reader.js';
 import {buildTaskGraph} from './task-graph.js';
@@ -146,7 +147,7 @@ export async function buildBrief({root, worktree, artifact, change, git, impactS
   const why = reason(files.get(`${prefix}README.md`));
   const decisions = claims.filter(c => c.kind === 'decision');
   const steps = (d?.steps || []).map(s => ({text: `${s.entity.replace(/^step:/, '')}${s.title ? ` — ${s.title}` : ''}`, source: null, step: GIT}));
-  const evidenceRecords = tasks.flatMap(t => {const list = frontMatter(t.body).value?.evidence_records;return Array.isArray(list) ? list.filter(r => r && typeof r === 'object').map(r => ({text: `${r.method} (${r.result})`, source: r.source ?? t.path, step: EXPERIMENT})) : [];});
+  const evidenceRecords = tasks.flatMap(t => {const list = frontMatter(t.body).value?.evidence_records;return Array.isArray(list) ? list.filter(r => r && typeof r === 'object').map(r => ({text: `${r.method} (${r.result})`, source: evidenceSource(r, t.path), step: EXPERIMENT})) : [];});
   const answers = [
     [`${plural(changedRecords.length, 'knowledge record')} and ${plural(codeFiles.length, 'other file')}${changedItems.some(i => i.text.endsWith('not in any task scope')) ? `; ${changedItems.filter(i => i.text.endsWith('not in any task scope')).length} not in any task scope` : ''}.`, changedItems],
     [(why && firstSentence(why)) ?? (decisions.length ? `${plural(decisions.length, 'decision claim')}; the change README states no reason.` : null), [...(why ? [{text: why, source: `${prefix}README.md`, step: EXPLAINED}] : []), ...decisions.map(c => ({text: `Decision ${c.id}: ${c.statement}${c.rejected.length ? ` Rejected: ${c.rejected.map(r => `${r.option} (${r.reason})`).join('; ')}.` : ''}`, source: c.file, step: c.step, claim: c.id}))]],
