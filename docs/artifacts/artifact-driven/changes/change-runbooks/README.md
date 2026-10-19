@@ -1,5 +1,5 @@
 ---
-tier: medium
+tier: large
 ---
 
 # Give the coordinator runbooks for recurring situations
@@ -8,7 +8,7 @@ tier: medium
 
 On 19 October 2026 the owner asked for runbook suggestions and approved seven runbooks. In this repository the same situations occur again and again, and the bundle gives one sentence or no text for them: the work after a merge, a protected branch that moves before merge, a change after plan approval, a change that stops, a defect in an established version, a check that needs a live environment, and a check that fails on one platform.
 
-The owner decided on 19 October 2026: one guideline page with the runbooks, and rows in the coordinator's Read-when table that point to them. No new state, gate or registry.
+The tier is large: the change amends specifications/knowledge-layout.md, which Artifact Plane references, and the Plane needs no companion change (see the impact reconciliation of the unit brief). The owner decided on 19 October 2026: one guideline page with the runbooks, and rows in the coordinator's Read-when table that point to them. No new state, gate or registry.
 
 Included:
 
