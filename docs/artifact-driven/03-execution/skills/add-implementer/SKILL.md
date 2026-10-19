@@ -5,46 +5,38 @@ description: Implement an assigned user-approved ADD task, verify its Definition
 
 # ADD Implementer
 
-## Required Skills
+Implement one assigned task of an approved plan, check its DoD and return commits and evidence.
 
-Before ADD work, read `../../../required-skills/kiss/SKILL.md` and `../../../required-skills/asd-ste-100/SKILL.md` relative to this skill directory. Apply KISS to scope, design, planning, implementation, and coordination. Apply ASD-STE100 principles to documents and evidence without changing technical meaning or claiming formal compliance. Include these checks in the existing self-check; do not add another review step.
+## Steps
 
-Keep the full adopted bundle available when registering this role in a harness. Resolve these paths from the canonical bundle when the harness copies the role elsewhere. If either required skill is unavailable, restore it from the supplied bundle before continuing affected work.
+1. **Confirm the task.** You need the task path, its governing requirements, specifications and ADRs, the target repository and the DoD. The coordinator establishes plan approval and upstream versions before dispatch. If a gate is unknown or unmet, report the blocker and stop.
+2. **Check the graph.** Confirm that `tasks/README.md` lists the task and that its `depends_on` tasks satisfy their DoD. Do not infer edges from names or prose. Missing or invalid declarations return to Plan.
+3. **Read narrowly.** Read local instructions, then the code that the task changes, by section or symbol. Do not load whole repositories.
+4. **Implement.** Work on the assigned branch, in a separate worktree for parallel work. Keep edits in the task scope and preserve unrelated work. Add or update tests for the task and its contracts.
+5. **Check.** Run the tests in the Verify list of the change impact and the fast unit suites; CI runs the full suites. Run every DoD check. Code that exists does not complete a criterion.
+6. **Return.** Commit the code. Return a short summary with the commits, the check commands or review method, results, failures and relevant references. Record evidence in the task only when the coordinator assigns that.
 
-If the complete current instructions of this skill and both required skills are already loaded in the same session, reuse them. A summary or a path alone is not enough. Reload them after context loss, after their sources change, or after a switch to another adopted bundle.
+Fix code defects and repeat the affected checks. Report a task, contract or requirement gap to the coordinator and pause affected work; do not amend governing contracts or expand the plan. Never commit to `main` or `master`, publish, merge, establish versions, deploy, or remove worktrees with unintegrated work.
 
-For tasks that benefit from test-first work, use [TDD](../../../04-patterns/test-driven-development.md). For approved architecture or policy work, use [Ports and Adapters](../../../04-patterns/ports-and-adapters.md) or [Policy as Code](../../../04-patterns/policy-as-code.md). Follow [CI guidance](../../../04-patterns/continuous-integration.md) for repeatable task and combined checks without treating passing jobs as merge authorization.
+## Self-check
 
-For event publishers or handlers, read [event-driven development](../../../04-patterns/event-driven-development.md) and implement only the delivery, ordering, duplicate handling, and recovery behavior specified by the approved tasks.
+- KISS: the code is the simplest that meets the task and its contracts.
+- KISS: no framework, option or abstraction that the task does not need.
+- STE: one check and its result in each evidence row, in active voice.
+- STE: evidence uses the terms of the governing contract with one meaning each.
+- STE: the summary changes no technical meaning and hides no failed check.
+- Every DoD item has a check and a recorded result; failed and incomplete checks stay visible.
 
-When tasks use these practices, read the relevant built-in guidance: [tactical DDD](../../../04-patterns/tactical-domain-driven-design.md), [contract-driven development](../../../04-patterns/contract-driven-development.md), or [BDD](../../../04-patterns/behavior-driven-development.md). These references belong to the full ADD bundle. Do not add unplanned frameworks merely to apply a pattern.
+Read the full `kiss` and `asd-ste-100` skills in `../../../required-skills/` when this checklist does not settle a case.
 
-Require an assigned task from the approved plan, governing requirements/specifications/ADRs, target repository, and task prerequisites. The coordinator must establish user approval and required upstream versions before dispatch. If those gates are unknown or unmet, report the blocker before dependent implementation.
+## Read when
 
-For a plan with task metadata, confirm that the assigned task is listed in `tasks/README.md` and that its declared internal prerequisites satisfy their applicable DoD. Apply the [task format](../../../06-guidelines/writing-artifacts.md#implementation-plan-and-tasks). Do not infer edges from task names or prose, or use copied historical evidence as current completion without required rechecks. Missing or invalid declarations return to Plan. For a legacy plan without task metadata, retain its documented prerequisites without inventing a task graph.
-
-Inspect local repository instructions and existing implementation. Use the assigned dedicated branch and a separate Git worktree for parallel work. Never commit directly to protected branches such as `main` or `master`. Keep edits within the assigned scope and preserve unrelated work.
-
-Implement the code and tests needed to satisfy the task and its contracts. Run concrete DoD checks appropriate to the change. Report the check commands or review method, results, failures, and relevant implementation references. Do not mark a criterion complete merely because code exists.
-
-In delegated work, commit code in the assigned worktree and return commits and evidence to the coordinator. Do not concurrently edit central knowledge/task files or integrate another worker's branch. In sequential work, record evidence in the task when the coordinator assigns that responsibility.
-
-Fix code defects and repeat affected checks. If a task gap, contract gap, or requirement problem appears, report it to the coordinator and pause affected work. Do not independently amend governing contracts or expand the approved plan. A material change or new plan requires renewed user approval.
-
-Task completion does not prove integrated change completion. Return remaining integration dependencies and failed checks clearly. Do not publish, merge PRs, establish versions, deploy, or remove worktrees containing unintegrated work as part of this role.
-
-## Shared Outcome Evidence
-
-For a member change, read the [unit brief](../../../06-guidelines/units-of-work.md) and governing contracts. Record task checks in the owning change; keep delivered task records available and do not copy them into versions or later changes. Return combined check results to the coordinator for shared evidence. Do not amend central membership, bypass an establishment gate, or treat a checked task as completed outcome evidence.
-
-## System-flow checks
-
-Read the [system-flow format](../../../06-guidelines/system-flows.md) when the change affects system journeys. During the existing task self-check, compare affected behavior with the approved flow knowledge and validate the task’s supporting references and evidence. A test source is static support unless recorded execution evidence supports an observed claim. Return new requirement or contract facts to their owning phase; do not amend governing flow contracts independently or bypass approval and establishment gates.
-
-## Representations
-
-Read the [visual representation guide](../../../06-guidelines/visual-representations.md) when a task changes behavior that a diagram of the governing specification shows. During the existing task self-check, record evidence as a table of DoD item, check, result and source. Recheck the behavior diagrams of the governing specification against the implemented behavior, and report a stale diagram to the coordinator. Do not edit a governing diagram to match the code; return the contract change to its owning phase.
-
-## Claims
-
-Read the [claim rules](../../../06-guidelines/evidence-records.md#claims). Record a claim only when it is consequential: it selects between options that change a contract, a flow, a dependency or files outside the task scope; if it is wrong, a DoD item, an acceptance criterion or a declared flow is wrong; it dismisses a computed impact item or a tested hypothesis; or it names a limit that the version ships with. Record hypothesis and root-cause claims in the task, including refuted hypotheses with the measurement that decided them. Record a limit of the delivered behavior as a `risk` or `unknown` claim. A root-cause check is a test that fails without the fix; record that run in the task evidence. Report a claim that changes a contract to the coordinator. Set `verified` only with the recorded check detail. Write `verified_by: agent`, never `person`. Do not add a step, a gate or a claim registry.
+| Condition | Read |
+| --- | --- |
+| You start, resume, lose context, or a required skill is missing | [Load and resume](reference.md#load-and-resume) |
+| The task has a legacy plan, parallel workers or delegated commits | [Task rules](reference.md#task-rules), [implementer context](../../../06-guidelines/working-with-ai.md#implementer-context) |
+| The change is a member of a unit of work | [Shared outcomes](reference.md#shared-outcomes) |
+| The change affects system journeys | [System flows](reference.md#system-flows) |
+| The task changes behavior that a governing diagram shows | [Representations](reference.md#representations) |
+| A hypothesis, root cause or limit is consequential | [Claims](reference.md#claims) |
+| The task uses a pattern | [Patterns](reference.md#patterns) |

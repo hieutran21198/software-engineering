@@ -5,8 +5,8 @@ Execution uses one coordinator and role-specific agent skills. The coordinator i
 ## Operating Flow
 
 1. Gather the user's intent and enough information to define the change. Reuse existing knowledge and ask focused questions about material gaps.
-2. Start the change on a dedicated branch. Complete Requirement, Specification, and Plan sequentially. Edit the artifact's knowledge in place, then self-check and commit each phase's output.
-3. Present the implementation plan and wait for explicit user approval.
+2. Assign the [change tier](../06-guidelines/change-tiers.md). Start the change on a dedicated branch. Complete Requirement, Specification, and Plan sequentially. Edit the artifact's knowledge in place and self-check each phase. Commit each phase for a medium or large change; commit the three phases together for a small change.
+3. For a medium or large change, present the implementation plan and wait for explicit user approval. For a small change, the user's request is the approval.
 4. Implement approved tasks, validate them, and validate the integrated change. Respect upstream version gates.
 5. Prepare the proposed version record and identity record update. Push branches and open PRs when remotes exist.
 6. Stop for the team to review and merge. A version becomes established only when all required knowledge and implementation changes land on `main` or `master`.
@@ -15,7 +15,7 @@ A new plan or material change requires renewed plan approval before affected imp
 
 ## Required Skills
 
-All ADD roles must read and apply `kiss` and `asd-ste-100`. In the adopted bundle, their instructions are at `required-skills/kiss/SKILL.md` and `required-skills/asd-ste-100/SKILL.md`.
+All ADD roles must apply `kiss` and `asd-ste-100`. Each role skill core has a self-check with five KISS and STE items; a role reads the full skills when that checklist does not settle a case. In the adopted bundle, their instructions are at `required-skills/kiss/SKILL.md` and `required-skills/asd-ste-100/SKILL.md`.
 
 Use KISS when defining requirements, choosing designs, planning work, and implementing changes. Use ASD-STE100 principles when writing or rewriting artifact documents and task evidence. Preserve necessary contracts, constraints, and detail. This applies writing principles; it does not certify ASD-STE100 compliance.
 
@@ -30,9 +30,11 @@ Apply both during existing phase and task self-checks. They do not add a workflo
 | [ADD Technical Lead](skills/add-technical-lead/SKILL.md) | Produce specifications, ADRs, and the plan sequentially, with self-checks in one frontier-model session. |
 | [ADD implementer](skills/add-implementer/SKILL.md) | Implement assigned tasks, run DoD checks, and record validation evidence. |
 
+Each role skill has a core of at most 400 words: the role's duty, its steps by tier and a self-check checklist. A Read-when table follows the core. Each row names a condition and the guidance to load when the condition is true: a section of the skill's `reference.md`, a guideline or a pattern. Content that only some changes need, such as the legacy layout, publication without a remote, flows, representations, claims, units and patterns, is behind a row.
+
 Skills can run within one session. Separate agents are used automatically for independent implementation tasks when useful; roles do not require separate sessions or redundant reviews.
 
-Before a role acts, read its skill and the required skills, unless their complete current instructions are already loaded in the same session. A summary or a path alone does not meet this condition. Reload the affected instructions after context loss, after their sources change, or after a switch to another adopted bundle.
+Before a role acts, read its skill core, unless its complete current instructions are already loaded in the same session. A summary or a path alone does not meet this condition. Reload the affected instructions after context loss, after their sources change, or after a switch to another adopted bundle.
 
 ## Knowledge Layout
 

@@ -20,7 +20,7 @@ First assign the [tier](change-tiers.md). The copyable files below are for a sma
 
 When the [validator](writing-artifacts.md#check-records-with-the-validator) is available, run it with `--change sample/change-small-update` in each self-check.
 
-The five files below form the minimum small change. The two knowledge files are edits to the artifact's working knowledge, not copies. Existing knowledge can require more files. Do not treat an uninvestigated flow map as proof of no impact.
+The five files below form the minimum small change. The two knowledge files are edits to the artifact's working knowledge, not copies; the blocks show them after the edit. A small change amends existing requirement items and keeps their IDs. A new requirement ID makes the change medium, because it fails the no-contract criterion. Existing knowledge can require more files. Do not treat an uninvestigated flow map as proof of no impact.
 
 ## Copyable files
 
