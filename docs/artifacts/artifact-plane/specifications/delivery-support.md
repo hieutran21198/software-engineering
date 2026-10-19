@@ -29,6 +29,23 @@ claims:
       - option: Build the impact index inside the validator.
         reason: The index needs the Plane state directory and minutes on a large
           repository; the validator must stay a fast read-only check.
+  - id: template-prompts-warn
+    kind: decision
+    statement: The prompts of the Plane templates ("Replace this text.") are
+      placeholder-text warnings; the uppercase placeholder of the ADD scaffold
+      stays an error.
+    status: supported
+    basis: observed
+    evidence:
+      - docs/artifacts/artifact-plane/changes/change-delivery-improvements/tasks/05-operations.md#evidence
+    check: Run npm test; the existing operation tests create documents from the
+      templates and expect no validator error.
+    rejected:
+      - option: Report the template prompts as errors.
+        reason: Records that the existing operations write would fail
+          validation, against PI8.
+      - option: Ignore the template prompts.
+        reason: An unedited template would look complete.
 ---
 
 # Delivery support contract
@@ -50,7 +67,7 @@ Existing records without these fields read as before. The diagnostic codes are t
 
 ## Shared checks
 
-`server/record-checks.js` implements every check of the record-checks contract that is not already a reader diagnostic. Readers, the validator entry point and the review service call it; no second implementation exists. Checks that need Git use the existing read-only Git helpers and local refs.
+`server/record-checks.js` implements every check of the record-checks contract that is not already a reader diagnostic. Readers, the validator entry point and the review service call it; no second implementation exists. Checks that need Git use the existing read-only Git helpers and local refs. `placeholder-text` is an error for the ADD scaffold placeholder `REPLACE` and a warning for the prompts of the Plane templates, such as "Replace this text." (claim template-prompts-warn).
 
 ## Tier check
 
@@ -82,7 +99,7 @@ The allowed tier is small when every criterion is `pass` or `coordinator`, large
 | task.add, task.update | Gain optional `covers`. The task template has no Prerequisites section and no approval sentence; `depends_on` stays the only prerequisite record. |
 | evidence.record | Omits `source` in the written record, because the default is the same section. |
 | change.scaffold | New. Input: the change.start fields plus a list of tasks with title, covers and DoD items. Calls change.start and task.add in one operation with one undo entry. For a small tier exactly one task is accepted. The result must pass the shared checks, or the operation is refused with the diagnostics. |
-| version.prepare | `level` becomes optional and defaults to the plan `compatibility`. The base is `current_version` of the identity record on the protected branch, not of the working tree. A computed number that is not greater than the protected number is refused. When the working tree already has a different unestablished version record of this change, the operation renames it. |
+| version.prepare | `level` becomes optional and defaults to the plan `compatibility`. The base is `current_version` of the identity record on the protected branch, not of the working tree. A computed number that is not greater than the protected number is refused. When the working tree already has a different unestablished version record of this change, the operation renames it. The rename deletes that record; it is the only deletion of a version record that the writer allows, and only for an unestablished record of the same change. A computed number that is not greater than a version record of another change in the working tree is also refused. |
 
 The writer, digests, journal and channel rules of knowledge-editing.md stay unchanged.
 
