@@ -47,3 +47,10 @@ Read the full `kiss` and `asd-ste-100` skills in `../../../required-skills/` whe
 | A change adds a table, diagram or derived view | [Representations](reference.md#representations) |
 | A decision, assumption or limit is consequential | [Claims](reference.md#claims) |
 | Checks run across branches or repositories | [Continuous integration](../../../04-patterns/continuous-integration.md) |
+| A PR of a change merged | [After merge](../../../06-guidelines/runbooks.md#after-merge) |
+| The protected branch moved after you prepared the version record | [Renumber](../../../06-guidelines/runbooks.md#renumber) |
+| After plan approval, knowledge is wrong, a claim is refuted or the scope changes | [Amendment](../../../06-guidelines/runbooks.md#amendment) |
+| The owner withdraws or pauses a change | [Stop](../../../06-guidelines/runbooks.md#stop) |
+| An established version has a defect or must be undone | [Reverse](../../../06-guidelines/runbooks.md#reverse) |
+| A DoD item needs a live harness, a running interface or a relaxed permission | [Live check](../../../06-guidelines/runbooks.md#live-check) |
+| A required check fails | [Failed check](../../../06-guidelines/runbooks.md#failed-check) |
