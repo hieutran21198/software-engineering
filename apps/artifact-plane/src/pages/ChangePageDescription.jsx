@@ -31,10 +31,10 @@ export default function PrDescription({artifact, change}) {
   }
   const {tier} = d;
   return <Section title="PR description" label="PR description" id="change-description"
-    summary={<span className="small muted">Tier {tier.declared} declared, {tier.allowed} allowed.</span>}
+    summary={<span className="small muted">Tier {tier.declared} declared; the criteria give {tier.allowed}.</span>}
     actions={<button className="primary" onClick={copy}>Copy</button>}>
     <p className="small muted description-copied" role="status">{copied}</p>
-    {tier.declared === 'small' && tier.allowed !== 'small' && <p className="small claim-note description-mismatch" role="note">The change declares tier small, but the criteria allow {tier.allowed}.</p>}
+    {tier.declared === 'small' && tier.allowed !== 'small' && <p className="small claim-note description-mismatch" role="note">The change declares tier small, but the criteria give {tier.allowed}.</p>}
     <ul className="description-criteria" aria-label="Tier criteria">
       {tier.criteria.map(c => <li key={c.id}>
         <span className="mono">{c.id}</span>
