@@ -30,7 +30,7 @@ HG1 to HG12 in requirements/human-guidance.md.
 
 ## Change status
 
-The work model derives one status for each change from the workflow evidence that the server already returns, and from two new fields of each change: `delivered` (the version record is on the protected ref) and `upstream` (`same`, `behind`, `ahead`, `diverged` or `none`, from `git rev-parse @{upstream}` and `git rev-list --left-right --count` in the change's worktree). The server reads the upstream once for each worktree in the existing workflow read. It does not fetch.
+The work model derives one status for each change from the workflow evidence that the server already returns, and from two new fields of each change: `delivered` (the version record is on the protected ref) and `upstream` (`same`, `behind`, `ahead`, `diverged` or `none`, from `git rev-list --left-right --count HEAD...@{upstream}` in the change's worktree; without an upstream the value is `none`). The server reads the upstream once for each worktree in the existing workflow read. It does not fetch.
 
 | Status | Condition | Status text | Next step text | Primary action |
 | --- | --- | --- | --- | --- |
