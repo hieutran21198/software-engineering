@@ -70,8 +70,9 @@ claims:
     statement: The flows source-retrieval, change-impact, repository-exploration,
       repository-refresh and execution-observation keep their steps, although
       the impact service reaches them from the Plane code of this unit.
-    status: supported
+    status: verified
     basis: observed
+    verified_by: agent
     evidence:
       - docs/artifacts/units-of-work/delivery-improvements/README.md#impact-reconciliation
     check: Run the impact service on the Plane branch difference at depth 2 and
@@ -119,6 +120,26 @@ evidence:
     method: one contract statement or check for each guarantee and tier
     result: passed
     source: docs/artifacts/artifact-driven/changes/change-delivery-improvements/tasks/06-validation.md#evidence
+  - criterion: small-path
+    method: replay of #37 counted and checked with the validator of a fresh adoption
+    result: passed
+    source: docs/artifacts/artifact-plane/changes/change-delivery-improvements/tasks/07-validation.md#evidence
+  - criterion: validator
+    method: adopted validator on the seeded fixture; built file and entry point compared
+    result: passed
+    source: docs/artifacts/artifact-plane/changes/change-delivery-improvements/tasks/07-validation.md#evidence
+  - criterion: review
+    method: description parity test over operation, HTTP, MCP, packet and page
+    result: passed
+    source: docs/artifacts/artifact-plane/changes/change-delivery-improvements/tasks/06-description.md#evidence
+  - criterion: scores
+    method: ADD rescored with the anchors of the framework-comparison scores
+    result: passed
+    source: docs/artifacts/units-of-work/framework-comparison/scores.md#rescore-after-delivery
+  - criterion: integration
+    method: Go, Node, browser, website and validator checks on the combined branch
+    result: passed
+    source: docs/artifacts/artifact-plane/changes/change-delivery-improvements/tasks/07-validation.md#evidence
 ---
 
 # Make delivery cost scale with the change

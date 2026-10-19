@@ -20,8 +20,12 @@ claims:
     statement: The standalone validator reports the impact-contained criterion
       as coordinator-decided; only the Plane services decide it with the impact
       service.
-    status: open
-    basis: inferred
+    status: verified
+    basis: observed
+    verified_by: agent
+    evidence:
+      - docs/artifacts/artifact-plane/changes/change-delivery-improvements/tasks/03-tier-check.md#evidence
+      - docs/artifacts/artifact-plane/changes/change-delivery-improvements/tasks/07-validation.md#evidence
     check: Run the built validator with --change on change-hidden-tab-streams in
       a repository without a Plane state directory and confirm that the
       criterion result is coordinator and that no index is built.
@@ -34,8 +38,9 @@ claims:
     statement: The prompts of the Plane templates ("Replace this text.") are
       placeholder-text warnings; the uppercase placeholder of the ADD scaffold
       stays an error.
-    status: supported
+    status: verified
     basis: observed
+    verified_by: agent
     evidence:
       - docs/artifacts/artifact-plane/changes/change-delivery-improvements/tasks/05-operations.md#evidence
     check: Run npm test; the existing operation tests create documents from the
