@@ -156,5 +156,5 @@ export function sidebarRows({snapshot, worktree, filter = '', expanded, history 
 // Page identity used for the selected sidebar row and for leaving unsaved edits.
 export function samePage(a, b) {
   if (!a || !b || a.kind !== b.kind) return false;
-  return ['artifact', 'change', 'unit', 'source', 'flow', 'context', 'sourceId'].every(k => (a[k] ?? null) === (b[k] ?? null)) && JSON.stringify(a.scope ?? null) === JSON.stringify(b.scope ?? null);
+  return ['artifact', 'change', 'unit', 'source', 'flow', 'context', 'sourceId', 'model'].every(k => (a[k] ?? null) === (b[k] ?? null)) && JSON.stringify(a.scope ?? null) === JSON.stringify(b.scope ?? null);
 }

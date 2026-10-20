@@ -31,10 +31,11 @@ import DiscoverPage from './pages/DiscoverPage.jsx';
 import RecordedPage from './pages/RecordedPage.jsx';
 import SourcePage from './pages/SourcePage.jsx';
 import ImpactPage from './pages/ImpactPage.jsx';
+import ConceptPage from './pages/ConceptPage.jsx';
 
 const HOME = {kind: 'work'};
 const KEPT = ['query', 'brief'];
-const PAGES = {work: WorkPage, artifact: ArtifactPage, document: DocumentPage, change: ChangePage, unit: UnitPage, flow: FlowPage, discover: DiscoverPage, recorded: RecordedPage, source: SourcePage, impact: ImpactPage};
+const PAGES = {work: WorkPage, artifact: ArtifactPage, document: DocumentPage, change: ChangePage, unit: UnitPage, flow: FlowPage, discover: DiscoverPage, recorded: RecordedPage, source: SourcePage, impact: ImpactPage, concept: ConceptPage};
 const VERBS = {'artifact.create': 'Created artifact', 'artifact.dependencies.set': 'Set dependencies in', 'change.start': 'Started change in', 'document.add': 'Added', 'document.save': 'Saved', 'document.delete': 'Deleted', 'document.properties.set': 'Saved front matter of', undo: 'Undid the change to'};
 const short = path => path.split('/').slice(-2).join('/');
 const describe = (operation, response) => {const files = response.files || [];return `${VERBS[operation] || 'Updated'} ${files.length === 1 ? short(files[0].path) : `${files.length} files`}.`;};
@@ -274,7 +275,7 @@ export function ProjectExplorer({active: isActive = true, initialPath = '', onOp
     [snapshot, worktree, projectRoot, worktreePath, overviewEpoch, loadedSession, go, back, route.trail.length, editable, busy]);
   const uncommitted = gitState ? gitState.knowledge.length : knowledgeStatus(snapshot?.repository.status);
   const Page = PAGES[page.kind] || WorkPage;
-  const pageKey = JSON.stringify([worktreePath, page.kind, page.artifact, page.change, page.unit, page.source, page.flow, page.context, page.sourceId]);
+  const pageKey = JSON.stringify([worktreePath, page.kind, page.artifact, page.change, page.unit, page.source, page.flow, page.context, page.sourceId, page.model]);
   const showOpen = !snapshot || editingRepo;
   const sidebarMax = 400, resize = width => setSidebarWidth(Math.max(200, Math.min(sidebarMax, Math.round(width))));
   function dividerKeys(event) {const widths = {ArrowRight: sidebarWidth + 20, ArrowLeft: sidebarWidth - 20, Home: 200, End: sidebarMax};if (Object.hasOwn(widths, event.key)) {event.preventDefault();resize(widths[event.key]);}}
