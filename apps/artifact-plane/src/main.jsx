@@ -33,6 +33,7 @@ import SourcePage from './pages/SourcePage.jsx';
 import ImpactPage from './pages/ImpactPage.jsx';
 
 const HOME = {kind: 'work'};
+const KEPT = ['query', 'brief'];
 const PAGES = {work: WorkPage, artifact: ArtifactPage, document: DocumentPage, change: ChangePage, unit: UnitPage, flow: FlowPage, discover: DiscoverPage, recorded: RecordedPage, source: SourcePage, impact: ImpactPage};
 const VERBS = {'artifact.create': 'Created artifact', 'artifact.dependencies.set': 'Set dependencies in', 'change.start': 'Started change in', 'document.add': 'Added', 'document.save': 'Saved', 'document.delete': 'Deleted', 'document.properties.set': 'Saved front matter of', undo: 'Undid the change to'};
 const short = path => path.split('/').slice(-2).join('/');
@@ -40,6 +41,21 @@ const describe = (operation, response) => {const files = response.files || [];re
 const KIND = /^docs\/artifacts\/([^/]+)\/(requirements|specifications|decisions)\/(flows\/)?/;
 const session = (key, fallback) => {try {const value = sessionStorage.getItem(key);return value === null ? fallback : JSON.parse(value);} catch {return fallback;}};
 const remember = (key, value) => {try {sessionStorage.setItem(key, JSON.stringify(value));} catch {}};
+// Browser history (specifications/concept-pages.md, Browser Back): one entry for each trail push.
+// The Navigation API index tells a Forward press from a Back press; without it, every press counts as Back.
+const entryIndex = () => window.navigation?.currentEntry?.index ?? null;
+const shown = {index: entryIndex(), hash: location.hash};
+const seen = () => {shown.index = entryIndex();shown.hash = location.hash;};
+const pushEntry = () => {history.pushState({plane: true}, '');seen();};
+const replaceEntry = () => {history.replaceState({plane: true}, '');seen();};
+// A focus target is the opening control; after a remount, the control with the same tag, name and landmark.
+const nameOf = node => node.getAttribute('aria-label') || node.textContent.trim();
+const focusTarget = node => node && node !== document.body ? {node, tag: node.tagName, name: nameOf(node), main: Boolean(node.closest('main'))} : null;
+function restoreFocus(target, tries = 20) {
+  const usable = node => node?.isConnected && !node.closest('[hidden]');
+  const node = usable(target.node) ? target.node : target.name && [...document.querySelectorAll(target.tag)].find(n => usable(n) && Boolean(n.closest('main')) === target.main && nameOf(n) === target.name);
+  if (node) node.focus();else if (tries) requestAnimationFrame(() => restoreFocus(target, tries - 1));
+}
 
 function RecordedAvailable({children}) {
   const runtime = useRuntime();
@@ -75,6 +91,8 @@ export function ProjectExplorer({active: isActive = true, initialPath = '', onOp
   // Opening a page reveals its sidebar row; Back restores the previous page and focus.
   const go = useCallback(next => {
     const current = routeRef.current;
+    // The same page keeps its Discover query and open brief rows unless next names them, as the TopBar entry to an open Discover page.
+    if (samePage(current.page, next)) next = {...Object.fromEntries(KEPT.filter(k => k in current.page).map(k => [k, current.page[k]])), ...next};
     const same = samePage(current.page, next) && JSON.stringify(current.page) === JSON.stringify(next);
     if (!same && !samePage(current.page, next) && !leave()) return;
     const reveal = [];
@@ -85,17 +103,32 @@ export function ProjectExplorer({active: isActive = true, initialPath = '', onOp
     if (reveal.length) setExpanded(open => reveal.every(key => open.has(key)) ? open : new Set([...open, ...reveal]));
     setDrawerOpen(false);
     if (same) return;
-    returnFocus.current = [...returnFocus.current, document.activeElement].slice(-50);
-    const value = samePage(current.page, next) ? {...current, page: next} : {page: next, trail: [...current.trail, current.page].slice(-50)};
-    routeRef.current = value;setRoute(value);
-    if (!samePage(current.page, next)) requestAnimationFrame(() => mainRef.current?.scrollTo?.({top: 0}));
+    // A replacement in place keeps the trail, the focus list and the browser position.
+    if (samePage(current.page, next)) {replaceEntry();const value = {...current, page: next};routeRef.current = value;setRoute(value);return;}
+    returnFocus.current = [...returnFocus.current, focusTarget(document.activeElement)].slice(-50);
+    const value = {page: next, trail: [...current.trail, current.page].slice(-50)};
+    routeRef.current = value;setRoute(value);pushEntry();
+    requestAnimationFrame(() => mainRef.current?.scrollTo?.({top: 0}));
   }, []);
   const back = useCallback(() => {
-    const current = routeRef.current;if (!current.trail.length || !leave()) return;
+    const current = routeRef.current;if (!current.trail.length || !leave()) return false;
     const value = {page: current.trail.at(-1), trail: current.trail.slice(0, -1)};routeRef.current = value;setRoute(value);
     const target = returnFocus.current.pop();
-    requestAnimationFrame(() => requestAnimationFrame(() => {if (target?.isConnected && !target.closest('[hidden]')) target.focus();}));
+    if (target) requestAnimationFrame(() => requestAnimationFrame(() => restoreFocus(target)));
+    return true;
   }, []);
+  // Browser Back moves only the active project tab, and only while its trail is not empty.
+  // Forward and a move between fragments of one entry change no page; a refused leave() restores the position.
+  useEffect(() => {
+    if (!isActive) return;
+    const pop = () => {
+      const index = entryIndex(), forward = index !== null && shown.index !== null && index > shown.index, fragment = location.hash !== shown.hash;seen();
+      if (forward || fragment || !routeRef.current.trail.length) return;
+      if (!back()) pushEntry();
+    };
+    window.addEventListener('popstate', pop);window.addEventListener('hashchange', seen);
+    return () => {window.removeEventListener('popstate', pop);window.removeEventListener('hashchange', seen);};
+  }, [isActive, back]);
   const resetRoute = () => {const value = {page: HOME, trail: []};routeRef.current = value;setRoute(value);returnFocus.current = [];};
 
   // Repository reads: one queue per project, events from the observer, focus and online refresh.

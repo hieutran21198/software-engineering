@@ -180,7 +180,9 @@ function Flows({flows, unit, terms}) {
   </div>;
 }
 
-export default function ChangeBrief({artifact, change, writable}) {
+// The page object keeps the open rows as brief, the list of their questions; without it the attention row is open.
+const DEFAULT_OPEN = ['What should I care about?'];
+export default function ChangeBrief({artifact, change, writable, page}) {
   const {worktree, go} = useShell(), brief = useChangeBrief(artifact, change), b = brief.brief, terms = termOnce();
   if (!b) return <Section title="Change brief" label="Change brief" id="change-brief">
     {brief.status === 'error' ? <p className="small" role="alert">{brief.error} <button className="link" onClick={brief.retry}>Retry</button></p> : <p className="muted small" role="status">Reading the change brief…</p>}
@@ -189,8 +191,14 @@ export default function ChangeBrief({artifact, change, writable}) {
   const open = c => c.status === 'open' ? 0 : 1;
   const claims = [...b.claims].sort((x, y) => (x.available ? 1 : 0) - (y.available ? 1 : 0) || open(x) - open(y) || KIND_ORDER[x.kind] - KIND_ORDER[y.kind]);
   const unit = b.flows.declared.length > 0;
+  const rows = b.answers.filter(a => a.summary !== null), opened = Array.isArray(page?.brief) ? page.brief : DEFAULT_OPEN;
+  // The open rows are read from the elements, so two toggles before a render keep both.
+  const toggle = event => {
+    const shown = [...event.currentTarget.parentElement.children], open = rows.filter((a, i) => shown[i]?.open).map(a => a.question);
+    if (open.length !== opened.filter(q => rows.some(a => a.question === q)).length || open.some(q => !opened.includes(q))) go({...page, brief: open});
+  };
   return <Section title="Change brief" label="Change brief" id="change-brief" summary={<span className="small muted">{origin}{brief.partial ? ' The impact answer is partial.' : ''}</span>}>
-    <div className="brief-rows">{b.answers.filter(a => a.summary !== null).map(a => <details key={a.question} open={a.question === 'What should I care about?'}>
+    <div className="brief-rows">{rows.map(a => <details key={a.question} open={opened.includes(a.question)} onToggle={toggle}>
       <summary><span className="brief-question">{a.question}</span><span className="brief-answer">{a.summary}</span></summary>
       <div className="brief-more">{a.question === 'What should I care about?' ? <Attention rows={b.attention.rows} more={b.attention.more} terms={terms} unit={memberUnit(worktree, artifact, change)} go={go}/> : a.question === 'What needs my decision?' ? <Decision answer={a} counts={b.counts} terms={terms}/> : <Items items={a.items} terms={terms}/>}</div>
     </details>)}</div>
