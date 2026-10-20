@@ -9,6 +9,7 @@ import {postJSON} from '../request.js';
 import {memberUnit} from '../work-model.js';
 import {statusFamily} from '../glossary.js';
 import {termOnce} from './guidance.jsx';
+import {conceptPage} from './ConceptLinks.jsx';
 
 const LADDER_NOTES = {
   'Not analyzed': 'A claim of kind unknown, or an item that the analysis does not cover.',
@@ -60,11 +61,24 @@ export function useChangeBrief(artifact, change) {
   return {...state, retry: () => setAttempt(n => n + 1)};
 }
 
-function Items({items, terms}) {
-  return <ul className="brief-items">{items.map((item, i) => <li key={i}>
-    <span className="grow">{item.claim ? <a href={`#claim-${item.claim}`}>{item.text}</a> : item.text}{item.source && <span className="brief-source"> {short(item.source)}</span>}</span>
+// A concept row (specifications/concept-pages.md, Change brief): the concept links to
+// its page, except a removed one, and the document or flow links to its page.
+const LEAD = {'declaration-new': 'new declaration in ', 'declaration-changed': 'declaration changed in ', 'declaration-removed': 'declaration removed in ', 'participation-changed': 'participation changed in ', 'describing-document-changed': 'describing document changed: '};
+function ConceptRow({concept: c, go}) {
+  const lead = LEAD[c.reason], label = c.flow ? c.flow.title : c.document.title;
+  const target = c.flow ? {kind: 'flow', artifact: c.flow.flow.split(':')[0], flow: c.flow.flow}
+    : {kind: 'document', artifact: c.document.path.match(/^docs\/artifacts\/([^/]+)\//)?.[1], source: c.document.path, ...(c.document.removed ? {established: true} : {})};
+  // Links, not buttons: a button is one box, so a long name would leave its line.
+  const open = page => event => {event.preventDefault();go(page);};
+  return <span className="concept-row">{c.reason === 'declaration-removed' ? c.title : <a href="#" aria-label={`Open concept ${c.title}, ${lead}${label}`} onClick={open(conceptPage({artifact: c.concept.split(':')[0], logicalId: c.concept}))}>{c.title}</a>}
+    {' — '}{lead}<a href="#" aria-label={`Open ${label} for ${c.title}`} onClick={open(target)}>{label}</a></span>;
+}
+function Items({items, terms, concepts = [], go}) {
+  const conceptOf = item => item.concept && concepts.find(c => c.concept === item.concept && c.document.path === item.document?.path);
+  return <ul className="brief-items">{items.map((item, i) => {const concept = conceptOf(item);return <li key={i}>
+    <span className="grow">{concept ? <ConceptRow concept={concept} go={go}/> : <>{item.claim ? <a href={`#claim-${item.claim}`}>{item.text}</a> : item.text}{item.source && <span className="brief-source"> {short(item.source)}</span>}</>}</span>
     <Step step={item.step} terms={terms}/>
-  </li>)}</ul>;
+  </li>;})}</ul>;
 }
 const UNDECIDED = /^(.+) is reached \(([^)]+)\)(, and neither .*)$/;
 // An attention row: a stripe of its family; an undecided flow names the rule and,
@@ -200,7 +214,7 @@ export default function ChangeBrief({artifact, change, writable, page}) {
   return <Section title="Change brief" label="Change brief" id="change-brief" summary={<span className="small muted">{origin}{brief.partial ? ' The impact answer is partial.' : ''}</span>}>
     <div className="brief-rows">{rows.map(a => <details key={a.question} open={opened.includes(a.question)} onToggle={toggle}>
       <summary><span className="brief-question">{a.question}</span><span className="brief-answer">{a.summary}</span></summary>
-      <div className="brief-more">{a.question === 'What should I care about?' ? <Attention rows={b.attention.rows} more={b.attention.more} terms={terms} unit={memberUnit(worktree, artifact, change)} go={go}/> : a.question === 'What needs my decision?' ? <Decision answer={a} counts={b.counts} terms={terms}/> : <Items items={a.items} terms={terms}/>}</div>
+      <div className="brief-more">{a.question === 'What should I care about?' ? <Attention rows={b.attention.rows} more={b.attention.more} terms={terms} unit={memberUnit(worktree, artifact, change)} go={go}/> : a.question === 'What needs my decision?' ? <Decision answer={a} counts={b.counts} terms={terms}/> : <Items items={a.items} terms={terms} concepts={b.concepts} go={go}/>}</div>
     </details>)}</div>
     {claims.length > 0 && <div className="brief-claims" role="region" aria-label="Claims">
       <h3>Claims <span className="small muted">{claims.length} · open first</span></h3>

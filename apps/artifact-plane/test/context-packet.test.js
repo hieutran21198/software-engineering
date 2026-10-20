@@ -36,3 +36,8 @@ test('change impact tiers get their own section after the recorded flow impact',
  for(const fact of ['flow&#58;a&#58;login','declared+documented','dynamic calls'])assert.ok(md.includes(fact),fact);
  delete input.data.impact.tiers;assert.ok(!formatContextMarkdown(input).includes('## Change impact'));
 });
+test('CP12: the packet brief holds the concepts, and the Change brief section shows them',()=>{
+ const input=packet();input.data.brief={schema:'artifact-plane.change-brief.v1',origin:{kind:'protected-diff'},concepts:[{concept:'add:version',title:'Version',reason:'participation-changed',document:{path:'docs/artifacts/add/specifications/flows/gates.md',title:'Resolve gates'},flow:{flow:'add:gates',title:'Resolve gates'}}],answers:[]};
+ const md=formatContextMarkdown(input),brief=md.slice(md.indexOf('## Change brief'),md.indexOf('## Evidence and unresolved facts'));
+ for(const fact of ['Version','participation-changed','Resolve gates'])assert.ok(brief.includes(fact),fact);
+});

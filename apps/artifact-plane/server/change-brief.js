@@ -5,7 +5,9 @@ import {buildTaskGraph} from './task-graph.js';
 import {checklist} from './workflow.js';
 import {unitBriefs, versionClaims, versionSnapshot, frontMatter, anchor} from './units-of-work.js';
 import {readClaims, changeClaimPaths} from './claims.js';
-import {protectedRefs} from './knowledge-baseline.js';
+import {protectedRefs, protectedTree, blobId} from './knowledge-baseline.js';
+import {parseModels, parseFlow} from './flow-model.js';
+import {documentTitle} from '../src/model.js';
 // The change brief (specifications/review-brief.md): seven answers, claims, flows,
 // attention, delivery facts and counts, derived from Git, the knowledge and the
 // impact service. It stores nothing and grants no approval.
@@ -83,6 +85,95 @@ async function mergeBase(root, git) {
   const head = oid ? await git(root, ['rev-parse', '--verify', '-q', 'HEAD']).catch(() => null) : null;
   return head ? await git(root, ['merge-base', oid, head]).catch(() => null) || null : null;
 }
+// Concept rows (specifications/concept-pages.md, Change brief): the reasons in
+// their order, the reason words of the PR line and the summary prefix parts.
+export const CONCEPT_REASONS = ['declaration-new', 'declaration-changed', 'declaration-removed', 'participation-changed', 'describing-document-changed'];
+const WORDS = {'declaration-new': 'new declaration', 'declaration-changed': 'declaration changed', 'declaration-removed': 'declaration removed'};
+export const reasonWords = c => c.reason === 'participation-changed' ? `participation changed in ${c.flow.title}` : WORDS[c.reason] ?? null;
+const rowText = c => c.reason === 'describing-document-changed' ? `${c.title} — describing document changed: ${c.document.title}` : `${c.title} — ${reasonWords(c)}${c.reason === 'participation-changed' ? '' : ` in ${c.document.title}`}`;
+const PREFIX = [['declaration-new', 'New concept', 'New concepts'], ['declaration-changed', 'Changed declaration', 'Changed declarations'], ['declaration-removed', 'Removed concept', 'Removed concepts'], ['participation-changed', 'Participation changed', 'Participations changed']];
+// The summary prefix: one part for each of the first four reasons, at most 3 titles each.
+export function conceptPrefix(concepts = []) {
+  return PREFIX.flatMap(([reason, one, many]) => {
+    const titles = [...new Map(concepts.filter(c => c.reason === reason).map(c => [c.concept, c.title])).values()];
+    if (!titles.length) return [];
+    return [`${titles.length > 1 ? many : one}: ${titles.slice(0, 3).join(', ')}${titles.length > 3 ? ` and ${titles.length - 3} more` : ''}.`];
+  }).join(' ');
+}
+const DECLARING = /^docs\/artifacts\/([^/]+)\/(specifications\/(?!flows\/).+\.md)$/;
+const FLOW = /^docs\/artifacts\/([^/]+)\/(specifications\/flows\/.+\.md)$/;
+const KNOWLEDGE = /^docs\/artifacts\/[^/]+\/(?:requirements|specifications|decisions)\/.+\.md$/;
+const entry = m => JSON.stringify([m.title, m.description, m.sources]);
+// Claim participation-diff: the participants of the concept in one flow and the
+// interactions that name one of them (step, from, to, action, outcome).
+function participation(flow, concept) {
+  const list = (flow?.participants || []).filter(p => `${p.artifact}:${p.model}` === concept), ids = new Set(list.map(p => p.id));
+  const interactions = (flow?.steps || []).flatMap(s => (s.interactions || []).filter(i => ids.has(i.from) || ids.has(i.to)).map(i => JSON.stringify([s.id, i.from, i.to, i.action, i.outcome])));
+  return JSON.stringify([list.map(p => JSON.stringify([p.id, p.requires, p.status ?? null, p.change ?? null])).sort(), interactions.sort()]);
+}
+// The concepts that a change reaches. A delivered change compares its commit with
+// its first parent; an open change compares the worktree bytes with the merge base,
+// or with the protected tip when Git gives no merge base.
+async function conceptsOf({worktree, git, origin, base, files}) {
+  if (!['delivery-commit', 'protected-diff'].includes(origin.kind)) return [];
+  const head = origin.kind === 'delivery-commit' ? origin.commit : null;
+  const from = head ? await git(worktree, ['rev-parse', '--verify', '-q', `${head}^1`]).catch(() => null)
+    : base ?? (await protectedRefs(worktree, git).catch(() => []))[0]?.oid ?? null;
+  if (!head && !from) return [];
+  const tree = rev => rev ? protectedTree(worktree, git, rev, ['docs/artifacts']).catch(() => new Map()) : new Map();
+  const before = new Map([...await tree(from)].filter(([p]) => KNOWLEDGE.test(p)));
+  const length = [...before.values()][0]?.length ?? 40;
+  const after = head ? new Map([...await tree(head)].filter(([p]) => KNOWLEDGE.test(p)))
+    : new Map([...files].filter(([p, text]) => KNOWLEDGE.test(p) && typeof text === 'string').map(([p, text]) => [p, blobId(Buffer.from(text, 'utf8'), length)]));
+  const changed = path => (before.has(path) || after.has(path)) && before.get(path) !== after.get(path);
+  const text = (rev, path, side) => !side.has(path) ? null : rev ? git(worktree, ['show', `${rev}:${path}`], true).catch(() => null) : files.get(path) ?? null;
+  const titleOf = async path => {const relative = path.replace(/^docs\/artifacts\/[^/]+\//, '');return documentTitle(await text(head, path, after) ?? await text(from, path, before) ?? '', relative);};
+  // Declarations of one side, by logical id.
+  async function declarations(rev, side) {
+    const listed = rev ? (await git(worktree, ['grep', '-l', '-E', '^models[[:space:]]*:', rev, '--', 'docs/artifacts'], true).catch(() => '')).split('\n').filter(Boolean).map(l => l.slice(rev.length + 1))
+      : [...side.keys()].filter(p => /(?:^|\n)models\s*:/.test(files.get(p)));
+    const found = new Map();
+    for (const file of listed) {
+      const match = file.match(DECLARING), markdown = match && await text(rev, file, side);
+      if (!markdown) continue;
+      for (const m of parseModels({id: file, artifact: match[1], source: 'working', path: match[2], file, markdown})?.models || []) if (!found.has(m.logicalId)) found.set(m.logicalId, m);
+    }
+    return found;
+  }
+  const old = from ? await declarations(from, before) : new Map(), now = await declarations(head, after);
+  const titleOfConcept = id => (now.get(id) ?? old.get(id))?.title;
+  const document = async (path, side) => ({path, title: await titleOf(path), ...(side.has(path) ? {} : {removed: true})});
+  const items = [];
+  for (const [id, m] of now) {
+    const was = old.get(id);
+    if (!was || entry(was) !== entry(m)) {items.push({concept: id, title: m.title, reason: was ? 'declaration-changed' : 'declaration-new', document: await document(m.file, after)});continue;}
+    for (const source of m.sources) {
+      const path = `docs/artifacts/${m.artifact}/${source}`;
+      if (changed(path)) items.push({concept: id, title: m.title, reason: 'describing-document-changed', document: await document(path, after)});
+    }
+  }
+  for (const [id, m] of old) if (!now.has(id)) items.push({concept: id, title: m.title, reason: 'declaration-removed', document: await document(m.file, after)});
+  // Participations in the flow documents that differ.
+  const flowsOf = async (rev, side, paths) => {
+    const found = new Map();
+    for (const file of paths) {
+      const match = file.match(FLOW), markdown = await text(rev, file, side);
+      if (markdown === null) continue;
+      const flow = parseFlow({id: file, artifact: match[1], source: 'working', path: match[2], file, markdown});
+      if (!found.has(flow.logicalId)) found.set(flow.logicalId, flow);
+    }
+    return found;
+  };
+  const flowPaths = [...new Set([...before.keys(), ...after.keys()])].filter(p => FLOW.test(p) && changed(p)).sort();
+  const flowsBefore = await flowsOf(from, before, flowPaths), flowsAfter = await flowsOf(head, after, flowPaths);
+  for (const key of [...new Set([...flowsBefore.keys(), ...flowsAfter.keys()])]) {
+    const a = flowsBefore.get(key), b = flowsAfter.get(key), flow = b ?? a;
+    const ids = [...new Set([a, b].flatMap(f => (f?.participants || []).map(p => `${p.artifact}:${p.model}`)))];
+    for (const id of ids) if (titleOfConcept(id) && participation(a, id) !== participation(b, id))
+      items.push({concept: id, title: titleOfConcept(id), reason: 'participation-changed', document: await document(flow.file, after), flow: {flow: key, title: flow.title}});
+  }
+  return items.sort((x, y) => CONCEPT_REASONS.indexOf(x.reason) - CONCEPT_REASONS.indexOf(y.reason) || x.title.localeCompare(y.title) || x.concept.localeCompare(y.concept) || x.document.path.localeCompare(y.document.path));
+}
 export async function buildBrief({root, worktree, artifact, change, git, impactService, records = []}) {
   const scan = await scanRepository(worktree, {git});
   const {files, snapshot, baselines} = scan;
@@ -102,6 +193,8 @@ export async function buildBrief({root, worktree, artifact, change, git, impactS
     } catch (error) {diagnostics.push({code: 'unavailable-impact', path: prefix, message: error.status ? error.message : 'Change impact could not be computed.'});}
   }
   const d = impact?.data;
+  const concepts = await conceptsOf({worktree, git, origin, base, files});
+  const conceptItems = concepts.map(c => ({text: rowText(c), source: c.document.path, step: GIT, concept: c.concept, document: c.document, ...(c.flow ? {flow: c.flow} : {})}));
   const changedPaths = new Set((d?.changed || []).map(c => c.path));
 
   // Claims of the change: plan, tasks, unit brief and the knowledge it changes.
@@ -167,10 +260,11 @@ export async function buildBrief({root, worktree, artifact, change, git, impactS
   const answers = [
     [`${plural(changedRecords.length, 'requirement, specification or decision document')}, ${plural(otherKnowledge.length, 'other knowledge file')} and ${plural(codeFiles.length, 'code and test file')}${changedItems.some(i => i.text.endsWith('not in any task scope')) ? `; ${changedItems.filter(i => i.text.endsWith('not in any task scope')).length} not in any task scope` : ''}.`, changedItems],
     [(why && firstSentence(why)) ?? (decisions.length ? `${plural(decisions.length, 'decision claim')}; the change README states no reason.` : null), [...(why ? [{text: why, source: `${prefix}README.md`, step: EXPLAINED}] : []), ...decisions.map(c => ({text: `Decision ${c.id}: ${c.statement}${c.rejected.length ? ` Rejected: ${c.rejected.map(r => `${r.option} (${r.reason})`).join('; ')}.` : ''}`, source: c.file, step: c.step, claim: c.id}))]],
-    [d ? `${plural(reached.length, 'flow')} reached: ${reached.filter(f => f.state === 'declared').length} declared, ${reached.filter(f => f.state === 'decided').length} decided by a claim, ${reached.filter(f => f.state === 'undecided').length} undecided. ${plural(d.unresolved.length, 'unresolved item')}.` : null,
-      d ? [...reached.map(f => ({text: `${f.flow} — ${f.state}${f.steps.length ? ` (steps ${f.steps.join(', ')})` : ''}`, source: f.decidedBy?.file ?? (typeof f.decidedBy === 'string' ? f.decidedBy : null), step: GIT})),
+    // The concept prefix, then the flow sentence; without Impact data the prefix alone.
+    [[conceptPrefix(concepts), d ? `${plural(reached.length, 'flow')} reached: ${reached.filter(f => f.state === 'declared').length} declared, ${reached.filter(f => f.state === 'decided').length} decided by a claim, ${reached.filter(f => f.state === 'undecided').length} undecided. ${plural(d.unresolved.length, 'unresolved item')}.` : ''].filter(Boolean).join(' '),
+      [...conceptItems, ...(d ? [...reached.map(f => ({text: `${f.flow} — ${f.state}${f.steps.length ? ` (steps ${f.steps.join(', ')})` : ''}`, source: f.decidedBy?.file ?? (typeof f.decidedBy === 'string' ? f.decidedBy : null), step: GIT})),
         ...d.unresolved.map(u => ({text: `${u.entity}: ${u.reason}`, source: null, step: NOT_ANALYZED})),
-        {text: `Coverage: depth ${d.coverage.depth}, frontier ${d.coverage.frontier}. Not analyzed: ${d.coverage.not_analyzed.join('; ')}.`, source: null, step: NOT_ANALYZED}] : []],
+        {text: `Coverage: depth ${d.coverage.depth}, frontier ${d.coverage.frontier}. Not analyzed: ${d.coverage.not_analyzed.join('; ')}.`, source: null, step: NOT_ANALYZED}] : [])]],
     [rows.length ? `${plural(rows.length, 'item')}: ${[...new Set(rows.map(r => r.category.toLowerCase()))].join(', ')}.` : null, attention.rows],
     [claims.length || steps.length ? `${plural(claims.length, 'claim')} and ${plural(steps.length, 'affected step')}.` : null,
       [...claims.filter(live).map(c => ({text: c.statement, source: c.file, step: c.step, claim: c.id})), ...steps, ...changedRecords.map(r => ({text: `Governed document ${r.path}`, source: `docs/artifacts/${artifact}/${r.path}`, step: GIT}))]],
@@ -184,5 +278,5 @@ export async function buildBrief({root, worktree, artifact, change, git, impactS
 
   const count = key => claims.reduce((m, c) => ({...m, [c[key]]: (m[c[key]] || 0) + 1}), {});
   const counts = {claims: claims.length, byStep: count('step'), byKind: count('kind'), byStatus: count('status'), checksByPerson: claims.filter(c => c.verifiedBy === 'person').length, checksByAgent: claims.filter(c => c.verifiedBy === 'agent').length};
-  return {brief: {schema: 'artifact-plane.change-brief.v1', origin, answers, claims, flows, attention, delivery, counts}, diagnostics, partial: !impact && origin.kind !== 'none' || diagnostics.length > 0, scan};
+  return {brief: {schema: 'artifact-plane.change-brief.v1', origin, concepts, answers, claims, flows, attention, delivery, counts}, diagnostics, partial: !impact && origin.kind !== 'none' || diagnostics.length > 0, scan};
 }

@@ -1,7 +1,11 @@
 import {test, expect} from '@playwright/test';
 import {writeFile} from 'node:fs/promises';
 import {join} from 'node:path';
-import {openRepository, openChange, openDocument, region, noOverflow} from './workbench.js';
+import {openRepository, openChange, openDocument, region, noOverflow, layoutFacts} from './workbench.js';
+import {conceptRepository, conceptFiles, add, declaring, declarations, version, delivery} from '../concept-fixtures.js';
+import {git} from '../fixtures.js';
+import {mkdir} from 'node:fs/promises';
+import {parse, stringify} from 'yaml';
 import {editingRepository, editingFiles, billing, tenant, read} from './editing-fixtures.js';
 // The Change brief of the change page: section order, rows, claim cards, the
 // hypothesis table, a person's check and wording notes on delivered records.
@@ -126,4 +130,69 @@ test('wording notes appear only on records of delivered work', async ({page}) =>
     await region(page, 'Artifact page').getByText('Onboarding', {exact: true}).click();
     await expect(region(page, 'Flow page').getByRole('note')).toContainText('Browser checks for the current integrated validation remain pending.');
   } finally {await f.cleanup();}
+});
+
+// CP11 (specifications/concept-pages.md, Change brief): the concept rows of
+// "What is affected?" link the concept and the document; a removed concept is text.
+const GATES = 'Resolve implementation dependency gates', MODELS = 'ADD models used in dependency gates';
+async function conceptBranch() {
+  const f = await conceptRepository(), put = async (path, text) => {await mkdir(join(f.root, path, '..'), {recursive: true});await writeFile(join(f.root, path), text);};
+  git(f.root, 'switch', '-q', '-c', 'work');
+  const change = {id: 'change', title: 'Change', description: 'One proposed change of an artifact.', sources: ['specifications/knowledge.md']};
+  const release = {id: 'release', title: 'Release', description: 'A published package of established versions.', sources: ['specifications/delivery.md']};
+  await put(declaring, declarations([version, change, release, delivery]));
+  await put(add + 'specifications/knowledge.md', '# Knowledge and execution contract\n\nVersions hold knowledge and provenance.\n');
+  const flowPath = add + 'specifications/flows/gates.md', text = conceptFiles().get(flowPath), front = text.match(/^---\n([\s\S]*?)\n---\n/), data = parse(front[1]);
+  data.flow.participants[0].requires = 'Provide the established contract.';
+  await put(flowPath, '---\n' + stringify(data) + '---\n' + text.slice(front[0].length));
+  await put(add + 'changes/change-next/README.md', '# Add the delivery record concept\n\n## Reason and scope\n\nReviewers need the delivery record as a concept.\n');
+  await put(add + 'changes/change-next/tasks/README.md', '---\ntasks: []\n---\n# Plan\n');
+  git(f.root, 'add', '-A');git(f.root, '-c', 'user.name=Fixture', '-c', 'user.email=fixture@example.invalid', 'commit', '-qm', 'Start change-next');
+  return f;
+}
+for (const width of [1440, 390]) test.describe(`concept rows at ${width} pixels`, () => {
+  test.use({viewport: {width, height: width < 500 ? 844 : 1000}});
+  test('CP11: concept rows link the concept and the document, a removed concept is text, and attention has no concept row', async ({page}) => {
+    test.setTimeout(90000);
+    const f = await conceptBranch(), errors = [];page.on('pageerror', e => errors.push(e.message));
+    try {
+      await openRepository(page, f.root);
+      await openChange(page, 'Add the delivery record concept');
+      const section = brief(page), row = section.locator('.brief-rows details').filter({has: page.locator('.brief-question', {hasText: 'What is affected?'})});
+      await expect(row.locator('.brief-answer')).toHaveText(/^New concept: Delivery record\. Removed concept: Ledger\. Participation changed: Version\. \d+ flows? reached: /, {timeout: 30000});
+      await row.locator('summary').click();
+      const items = row.locator('.brief-items > li');
+      const texts = (await items.locator('.grow').allInnerTexts()).map(t => t.replace(/\s+/g, ' ').trim());
+      expect(texts.slice(0, 5)).toEqual([`Delivery record — new declaration in ${MODELS}`, `Ledger — declaration removed in ${MODELS}`, `Version — participation changed in ${GATES}`,
+        'Change — describing document changed: Knowledge and execution contract', 'Version — describing document changed: Knowledge and execution contract']);
+      await expect(items.nth(0).locator('.ladder-step')).toHaveText('Fact from Git');
+      // The removed concept is plain text; its document is a link.
+      await expect(row.getByRole('link', {name: /^Open concept Ledger/})).toHaveCount(0);
+      await expect(row.getByRole('link', {name: `Open ${MODELS} for Ledger`, exact: true})).toBeVisible();
+      // A long document name wraps with the row text: the link starts on the line of its lead words.
+      const box = await items.nth(0).locator('.concept-row').evaluate(el => {const lead = el.childNodes[2], range = document.createRange();range.selectNodeContents(lead);const a = range.getClientRects(), link = el.querySelectorAll('a')[1].getClientRects()[0];return [a[a.length - 1].top, link.top];});
+      expect(Math.abs(box[0] - box[1])).toBeLessThan(4);
+      // No source path repeats the linked document on a concept row.
+      await expect(items.nth(0).locator('.brief-source')).toHaveCount(0);
+      // Attention has no concept row.
+      const care = section.locator('.brief-attention');
+      for (const t of ['Delivery record', 'Ledger', 'describing document']) await expect(care).not.toContainText(t);
+      // Names are unique, and the page does not scroll sideways.
+      const facts = await layoutFacts(page);
+      expect(facts.duplicates.filter(d => /^Open /.test(d))).toEqual([]);
+      expect(await noOverflow(page)).toBe(true);
+      // The concept link opens the concept page; Back returns with the row open.
+      await row.getByRole('link', {name: `Open concept Delivery record, new declaration in ${MODELS}`, exact: true}).click();
+      await expect(region(page, 'Concept page').getByRole('heading', {level: 1})).toContainText('Delivery record');
+      await page.goBack();
+      await expect(row).toHaveAttribute('open', '');
+      // The flow link opens the flow page; the document link opens the document page.
+      await row.getByRole('link', {name: `Open ${GATES} for Version`, exact: true}).click();
+      await expect(region(page, 'Flow page').getByRole('heading', {level: 1})).toContainText(GATES);
+      await page.goBack();
+      await row.getByRole('link', {name: 'Open Knowledge and execution contract for Change', exact: true}).click();
+      await expect(region(page, 'Document page').getByRole('heading', {level: 1})).toContainText('Knowledge and execution contract');
+      expect(errors).toEqual([]);
+    } finally {await f.cleanup();}
+  });
 });
