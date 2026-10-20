@@ -12,7 +12,7 @@ import {evidenceFor, upstreamState} from '../server/workflow.js';
 import {queryRepository} from '../server/repository-query.js';
 import {createReviewService} from '../server/change-review.js';
 import {createImpactService} from '../server/impact.js';
-import {changeStatus, currentChanges, isCurrent, phaseModel, phaseLabel, sidebarRows} from '../src/work-model.js';
+import {changeStatus, currentChanges, isCurrent, phaseModel, phaseLabel, sidebarRows, enterRow} from '../src/work-model.js';
 
 const step = (name, state) => ({name, state, evidence: []});
 const NAMES = ['Requirement', 'Specification', 'Plan', 'Implementation', 'Validation', 'Version preparation'];
@@ -54,31 +54,45 @@ test('HG2: a prepared version stays in Current work; a delivered change is only 
   assert.equal(rows.find(r => r.key === 'c:a/change-ready').detail, 'A · Ready for team review');
 });
 
-test('CP13, claim sidebar-enter-unchanged: concept rows join the filtered tree first under their artifact', () => {
+test('CP13, claim sidebar-enter-exact-concept: concept rows join the filtered tree first under their artifact', () => {
   const doc = (path, title) => ({path, file: `docs/artifacts/add/${path}`, title, source: 'working', state: 'unchanged'});
   const snapshot = {artifacts: [
     {id: 'add', title: 'Artifact-Driven Development', layout: 'in-place', elements: [doc('requirements/version-records.md', 'Version records'), doc('specifications/changes.md', 'Change records')], changes: []},
     {id: 'plane', title: 'Artifact Plane', layout: 'in-place', elements: [], changes: []}]};
-  const worktree = {path: '/w', branch: 'work', changes: [{...open(2), artifact: 'plane', name: 'change-concept-pages', title: 'Concept pages'}], unitsOfWork: []};
+  // The name of the second change contains version, as change-legacy-conversion does in this repository.
+  const worktree = {path: '/w', branch: 'work', changes: [{...open(2), artifact: 'plane', name: 'change-concept-pages', title: 'Concept pages'}, {...open(2), artifact: 'add', name: 'change-version-gates', title: 'Gate releases'}], unitsOfWork: []};
   const item = (artifact, model, title, declaration = null) => ({logicalId: `${artifact}:${model}`, entity: `model:${artifact}:${model}`, title, description: '', artifact, declaration});
   const concepts = [item('add', 'version', 'Version'), item('add', 'change', 'Change'), item('add', 'release', 'Release', 'removed'), item('plane', 'repository-snapshot', 'Repository snapshot')];
-  const rows = filter => sidebarRows({snapshot, worktree, filter, expanded: new Set(), concepts});
+  const rows = (filter, list = concepts) => sidebarRows({snapshot, worktree, filter, expanded: new Set(), concepts: list});
   const shown = filter => rows(filter).filter(r => r.kind !== 'heading').map(r => `${r.level}:${r.label}${r.detail ? ` (${r.detail})` : ''}`);
-  // The rule of the search box: Enter opens the first row with a page that matches itself.
-  const enter = filter => rows(filter).find(r => r.page && r.matched)?.page;
-  assert.deepEqual(shown('version'), ['0:Current work', '0:Artifact-Driven Development', '1:Version (Concept)', '1:Requirements', '2:Version records']);
-  assert.deepEqual(enter('version'), {kind: 'concept', artifact: 'add', model: 'version'});
+  // The rule of the search box: Enter opens the concept whose title equals the filter, else the first row with a page that matches itself.
+  const enter = (filter, list) => enterRow(rows(filter, list).filter(r => r.kind !== 'heading'), filter)?.page;
+  const version = {kind: 'concept', artifact: 'add', model: 'version'};
+  assert.deepEqual(shown('version'), ['0:Current work', '1:Gate releases (Artifact-Driven Development · Plan)', '0:Artifact-Driven Development', '1:Version (Concept)', '1:Requirements', '2:Version records']);
+  // An exact concept title opens the concept, ignoring case and outer spaces, before the change whose name contains version.
+  for (const query of ['version', 'Version', 'Version ', '  VERSION']) assert.deepEqual(enter(query), version, query);
+  assert.deepEqual(enter('change'), {kind: 'concept', artifact: 'add', model: 'change'});
   // The model id and the logical id match; nothing else matches the logical id.
   assert.deepEqual(shown('plane:repository-snapshot'), ['0:Current work', '0:Artifact Plane', '1:Repository snapshot (Concept)']);
   assert.deepEqual(rows('plane:repository-snapshot').filter(r => r.matched).map(r => r.label), ['Repository snapshot']);
   assert.deepEqual(shown('repository-snapshot'), shown('plane:repository-snapshot'));
-  // Enter keeps the 1.24.0 rule: the change in progress comes first in tree order.
-  assert.deepEqual(enter('change'), {kind: 'change', artifact: 'plane', change: 'change-concept-pages'});
-  assert.deepEqual(shown('change').slice(0, 4), ['0:Current work', '1:Concept pages (Artifact Plane · Plan)', '0:Artifact-Driven Development', '1:Change (Concept)']);
-  // A removed declaration has no row, and an empty filter shows no concept row.
+  // A query that equals no concept title keeps the 1.24.0 rule: the first matching row in tree order.
+  assert.deepEqual(enter('chang'), {kind: 'change', artifact: 'plane', change: 'change-concept-pages'});
+  assert.deepEqual(enter('versio'), {kind: 'change', artifact: 'add', change: 'change-version-gates'});
+  assert.deepEqual(enter('repository-snapshot'), {kind: 'concept', artifact: 'plane', model: 'repository-snapshot'});
+  // Enter compares the concept title only: a query that equals the model id, but no title, keeps the first match.
+  // The change Repository snapshot cache comes first in tree order and matches both queries by its title or name.
+  const cached = {...worktree, changes: [...worktree.changes, {...open(2), artifact: 'plane', name: 'change-repository-snapshot-cache', title: 'Repository snapshot cache'}]};
+  const enterIn = (w, filter) => enterRow(sidebarRows({snapshot, worktree: w, filter, expanded: new Set(), concepts}).filter(r => r.kind !== 'heading'), filter)?.page;
+  assert.deepEqual(enterIn(cached, 'repository-snapshot'), {kind: 'change', artifact: 'plane', change: 'change-repository-snapshot-cache'});
+  assert.deepEqual(enterIn(cached, ' Repository Snapshot'), {kind: 'concept', artifact: 'plane', model: 'repository-snapshot'});
+  assert.deepEqual(shown('change').slice(0, 5), ['0:Current work', '1:Concept pages (Artifact Plane · Plan)', '1:Gate releases (Artifact-Driven Development · Plan)', '0:Artifact-Driven Development', '1:Change (Concept)']);
+  // A removed declaration has no row and no exact match; without concepts, Enter keeps the 1.24.0 result.
   assert.equal(shown('release').some(r => r.includes('Release')), false);
+  assert.deepEqual(enter('version', []), {kind: 'change', artifact: 'add', change: 'change-version-gates'});
+  assert.deepEqual(enter('change', []), {kind: 'change', artifact: 'plane', change: 'change-concept-pages'});
   assert.equal(rows('').some(r => r.kind === 'concept'), false);
-  assert.deepEqual(rows('version').map(r => r.key), sidebarRows({snapshot, worktree, filter: 'version', expanded: new Set()}).map(r => r.key).toSpliced(3, 0, 'a:add:concept:add:version'));
+  assert.deepEqual(rows('version').map(r => r.key), rows('version', []).map(r => r.key).toSpliced(4, 0, 'a:add:concept:add:version'));
 });
 
 test('HG4: the stepper marks Implementation not done while a DoD item is unchecked and Version prepared until established', () => {

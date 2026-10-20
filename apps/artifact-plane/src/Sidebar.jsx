@@ -1,5 +1,5 @@
 import React, {useEffect, useMemo, useRef, useState} from 'react';
-import {sidebarRows, samePage} from './work-model.js';
+import {sidebarRows, samePage, enterRow} from './work-model.js';
 import {DiffBadge, Icon} from './ui.jsx';
 
 // The sidebar: search, current work, artifacts with their documents, and
@@ -36,7 +36,7 @@ export default function Sidebar({snapshot, worktree, page, expanded, onToggle, o
     else if (event.key === 'ArrowLeft') {event.preventDefault();if (row.expandable && row.open && !filter) onToggle(row.key);else move(parent(index));}
     else if (event.key === 'Enter' || event.key === ' ') {event.preventDefault();activate(row);}
   }
-  const first = items.find(r => r.page && r.matched);
+  const first = enterRow(items, filter);
   return <nav className="sidebar" id={id} aria-label="Navigation">
     <div className="sidebar-scroll">
       <form role="search" className="sidebar-search" onSubmit={event => {event.preventDefault();if (filter && first) onOpen(first.page);}}>

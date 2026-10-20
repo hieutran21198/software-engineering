@@ -4,7 +4,7 @@ import {fixtureRepository, fingerprint, git, sourceFixture} from '../fixtures.js
 import {RuntimeStore} from '../../server/runtime-store.js';
 import {runtimeFixture, bind} from '../runtime-fixtures.js';
 import {editingFiles, tenant, billing} from './editing-fixtures.js';
-import {conceptRepository} from '../concept-fixtures.js';
+import {add, plane, conceptFiles, conceptRepository} from '../concept-fixtures.js';
 import {openRepository, region, refresh, noOverflow, showSidebar, sidebar, tree, treeItem, layoutFacts} from './workbench.js';
 // The More menu pages: Discover behavior (search flows by a described
 // behavior) and Recorded executions (captured task attempts of this machine).
@@ -136,6 +136,44 @@ for (const width of [1440, 390]) test(`CPA9 at ${width} px: the sidebar search f
     // Concepts load once for each worktree and epoch: never twice without an overview read between.
     expect(loads.length).toBeGreaterThan(0);expect(loads[0]).toMatchObject({operation: 'concepts', knowledge: 'planning', worktree: f.root});
     expect(new Set(loads.map(l => l.after)).size).toBe(loads.length);
+    expect(await noOverflow(page)).toBe(true);
+    expect(await fingerprint(f.root)).toEqual(before);expect(errors).toEqual([]);
+  } finally {await f.cleanup();}
+});
+
+// CP13, claim sidebar-enter-exact-concept (specifications/concept-pages.md, Sidebar search): Enter opens an exact concept title.
+// The open change change-version-gates has a name that contains version and change, as change-legacy-conversion does in this repository.
+for (const width of [1440, 390]) test(`claim sidebar-enter-exact-concept at ${width} px: Enter opens the concept whose title equals the filter, else the first match`, async ({page}) => {
+  test.setTimeout(60000);
+  await page.setViewportSize({width, height: width < 500 ? 844 : 1000});
+  const files = conceptFiles();
+  files.set(add + 'changes/change-version-gates/README.md', '# Gate releases\n\nGate the releases.\n');
+  files.set(add + 'changes/change-version-gates/tasks/README.md', '---\ntasks: []\n---\n# Plan\n');
+  // The open change Repository snapshot cache of plane matches snapshot, the model id of the concept Repository snapshot, by its title and name.
+  files.set(plane + 'changes/change-snapshot-cache/README.md', '# Repository snapshot cache\n\nCache the snapshots.\n');
+  files.set(plane + 'changes/change-snapshot-cache/tasks/README.md', '---\ntasks: []\n---\n# Plan\n');
+  const f = await fixtureRepository(files), before = await fingerprint(f.root), errors = [];
+  page.on('pageerror', e => errors.push(e.message));
+  try {
+    await openRepository(page, f.root);
+    // Enter waits for the concept row, so the concepts are loaded when it chooses.
+    const enter = async (query, row) => {
+      await showSidebar(page);const field = page.getByLabel('Search knowledge', {exact: true});await field.fill(query);
+      await expect(tree(page).locator('.tree-row.concept', {hasText: row})).toBeVisible();await field.press('Enter');
+    };
+    const concept = region(page, 'Concept page').getByRole('heading', {level: 1});
+    // The 1.24.0 rule alone opens the change Gate releases for these queries: it is the first matching row in tree order.
+    for (const query of ['version', 'Version', 'Version ', '  VERSION']) {await enter(query, 'Version');await expect(concept).toHaveText('Version');}
+    await enter('change', 'Change');await expect(concept).toHaveText('Change');
+    // A query that equals no concept title keeps the first match: the change in Current work.
+    await enter('versio', 'Version');await expect(region(page, 'Change page')).toBeVisible();
+    await showSidebar(page);await page.getByLabel('Search knowledge', {exact: true}).fill('versio');
+    await expect(treeItem(page, /^Gate releases/)).toHaveAttribute('aria-selected', 'true');
+    // Enter compares the concept title only: the model id snapshot keeps the first match, the change; the exact title opens the concept.
+    await enter('snapshot', 'Repository snapshot');await expect(region(page, 'Change page')).toBeVisible();
+    await showSidebar(page);await page.getByLabel('Search knowledge', {exact: true}).fill('snapshot');
+    await expect(treeItem(page, /^Repository snapshot cache/)).toHaveAttribute('aria-selected', 'true');
+    await enter('Repository snapshot', 'Repository snapshot');await expect(concept).toHaveText('Repository snapshot');
     expect(await noOverflow(page)).toBe(true);
     expect(await fingerprint(f.root)).toEqual(before);expect(errors).toEqual([]);
   } finally {await f.cleanup();}

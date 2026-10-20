@@ -351,7 +351,10 @@ test('CP12: the summary prefix keeps the order, the number form and the 3-title 
   assert.equal(conceptPrefix([c('A', 'declaration-changed'), c('B', 'declaration-changed'), c('C', 'declaration-removed'), c('D', 'declaration-removed')]), 'Changed declarations: A, B. Removed concepts: C, D.');
   // One concept with participation changed in two flows is one title.
   assert.equal(conceptPrefix([c('A', 'participation-changed'), c('A', 'participation-changed')]), 'Participation changed: A.');
-  assert.equal(conceptPrefix([c('A', 'participation-changed'), c('B', 'participation-changed')]), 'Participations changed: A, B.');
+  // Participation changed keeps one form for any count.
+  assert.equal(conceptPrefix([c('A', 'participation-changed'), c('B', 'participation-changed')]), 'Participation changed: A, B.');
+  assert.equal(conceptPrefix(['A', 'B', 'C', 'D'].map(t => c(t, 'participation-changed'))), 'Participation changed: A, B, C and 1 more.');
+  assert.equal(conceptPrefix([c('A', 'declaration-new'), c('B', 'declaration-new'), c('C', 'participation-changed'), c('D', 'participation-changed')]), 'New concepts: A, B. Participation changed: C, D.');
 });
 
 test('CP12: without Impact data the summary is the prefix alone', async t => {

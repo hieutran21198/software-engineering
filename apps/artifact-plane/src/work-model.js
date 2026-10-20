@@ -1,6 +1,6 @@
 // Derived work labels for the shell and pages. Labels state what the evidence
 // shows; they never infer approval or a running agent.
-import {matchesName} from './names.js';
+import {matchesName, normalizeName} from './names.js';
 import {elementType} from './elements.js';
 import {differenceOf} from './glossary.js';
 
@@ -159,6 +159,14 @@ export function sidebarRows({snapshot, worktree, filter = '', expanded, history 
       rows.push({key: `hu:${u.id}`, level: 0, matched: true, label: u.title, detail: `Unit of work · ${u.members.length} ${u.members.length === 1 ? 'change' : 'changes'}`, page: {kind: 'unit', unit: u.id}});
   }
   return rows;
+}
+
+// The row that Enter in the search box opens: the concept whose title equals
+// the filter, ignoring case and outer spaces (claim sidebar-enter-exact-concept);
+// otherwise the 1.24.0 rule, the first row with a page that matches itself in tree order.
+export function enterRow(rows, filter) {
+  const query = normalizeName(filter);
+  return rows.find(r => r.kind === 'concept' && r.page && normalizeName(r.label) === query) || rows.find(r => r.page && r.matched);
 }
 
 // Page identity used for the selected sidebar row and for leaving unsaved edits.
