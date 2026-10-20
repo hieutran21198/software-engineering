@@ -86,7 +86,9 @@ flow:
       path: apps/artifact-plane/test/browser/project-tabs.spec.js
       requires: Open a repository from its address, and select the existing tab
         at a second opening.
-      basis: static
+      basis: observed
+      evidence:
+        - docs/artifacts/artifact-plane/changes/change-ui-discovery/tasks/02-repository-address.md
     - id: preferences
       kind: implementation
       path: apps/artifact-plane/src/project-tabs.js

@@ -114,7 +114,9 @@ flow:
       path: apps/artifact-plane/test/workbench.test.js
       requires: Check the four states, the turn-off variable, the port variable
         and the hook output with a free, a Plane and another server.
-      basis: static
+      basis: observed
+      evidence:
+        - docs/artifacts/artifact-plane/changes/change-ui-discovery/tasks/01-workbench-step.md
     - id: guidance-tests
       kind: test
       path: apps/artifact-plane/test/agent-guidance.test.js

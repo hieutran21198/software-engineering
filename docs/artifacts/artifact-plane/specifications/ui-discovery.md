@@ -7,8 +7,12 @@ claims:
     kind: decision
     statement: The hook identifies a Plane server with the new route
       GET /api/plane, which returns the name and the version.
-    status: open
-    basis: inferred
+    status: verified
+    basis: observed
+    verified_by: agent
+    evidence:
+      - docs/artifacts/artifact-plane/changes/change-ui-discovery/tasks/01-workbench-step.md#evidence
+      - docs/artifacts/artifact-plane/changes/change-ui-discovery/tasks/03-validation.md#evidence
     rejected:
       - option: Read the HTML title of the start page.
         reason: The title is presentation text; a change of the page would
@@ -24,8 +28,11 @@ claims:
     kind: decision
     statement: The hook reads the port from ARTIFACT_PLANE_PORT, not from PORT,
       and gives the value to the server it starts as PORT.
-    status: open
-    basis: inferred
+    status: verified
+    basis: observed
+    verified_by: agent
+    evidence:
+      - docs/artifacts/artifact-plane/changes/change-ui-discovery/tasks/01-workbench-step.md#evidence
     rejected:
       - option: Read PORT, as `serve` does.
         reason: A harness often runs with PORT set for the development server of
@@ -38,8 +45,12 @@ claims:
     kind: decision
     statement: The environment variable ARTIFACT_PLANE_AUTOSTART=0 turns off the
       server start.
-    status: open
-    basis: inferred
+    status: verified
+    basis: observed
+    verified_by: agent
+    evidence:
+      - docs/artifacts/artifact-plane/changes/change-ui-discovery/tasks/01-workbench-step.md#evidence
+      - docs/artifacts/artifact-plane/changes/change-ui-discovery/tasks/03-validation.md#evidence
     rejected:
       - option: A setting file of the Plane.
         reason: It adds a store; both harnesses already pass their environment
@@ -54,8 +65,11 @@ claims:
     statement: The Git top level that the hook puts in the address is the path
       that the workbench keeps for the tab of that repository, so a second
       opening selects the existing tab.
-    status: open
-    basis: inferred
+    status: verified
+    basis: observed
+    verified_by: agent
+    evidence:
+      - docs/artifacts/artifact-plane/changes/change-ui-discovery/tasks/02-repository-address.md#evidence
     risk_if_wrong: Each new session opens one more tab of the same repository.
     check: In the UDA4 browser test, open the address with the path from
       `git rev-parse --show-toplevel` of the fixture twice and count the tabs.
@@ -63,8 +77,11 @@ claims:
     kind: unknown
     statement: A server that the hook starts answers within 3 seconds, also at
       the first start of the executable, which extracts its assets.
-    status: open
-    basis: inferred
+    status: verified
+    basis: observed
+    verified_by: agent
+    evidence:
+      - docs/artifacts/artifact-plane/changes/change-ui-discovery/tasks/03-validation.md#evidence
     risk_if_wrong: The line says that the workbench is starting, and the person
       must wait before the address answers.
     check: Time the first start of the release executable with an empty state
