@@ -10,7 +10,8 @@ import {DiffBadge, Icon} from './ui.jsx';
 export default function Sidebar({snapshot, worktree, page, expanded, onToggle, onOpen, history, onHistory, id, concepts, onSearch}) {
   const [filter, setFilter] = useState(''), [focus, setFocus] = useState(null), tree = useRef(null);
   const query = filter.trim();
-  useEffect(() => {onSearch?.(Boolean(query));}, [Boolean(query)]);
+  // An unmounted sidebar has no filter text: the drawer closes at 800 px or less.
+  useEffect(() => {onSearch?.(Boolean(query));return () => onSearch?.(false);}, [Boolean(query)]);
   const rows = useMemo(() => sidebarRows({snapshot, worktree, filter, expanded, history, concepts}), [snapshot, worktree, filter, expanded, history, concepts]);
   const items = rows.filter(r => r.kind !== 'heading');
   const current = items.find(r => r.page && samePage(r.page, page)) || (page.kind === 'work' ? items[0] : null);

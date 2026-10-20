@@ -85,10 +85,11 @@ for (const width of [1440, 390]) test(`CPA9 at ${width} px: the sidebar search f
   await page.setViewportSize({width, height: width < 500 ? 844 : 1000});
   const f = await conceptRepository(), before = await fingerprint(f.root), errors = [], loads = [], reads = [];
   page.on('pageerror', e => errors.push(e.message));
-  // Each concepts load records the count of overview reads before it; an overview read starts a new shell epoch.
+  // Each sidebar concepts load records the count of overview reads before it; an overview read starts a new shell epoch.
+  // Page links load the concepts of one artifact and are not counted.
   page.on('request', r => {
     const body = r.method() === 'POST' ? r.postDataJSON() : null;
-    if (r.url().endsWith('/api/flows/query') && body?.operation === 'concepts') loads.push({...body, after: reads.length});
+    if (r.url().endsWith('/api/flows/query') && body?.operation === 'concepts' && !('artifact' in body)) loads.push({...body, after: reads.length});
     if (r.url().endsWith('/api/repository/query') && body?.section === 'overview') reads.push(body);
   });
   try {
@@ -110,6 +111,14 @@ for (const width of [1440, 390]) test(`CPA9 at ${width} px: the sidebar search f
     await field.fill('Version');await field.press('Enter');
     await expect(region(page, 'Concept page').getByRole('heading', {level: 1})).toHaveText('Version');
     // At 390 px opening a page closes the drawer, and the drawer starts with an empty filter, as in 1.24.0.
+    // With the drawer closed no filter has text, so a new shell epoch loads no concepts.
+    if (width < 500) {
+      const count = loads.length, overviews = reads.length;
+      await page.evaluate(() => window.dispatchEvent(new Event('focus')));
+      await expect.poll(() => reads.length).toBeGreaterThan(overviews);
+      await expect(page.getByRole('button', {name: 'Refresh', exact: true, includeHidden: true})).toHaveAttribute('aria-busy', 'false');
+      await page.waitForTimeout(500);expect(loads.length).toBe(count);
+    }
     await showSidebar(page);if (width < 500) await field.fill('Version');
     await expect(treeItem(page, /^Version/)).toHaveAttribute('aria-selected', 'true');
     // The link is a Tab stop after the tree.
