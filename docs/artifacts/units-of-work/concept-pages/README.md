@@ -55,7 +55,27 @@ acceptance:
     criterion: The Node, browser and Go suites, the S1 to S8 limits, the
       executable smoke check and the validator pass on the integrated branch.
     integration: true
-evidence: []
+evidence:
+  - criterion: concepts-readable
+    method: Browser tests of the concept page, the artifact Concepts section, the document Concepts property, the flow participant links, the Impact concept rows and the sidebar concept rows at 1440 and 390 px, and the reading scenarios S-A and S-C.
+    result: passed
+    source: docs/artifacts/artifact-plane/changes/change-concept-pages/tasks/05-concept-page.md#evidence
+  - criterion: changes-name-concepts
+    method: Brief and PR description tests on fixtures built after 89ed23a and 3c47a48 and on a renamed participant, and a local run of the brief of change-visual-knowledge.
+    result: passed
+    source: docs/artifacts/artifact-plane/changes/change-concept-pages/tasks/08-brief-concepts.md#evidence
+  - criterion: agent-parity
+    method: HTTP and MCP parity tests of get_concept, search_flows with kinds, and a comparison of search_flows without kinds with the 0eecce1 service on the same fixtures.
+    result: passed
+    source: docs/artifacts/artifact-plane/changes/change-concept-pages/tasks/03-concept-mcp.md#evidence
+  - criterion: absent-not-empty
+    method: golden.spec.js compares the build with the 1.24.0 captures of a repository without models on CI Chrome 156 and Nix Chromium 149.
+    result: passed
+    source: docs/artifacts/artifact-plane/changes/change-concept-pages/tasks/01-golden-captures.md#evidence
+  - criterion: integration
+    method: npm test, npm run build, the full browser suite on CI Chrome 156 and Nix Chromium 149, go test and go vet, the executable smoke check, the S1 to S8 limits and the validator on the integrated branch.
+    result: passed
+    source: docs/artifacts/artifact-plane/changes/change-concept-pages/tasks/10-validation.md#evidence
 ---
 
 # Concept pages

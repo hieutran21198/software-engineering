@@ -104,8 +104,10 @@ claims:
     statement: A changed participation is a difference in the participants of a
       flow, or in the interactions that name one of its participants, between
       the base and the head of the change.
-    status: open
-    basis: static
+    status: supported
+    basis: observed
+    evidence:
+      - docs/artifacts/artifact-plane/changes/change-concept-pages/tasks/08-brief-concepts.md#evidence
     rejected:
       - option: Count any change of a step where the concept takes part.
         reason: Commit 89ed23a adds a support to such a step and changes no
@@ -137,8 +139,11 @@ claims:
     statement: Enter in the sidebar search opens the concept whose title equals
       the filter, ignoring case and outer spaces; otherwise it keeps the 1.24.0
       rule and opens the first matching row in tree order.
-    status: open
-    basis: static
+    status: supported
+    basis: observed
+    evidence:
+      - docs/artifacts/artifact-plane/changes/change-concept-pages/tasks/09-sidebar-search.md#evidence
+      - docs/artifacts/artifact-plane/changes/change-concept-pages/tasks/10-validation.md#evidence
     rejected:
       - option: Keep the 1.24.0 rule for every query.
         reason: In this repository the query version opens the change
