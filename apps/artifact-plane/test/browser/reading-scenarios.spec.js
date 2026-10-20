@@ -4,7 +4,7 @@ import {join} from 'node:path';
 import {tmpdir} from 'node:os';
 import {Client} from '@modelcontextprotocol/sdk/client/index.js';
 import {InMemoryTransport} from '@modelcontextprotocol/sdk/inMemory.js';
-import {openRepository, openDocument, region, tree, refresh} from './workbench.js';
+import {openRepository, openDocument, region, tree} from './workbench.js';
 import {measure, report} from './measure.js';
 import {fixtureRepository, git, identity, versionRecord} from '../fixtures.js';
 import {conceptFiles, add, declaring, declarations, version, delivery} from '../concept-fixtures.js';
@@ -180,7 +180,7 @@ for (const width of [1440, 390]) test.describe(`at ${width} pixels`, () => {
     // Not measured: the author has the declaring document open and saves it with Release added.
     const doc = await openDocument(page, ADD, 'Specifications', MODELS);
     await f.put(declaring, declarations([artifact, change, reworded, delivery, release]));
-    if (await page.getByRole('button', {name: 'Refresh', exact: true}).isVisible()) await refresh(page);
+    // No Refresh: at both widths the saved document reaches the open page by live reload.
     // The Properties section is hidden in its collapsed disclosure at 390 px, so the wait reads it by class.
     const properties = doc.locator('section.document-properties');
     await expect(properties).toContainText('Release', {timeout: 15000});
