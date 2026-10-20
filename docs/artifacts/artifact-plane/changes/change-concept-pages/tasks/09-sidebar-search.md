@@ -22,7 +22,7 @@ specifications/concept-pages.md: Sidebar search; claim sidebar-enter-unchanged.
 - [x] The filter `artifact-plane:repository-snapshot` matches only that concept row.
 - [x] While the filter has text, the Discover link shows after the tree, is a Tab stop, opens Discover with the query, and Enter in the box never chooses it; `Nothing matches this title or ID.` still shows above it (CP14).
 - [x] `/` focuses the search of the active tab, opens the drawer at 390 px, and does nothing in an input, a textarea, a select, an editable element or an open form; the input has the title and aria-keyshortcuts (CP14, CPA9).
-- [x] Enter keeps the first-match rule; the result of the queries `version` and `change` is recorded (claim sidebar-enter-unchanged).
+- [ ] Enter opens the concept whose title equals the filter and otherwise keeps the first-match rule; the results of the queries `version`, `Version` and `change` are recorded (claim sidebar-enter-exact-concept).
 - [x] Concepts load once for a worktree and shell epoch, and the filter of a repository without models makes no visible change except CP1's.
 - [x] `npm test` and `npm run test:browser` pass, and the S1 to S8 limits hold.
 

@@ -119,8 +119,11 @@ claims:
     statement: Enter in the sidebar search keeps the 1.24.0 rule and opens the
       first matching row in tree order; concept rows come first under their
       artifact.
-    status: open
-    basis: static
+    status: superseded
+    superseded_by: sidebar-enter-exact-concept
+    basis: observed
+    evidence:
+      - docs/artifacts/artifact-plane/changes/change-concept-pages/tasks/09-sidebar-search.md#evidence
     rejected:
       - option: Enter opens an exact title match first.
         reason: It changes the result of Enter for documents in repositories
@@ -129,6 +132,25 @@ claims:
       every change name starts with change-, not the concept Change.
     check: Run the S1 to S8 scenarios and the sidebar test with the queries
       version and change.
+  - id: sidebar-enter-exact-concept
+    kind: decision
+    statement: Enter in the sidebar search opens the concept whose title equals
+      the filter, ignoring case and outer spaces; otherwise it keeps the 1.24.0
+      rule and opens the first matching row in tree order.
+    status: open
+    basis: static
+    rejected:
+      - option: Keep the 1.24.0 rule for every query.
+        reason: In this repository the query version opens the change
+          change-legacy-conversion, because its name contains version, and not
+          the concept Version that the approved design expects.
+      - option: Enter opens an exact title match of any row first.
+        reason: It changes the result of Enter for documents in repositories
+          without models, which CP1 forbids.
+    risk_if_wrong: A document or change whose title equals a concept title needs
+      one more key press.
+    check: Run the sidebar tests with the queries version, Version and change,
+      and the golden test.
   - id: back-moves-active-tab
     kind: decision
     statement: Each browser Back press moves the active project tab one page
@@ -290,7 +312,7 @@ Each item of `concepts` is `{concept, title, reason, document, flow?}`. The answ
 
 A changed declaring document with equal entries gives no row. The rows come first in the items, with the step `Fact from Git`. The UI links the concept, except a removed one, and the document. Concept rows never enter the attention list.
 
-The summary of "What is affected?" starts with a prefix for the first four reasons, in this order: `New concept: <titles>.`, `Changed declaration: <titles>.`, `Removed concept: <titles>.`, `Participation changed: <titles>.` Each part takes the plural form for more than one title and lists at most 3 titles, then `and N more`. Without Impact data, the summary is the prefix alone.
+The summary of "What is affected?" starts with a prefix for the first four reasons, in this order: `New concept: <titles>.`, `Changed declaration: <titles>.`, `Removed concept: <titles>.`, `Participation changed: <titles>.` For more than one title the first three parts take the plural form (`New concepts:`, `Changed declarations:`, `Removed concepts:`); `Participation changed:` keeps one form. Each part lists at most 3 titles, then `and N more`. Without Impact data, the summary is the prefix alone.
 
 The PR description (server/change-description.js) Impact section starts with the line `Concepts declared or changed: <title> (<reason words>); …` when a row of the first four reasons exists. The flow sentence without the prefix follows, then a blank line and the Coverage line, as in 1.24.0. Without Impact data, the concept line precedes the 1.24.0 fallback text. Describing-document rows give no line. The context packet copies the brief, so its brief holds `concepts`.
 
@@ -301,7 +323,7 @@ The PR description (server/change-description.js) Impact section starts with the
 - After the tree, while the filter has text, the link `Find “<query>” in Discover behavior` opens `{kind: 'discover', query}`. It is outside the tree and a Tab stop. Enter in the search box does not choose it, and the text `Nothing matches this title or ID.` still shows above it.
 - The input gets the title `Search or jump to… (/)` and aria-keyshortcuts `/`.
 - The `/` key focuses the input of the active tab when focus is not in an input, a textarea, a select, an editable element or an open form. At 800 px or less it opens the drawer first.
-- Enter keeps the rule of claim sidebar-enter-unchanged. No other key changes.
+- Enter opens the concept whose title equals the filter, ignoring case and outer spaces (claim sidebar-enter-exact-concept). Otherwise Enter keeps the 1.24.0 rule and opens the first matching row with a page in tree order. A repository without models keeps the 1.24.0 result. No other key changes.
 
 ## MCP
 
