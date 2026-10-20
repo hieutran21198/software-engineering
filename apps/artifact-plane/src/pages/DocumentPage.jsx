@@ -11,6 +11,7 @@ import {artifactTitle, changeTitle, isFlow, memberUnit} from '../work-model.js';
 import {impactPage} from '../impact-model.js';
 import {pendingSentence} from '../wording-note.js';
 import {ConflictDialog, FrontMatterEditor, bodyWithoutTitle, linkPage, useMedia} from './DocumentPageParts.jsx';
+import {ConceptName, useConcepts} from './ConceptLinks.jsx';
 import './DocumentPage.css';
 
 const KINDS = {requirements: ['Requirement', 'Requirements'], specifications: ['Specification', 'Specifications'], decisions: ['Decision', 'Decisions']};
@@ -175,6 +176,7 @@ function DocumentProperties({heading, info, page, values, loaded, writable, esta
   return <section className="document-properties" aria-label="Properties">
     {heading && <h2 className="properties-title">Properties</h2>}
     <Prop label="Kind">{info.kind}</Prop>
+    {info.type !== 'unit' && <ConceptsProp artifact={info.scope.artifact} source={page.source} go={go}/>}
     {info.type === 'element' && <Prop label="In this branch">
       {BRANCH[state] ? <><DiffBadge name={BRANCH[state][0]}/> <span className="muted small">{BRANCH[state][1]}</span></>
         : state === 'unchanged' ? 'Same as main' : <span className="muted small">Not compared: no main branch is readable.</span>}
@@ -197,6 +199,18 @@ function DocumentProperties({heading, info, page, values, loaded, writable, esta
 const Prop = ({label, children, group}) => <div className="prop" {...(group ? {role: 'group', 'aria-label': label} : {})}>
   <div className="prop-key">{label}</div><div className="prop-value">{children}</div>
 </div>;
+
+// The concepts that the document declares or describes; nothing for other documents.
+function ConceptsProp({artifact, source, go}) {
+  const concepts = useConcepts(artifact);
+  const declares = concepts.filter(c => c.declaredIn?.path === source), describes = concepts.filter(c => (c.sources || []).some(s => s.path === source));
+  if (!declares.length && !describes.length) return null;
+  const names = list => list.map((c, i) => <React.Fragment key={c.logicalId}>{i > 0 && ', '}<ConceptName concept={c} go={go}/></React.Fragment>);
+  return <Prop label="Concepts">
+    {declares.length > 0 && <div>Declares {names(declares)}</div>}
+    {describes.length > 0 && <div>Describes {names(describes)}</div>}
+  </Prop>;
+}
 
 function SelfCheck({selfCheck, source, writable, edit, go, artifact}) {
   const [recording, setRecording] = useState(false), opener = useRef(null);
