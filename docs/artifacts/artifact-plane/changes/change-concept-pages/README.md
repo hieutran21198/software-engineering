@@ -29,3 +29,4 @@ Excluded: new record keys and ADD bundle changes (a later ADD 3.2.0), the Discov
 Knowledge is edited in place on this branch. The unit brief is [Concept pages](../../../units-of-work/concept-pages/README.md).
 
 - [Requirements: concept pages](../../requirements/concept-pages.md)
+- [Specification: concept pages](../../specifications/concept-pages.md)
