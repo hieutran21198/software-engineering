@@ -76,3 +76,5 @@ button.danger.delete-document { padding: 0; }
 .document-reader table { overflow-wrap: normal; }
 .document-reader td, .document-reader th { overflow-wrap: break-word; }
 .comparison h4 { display: none; }
+/* A concept name keeps its DiffBadge on the same line. */
+.concept-name { display: inline-flex; flex-wrap: wrap; align-items: baseline; column-gap: 4px; max-width: 100%; }

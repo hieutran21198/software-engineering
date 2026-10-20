@@ -13,6 +13,13 @@ const sourcePage = page => region(page, 'Source page');
 const step = (page, n) => flowPage(page).locator('.flow-steps > li').nth(n - 1);
 const stepHead = (page, n) => step(page, n).locator('.step-head');
 const flowPath = tenant + 'specifications/flows/member-login.md';
+// The page object that the shell renders, read from the React props of the page.
+const shownPage = page => page.evaluate(() => {
+  const element = document.querySelector('main.page-area > section');
+  let fiber = element[Object.keys(element).find(k => k.startsWith('__reactFiber$'))];
+  while (fiber && !(typeof fiber.type === 'function' && fiber.memoizedProps?.page)) fiber = fiber.return;
+  return fiber?.memoizedProps.page;
+});
 const flowValue = async (root, path = flowPath) => YAML.parse((await read(root, path)).match(/^---\n([\s\S]*?)\n---/)[1]).flow;
 async function expand(page, n) {
   const head = stepHead(page, n);
@@ -209,6 +216,12 @@ test('the Model disclosure shows participants and interactions; comments, model 
     expect(text).toContain('# Flow comment');expect(text).toContain('custom_key: keep');
     expect(text).toContain('- {from: member, to: member, action: Check membership, outcome: Membership checked., supports: [need]}');
     expect(text).toContain('- {id: member, artifact: tenant, model: member, requires: Signs in}');
+    // A resolved participant title links to its concept page (CP9); an unresolved one stays text.
+    await expect(model.getByRole('listitem').filter({hasText: /^member/})).toHaveText('member · Member — Signs in');
+    await expect(model.getByRole('button', {name: /^Open concept/})).toHaveText(['Member']);
+    await expect(model.getByRole('listitem').filter({hasText: /^ghost/}).getByRole('button')).toHaveCount(0);
+    await model.getByRole('button', {name: 'Open concept Member', exact: true}).click();
+    await expect.poll(() => shownPage(page)).toEqual({kind: 'concept', artifact: 'tenant', model: 'member'});
   } finally {await f.cleanup();}
 });
 

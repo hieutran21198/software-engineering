@@ -10,6 +10,7 @@ import {artifactDocuments, artifactTitle, changeStatus, changeTitle, currentChan
 import {knowledgeTargets} from '../knowledge-navigation.js';
 import {linkPage, purposeParts} from './DocumentPageParts.jsx';
 import {DependencyExplanation} from './ArtifactPageParts.jsx';
+import {conceptPage, firstSentence, useConcepts} from './ConceptLinks.jsx';
 import './ArtifactPage.css';
 
 const SINGULAR = {requirements: 'requirement', specifications: 'specification', decisions: 'decision', flows: 'flow'};
@@ -137,8 +138,25 @@ function ArtifactView({artifact, page, snapshot, worktree, go, edit}) {
       </Section>;
     })}
 
+    <Concepts artifact={artifact} expanded={expanded.has('concepts')} onToggle={() => toggle('concepts')} go={go}/>
     <Versions artifact={artifact} go={go}/>
   </div></section>;
+}
+
+// The concepts of the artifact, only when it declares one. A removed
+// declaration is no concept of the artifact any more.
+function Concepts({artifact, expanded, onToggle, go}) {
+  const concepts = useConcepts(artifact.id).filter(c => c.declaration !== 'removed');
+  if (!concepts.length) return null;
+  const shown = expanded ? concepts : concepts.slice(0, 5);
+  return <Section id="artifact-section-concepts" title="Concepts" summary={concepts.length}>
+    <ul className="doc-list concept-list">{shown.map(c => <li key={c.logicalId}>
+      <button className="unstyled" onClick={() => go(conceptPage(c))}>
+        <span className="doc-title"><span className="concept-title">{c.title}</span>{c.description && <span className="concept-detail">{firstSentence(c.description)}</span>}</span>
+      </button>
+    </li>)}</ul>
+    {concepts.length > 5 && <button className="link show-all" aria-expanded={expanded} aria-label={expanded ? 'Show first 5 concepts' : `Show all ${concepts.length} concepts`} onClick={onToggle}>{expanded ? 'Show first 5' : `Show all ${concepts.length}`}</button>}
+  </Section>;
 }
 
 function Versions({artifact, go}) {

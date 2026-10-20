@@ -10,6 +10,7 @@ import {sha256} from '../knowledge-api.js';
 import {artifactDocuments} from '../work-model.js';
 import {pendingSentence} from '../wording-note.js';
 import {useFlowDetail, useTrackedFiles, SUPPORT_GROUPS, supportGroup, supportTarget, supportFields, supportOperation, TextEditor, FrontMatterEditor, flowNodeTypes} from './FlowPageParts.jsx';
+import {conceptPage} from './ConceptLinks.jsx';
 import './FlowPage.css';
 
 const STOP = new Set(['a', 'an', 'the', 'or', 'and', 'with', 'to', 'in', 'of', 'for', 'on', 'by', 'from', 'that', 'as']);
@@ -202,11 +203,17 @@ export default function FlowPage({page}) {
     <details className="flow-model section">
       <summary>Model</summary>
       {participants.length || interactions.length || models.length ? <>
-        {participants.length > 0 && <><h3>Participants</h3><ul>{participants.map(p => <li key={p.id}><b>{p.id}</b> · {models.find(m => m.participants?.some(x => x.id === p.id))?.title || `${p.artifact}:${p.model}`}{p.requires ? ` — ${p.requires}` : ''}</li>)}</ul></>}
+        {participants.length > 0 && <><h3>Participants</h3><ul>{participants.map(p => <li key={p.id}><b>{p.id}</b> · <Participant model={models.find(m => m.participants?.some(x => x.id === p.id))} participant={p} go={go}/>{p.requires ? ` — ${p.requires}` : ''}</li>)}</ul></>}
         {interactions.length > 0 && <><h3>Interactions</h3><ul>{interactions.map(({step, x, i}) => <li key={`${step.id}:${i}`}><b>{step.title}:</b> {x.from} → {x.to}: {x.action}{x.outcome ? ` — ${x.outcome}` : ''}</li>)}</ul></>}
       </> : <p className="muted">No models, participants or interactions are documented for this flow.</p>}
       {writable && digest && <FrontMatterEditor key={digest} text={splitFront(doc.markdown).front ?? ''}
         onSave={text => edit.run('document.properties.set', {path: entry.file, frontMatter: text}, {expected: {[entry.file]: digest}})}/>}
     </details>
   </div></section>;
+}
+
+// The model title of a participant: a link to the concept page when the participant resolves.
+function Participant({model, participant, go}) {
+  const title = model?.title || `${participant.artifact}:${participant.model}`;
+  return model?.resolved && model.title ? <button className="link" aria-label={`Open concept ${title}`} onClick={() => go(conceptPage(model))}>{title}</button> : title;
 }
