@@ -15,6 +15,7 @@ import { runtimeService } from "./runtime-api.js";
 import {createKnowledgeService} from './knowledge-operations.js';
 import {knowledgeGit} from './knowledge-git.js';
 import {errorBody as editError} from './knowledge-writer.js';
+import pkg from "../package.json" with { type: "json" };
 // A bundled server.mjs has dist/ beside it; a source checkout has it beside server/.
 export const distDirectory = (directory) => existsSync(join(directory, "dist")) ? join(directory, "dist") : resolve(directory, "../dist");
 // The real path, so that the containment check compares like with like: on
@@ -68,6 +69,11 @@ export function createAppServer(options = {}) {
       )
         return json(res, 403, { error: "Use the local application origin." });
       const url = new URL(req.url, `http://${host}`);
+      // The identity of a Plane server (specifications/ui-discovery.md: Identity route).
+      if (url.pathname === "/api/plane") {
+        if (req.method !== "GET") return json(res, 405, {error: "Use GET for the identity."});
+        return json(res, 200, {name: "artifact-plane", version: pkg.version});
+      }
       if(url.pathname==='/api/repository/events'){
         if(req.method!=='GET')return json(res,405,{error:'Use GET for events.'});
         if([...url.searchParams.keys()].some(k=>k!=='path')||url.searchParams.getAll('path').length!==1)return json(res,400,{error:'Supply one repository path.'});
