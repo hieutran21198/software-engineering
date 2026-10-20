@@ -43,7 +43,7 @@ Facts on 20 October 2026, Artifact Plane 1.24.0 at 0eecce1:
 - CP16: An agent gets one concept with its declaration, sources, flows, interactions, inferred code and tests, record problems and open changes in one MCP call, by identity or by exact title.
 - CP17: An agent can ask `search_flows` for concepts. Without the new filter, `search_flows` answers as in 1.24.0.
 - CP18: Each fact on the concept page has the same wording basis in the MCP answer.
-- CP19: The concept page action "What does <concept> affect?" exists only if Impact for the concept and its describing documents holds an entity that the concept page does not list.
+- CP19: The concept page action "What does <concept> affect?" ships only if Impact for a concept and its describing documents holds an entity that the concept page does not list.
 - CP20: The existing pages, MCP tools, HTTP interface, authoring scenario limits and record checks keep their behavior, except where CP1 to CP19 change them.
 
 ## Acceptance criteria
@@ -60,7 +60,7 @@ Facts on 20 October 2026, Artifact Plane 1.24.0 at 0eecce1:
 - CPA10: Browser tests return with browser Back from the concept page to Discover with its results, and to the change page with the expanded brief row.
 - CPA11: An MCP test calls `get_concept` by identity and by exact title and gets the CP16 facts; an ambiguous title gives candidates. A parity test maps each concept page string to an answer field.
 - CPA12: Server tests show that `search_flows` with the concept filter returns concepts, and that its answer without the filter equals the 1.24.0 answer, except timing metrics.
-- CPA13: A server test compares the Impact entities of the concept seed with the concept page facts, and the concept page shows the action only when the test finds an extra entity.
+- CPA13: A server test compares the Impact entities of a fixture concept and its describing documents with the concept page facts and finds an entity that the page does not list. The action ships only while this test passes.
 - CPA14: The existing Node, browser and Go suites, the authoring scenario limits S1 to S8, the executable smoke check and the knowledge validator pass.
 
 ## Affected artifacts and flows
