@@ -14,7 +14,7 @@ Implementer. `apps/artifact-plane/src/Sidebar.jsx` (concept rows, the Discover l
 
 ## Governing knowledge
 
-specifications/concept-pages.md: Sidebar search; claim sidebar-enter-unchanged.
+specifications/concept-pages.md: Sidebar search; claim sidebar-enter-exact-concept, which supersedes sidebar-enter-unchanged.
 
 ## Definition of Done
 
