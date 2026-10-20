@@ -15,6 +15,7 @@ The owner decided on 20 October 2026:
 - Concept search is literal; no embedding index is added.
 - The work is one Plane change in two task waves: first the pages, then the brief and search. The owner reviews screenshots of the first wave before the second wave starts.
 - The concept page action "What does <concept> affect?" ships only if Impact finds an entity that the concept page does not list.
+- This change merges before change-antigravity-support of the artifact-plane artifact. That change renumbers its version.
 
 Included:
 
