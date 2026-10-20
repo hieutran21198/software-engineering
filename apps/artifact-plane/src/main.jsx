@@ -322,7 +322,7 @@ export function ProjectExplorer({active: isActive = true, initialPath = '', onOp
       <div className="workspace" ref={workspaceRef} style={{'--sidebar-width': sidebarWidth + 'px'}}>
         {snapshot && !showOpen && (!narrow || drawerOpen) && <>
           {narrow && <button className="drawer-backdrop unstyled" aria-label="Close navigation" onClick={() => setDrawerOpen(false)}/>}
-          <Sidebar id={drawerId} snapshot={snapshot} worktree={worktree} page={page} expanded={expanded} onToggle={toggle} onOpen={go} history={history} onHistory={setHistory} concepts={sidebarConcepts} onSearch={setSearching}/>
+          <Sidebar id={drawerId} snapshot={snapshot} worktree={worktree} page={page} expanded={expanded} onToggle={toggle} onOpen={go} history={history} onHistory={setHistory} concepts={sidebarConcepts} conceptsReady={concepts.worktree === worktreePath} onSearch={setSearching}/>
           {!narrow && <div className="sidebar-divider" role="separator" aria-label="Resize navigation" aria-orientation="vertical" aria-valuemin={200} aria-valuemax={sidebarMax} aria-valuenow={sidebarWidth} aria-controls={drawerId} tabIndex={0}
             onKeyDown={dividerKeys} onPointerDown={event => {if (event.button !== 0) return;event.preventDefault();event.currentTarget.focus();event.currentTarget.setPointerCapture(event.pointerId);}}
             onPointerMove={event => {if (event.currentTarget.hasPointerCapture(event.pointerId)) resize(event.clientX - workspaceRef.current.getBoundingClientRect().left);}}

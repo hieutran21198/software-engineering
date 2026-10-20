@@ -179,6 +179,33 @@ for (const width of [1440, 390]) test(`claim sidebar-enter-exact-concept at ${wi
   } finally {await f.cleanup();}
 });
 
+// Claim sidebar-enter-exact-concept: Enter pressed before the concepts arrive waits for them.
+test('Enter right after the fill waits for the concepts and still opens the exact concept title', async ({page}) => {
+  test.setTimeout(60000);
+  const files = conceptFiles();
+  files.set(add + 'changes/change-version-gates/README.md', '# Gate releases\n\nGate the releases.\n');
+  files.set(add + 'changes/change-version-gates/tasks/README.md', '---\ntasks: []\n---\n# Plan\n');
+  const f = await fixtureRepository(files), errors = [];
+  page.on('pageerror', e => errors.push(e.message));
+  let release, held = 0;const gate = new Promise(r => {release = r;});
+  await page.route('**/api/flows/query', async route => {
+    const b = route.request().postDataJSON();
+    if (b.operation === 'concepts' && !b.artifact) {held++;await gate;}
+    return route.continue();
+  });
+  try {
+    await openRepository(page, f.root);
+    await showSidebar(page);const field = page.getByLabel('Search knowledge', {exact: true});
+    await field.fill('version');await field.press('Enter');
+    await expect.poll(() => held).toBe(1);
+    // The concepts are held: Enter opens nothing yet, not the change Gate releases.
+    await page.waitForTimeout(300);await expect(region(page, 'Change page')).toHaveCount(0);
+    release();
+    await expect(region(page, 'Concept page').getByRole('heading', {level: 1})).toHaveText('Version');
+    expect(errors).toEqual([]);
+  } finally {await f.cleanup();}
+});
+
 test('no match and legacy repositories without flow records are stated honestly', async ({page}) => {
   const f = await fixtureRepository(sourceFixture());
   try {

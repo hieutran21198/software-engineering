@@ -7,7 +7,7 @@ import {DiffBadge, Icon} from './ui.jsx';
 // rows also expand. Roving tabindex keeps one row in the tab order.
 // While the filter has text, concept rows join the tree and a link after the
 // tree opens Discover with the query; onSearch tells the explorer to load concepts.
-export default function Sidebar({snapshot, worktree, page, expanded, onToggle, onOpen, history, onHistory, id, concepts, onSearch}) {
+export default function Sidebar({snapshot, worktree, page, expanded, onToggle, onOpen, history, onHistory, id, concepts, conceptsReady = true, onSearch}) {
   const [filter, setFilter] = useState(''), [focus, setFocus] = useState(null), tree = useRef(null);
   const query = filter.trim();
   // An unmounted sidebar has no filter text: the drawer closes at 800 px or less.
@@ -37,9 +37,19 @@ export default function Sidebar({snapshot, worktree, page, expanded, onToggle, o
     else if (event.key === 'Enter' || event.key === ' ') {event.preventDefault();activate(row);}
   }
   const first = enterRow(items, filter);
+  // Enter before the concepts of the worktree arrive waits for them, at most 3 s, so an exact concept title still wins.
+  const [pending, setPending] = useState(null);
+  useEffect(() => {
+    if (pending === null) return;
+    if (pending !== filter) {setPending(null);return;}
+    const open = () => {setPending(null);if (first) onOpen(first.page);};
+    if (conceptsReady) {open();return;}
+    const timer = setTimeout(open, 3000);
+    return () => clearTimeout(timer);
+  }, [pending, filter, conceptsReady, first]);
   return <nav className="sidebar" id={id} aria-label="Navigation">
     <div className="sidebar-scroll">
-      <form role="search" className="sidebar-search" onSubmit={event => {event.preventDefault();if (filter && first) onOpen(first.page);}}>
+      <form role="search" className="sidebar-search" onSubmit={event => {event.preventDefault();if (!filter) return;if (conceptsReady) {if (first) onOpen(first.page);} else setPending(filter);}}>
         {Icon.search}
         <input aria-label="Search knowledge" placeholder="Search or jump to…" title="Search or jump to… (/)" aria-keyshortcuts="/" value={filter} onChange={event => setFilter(event.target.value)} autoComplete="off"/>
         {filter && <button type="button" className="icon" style={{width: 24, height: 24}} aria-label="Clear search" onClick={() => setFilter('')}>{Icon.close}</button>}

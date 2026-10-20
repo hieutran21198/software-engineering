@@ -323,7 +323,7 @@ The PR description (server/change-description.js) Impact section starts with the
 - After the tree, while the filter has text, the link `Find “<query>” in Discover behavior` opens `{kind: 'discover', query}`. It is outside the tree and a Tab stop. Enter in the search box does not choose it, and the text `Nothing matches this title or ID.` still shows above it.
 - The input gets the title `Search or jump to… (/)` and aria-keyshortcuts `/`.
 - The `/` key focuses the input of the active tab when focus is not in an input, a textarea, a select, an editable element or an open form. At 800 px or less it opens the drawer first.
-- Enter opens the concept whose title equals the filter, ignoring case and outer spaces (claim sidebar-enter-exact-concept). Otherwise Enter keeps the 1.24.0 rule and opens the first matching row with a page in tree order. A repository without models keeps the 1.24.0 result. No other key changes.
+- Enter opens the concept whose title equals the filter, ignoring case and outer spaces (claim sidebar-enter-exact-concept). Otherwise Enter keeps the 1.24.0 rule and opens the first matching row with a page in tree order. Enter before the concepts of the worktree arrive waits for them, at most 3 s, and then applies the same rule. A repository without models keeps the 1.24.0 result. No other key changes.
 
 ## MCP
 
