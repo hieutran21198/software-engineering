@@ -23,3 +23,4 @@ Knowledge is edited in place on this branch. The unit brief is [Plane UI discove
 
 - [Requirements: workbench discovery](../../requirements/ui-discovery.md)
 - [Specification: workbench discovery](../../specifications/ui-discovery.md)
+- [Plan](tasks/README.md)
