@@ -88,13 +88,35 @@ claims:
     check: Start a Claude Code session and a Codex session in this repository
       with the committed configuration, once with the new executable and once
       with Plane 1.22.0 on the path, and record the results in the live check.
+  - id: antigravity-hook-adapter
+    kind: decision
+    statement: The hook command accepts optional --event <name> and normalizes
+      Antigravity camelCase payloads (conversationId, workspacePaths, toolCall,
+      invocationNum, executionNum, terminationReason) to the observer and
+      guidance inputs while writing Antigravity output shapes (injectSteps,
+      decision deny and decision continue).
+    status: open
+    basis: documented
+    rejected:
+      - option: A separate antigravity-hook subcommand or wrapper script.
+        reason: A second command or script splits the fail-open and observer
+          code paths across harnesses.
+      - option: Infer PostToolUse from the stdin payload alone without --event.
+        reason: A successful Antigravity PostToolUse payload has no error field
+          and has the same keys as PreToolUse.
+    risk_if_wrong: An Antigravity hook invocation without --event treats a
+      successful PostToolUse payload as PreToolUse when both use the same
+      command string.
+    check: Run the AIA8 test suite covering SessionStart, PreInvocation,
+      PreToolUse, PostToolUse (with --event PostToolUse and with error) and
+      Stop (executionNum 1 versus 2, NO_TOOL_CALL versus other reasons).
 ---
 
 # Agent integration contract
 
 ## Governing requirements
 
-AI1 to AI12 in requirements/agent-integration.md.
+AI1 to AI14 in requirements/agent-integration.md.
 
 ## Command line
 
@@ -102,25 +124,39 @@ The executable adds two commands to `serve`, `mcp` and `model-install`:
 
 | Command | Behavior |
 | --- | --- |
-| `hook` | Reads one hook input from standard input and writes one JSON object to standard output. It takes no option except `--state-dir /absolute/path`. |
+| `hook` | Reads one hook input from standard input and writes one JSON object to standard output. It takes no option except `--state-dir /absolute/path` and `--event <name>`. |
 | `runtime <register\|bind\|report\|query> --name value ...` | The commands and options of `node server/runtime-cli.js` (integration/README.md). `bind` adds `--binding inferred`; the default is `explicit`. |
 
 server/app.js imports the module of a command only when that command runs. The `hook` command never writes to standard error more than one line, and it always exits with status 0, also for an unknown option. `node server/runtime-cli.js` keeps its commands and output.
 
 ## Hook command
 
-The hook reads at most 1 MiB. It parses the JSON and dispatches on `hook_event_name`. A field that the input does not have is treated as empty. The supported events are the events of the observer (specifications/codex-execution.md, Codex lifecycle adapter) and `SessionStart` with any source.
+The hook reads at most 1 MiB. It parses the JSON and dispatches on `hook_event_name`. When `hook_event_name` is absent and the object has `conversationId` or `workspacePaths`, the input is an Antigravity (`protojson` camelCase) hook payload. A field that the input does not have is treated as empty. The supported events are the events of the observer (specifications/codex-execution.md, Codex lifecycle adapter) and `SessionStart` with any source.
+
+For an Antigravity payload, the adapter normalizes the input before running the observer and event steps:
+
+| Target field | Antigravity source |
+| --- | --- |
+| `hook_event_name` | `--event` when it names a supported event (`PreInvocation` maps to `UserPromptSubmit`; `PostInvocation` returns `{}` without observing); else `PostToolUse` when `toolCall` is an object and `'error' in input`, `PreToolUse` when `toolCall` is an object, `Stop` when `terminationReason` is a string or `fullyIdle` is a boolean, `UserPromptSubmit` when `invocationNum` is a number, or `SessionStart` otherwise. |
+| `session_id` | `conversationId`. |
+| `cwd` | The first nonempty string in `workspacePaths`, or `process.cwd()` when `workspacePaths` has none. |
+| `turn_id` | `conversationId`, so `UserPromptSubmit` (`PreInvocation`), `PreToolUse`, `PostToolUse` and `Stop` share one turn identifier across the conversation. |
+| `model` | `modelName`. |
+| `agent_id` | `agentId` or `subagentId` when present. |
+| `tool_name` | `toolCall.name`. |
+| `tool_input` | `{command: toolCall.args.CommandLine ?? toolCall.args.command, file_path: toolCall.args.Path ?? toolCall.args.AbsolutePath ?? toolCall.args.FilePath ?? toolCall.args.file_path, path: toolCall.args.Path ?? toolCall.args.DirectoryPath ?? toolCall.args.path}` when `toolCall.args` is an object. |
+| `stop_hook_active` | `true` when `stop_hook_active` is `true`, when `terminationReason` is a nonempty string other than `NO_TOOL_CALL`, or when `executionNum` is a number greater than 1; else `false`. |
 
 For each supported event, the hook first records the observation as the observer does now. Claude Code 2.1.301 sends `prompt_id` and no `turn_id`; the observer uses `prompt_id` as the turn when `turn_id` is absent, so Claude Code attempts reach Processing and Validating. Then it does the work of the event:
 
-| Event | Work | Output |
-| --- | --- | --- |
-| SessionStart | Session context | `{"hookSpecificOutput":{"hookEventName":"SessionStart","additionalContext":"<text>"}}`, or `{}` when the text is empty |
-| PreToolUse | Reserved actions, then inferred binding | `{"hookSpecificOutput":{"hookEventName":"PreToolUse","permissionDecision":"deny","permissionDecisionReason":"<reason>"}}` for a reserved action, else `{}` |
-| Stop, SubagentStop | Stop check | `{"decision":"block","reason":"<text>"}` when the check fails, else `{}` |
-| Other events | none | `{}` |
+| Event | Work | Output (Claude Code and Codex) | Output (Antigravity) |
+| --- | --- | --- | --- |
+| SessionStart | Session context | `{"hookSpecificOutput":{"hookEventName":"SessionStart","additionalContext":"<text>"}}`, or `{}` when the text is empty | `{"injectSteps":[{"systemMessage":{"systemMessage":"<text>"}}]}`, or `{}` when the text is empty |
+| PreToolUse | Reserved actions, then inferred binding | `{"hookSpecificOutput":{"hookEventName":"PreToolUse","permissionDecision":"deny","permissionDecisionReason":"<reason>"}}` for a reserved action, else `{}` | `{"decision":"deny","reason":"<reason>"}` for a reserved action, else `{}` |
+| Stop, SubagentStop | Stop check | `{"decision":"block","reason":"<text>"}` when the check fails, else `{}` | `{"decision":"continue","reason":"<text>"}` when the check fails, else `{}` |
+| Other events | none | `{}` | `{}` |
 
-Both harnesses accept these shapes. The hook writes no other field and no plain text, except the workbench parts of the SessionStart output (specifications/ui-discovery.md, Hook output).
+All three harnesses accept their respective shapes. The hook writes no other field and no plain text, except the workbench parts of the SessionStart output (specifications/ui-discovery.md, Hook output).
 
 Each step has its own error boundary. An error, a timeout or a missing repository makes that step return `{}`, and the hook writes one line "Artifact Plane hook unavailable; execution continues." to standard error. In a Git repository without `docs/artifacts`, the steps return `{}`; only SessionStart also writes the line. A step also returns `{}` when it runs longer than its limit: 2 seconds for PreToolUse, 5 seconds for SessionStart and 20 seconds for the stop check. The observer step keeps its existing bounds: Git reads stop after 5 seconds and SQLite waits at most 2 seconds for a lock. On Windows the runtime store refuses its directory because the file system reports no private POSIX modes, as it does from source; the observer step then fails on each call and the guidance steps still work. The hook stores no prompt, tool input, command, tool output, assistant message or transcript path. It reads `tool_input` only in memory, for the reserved actions and the task path.
 
@@ -198,7 +234,7 @@ The existing tools keep their inputs and results.
 
 ## Configuration
 
-Hook entries for both harnesses use the command `artifact-plane hook || true` with these events and timeouts in seconds:
+Hook entries for Claude Code and Codex use the command `artifact-plane hook || true` with these events and timeouts in seconds:
 
 | Event | Matcher | Timeout |
 | --- | --- | --- |
@@ -208,16 +244,27 @@ Hook entries for both harnesses use the command `artifact-plane hook || true` wi
 | SessionEnd | none | 3 |
 | Interrupt (Codex only) | none | 3 |
 
+Hook entries for Antigravity use a top-level named hook `"artifact-plane"` in `.agents/hooks.json` with `artifact-plane hook --event <Event> || true`:
+
+| Event | Structure | Matcher | Timeout |
+| --- | --- | --- | --- |
+| SessionStart | flat handler list | none | 10 |
+| PreInvocation | flat handler list | none | 5 |
+| PreToolUse, PostToolUse | grouped with `matcher` and `hooks` | `*` | 5 |
+| Stop | flat handler list | none | 30 |
+
 `|| true` makes a missing or older executable return status 0 with no output.
 
 This repository commits:
 
 - `.mcp.json`: the server `artifact-plane` with command `artifact-plane` and args `["mcp"]`;
-- `.claude/settings.json`: the hook entries above;
+- `.claude/settings.json`: the Claude Code hook entries above;
 - `.codex/config.toml`: `[mcp_servers.artifact-plane]` with the same command and args, added to the existing `[agents]` table;
-- `.codex/hooks.json`: the hook entries above.
+- `.codex/hooks.json`: the Codex hook entries above;
+- `.agents/hooks.json`: the Antigravity hook entries above;
+- `.agents/plugins/artifact-plane/plugin.json` (`{"name":"artifact-plane"}`) and `.agents/plugins/artifact-plane/mcp_config.json`: the server `artifact-plane` with command `artifact-plane` and args `["mcp"]` so Antigravity discovers the workspace MCP server through its plugin loader.
 
-integration/hooks.example.json is replaced by integration/claude-settings.example.json and integration/codex-hooks.example.json with the same entries. integration/README.md and the Plane README describe for each harness: the MCP registration, the hook file, the trust steps (Claude Code: the workspace trust dialog and the approval of project MCP servers; Codex: a trusted project and the review of each hook in `/hooks`), the bind commands of the executable, and the source path.
+integration/hooks.example.json is replaced by integration/claude-settings.example.json, integration/codex-hooks.example.json and integration/antigravity-hooks.example.json with the same entries. integration/README.md and the Plane README describe for each harness: the MCP registration, the hook file, the trust or plugin steps (Claude Code: the workspace trust dialog and the approval of project MCP servers; Codex: a trusted project and the review of each hook in `/hooks`; Antigravity: `.agents/hooks.json` for workspace hooks and `.agents/plugins/artifact-plane/mcp_config.json` or `~/.gemini/config/mcp_config.json` for the MCP server), the bind commands of the executable, and the source path.
 
 ## Flows
 
@@ -225,14 +272,14 @@ execution-observation: the bind step adds the support of the inferred binding; t
 
 ## Validation
 
-- Node tests with recorded inputs of both harnesses for each event of the table, run against the hook function and once against the built executable.
+- Node tests with recorded inputs of Claude Code, Codex and Antigravity for each supported event, run against the hook function and once against the built executable.
 - A test table for reserved actions with at least: commit on main, commit on a change branch, `git -C <main worktree> commit`, push of `HEAD:main`, push without refspec on main, push of a change branch, `gh pr merge 44`, `echo "git commit"`, `git log --grep commit`, and a chained `git add . && git commit` on main.
 - Fail-open tests: missing repository, non-ADD repository, invalid JSON, a store directory that cannot be written, a step that exceeds its limit; each exits 0 and the store holds no forbidden field.
-- Inferred binding tests: a subagent read, a linked worktree read, a read in the main worktree without agent_id (no binding), an explicit bind after an inferred one.
+- Inferred binding tests: a subagent read, a linked worktree read (including an Antigravity `read_file` tool call with `toolCall.args.Path`), a read in the main worktree without agent_id (no binding), an explicit bind after an inferred one.
 - MCP tests: tool list, instructions, version, default root, `get_change_status` equal to `changeStatus` on the change status fixture, `check_records` equal to `validateKnowledge`.
 - The executable smoke check runs `hook` with a SessionStart input and `runtime query`.
 - A live check in this repository with Claude Code and Codex for AIA6 and the open claims, with the harness versions in the evidence.
 
 ## Specification self-check
 
-Every ID of requirements/agent-integration.md maps to a section: AI1 to Command line; AI2 and AI7 to Hook command; AI3 to Session context; AI4 to Stop check; AI5 to Reserved actions; AI6 to Inferred binding; AI8 and AI9 to MCP; AI10 and AI11 to Configuration; AI12 to Command line, MCP and the observer rules that stay. The output shapes come from the hook references of Claude Code 2.1.301 and codex-cli 0.163.0. Five claims are open for the plan approval. KISS: one command, existing readers and validator, no new table or store. STE: one rule in each sentence.
+`node apps/artifact-plane/scripts/validate-knowledge.mjs --change artifact-plane/change-antigravity-support` reports `ok: true`. Every ID of requirements/agent-integration.md maps to a section: AI1 to Command line; AI2, AI7 and AI13 to Hook command; AI3 to Session context; AI4 and AI14 to Stop check and Hook command; AI5 to Reserved actions; AI6 to Inferred binding; AI8 and AI9 to MCP; AI10 and AI11 to Configuration; AI12 to Command line, MCP and the observer rules that stay. The output shapes come from the hook references of Claude Code 2.1.301, codex-cli 0.163.0 and Antigravity (`hooks.json` specification). Claim `antigravity-hook-adapter` is open for plan approval. KISS: one command, existing readers and validator, no new table or store. STE: one rule in each sentence.

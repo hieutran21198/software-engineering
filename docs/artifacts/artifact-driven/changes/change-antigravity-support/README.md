@@ -21,3 +21,4 @@ Excluded: changes to `se-adopt` flags or copy behavior, changes to role skill co
 Knowledge is edited in place on this branch. The unit brief is [Antigravity support](../../../units-of-work/antigravity-support/README.md).
 
 - [Requirements: Antigravity support](../../requirements/antigravity-support.md)
+- [Specification: Antigravity support](../../specifications/antigravity-support.md)

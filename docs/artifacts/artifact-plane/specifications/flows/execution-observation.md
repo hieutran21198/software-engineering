@@ -77,8 +77,9 @@ flow:
       kind: implementation
       path: apps/artifact-plane/server/agent-hook.js
       symbol: hookOutput
-      requires: Record the allowlisted observation of each hook input and start
-        an inferred binding without waiting for it.
+      requires: Record the allowlisted observation of each Claude Code, Codex or
+        Antigravity hook input and start an inferred binding without waiting for
+        it.
       basis: static
     - id: binding-tests
       kind: test

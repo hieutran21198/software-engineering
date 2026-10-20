@@ -22,3 +22,4 @@ Excluded: changes to MCP tool schemas, HTTP routes, SQLite schema, or automatic 
 Knowledge is edited in place on this branch. The unit brief is [Antigravity support](../../../units-of-work/antigravity-support/README.md).
 
 - [Requirements: agent integration](../../requirements/agent-integration.md)
+- [Specification: agent integration](../../specifications/agent-integration.md)
