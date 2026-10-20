@@ -80,6 +80,12 @@ test('CP13, claim sidebar-enter-exact-concept: concept rows join the filtered tr
   assert.deepEqual(enter('chang'), {kind: 'change', artifact: 'plane', change: 'change-concept-pages'});
   assert.deepEqual(enter('versio'), {kind: 'change', artifact: 'add', change: 'change-version-gates'});
   assert.deepEqual(enter('repository-snapshot'), {kind: 'concept', artifact: 'plane', model: 'repository-snapshot'});
+  // Enter compares the concept title only: a query that equals the model id, but no title, keeps the first match.
+  // The change Repository snapshot cache comes first in tree order and matches both queries by its title or name.
+  const cached = {...worktree, changes: [...worktree.changes, {...open(2), artifact: 'plane', name: 'change-repository-snapshot-cache', title: 'Repository snapshot cache'}]};
+  const enterIn = (w, filter) => enterRow(sidebarRows({snapshot, worktree: w, filter, expanded: new Set(), concepts}).filter(r => r.kind !== 'heading'), filter)?.page;
+  assert.deepEqual(enterIn(cached, 'repository-snapshot'), {kind: 'change', artifact: 'plane', change: 'change-repository-snapshot-cache'});
+  assert.deepEqual(enterIn(cached, ' Repository Snapshot'), {kind: 'concept', artifact: 'plane', model: 'repository-snapshot'});
   assert.deepEqual(shown('change').slice(0, 5), ['0:Current work', '1:Concept pages (Artifact Plane · Plan)', '1:Gate releases (Artifact-Driven Development · Plan)', '0:Artifact-Driven Development', '1:Change (Concept)']);
   // A removed declaration has no row and no exact match; without concepts, Enter keeps the 1.24.0 result.
   assert.equal(shown('release').some(r => r.includes('Release')), false);

@@ -4,7 +4,7 @@ import {fixtureRepository, fingerprint, git, sourceFixture} from '../fixtures.js
 import {RuntimeStore} from '../../server/runtime-store.js';
 import {runtimeFixture, bind} from '../runtime-fixtures.js';
 import {editingFiles, tenant, billing} from './editing-fixtures.js';
-import {add, conceptFiles, conceptRepository} from '../concept-fixtures.js';
+import {add, plane, conceptFiles, conceptRepository} from '../concept-fixtures.js';
 import {openRepository, region, refresh, noOverflow, showSidebar, sidebar, tree, treeItem, layoutFacts} from './workbench.js';
 // The More menu pages: Discover behavior (search flows by a described
 // behavior) and Recorded executions (captured task attempts of this machine).
@@ -149,6 +149,9 @@ for (const width of [1440, 390]) test(`claim sidebar-enter-exact-concept at ${wi
   const files = conceptFiles();
   files.set(add + 'changes/change-version-gates/README.md', '# Gate releases\n\nGate the releases.\n');
   files.set(add + 'changes/change-version-gates/tasks/README.md', '---\ntasks: []\n---\n# Plan\n');
+  // The open change Repository snapshot cache of plane matches snapshot, the model id of the concept Repository snapshot, by its title and name.
+  files.set(plane + 'changes/change-snapshot-cache/README.md', '# Repository snapshot cache\n\nCache the snapshots.\n');
+  files.set(plane + 'changes/change-snapshot-cache/tasks/README.md', '---\ntasks: []\n---\n# Plan\n');
   const f = await fixtureRepository(files), before = await fingerprint(f.root), errors = [];
   page.on('pageerror', e => errors.push(e.message));
   try {
@@ -166,6 +169,11 @@ for (const width of [1440, 390]) test(`claim sidebar-enter-exact-concept at ${wi
     await enter('versio', 'Version');await expect(region(page, 'Change page')).toBeVisible();
     await showSidebar(page);await page.getByLabel('Search knowledge', {exact: true}).fill('versio');
     await expect(treeItem(page, /^Gate releases/)).toHaveAttribute('aria-selected', 'true');
+    // Enter compares the concept title only: the model id snapshot keeps the first match, the change; the exact title opens the concept.
+    await enter('snapshot', 'Repository snapshot');await expect(region(page, 'Change page')).toBeVisible();
+    await showSidebar(page);await page.getByLabel('Search knowledge', {exact: true}).fill('snapshot');
+    await expect(treeItem(page, /^Repository snapshot cache/)).toHaveAttribute('aria-selected', 'true');
+    await enter('Repository snapshot', 'Repository snapshot');await expect(concept).toHaveText('Repository snapshot');
     expect(await noOverflow(page)).toBe(true);
     expect(await fingerprint(f.root)).toEqual(before);expect(errors).toEqual([]);
   } finally {await f.cleanup();}
