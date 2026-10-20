@@ -3,7 +3,7 @@ import {writeFile} from 'node:fs/promises';
 import {join} from 'node:path';
 import {fingerprint} from '../fixtures.js';
 import {conceptRepository, conceptFiles, branchRepository, declaring, declarations, version} from '../concept-fixtures.js';
-import {openRepository, region, noOverflow, layoutFacts, refresh} from './workbench.js';
+import {openRepository, openArtifact, openDocument, region, noOverflow, layoutFacts, refresh} from './workbench.js';
 // The concept page (specifications/concept-pages.md, Concept page) and the Impact
 // concept rows (Existing pages, Impact), at 1440 and 390 pixels.
 const conceptPage = page => region(page, 'Concept page');
@@ -103,6 +103,34 @@ for (const width of [1440, 390]) test.describe(`at ${width} pixels`, () => {
       await expect(changed).toContainText('docs/artifacts/add/specifications/knowledge.md');
       await expect(changed).toContainText('docs/artifacts/add/specifications/delivery.md');
       expect(await fingerprint(f.root)).toEqual(before);expect(errors).toEqual([]);
+    } finally {await f.cleanup();}
+  });
+
+  test('the links of the artifact, document and flow pages open the concept page', async ({page}) => {
+    test.setTimeout(90000);
+    const f = await conceptRepository(), errors = [];page.on('pageerror', e => errors.push(e.message));
+    try {
+      await openRepository(page, f.root);
+      const artifact = await openArtifact(page, 'Artifact-Driven Development');
+      await artifact.getByRole('region', {name: 'Concepts', exact: true}).getByRole('button', {name: /^Version /}).click();
+      await expect(heading(page)).toHaveText('Version');
+      await expect(flows(page)).toBeVisible();
+      const doc = await openDocument(page, 'Artifact-Driven Development', 'Specifications', 'ADD models used in dependency gates');
+      const disclosure = doc.locator('details.properties-disclosure > summary');
+      if (await disclosure.isVisible()) await disclosure.click();
+      await doc.getByRole('region', {name: 'Properties'}).getByRole('button', {name: 'Version', exact: true}).click();
+      await expect(heading(page)).toHaveText('Version');
+      // The flow opens from the concept page; its participant link returns to it.
+      await flowRow(page, 'Explore a local ADD repository').click();
+      await flows(page).getByRole('button', {name: 'Open flow', exact: true}).click();
+      const flow = region(page, 'Flow page');
+      await expect(flow.getByRole('heading', {level: 1})).toHaveText('Explore a local ADD repository');
+      await flow.locator('details.flow-model > summary').click();
+      await flow.locator('details.flow-model').getByRole('button', {name: 'Open concept Version', exact: true}).click();
+      await expect(heading(page)).toHaveText('Version');
+      await page.goBack();
+      await expect(region(page, 'Flow page').getByRole('heading', {level: 1})).toHaveText('Explore a local ADD repository');
+      expect(errors).toEqual([]);
     } finally {await f.cleanup();}
   });
 
