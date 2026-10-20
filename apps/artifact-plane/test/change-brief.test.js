@@ -10,6 +10,8 @@ import {createFlowMcpServer} from '../server/flow-mcp.js';
 import {QUESTIONS, LADDER, claimStep, conceptPrefix, buildBrief} from '../server/change-brief.js';
 import {formatContextMarkdown} from '../src/context-packet.js';
 import {git as readerGit} from '../server/reader.js';
+import {rm} from 'node:fs/promises';
+import {join} from 'node:path';
 import {conceptBrief, add, plane, declaring, declarations, version, delivery, models} from './concept-brief-fixtures.js';
 
 const CATEGORIES = ['Delivered with unmet evidence', 'Claim with an error', 'Open decision', 'Open root cause', 'Undecided flow or unresolved item', 'Open assumption', 'Unknown or risk'];
@@ -311,7 +313,7 @@ test('participation-diff: a renamed participant is a changed participation', asy
     });
   });
   const b = await brief();
-  // Recorded result: one row for Version in the plane flow; Repository snapshot keeps its participant, but its interaction now names knowledge.
+  // Recorded result: two rows in the plane flow, Repository snapshot and Version: the participant version is now knowledge, and the interaction from snapshot now names knowledge.
   assert.deepEqual(rows(b), [['Repository snapshot', 'participation-changed', 'Explore a local ADD repository'], ['Version', 'participation-changed', 'Explore a local ADD repository']]);
 });
 
@@ -363,6 +365,31 @@ test('CP12: without Impact data the summary is the prefix alone', async t => {
   const affected = affectedOf(brief);
   assert.equal(affected.summary, 'New concept: Delivery record.');
   assert.deepEqual(affected.items.map(i => i.text), ['Delivery record — new declaration in ADD models used in dependency gates', 'Release — describing document changed: Change-owned delivery contract', 'Version — describing document changed: Change-owned delivery contract']);
+});
+
+test('CP12: without Impact data and without a prefix, the summary is the 1.24.0 fallback text', async t => {
+  const {f} = await conceptBrief(t, async ({put}) => {
+    await put(add + 'specifications/knowledge.md', '# Knowledge and execution contract\n\nVersions hold knowledge.\n\n## More\n\nText.\n');
+  });
+  const unavailable = {query: async () => {throw Object.assign(new Error('Impact is off.'), {status: 503});}};
+  const {brief} = await buildBrief({root: f.root, worktree: f.root, artifact: 'add', change: 'change-next', git: readerGit, impactService: unavailable});
+  // Only describing rows: the prefix is empty, so the row keeps a summary and is not blank.
+  const affected = affectedOf(brief);
+  assert.equal(affected.summary, 'The impact answer is not available.');
+  assert.deepEqual(affected.items.map(i => i.text), ['Change — describing document changed: Knowledge and execution contract', 'Version — describing document changed: Knowledge and execution contract']);
+});
+
+test('CP11: a removed flow document gives participation rows whose document is removed', async t => {
+  const {f, brief} = await conceptBrief(t, async () => {});
+  await rm(join(f.root, add + 'specifications/flows/gates.md'));
+  f.commit('Remove the gates flow');
+  const b = await brief();
+  const removed = b.concepts.filter(c => c.reason === 'participation-changed');
+  assert.ok(removed.length > 0);
+  for (const c of removed) {
+    assert.deepEqual(c.document, {path: add + 'specifications/flows/gates.md', title: GATES, removed: true});
+    assert.deepEqual(c.flow, {flow: 'add:gates', title: GATES});
+  }
 });
 
 test('CP11: the brief operation, the packet brief and get_change_brief give the same concepts', async t => {

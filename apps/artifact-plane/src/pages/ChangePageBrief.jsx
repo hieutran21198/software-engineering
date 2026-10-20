@@ -66,12 +66,14 @@ export function useChangeBrief(artifact, change) {
 const LEAD = {'declaration-new': 'new declaration in ', 'declaration-changed': 'declaration changed in ', 'declaration-removed': 'declaration removed in ', 'participation-changed': 'participation changed in ', 'describing-document-changed': 'describing document changed: '};
 function ConceptRow({concept: c, go}) {
   const lead = LEAD[c.reason], label = c.flow ? c.flow.title : c.document.title;
-  const target = c.flow ? {kind: 'flow', artifact: c.flow.flow.split(':')[0], flow: c.flow.flow}
+  // A flow document removed at the head opens its established document, not the flow page.
+  const target = c.flow && !c.document.removed ? {kind: 'flow', artifact: c.flow.flow.split(':')[0], flow: c.flow.flow}
     : {kind: 'document', artifact: c.document.path.match(/^docs\/artifacts\/([^/]+)\//)?.[1], source: c.document.path, ...(c.document.removed ? {established: true} : {})};
   // Links, not buttons: a button is one box, so a long name would leave its line.
-  const open = page => event => {event.preventDefault();go(page);};
-  return <span className="concept-row">{c.reason === 'declaration-removed' ? c.title : <a href="#" aria-label={`Open concept ${c.title}, ${lead}${label}`} onClick={open(conceptPage({artifact: c.concept.split(':')[0], logicalId: c.concept}))}>{c.title}</a>}
-    {' — '}{lead}<a href="#" aria-label={`Open ${label} for ${c.title}`} onClick={open(target)}>{label}</a></span>;
+  // The href has no page, so a middle click does nothing, as on a button.link.
+  const open = page => ({href: '#', onClick: event => {event.preventDefault();go(page);}, onAuxClick: event => event.preventDefault()});
+  return <span className="concept-row">{c.reason === 'declaration-removed' ? c.title : <a aria-label={`Open concept ${c.title}, ${lead}${label}`} {...open(conceptPage({artifact: c.concept.split(':')[0], logicalId: c.concept}))}>{c.title}</a>}
+    {' — '}{lead}<a aria-label={`Open ${label} for ${c.title}`} {...open(target)}>{label}</a></span>;
 }
 function Items({items, terms, concepts = [], go}) {
   const conceptOf = item => item.concept && concepts.find(c => c.concept === item.concept && c.document.path === item.document?.path);

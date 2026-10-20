@@ -4,7 +4,7 @@ import {join} from 'node:path';
 import {openRepository, openChange, openDocument, region, noOverflow, layoutFacts} from './workbench.js';
 import {conceptRepository, conceptFiles, add, declaring, declarations, version, delivery} from '../concept-fixtures.js';
 import {git} from '../fixtures.js';
-import {mkdir} from 'node:fs/promises';
+import {mkdir, rm} from 'node:fs/promises';
 import {parse, stringify} from 'yaml';
 import {editingRepository, editingFiles, billing, tenant, read} from './editing-fixtures.js';
 // The Change brief of the change page: section order, rows, claim cards, the
@@ -195,4 +195,29 @@ for (const width of [1440, 390]) test.describe(`concept rows at ${width} pixels`
       expect(errors).toEqual([]);
     } finally {await f.cleanup();}
   });
+});
+
+// A row of a removed flow document opens the established document, and a middle
+// click on a row link opens no new tab.
+test('CP11: a participation row of a removed flow opens the document on main; a middle click opens nothing', async ({page, context}) => {
+  test.setTimeout(90000);
+  const f = await conceptBranch(), errors = [];page.on('pageerror', e => errors.push(e.message));
+  try {
+    await rm(join(f.root, add + 'specifications/flows/gates.md'));
+    git(f.root, 'add', '-A');git(f.root, '-c', 'user.name=Fixture', '-c', 'user.email=fixture@example.invalid', 'commit', '-qm', 'Remove the gates flow');
+    await openRepository(page, f.root);
+    await openChange(page, 'Add the delivery record concept');
+    const row = brief(page).locator('.brief-rows details').filter({has: page.locator('.brief-question', {hasText: 'What is affected?'})});
+    await expect(row.locator('.brief-answer')).toContainText('Participations changed: Change, Version.', {timeout: 30000});
+    await row.locator('summary').click();
+    const link = row.getByRole('link', {name: `Open ${GATES} for Version`, exact: true});
+    // A middle click and a Control click open no tab; the Control click opens the page in place.
+    const popup = context.waitForEvent('page', {timeout: 2000}).then(() => true, () => false);
+    await link.click({button: 'middle'});
+    await link.click({modifiers: ['ControlOrMeta']});
+    expect(await popup).toBe(false);
+    await expect(region(page, 'Document page').getByRole('heading', {level: 1})).toContainText(GATES);
+    await expect(region(page, 'Document page').getByRole('status').filter({hasText: 'This document is removed on this branch.'})).toBeVisible();
+    expect(errors).toEqual([]);
+  } finally {await f.cleanup();}
 });
