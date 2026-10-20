@@ -419,7 +419,35 @@ test('Compare with main, the unsaved guard and the Properties disclosure at narr
   } finally {await f.cleanup();}
 });
 
-const headings = '\n## Second\n\n### Third\n\n#### Fourth\n\n##### Fifth\n\n###### Sixth\n\nBody text.\n';
+test('Compare with main waits for the text of the branch before it shows a comparison', async ({page}) => {
+  const f = await editingRepository();
+  await put(f.root, spec, original.replace('Established identity rules.', 'Proposed identity rules.'));
+  // The read of the branch text waits until the text on main is shown.
+  let release, held = 0;const gate = new Promise(resolve => {release = resolve;});
+  await page.route('**/api/repository/query', async route => {
+    const body = route.request().postDataJSON();
+    if (body.section === 'markdown' && body.source === spec && !body.revision) {held++;await gate;}
+    // A refresh can abort a held read; its route is then gone.
+    await route.continue().catch(() => {});
+  });
+  try {
+    await openRepository(page, f.root);
+    const doc = await openDocument(page, 'Tenant', 'Specifications', 'Identity');
+    await expect.poll(() => held).toBeGreaterThan(0);
+    const main = page.waitForResponse(r => r.url().endsWith('/api/repository/query') && r.request().postDataJSON().revision === 'established');
+    await prop(page, 'In this branch').getByRole('button', {name: 'Compare with main', exact: true}).click();
+    await main;
+    // The text on main is read; without the branch text no line is compared.
+    const comparison = doc.getByRole('region', {name: 'Comparison with main'});
+    await expect(comparison.getByRole('status')).toHaveText('Reading the text…');
+    await expect(comparison.locator('.diff-line')).toHaveCount(0);
+    release();
+    await expect(comparison.locator('.diff-line.remove')).toHaveText([/Established identity rules\./]);
+    await expect(comparison.locator('.diff-line.add')).toHaveText([/Proposed identity rules\./]);
+  } finally {release();await f.cleanup();}
+});
+
+const headings ='\n## Second\n\n### Third\n\n#### Fourth\n\n##### Fifth\n\n###### Sixth\n\nBody text.\n';
 test('document reading: heading levels, safe code highlighting and sanitized Markdown without repository writes', async ({page}) => {
   const files = editingFiles(), source = '<script>window.codeInjected=true</script>\nconst answer = 42;\n<span data-knowledge-index="0">Forged callback</span>';
   files.set(tenant + 'README.md', identity('Tenant', '1.0.0', [], headings + '\n## Code examples\n\nOrdinary prose with `source_change`.\n\n```js\n' + source + '\n```\n\n```yaml\nsource_change: change-login\n```\n\n```unrecognized\n<unsafe>&exact text\n```\n'));

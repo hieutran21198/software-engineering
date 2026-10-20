@@ -112,7 +112,7 @@ export default function DocumentPage({page}) {
       {narrow && <details className="properties-disclosure"><summary>Properties</summary>{properties}</details>}
       {established && <p className="notice" role="status">{info.removed ? 'This document is removed on this branch. The text below is the version on main.' : 'The text below is the version on main.'}</p>}
       {wording && <p className="notice wording-note" role="note">Inferred from wording: this record of delivered work says “{wording}” The work may be delivered; check before relying on it.</p>}
-      {compare && mode === 'view' && <Comparison info={info} source={page.source} after={doc.markdown}/>}
+      {compare && mode === 'view' && <Comparison info={info} source={page.source} after={doc.ready ? doc.markdown : null}/>}
       {mode === 'edit' ? <section className="document-editor" aria-label="Document editor"
         onKeyDown={event => {if ((event.ctrlKey || event.metaKey) && event.key.toLowerCase() === 's') {event.preventDefault();save();}}}>
         {!base ? <p className="muted" role="status">Reading the text…</p> : <>
@@ -155,13 +155,16 @@ function Eyebrow({info, snapshot, go}) {
   return <>{artifactLink || artifactTitle(snapshot, info.scope.artifact)} / {info.plural || info.kind}</>;
 }
 
+// after is null until the text of the branch is read: an unread text would show every line of main as removed.
 function Comparison({info, source, after}) {
   const added = info.element?.state === 'added';
   const main = useQuery(added ? null : {section: 'markdown', source, artifact: info.scope.artifact, revision: 'established'});
   return <section className="comparison" aria-label="Comparison with main">
     <h2 className="section-title">Compared with main</h2>
-    {added ? <ReviewDiff before="" after={after} complete/> : main.error && !main.data ? <p role="alert">{main.error}</p>
-      : !main.data ? <p className="muted" role="status">Reading the text on main…</p> : <ReviewDiff before={main.data.markdown} after={after} complete/>}
+    {!added && main.error && !main.data ? <p role="alert">{main.error}</p>
+      : !added && !main.data ? <p className="muted" role="status">Reading the text on main…</p>
+      : after === null ? <p className="muted" role="status">Reading the text…</p>
+      : <ReviewDiff before={added ? '' : main.data.markdown} after={after} complete/>}
   </section>;
 }
 
