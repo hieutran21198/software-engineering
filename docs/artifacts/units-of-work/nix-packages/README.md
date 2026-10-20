@@ -11,7 +11,15 @@ acceptance:
   - id: integration
     criterion: Installed commands pass isolated adoption and Plane launch checks without writing to the Nix store.
     integration: true
-evidence: []
+evidence:
+  - criterion: packages
+    method: Evaluate all package outputs and inspect the native platform coverage record.
+    result: incomplete
+    source: docs/artifacts/nix-packages/changes/change-initial/tasks/04-integration.md#incomplete-native-checks
+  - criterion: integration
+    method: Run installed package integration and semantic runtime checks on the available Linux host.
+    result: passed
+    source: docs/artifacts/nix-packages/changes/change-initial/tasks/03-artifact-plane.md#evidence
 ---
 
 # Nix application packages
@@ -22,4 +30,5 @@ Exclude application features, system services, editor integration and external p
 
 ## Combined checks
 
-Implementation has not started. Native build and smoke evidence will be linked from the originating tasks.
+The originating tasks record the x86_64-linux build, adoption, native module, HTTP, MCP and semantic runtime results.
+All four systems evaluate. Native checks on the other three systems remain incomplete, so this outcome has no prepared version record and is not complete or established.
