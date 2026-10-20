@@ -64,6 +64,26 @@ test("local API response contract and validation reject hostile or malformed req
   assert.equal((await fetch(`${base}/server/reader.js`)).status, 404);
 });
 
+// specifications/ui-discovery.md: Identity route.
+test("GET /api/plane names the Plane and its version; another method and a foreign host are refused", async (t) => {
+  const {default: pkg} = await import("../package.json", {with: {type: "json"}});
+  const server = createAppServer();
+  await new Promise((resolve) => server.listen(0, "127.0.0.1", resolve));
+  t.after(() => new Promise((resolve) => server.close(resolve)));
+  const base = `http://127.0.0.1:${server.address().port}`;
+  const identity = await fetch(`${base}/api/plane`);
+  assert.equal(identity.status, 200);
+  assert.match(identity.headers.get("content-type"), /^application\/json/);
+  assert.deepEqual(await identity.json(), {name: "artifact-plane", version: pkg.version});
+  for (const method of ["POST", "PUT", "DELETE", "HEAD"]) assert.equal((await fetch(`${base}/api/plane`, {method})).status, 405, method);
+  const status = (headers) => new Promise((resolve, reject) => {
+    const req = httpRequest(`${base}/api/plane`, {headers}, (res) => {res.resume();resolve(res.statusCode);});
+    req.on("error", reject);req.end();
+  });
+  assert.equal(await status({Host: "foreign.example"}), 403);
+  assert.equal(await status({Origin: "https://foreign.example"}), 403);
+});
+
 // Impact route, MCP tool and delegated flow impact share one impact service.
 import {Client} from "@modelcontextprotocol/sdk/client/index.js";
 import {InMemoryTransport} from "@modelcontextprotocol/sdk/inMemory.js";

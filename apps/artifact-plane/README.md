@@ -73,6 +73,8 @@ npm start
 
 Open `http://127.0.0.1:4310`. Enter the absolute path to a Git worktree root that contains `docs/artifacts`. The path refers to the computer running the server. To use a different port, set `PORT` before starting the app.
 
+With the agent hooks configured, a Claude Code or Codex session starts the server and shows its address; see [Workbench](integration/README.md#workbench).
+
 All browser assets are bundled locally. Knowledge exploration needs no account, AI service, or external runtime service. Repository observation runs in the local server.
 
 ## Explore

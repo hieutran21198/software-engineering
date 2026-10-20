@@ -17,7 +17,7 @@ const LIMIT = 4000, MORE = 'More in get_change_status.', STOP_LIMIT = 10;
 const isDirectory = path => stat(path).then(s => s.isDirectory(), () => false);
 const topLevel = (dir, git) => git(dir, ['rev-parse', '--show-toplevel']).catch(() => null);
 // The Git top level of dir when it is an ADD repository, else null.
-async function addRoot(dir, git) {
+export async function addRoot(dir, git) {
   const top = await topLevel(dir, git);
   return top && await isDirectory(join(top, 'docs/artifacts')) ? top : null;
 }

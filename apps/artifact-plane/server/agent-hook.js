@@ -8,9 +8,10 @@ import {isSea} from 'node:sea';
 import {fileURLToPath} from 'node:url';
 import {RuntimeStore, repositoryIdentity, inferredBinding} from './runtime-store.js';
 import {worktreeStatus, reservedAction, stopCheck} from './agent-guidance.js';
+import {workbenchStep} from './workbench.js';
 
 export const MAX_INPUT = 1024 * 1024;
-export const LIMITS = {PreToolUse: 2000, SessionStart: 5000, stop: 20000};
+export const LIMITS = {PreToolUse: 2000, SessionStart: 5000, workbench: 4000, stop: 20000};
 const OBSERVED = new Set(['SessionStart', 'UserPromptSubmit', 'PreToolUse', 'PostToolUse', 'PermissionRequest', 'Stop', 'Interrupt', 'SessionEnd', 'SubagentStart', 'SubagentStop']);
 const TIMEOUT = Symbol('timeout');
 
@@ -54,7 +55,7 @@ async function within(ms, fn) {
 // The output of one hook input text: {output, unavailable}. `unavailable` is true
 // when a step failed, timed out or found no ADD repository. Tests replace steps.
 export async function hookOutput(text, {stateDir, limits = LIMITS, steps = {}} = {}) {
-  const run = {observe, status: worktreeStatus, reserved: reservedAction, infer: inferredBinding, start: startBind, stop: stopCheck, ...steps};
+  const run = {observe, status: worktreeStatus, workbench: workbenchStep, reserved: reservedAction, infer: inferredBinding, start: startBind, stop: stopCheck, ...steps};
   let unavailable = false, input;
   const step = async (ms, fn) => {
     try {const result = await within(ms, fn);if (result !== TIMEOUT) return result;}
@@ -72,9 +73,13 @@ export async function hookOutput(text, {stateDir, limits = LIMITS, steps = {}} =
   try {store = run.observe(input, stateDir);} catch {unavailable = true;}
   try {
     if (event === 'SessionStart') {
-      const status = await step(limits.SessionStart, () => run.status(input.cwd));
+      // The workbench step runs beside the session context step, with its own limit (specifications/ui-discovery.md: Hook output).
+      const [status, workbench] = await Promise.all([step(limits.SessionStart, () => run.status(input.cwd)), step(limits.workbench, () => run.workbench(input.cwd))]);
       if (!status) unavailable = true;
-      else if (status.text) output = {hookSpecificOutput: {hookEventName: 'SessionStart', additionalContext: status.text}};
+      const line = workbench?.line;
+      const context = status?.text && line ? `${status.text}\nWorkbench for people: ${line}` : status?.text || line;
+      if (context) output = {hookSpecificOutput: {hookEventName: 'SessionStart', additionalContext: context},
+        ...(line && ['startup', 'resume'].includes(input.source) ? {systemMessage: line} : {})};
     } else if (event === 'PreToolUse') {
       const deadline = Date.now() + limits.PreToolUse;
       const denied = await step(limits.PreToolUse, () => run.reserved(input));

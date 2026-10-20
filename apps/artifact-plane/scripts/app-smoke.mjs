@@ -71,8 +71,9 @@ await check("mcp answers initialize and lists its tools", async () => {
 });
 
 // The hook writes one JSON object and exits with status 0; runtime query prints the JSON of the store.
+// The hook must not start a workbench that outlives the check, so its start is turned off.
 const runWith = (args, input) => new Promise((done, reject) => {
-  const child = execFile(file, args, { env }, (error, stdout, stderr) => error ? reject(Object.assign(error, { stderr })) : done(JSON.parse(stdout)));
+  const child = execFile(file, args, { env: { ...env, ARTIFACT_PLANE_PORT: String(port), ARTIFACT_PLANE_AUTOSTART: "0" } }, (error, stdout, stderr) => error ? reject(Object.assign(error, { stderr })) : done(JSON.parse(stdout)));
   child.stdin.end(input);
 });
 await check("hook answers a SessionStart input with one JSON object", async () => {
@@ -81,7 +82,9 @@ await check("hook answers a SessionStart input with one JSON object", async () =
   assert(output && typeof output === "object" && !Array.isArray(output), `output ${JSON.stringify(output)}`);
   const context = output.hookSpecificOutput?.additionalContext;
   assert(context === undefined || typeof context === "string", "additionalContext is not text");
+  assert(output.systemMessage?.includes("artifact-plane serve"), `systemMessage ${JSON.stringify(output.systemMessage)}`);
   console.log(`     ${context ? context.split("\n")[0] : "{}"}`);
+  console.log(`     ${output.systemMessage}`);
 });
 await check("runtime query prints the JSON of the store", async () => {
   const result = await runWith(["runtime", "query", "--root", repository, "--state-dir", state], "").catch((error) => {

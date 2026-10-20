@@ -2,8 +2,10 @@
 // Hook command, Inferred binding, Validation) with recorded inputs of Claude Code
 // 2.1.301 and codex-cli 0.163.0. PLANE_TEST_EXECUTABLE selects a built executable
 // for the process tests; without it they run the source entry `node server/app.js`.
-import test from 'node:test';
+import test, {before, after} from 'node:test';
 import assert from 'node:assert/strict';
+import {EventEmitter} from 'node:events';
+import {createServer} from 'node:http';
 import {spawn, execFileSync} from 'node:child_process';
 import {mkdtemp, mkdir, writeFile, readFile, readdir, rm, chmod, realpath} from 'node:fs/promises';
 import {existsSync} from 'node:fs';
@@ -11,9 +13,21 @@ import {DatabaseSync} from 'node:sqlite';
 import {tmpdir} from 'node:os';
 import {join, dirname} from 'node:path';
 import {fileURLToPath} from 'node:url';
-import {hookOutput} from '../server/agent-hook.js';
+import {hookOutput, LIMITS} from '../server/agent-hook.js';
+import {workbenchStep, workbenchLine, probe, startServe} from '../server/workbench.js';
 import {git} from './fixtures.js';
 import {runtimeFixture} from './runtime-fixtures.js';
+
+// A program that is not a Plane holds this port. The hook processes probe it, give the
+// unavailable line and start no server; ARTIFACT_PLANE_AUTOSTART=0 also stops a start.
+const held = createServer((req, res) => {res.writeHead(404);res.end();});
+let HELD;
+before(() => new Promise(done => held.listen(0, '127.0.0.1', () => {HELD = held.address().port;done();})));
+after(() => new Promise(done => held.close(done)));
+const heldLine = () => workbenchLine('unavailable', HELD, '');
+// A fixed workbench step for the dispatcher tests.
+const READY = root => `Artifact Plane workbench: http://127.0.0.1:4310/?repository=${encodeURIComponent(root)}`;
+const ready = root => async () => ({state: 'ready', port: 4310, line: READY(root)});
 
 const app = fileURLToPath(new URL('../server/app.js', import.meta.url));
 const executable = process.env.PLANE_TEST_EXECUTABLE || null;
@@ -80,13 +94,19 @@ function codexInputs(cwd) {
     [{...base, hook_event_name: 'SessionEnd'}, {}],
   ];
 }
-function assertExpected(output, expected, input) {
+// `line` is the expected workbench line of a SessionStart output (specifications/ui-discovery.md: Hook output).
+function assertExpected(output, expected, input, line = null) {
   const label = `${input.hook_event_name} ${JSON.stringify(input.tool_input ?? input.source ?? '')}`;
   if (expected === 'context') {
-    assert.deepEqual(Object.keys(output), ['hookSpecificOutput'], label);
+    const shown = line && ['startup', 'resume'].includes(input.source);
+    assert.deepEqual(Object.keys(output), shown ? ['hookSpecificOutput', 'systemMessage'] : ['hookSpecificOutput'], label);
+    if (shown) assert.equal(output.systemMessage, line, label);
     assert.deepEqual(Object.keys(output.hookSpecificOutput), ['hookEventName', 'additionalContext'], label);
     assert.equal(output.hookSpecificOutput.hookEventName, 'SessionStart');
     assert.match(output.hookSpecificOutput.additionalContext, /^Artifact Plane .*: ADD state of .* on branch main\.\n- demo\/change-live \(tier medium, unit live\): /, label);
+    const workbench = output.hookSpecificOutput.additionalContext.split('\n').filter(l => l.startsWith('Workbench for people: '));
+    assert.deepEqual(workbench, line ? [`Workbench for people: ${line}`] : [], label);
+    if (line) assert.ok(output.hookSpecificOutput.additionalContext.endsWith(`\nWorkbench for people: ${line}`), label);
   } else if (expected === 'block') {
     assert.deepEqual(Object.keys(output), ['decision', 'reason'], label);
     assert.equal(output.decision, 'block');
@@ -113,7 +133,8 @@ const eventCount = stateDir => {const db = new DatabaseSync(join(stateDir, 'runt
 function hookProcess(input, {stateDir, env = {}, args = stateDir ? ['--state-dir', stateDir] : []} = {}) {
   const started = Date.now();
   return new Promise((resolve, reject) => {
-    const child = spawn(program[0], [...program.slice(1), 'hook', ...args], {env: {...process.env, ...(stateDir ? {ARTIFACT_PLANE_STATE_DIR: stateDir} : {}), ...env}, stdio: ['pipe', 'pipe', 'pipe']});
+    const child = spawn(program[0], [...program.slice(1), 'hook', ...args], {env: {...process.env, ARTIFACT_PLANE_AUTOSTART: '0', ARTIFACT_PLANE_PORT: String(HELD),
+      ...(stateDir ? {ARTIFACT_PLANE_STATE_DIR: stateDir} : {}), ...env}, stdio: ['pipe', 'pipe', 'pipe']});
     let stdout = '', stderr = '';
     child.stdout.setEncoding('utf8').on('data', chunk => stdout += chunk);
     child.stderr.setEncoding('utf8').on('data', chunk => stderr += chunk);
@@ -136,8 +157,8 @@ test('AIA1: recorded Claude Code and Codex inputs get the output of the Hook com
   for (const [harness, inputs] of [['claude', claudeInputs(f.root)], ['codex', codexInputs(f.root)]]) {
     for (const [input, expected, bind] of inputs) {
       const started = [];
-      const {output, unavailable} = await hookOutput(JSON.stringify(input), {stateDir: f.stateDir, steps: {start: (b, dir) => started.push([b, dir])}});
-      assertExpected(output, expected, input);
+      const {output, unavailable} = await hookOutput(JSON.stringify(input), {stateDir: f.stateDir, steps: {start: (b, dir) => started.push([b, dir]), workbench: ready(f.root)}});
+      assertExpected(output, expected, input, READY(f.root));
       assert.equal(unavailable, false, `${harness} ${input.hook_event_name}`);
       assert.deepEqual(started, bind ? [[{root: f.root, artifact: 'demo', change: 'change-live', task: 'a.md', session: input.session_id, agent: input.agent_id, unit: 'live'}, f.stateDir]] : [], `${harness} ${input.hook_event_name}`);
     }
@@ -152,7 +173,7 @@ test(`AIA1: recorded inputs of both harnesses get the same output from the ${exe
   const f = await fixture(t);
   for (const [input, expected] of [...claudeInputs(f.root), ...codexInputs(f.root)].filter(([input]) => input.tool_input?.file_path === undefined)) {
     const {output, stderr} = await hookProcess(input, {stateDir: f.stateDir});
-    assertExpected(output, expected, input);
+    assertExpected(output, expected, input, heldLine());
     assert.equal(stderr, '');
   }
   await assertNoPayload(f.stateDir);
@@ -201,7 +222,7 @@ test('AI7: a store directory that cannot be written stops neither the context no
   await writeFile(file, '');await chmod(file, 0o600);
   const base = {session_id: 's', cwd: f.root, prompt: MARKER};
   const context = await hookProcess({...base, hook_event_name: 'SessionStart', source: 'startup'}, {stateDir: file, env: {ARTIFACT_PLANE_STATE_DIR: dir}});
-  assertExpected(context.output, 'context', base);assert.equal(context.stderr, UNAVAILABLE);
+  assertExpected(context.output, 'context', {...base, source: 'startup'}, heldLine());assert.equal(context.stderr, UNAVAILABLE);
   const refused = await hookProcess({...base, hook_event_name: 'PreToolUse', tool_input: {command: 'git commit -m x'}}, {stateDir: file, env: {ARTIFACT_PLANE_STATE_DIR: dir}});
   assert.deepEqual([refused.output, refused.stderr], [deny('commits to main'), UNAVAILABLE]);
   const read = await hookProcess({...base, hook_event_name: 'PreToolUse', agent_id: 'child', tool_input: {file_path: join(f.root, TASK)}}, {stateDir: file, env: {ARTIFACT_PLANE_STATE_DIR: dir}});
@@ -211,10 +232,14 @@ test('AI7: a store directory that cannot be written stops neither the context no
 
 test('AI7: a step that runs longer than its limit returns {}, and the other steps keep their output', async t => {
   const f = await fixture(t), never = () => new Promise(() => {});
-  const limits = {SessionStart: 50, PreToolUse: 50, stop: 50};
-  const run = (input, steps) => hookOutput(JSON.stringify({session_id: 's', cwd: f.root, ...input}), {stateDir: f.stateDir, limits, steps});
+  const limits = {SessionStart: 50, PreToolUse: 50, workbench: 50, stop: 50};
+  const run = (input, steps) => hookOutput(JSON.stringify({session_id: 's', cwd: f.root, ...input}), {stateDir: f.stateDir, limits, steps: {workbench: async () => null, ...steps}});
   const started = Date.now();
   assert.deepEqual(await run({hook_event_name: 'SessionStart'}, {status: never}), {output: {}, unavailable: true});
+  assert.deepEqual(await run({hook_event_name: 'SessionStart'}, {status: never, workbench: never}), {output: {}, unavailable: true});
+  // Without the session context text, the agent context is the workbench line alone.
+  assert.deepEqual(await run({hook_event_name: 'SessionStart', source: 'startup'}, {status: never, workbench: ready(f.root)}),
+    {output: {hookSpecificOutput: {hookEventName: 'SessionStart', additionalContext: READY(f.root)}, systemMessage: READY(f.root)}, unavailable: true});
   assert.deepEqual(await run({hook_event_name: 'Stop'}, {stop: never}), {output: {}, unavailable: true});
   assert.deepEqual(await run({hook_event_name: 'PreToolUse', tool_input: {command: 'git status'}}, {reserved: never}), {output: {}, unavailable: true});
   assert.deepEqual(await run({hook_event_name: 'PreToolUse', agent_id: 'c', tool_input: {file_path: TASK}}, {infer: never}), {output: {}, unavailable: true});
@@ -223,8 +248,54 @@ test('AI7: a step that runs longer than its limit returns {}, and the other step
   const failed = () => {throw Error('broken');};
   assert.deepEqual(await run({hook_event_name: 'PreToolUse', tool_input: {command: 'git commit -m x'}}, {observe: failed, infer: failed}), {output: deny('commits to main'), unavailable: true});
   assert.deepEqual(await run({hook_event_name: 'SessionStart'}, {status: failed}), {output: {}, unavailable: true});
-  const context = await hookOutput(JSON.stringify({session_id: 's', cwd: f.root, hook_event_name: 'SessionStart'}), {stateDir: f.stateDir, steps: {observe: failed}});
+  const context = await hookOutput(JSON.stringify({session_id: 's', cwd: f.root, hook_event_name: 'SessionStart'}), {stateDir: f.stateDir, steps: {observe: failed, workbench: async () => null}});
   assert.equal(context.unavailable, true);assertExpected(context.output, 'context', {});
+});
+
+// specifications/ui-discovery.md: Workbench step, Hook output.
+test('UDA1: at a free port the hook starts one detached server and gives the ready line to the person and the agent; compact shows no line', async t => {
+  const f = await fixture(t), stateDir = await temporary(t), children = [];
+  const port = await new Promise(done => {const s = createServer().listen(0, '127.0.0.1', () => {const {port} = s.address();s.close(() => done(port));});});
+  t.after(async () => {
+    for (const child of children) {
+      try {process.kill(child.pid, 'SIGTERM');} catch {/* already ended */}
+      for (const deadline = Date.now() + 5000; Date.now() < deadline && await probe(port) !== 'free';) await new Promise(done => setTimeout(done, 50));
+    }
+  });
+  const env = {...process.env, ARTIFACT_PLANE_PORT: String(port), ARTIFACT_PLANE_STATE_DIR: stateDir};
+  const workbench = cwd => workbenchStep(cwd, {env, start: (p, e) => {const child = startServe(p, e);children.push(child);return child;}});
+  const line = `Artifact Plane workbench: http://127.0.0.1:${port}/?repository=${encodeURIComponent(f.root)}`;
+  const run = source => hookOutput(JSON.stringify({session_id: 's', hook_event_name: 'SessionStart', source, cwd: f.root}), {stateDir: f.stateDir, steps: {workbench}});
+  const startup = await run('startup');
+  assert.equal(startup.unavailable, false);
+  assertExpected(startup.output, 'context', {hook_event_name: 'SessionStart', source: 'startup'}, line);
+  assert.equal(children.length, 1);
+  assert.equal(await probe(port), 'plane');
+  for (const source of ['resume', 'clear', 'compact']) assertExpected((await run(source)).output, 'context', {hook_event_name: 'SessionStart', source}, line);
+  assert.equal('systemMessage' in (await run('compact')).output, false);
+  assert.equal(children.length, 1);
+});
+
+test('UDA6: outside an ADD repository the hook gives {} and starts nothing; a failing workbench step keeps the session context', async t => {
+  const f = await fixture(t), plain = await temporary(t), starts = [], probes = [];
+  git(plain, 'init', '-q', '-b', 'main');await writeFile(join(plain, 'file.txt'), 'x');commit(plain, 'plain');
+  const workbench = cwd => workbenchStep(cwd, {env: {}, probe: async port => {probes.push(port);return 'free';}, start: () => {starts.push(1);return new EventEmitter();}});
+  const run = (cwd, steps) => hookOutput(JSON.stringify({session_id: 's', hook_event_name: 'SessionStart', source: 'startup', cwd}), {stateDir: f.stateDir, limits: {...LIMITS, workbench: 100}, steps});
+  assert.deepEqual(await run(plain, {workbench}), {output: {}, unavailable: true});
+  assert.deepEqual([starts, probes], [[], []]);
+  for (const failing of [() => {throw Error('broken');}, () => new Promise(() => {})]) {
+    const result = await run(f.root, {workbench: failing});
+    assert.equal(result.unavailable, true);
+    assertExpected(result.output, 'context', {hook_event_name: 'SessionStart', source: 'startup'});
+  }
+});
+
+test('UDA6: a failed start in the hook process exits with status 0 and keeps the session context', async t => {
+  const f = await fixture(t);
+  const input = {session_id: 's', hook_event_name: 'SessionStart', source: 'startup', cwd: f.root};
+  const {output, stderr} = await hookProcess(input, {stateDir: f.stateDir, env: {ARTIFACT_PLANE_PORT: 'none', ARTIFACT_PLANE_AUTOSTART: ''}});
+  assertExpected(output, 'context', input, workbenchLine('unavailable', 'none', f.root));
+  assert.equal(stderr, '');
 });
 
 // A git on the path that sleeps for the reads of the guidance steps and runs the real git otherwise.

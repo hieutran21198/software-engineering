@@ -2,7 +2,8 @@
 flow:
   id: project-tabs
   title: Switch independent project workspaces
-  trigger: A person opens, selects, closes or restores a project tab.
+  trigger: A person opens, selects, closes or restores a project tab, or opens a
+    repository address.
   outcome: Project navigation stays independent and browser preferences contain
     only paths, order and active selection.
   entry_steps:
@@ -19,6 +20,8 @@ flow:
       supports:
         - authoring-contract
         - workspace
+        - address-contract
+        - address-checks
     - id: select
       title: Activate one explorer and pause inactive work
       supports:
@@ -72,6 +75,20 @@ flow:
       element: specifications/ux-simplification.md
       requires: Disambiguate equal project names while preserving canonical project identity and active worktree isolation.
       basis: documented
+    - id: address-contract
+      kind: element
+      artifact: artifact-plane
+      element: specifications/ui-discovery.md
+      requires: Open or select the tab of the repository that the address names.
+      basis: documented
+    - id: address-checks
+      kind: test
+      path: apps/artifact-plane/test/browser/project-tabs.spec.js
+      requires: Open a repository from its address, and select the existing tab
+        at a second opening.
+      basis: observed
+      evidence:
+        - docs/artifacts/artifact-plane/changes/change-ui-discovery/tasks/02-repository-address.md
     - id: preferences
       kind: implementation
       path: apps/artifact-plane/src/project-tabs.js
