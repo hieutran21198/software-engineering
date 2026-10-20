@@ -37,6 +37,9 @@ flow:
         - named-scope-adapters
         - flow-search-controls
         - search-browser-checks
+        - concept-contract
+        - concept-operations
+        - concept-mcp-checks
     - id: authorize
       title: Resolve a source ID inside the selected context
       supports:
@@ -288,6 +291,24 @@ flow:
       requires: Render fenced Mermaid blocks of knowledge as sanitized SVG with
         bundled code, and keep the code panel when a block does not render.
       basis: documented
+    - id: concept-contract
+      kind: element
+      artifact: artifact-plane
+      element: specifications/concept-pages.md
+      requires: Define the concepts and concept operations, get_concept and the kinds input of search_flows.
+      basis: documented
+    - id: concept-operations
+      kind: implementation
+      path: apps/artifact-plane/server/concepts.js
+      requires: Answer the concepts and concept operations from the flow record.
+      basis: static
+    - id: concept-mcp-checks
+      kind: test
+      path: apps/artifact-plane/test/flow-adapters.test.js
+      requires: Check get_concept, search_flows with kinds and the 1.24.0 answer without kinds.
+      basis: observed
+      evidence:
+        - docs/artifacts/artifact-plane/changes/change-concept-pages/tasks/03-concept-mcp.md
   gaps:
     - Retrieval ranks candidates; it does not prove compatibility or complete
       system discovery.
