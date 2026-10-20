@@ -6,7 +6,7 @@ The released executable `artifact-plane` connects to Claude Code and Codex in tw
 
 | Event | Effect |
 | --- | --- |
-| SessionStart (startup, resume, clear, compact) | Adds the state of the changes in the worktree to the agent context: change, tier, unit, status, next step and unchecked DoD items. |
+| SessionStart (startup, resume, clear, compact) | Adds the state of the changes in the worktree to the agent context: change, tier, unit, status, next step and unchecked DoD items. Starts the workbench when it does not run, and shows you its address at startup and resume (see Workbench). |
 | PreToolUse | Refuses three actions that ADD reserves for people: a commit on `main` or `master`, a push to `main` or `master`, and `gh pr merge`. Binds the agent to a task when it reads a task file (see Observe execution). |
 | Stop, SubagentStop | When a current change of the worktree has record errors, asks the agent once to fix or explain them. Warnings do not count. |
 | All events | Records allowlisted observations for the implementation graph. |
@@ -38,6 +38,26 @@ The refusals and the stop request apply only in a repository with `docs/artifact
 3. Trust: Codex loads project configuration only for a trusted project (`[projects."<absolute path>"] trust_level = "trusted"` in `~/.codex/config.toml`, or the trust prompt). Then open `/hooks` and trust each hook. Codex skips a hook again after its command changes, until you trust it again.
 
 The examples use a POSIX shell. On Windows, use `artifact-plane hook` without `|| true`, with an executable of the same version as the configuration.
+
+## Workbench
+
+When a session starts in a repository with `docs/artifacts`, the hook looks for the workbench at `http://127.0.0.1:4310`. When nothing answers, it starts `artifact-plane serve` in the background. At startup and resume you see one line:
+
+| Line | Meaning |
+| --- | --- |
+| `Artifact Plane workbench: <address>` | The workbench runs. Open the address; it opens the repository of the session. |
+| `Artifact Plane workbench is starting: <address>` | The hook started the workbench, and it did not answer yet. Open the address after a few seconds. |
+| `Artifact Plane workbench: run artifact-plane serve, then open <address>` | The start is turned off. |
+| `Artifact Plane workbench is not available at port <port>. ...` | Another program, or a Plane older than 1.24.0, uses the port, or the start failed. Run the command of the line to see the error. |
+
+The agent gets the same line in its context. The hook never opens a browser. The workbench keeps running after the session ends; one workbench serves all repositories. To stop it, end the `artifact-plane serve` process, for example with `pkill -f "artifact-plane serve"`.
+
+Two environment variables change the start:
+
+- `ARTIFACT_PLANE_PORT=<port>` selects another port. The hook does not read `PORT`, because a project often sets it for its own server.
+- `ARTIFACT_PLANE_AUTOSTART=0` turns off the start.
+
+Set them in the environment that starts the harness, for example in your shell profile. In Claude Code you can also set them in the `env` object of `.claude/settings.local.json`.
 
 ## MCP tools
 
