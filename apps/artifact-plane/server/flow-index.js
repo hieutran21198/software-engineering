@@ -14,6 +14,7 @@ import { createHash } from "node:crypto";
 import { defaultStateDir, repositoryIdentity } from "./runtime-store.js";
 import { readFlowRepository, flowFingerprint } from "./flow-reader.js";
 import { flowImpact, safeFlowID } from "./flow-model.js";
+import { conceptList, conceptAnswer } from "./concepts.js";
 import { ExploreError } from "./reader.js";
 import { createLocalEmbedder, normalizeVector } from "./flow-embeddings.js";
 const digest = (x) => createHash("sha256").update(x).digest("hex");
@@ -72,13 +73,13 @@ function validate(body) {
     !isAbsolute(body.path)
   )
     throw new ExploreError(422, "Select an absolute repository path");
-  const keys=['path','worktree','knowledge','operation','query','flow','ids','source','cursor','limit','budget','match','artifact'];
+  const keys=['path','worktree','knowledge','operation','query','flow','ids','source','cursor','limit','budget','match','artifact','concept'];
   if(Object.keys(body).some(key=>!keys.includes(key))||body.path.includes('\0'))throw new ExploreError(422,'Invalid flow query fields');
   const knowledge = body.knowledge ?? "planning",
     operation = body.operation;
   if (
     !["planning", "established", "all"].includes(knowledge) ||
-    !["search", "detail", "impact", "source"].includes(operation)
+    !["search", "detail", "impact", "source", "concepts", "concept"].includes(operation)
   )
     throw new ExploreError(422, "Invalid flow operation or knowledge selector");
   if (
@@ -88,7 +89,7 @@ function validate(body) {
     throw new ExploreError(422, "Invalid cursor");
   if (body.match !== undefined && (operation !== 'search' || !['title','discovery'].includes(body.match)))
     throw new ExploreError(422, 'Invalid match selector');
-  if (body.artifact !== undefined && (!['search','impact'].includes(operation) || !safeFlowID(body.artifact)))
+  if (body.artifact !== undefined && (!['search','impact','concepts'].includes(operation) || !safeFlowID(body.artifact)))
     throw new ExploreError(422, 'Invalid artifact selector');
   const limit = body.limit ?? 10,
     budget = body.budget ?? 12000;
@@ -122,6 +123,13 @@ function validate(body) {
   )
     throw new ExploreError(422, "Select a registered source ID");
   if (
+    operation === "concept" &&
+    (typeof body.concept !== "string" || !body.concept.trim() || body.concept.length > 4000)
+  )
+    throw new ExploreError(422, "Select a concept by identity, entity or title");
+  if (body.concept !== undefined && operation !== "concept")
+    throw new ExploreError(422, "Invalid concept selector");
+  if (
     operation === "impact" &&
     (!Array.isArray(body.ids) ||
       !body.ids.length ||
@@ -149,7 +157,8 @@ export function impactOrigins(record, ids) {
       if (files.length) for (const file of files.slice(0, 100)) add(id, { path: file }); else unresolved.push(id);
       continue;
     }
-    const node = record.graph.nodes.find(n => n.id === id || n.logicalId === id || n.elementId === id || n.file === id);
+    // A file ID names its document, not the models that the document declares.
+    const node = record.graph.nodes.find(n => n.id === id || n.logicalId === id || n.elementId === id || n.kind !== "model" && n.file === id);
     const flow = node?.kind === "flow" ? flows.find(f => f.id === node.id) : null;
     if (flow) add(id, { flow: flow.logicalId });
     else if (node?.kind === "step") { const owner = flows.find(f => f.id === node.flow); if (owner) add(id, { step: `${owner.logicalId}:${node.localId}` }); else unresolved.push(id); }
@@ -658,6 +667,12 @@ export function createFlowService({
             affectedFlows,
           })),
       };
+    } else if (body.operation === "concepts") {
+      data = { concepts: (await conceptList(record, { artifact: body.artifact })).concepts };
+    } else if (body.operation === "concept") {
+      const answer = await conceptAnswer(record, body.concept);
+      data = { concept: answer.concept };
+      diagnostics.push(...answer.diagnostics);
     } else if (body.operation === "impact") {
       // With an impact service, the typed tiers answer; the result keeps the flow-only shape.
       const impact = impactService ? await delegatedImpact(impactService, record, body) : flowImpact(record.graph, body.ids);
