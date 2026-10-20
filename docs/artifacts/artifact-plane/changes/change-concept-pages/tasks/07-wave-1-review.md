@@ -21,7 +21,7 @@ specifications/concept-pages.md: all wave 1 sections; units-of-work/concept-page
 - [x] Tasks 01 to 06 are integrated; `npm test`, `npm run build`, `npm run test:browser` on the CI browser, `go test ./...` and the executable smoke check pass.
 - [x] The golden test passes on the integrated build.
 - [x] Screenshots of the Version, Repository snapshot and an unused-model concept page, the ADD artifact page, the domain-model document, the dependency-gates flow Model section and an Impact concept row on this repository at 1440 and 390 px are reviewed as a user against the mockups, and defects are fixed.
-- [ ] The owner accepts the wave 1 screenshots; until then tasks 08 and 09 do not start.
+- [x] The owner accepts the wave 1 screenshots; until then tasks 08 and 09 do not start.
 
 ## Evidence
 
@@ -30,4 +30,4 @@ specifications/concept-pages.md: all wave 1 sections; units-of-work/concept-page
 - `npm run test:browser` on the CI browser (Chrome for Testing 156): 136 passed, including golden.spec.js and history.spec.js.
 - `npm run test:browser` on Nix Chromium 149: 135 passed, 1 failed (artifact-document.spec.js:371, a comparison with every line removed). The test is unchanged since 0eecce1; the file passed 15 of 15 in two reruns. Recorded as intermittent under suite load.
 - Screenshots on a disposable clone of b7d7836 with local main at 0eecce1 and one added unused model (Delivery record), CI browser, 1440 and 390 px: Version (closed, and a flow row and Code and tests open), Repository snapshot, Delivery record, the ADD artifact page, the domain-model document, the dependency-gates flow Model section, Impact of Version and an Impact concept row. Each has one h1 and no horizontal scroll. Reviewed against the mockups; no defect found. Published for the owner: https://claude.ai/artifact/Lz7QRMb1hzQdvjYmERJoar.
-- Owner acceptance: pending.
+- Owner acceptance: on 20 October 2026 the owner accepted the wave 1 screenshots and the four listed choices (the affect action on a concept without flows, the Participants heading, no rows for removed concepts on the artifact page, no reopened Flows row on Back).
