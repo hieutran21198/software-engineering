@@ -109,7 +109,7 @@ export default function ChangePage({page}) {
     ]}/>
     {workflow.status === 'error' && !workflow.data && <p className="small" role="alert">{workflow.error} <button className="link" onClick={workflow.retry}>Retry</button></p>}
     {writable && phase && <SelfCheckLine change={change} artifact={artifact} phase={phase}/>}
-    {artifact?.layout === 'in-place' && <ChangeBrief artifact={change.artifact} change={change.name} writable={edit.editable && !retained}/>}
+    {artifact?.layout === 'in-place' && <ChangeBrief artifact={change.artifact} change={change.name} writable={edit.editable && !retained} page={page}/>}
     {retained && <DeliverySection change={change} review={review} onLoadReview={loadReview}/>}
     <PlanSection change={change} writable={writable}/>
     {!retained && <ChangedKnowledge change={change} artifact={artifact} review={review} onLoadReview={loadReview}/>}
