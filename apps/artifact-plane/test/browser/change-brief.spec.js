@@ -208,7 +208,7 @@ test('CP11: a participation row of a removed flow opens the document on main; a 
     await openRepository(page, f.root);
     await openChange(page, 'Add the delivery record concept');
     const row = brief(page).locator('.brief-rows details').filter({has: page.locator('.brief-question', {hasText: 'What is affected?'})});
-    await expect(row.locator('.brief-answer')).toContainText('Participations changed: Change, Version.', {timeout: 30000});
+    await expect(row.locator('.brief-answer')).toContainText('Participation changed: Change, Version.', {timeout: 30000});
     await row.locator('summary').click();
     const link = row.getByRole('link', {name: `Open ${GATES} for Version`, exact: true});
     // A middle click and a Control click open no tab; the Control click opens the page in place.

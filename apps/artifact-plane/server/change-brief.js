@@ -91,7 +91,7 @@ export const CONCEPT_REASONS = ['declaration-new', 'declaration-changed', 'decla
 const WORDS = {'declaration-new': 'new declaration', 'declaration-changed': 'declaration changed', 'declaration-removed': 'declaration removed'};
 export const reasonWords = c => c.reason === 'participation-changed' ? `participation changed in ${c.flow.title}` : WORDS[c.reason] ?? null;
 const rowText = c => c.reason === 'describing-document-changed' ? `${c.title} — describing document changed: ${c.document.title}` : `${c.title} — ${reasonWords(c)}${c.reason === 'participation-changed' ? '' : ` in ${c.document.title}`}`;
-const PREFIX = [['declaration-new', 'New concept', 'New concepts'], ['declaration-changed', 'Changed declaration', 'Changed declarations'], ['declaration-removed', 'Removed concept', 'Removed concepts'], ['participation-changed', 'Participation changed', 'Participations changed']];
+const PREFIX = [['declaration-new', 'New concept', 'New concepts'], ['declaration-changed', 'Changed declaration', 'Changed declarations'], ['declaration-removed', 'Removed concept', 'Removed concepts'], ['participation-changed', 'Participation changed', 'Participation changed']];
 // The summary prefix: one part for each of the first four reasons, at most 3 titles each.
 export function conceptPrefix(concepts = []) {
   return PREFIX.flatMap(([reason, one, many]) => {
