@@ -1,6 +1,6 @@
 import React, {useState, useEffect} from 'react';
 import {ReactFlowProvider} from '@xyflow/react';
-import {readWorkspace, writeWorkspace, closeTab, projectLabels} from './project-tabs.js';
+import {readWorkspace, addressWorkspace, writeWorkspace, closeTab, projectLabels} from './project-tabs.js';
 import {Icon} from './ui.jsx';
 
 const tab = path => ({id: crypto.randomUUID(), path});
@@ -8,7 +8,10 @@ const tab = path => ({id: crypto.randomUUID(), path});
 // The window: one top bar with the product name and project tabs, then the
 // active project. The active project places its own controls in the top bar.
 export default function Workspace({Explorer}) {
-  const [initial] = useState(() => readWorkspace({getItem: key => localStorage.getItem(key)}));
+  const [initial] = useState(() => {
+    const restored = readWorkspace({getItem: key => localStorage.getItem(key)});
+    return {...restored, ...addressWorkspace(restored, new URLSearchParams(location.search).get('repository'))};
+  });
   const [workspace, setWorkspace] = useState(() => {
     const tabs = initial.projects.length ? initial.projects.map(tab) : [tab(null)];
     return {tabs, activeId: tabs.find(t => t.path === initial.activeProject)?.id || tabs[0].id};
@@ -17,6 +20,8 @@ export default function Workspace({Explorer}) {
   const {tabs, activeId} = workspace;
   const labels = projectLabels(tabs);
 
+  // A reload must not open the address repository again, so the query goes once it is read.
+  useEffect(() => { if (location.search) history.replaceState(history.state, '', location.pathname + location.hash); }, []);
   useEffect(() => {
     const failure = writeWorkspace({setItem: (key, value) => localStorage.setItem(key, value)}, tabs, activeId);
     if (failure) setWarning(failure);
