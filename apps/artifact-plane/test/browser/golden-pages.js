@@ -140,12 +140,14 @@ async function facts(page, root) {
   // The temporary parent of the fixture changes on every run.
   return JSON.parse(JSON.stringify(value).split(root).join('<root>'));
 }
-// Waits until two captures 400 ms apart are equal and nothing is busy.
+// A loading state ends with an ellipsis, such as `Reading the change brief…`.
+const loading = value => ['topbar', 'sidebar', 'main'].some(key => value[key] && [...value[key].text, ...value[key].controls.map(c => c.name)].some(text => text.endsWith('…')));
+// Waits until two captures 400 ms apart are equal, nothing is busy and nothing is loading.
 async function settled(page, root) {
   let previous = null;
-  for (let attempt = 0; attempt < 60; attempt++) {
-    const current = JSON.stringify(await facts(page, root));
-    if (current === previous && !JSON.parse(current).busy) {const {busy, ...rest} = JSON.parse(current);return rest;}
+  for (let attempt = 0; attempt < 150; attempt++) {
+    const current = JSON.stringify(await facts(page, root)), value = JSON.parse(current);
+    if (current === previous && !value.busy && !loading(value)) {const {busy, ...rest} = value;return rest;}
     previous = current;await page.waitForTimeout(400);
   }
   throw Error('The page did not settle.');
