@@ -30,6 +30,23 @@ acceptance:
     criterion: The Node, browser and Go suites and the executable smoke check
       pass, and the validator reports ok true for the change.
     integration: true
+evidence:
+  - criterion: address-shown
+    method: Owner look at interactive Claude Code and Codex sessions in a disposable clone with the 1.24.0 executable, plus the hook output tests.
+    result: passed
+    source: docs/artifacts/artifact-plane/changes/change-ui-discovery/tasks/03-validation.md#evidence
+  - criterion: repository-opened
+    method: Browser test of the repository address and a browser opening of the live address.
+    result: passed
+    source: docs/artifacts/artifact-plane/changes/change-ui-discovery/tasks/02-repository-address.md#evidence
+  - criterion: safe-start
+    method: Workbench step and hook tests for a Plane, another program, the turn-off variable and failures, and a Plane 1.23.1 at the port.
+    result: passed
+    source: docs/artifacts/artifact-plane/changes/change-ui-discovery/tasks/01-workbench-step.md#evidence
+  - criterion: integration
+    method: Node, browser (CI browser), Go and executable smoke checks on the integrated branch, and the validator.
+    result: passed
+    source: docs/artifacts/artifact-plane/changes/change-ui-discovery/tasks/03-validation.md#evidence
 ---
 
 # Plane UI discovery

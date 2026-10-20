@@ -90,8 +90,11 @@ claims:
     kind: assumption
     statement: Codex 0.163.0 shows the systemMessage of a SessionStart hook to
       the person, as a warning.
-    status: open
-    basis: documented
+    status: verified
+    basis: observed
+    verified_by: person
+    evidence:
+      - docs/artifacts/artifact-plane/changes/change-ui-discovery/tasks/03-validation.md#evidence
     risk_if_wrong: A Codex user does not see the line; the agent context still
       names the address.
     check: Start a Codex session in this repository in the UDA7 live check and
