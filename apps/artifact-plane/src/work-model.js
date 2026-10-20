@@ -116,7 +116,9 @@ export function artifactDocuments(artifact) {
 // Sidebar rows: a flat list with levels. Filtering keeps matches and their parents.
 // Row: {key, level, label, detail, badge (a difference name), count, expandable, open, page, kind, matched}
 // matched marks rows that match the filter themselves, not only as parents.
-export function sidebarRows({snapshot, worktree, filter = '', expanded, history = false}) {
+// concepts: the items of the concepts operation. While the filter has text, a
+// matching concept is a level-1 row under its artifact, before its kind rows.
+export function sidebarRows({snapshot, worktree, filter = '', expanded, history = false, concepts = []}) {
   if (!snapshot) return [];
   const rows = [], active = Boolean(filter.trim()), open = key => active || expanded.has(key);
   const match = (...fields) => !active || matchesName(filter, ...fields);
@@ -128,6 +130,12 @@ export function sidebarRows({snapshot, worktree, filter = '', expanded, history 
   for (const a of snapshot.artifacts) {
     const key = `a:${a.id}`, docs = artifactDocuments(a), children = [];
     const kinds = [...docs.groups.map(g => [g.kind, g.label, g.documents]), ['flows', 'Flows', docs.flows]];
+    // A removed declaration has no concept page, so it has no row.
+    if (active) for (const c of concepts) {
+      const model = c.logicalId.slice(a.id.length + 1);
+      if (c.artifact === a.id && c.declaration !== 'removed' && match(c.title, model, c.logicalId))
+        children.push({key: `${key}:concept:${c.logicalId}`, level: 1, kind: 'concept', matched: true, label: c.title, detail: 'Concept', page: {kind: 'concept', artifact: a.id, model}});
+    }
     for (const [kind, label, documents] of kinds) {
       const kindKey = `${key}:${kind}`, matching = documents.filter(d => match(d.title, d.path));
       if (active && !matching.length) continue;

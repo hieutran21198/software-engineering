@@ -54,6 +54,33 @@ test('HG2: a prepared version stays in Current work; a delivered change is only 
   assert.equal(rows.find(r => r.key === 'c:a/change-ready').detail, 'A · Ready for team review');
 });
 
+test('CP13, claim sidebar-enter-unchanged: concept rows join the filtered tree first under their artifact', () => {
+  const doc = (path, title) => ({path, file: `docs/artifacts/add/${path}`, title, source: 'working', state: 'unchanged'});
+  const snapshot = {artifacts: [
+    {id: 'add', title: 'Artifact-Driven Development', layout: 'in-place', elements: [doc('requirements/version-records.md', 'Version records'), doc('specifications/changes.md', 'Change records')], changes: []},
+    {id: 'plane', title: 'Artifact Plane', layout: 'in-place', elements: [], changes: []}]};
+  const worktree = {path: '/w', branch: 'work', changes: [{...open(2), artifact: 'plane', name: 'change-concept-pages', title: 'Concept pages'}], unitsOfWork: []};
+  const item = (artifact, model, title, declaration = null) => ({logicalId: `${artifact}:${model}`, entity: `model:${artifact}:${model}`, title, description: '', artifact, declaration});
+  const concepts = [item('add', 'version', 'Version'), item('add', 'change', 'Change'), item('add', 'release', 'Release', 'removed'), item('plane', 'repository-snapshot', 'Repository snapshot')];
+  const rows = filter => sidebarRows({snapshot, worktree, filter, expanded: new Set(), concepts});
+  const shown = filter => rows(filter).filter(r => r.kind !== 'heading').map(r => `${r.level}:${r.label}${r.detail ? ` (${r.detail})` : ''}`);
+  // The rule of the search box: Enter opens the first row with a page that matches itself.
+  const enter = filter => rows(filter).find(r => r.page && r.matched)?.page;
+  assert.deepEqual(shown('version'), ['0:Current work', '0:Artifact-Driven Development', '1:Version (Concept)', '1:Requirements', '2:Version records']);
+  assert.deepEqual(enter('version'), {kind: 'concept', artifact: 'add', model: 'version'});
+  // The model id and the logical id match; nothing else matches the logical id.
+  assert.deepEqual(shown('plane:repository-snapshot'), ['0:Current work', '0:Artifact Plane', '1:Repository snapshot (Concept)']);
+  assert.deepEqual(rows('plane:repository-snapshot').filter(r => r.matched).map(r => r.label), ['Repository snapshot']);
+  assert.deepEqual(shown('repository-snapshot'), shown('plane:repository-snapshot'));
+  // Enter keeps the 1.24.0 rule: the change in progress comes first in tree order.
+  assert.deepEqual(enter('change'), {kind: 'change', artifact: 'plane', change: 'change-concept-pages'});
+  assert.deepEqual(shown('change').slice(0, 4), ['0:Current work', '1:Concept pages (Artifact Plane · Plan)', '0:Artifact-Driven Development', '1:Change (Concept)']);
+  // A removed declaration has no row, and an empty filter shows no concept row.
+  assert.equal(shown('release').some(r => r.includes('Release')), false);
+  assert.equal(rows('').some(r => r.kind === 'concept'), false);
+  assert.deepEqual(rows('version').map(r => r.key), sidebarRows({snapshot, worktree, filter: 'version', expanded: new Set()}).map(r => r.key).toSpliced(3, 0, 'a:add:concept:add:version'));
+});
+
 test('HG4: the stepper marks Implementation not done while a DoD item is unchecked and Version prepared until established', () => {
   const states = change => phaseModel(change).steps.map(s => s.state);
   assert.deepEqual(states(prepared({tasks: [{path: 't.md', checked: 5, unchecked: 1}]})), ['done', 'done', 'done', 'incomplete', 'prepared']);
