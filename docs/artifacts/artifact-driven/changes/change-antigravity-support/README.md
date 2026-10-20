@@ -22,3 +22,4 @@ Knowledge is edited in place on this branch. The unit brief is [Antigravity supp
 
 - [Requirements: Antigravity support](../../requirements/antigravity-support.md)
 - [Specification: Antigravity support](../../specifications/antigravity-support.md)
+- [Plan](tasks/README.md)
