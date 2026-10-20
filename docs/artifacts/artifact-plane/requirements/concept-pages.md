@@ -40,7 +40,7 @@ Facts on 20 October 2026, Artifact Plane 1.24.0 at 0eecce1:
 - CP13: The sidebar search finds a concept by its title or identity and opens its concept page.
 - CP14: While the sidebar search has text, a link opens Discover with the same query. The `/` key focuses the sidebar search.
 - CP15: Browser Back returns to the previous page of the active project tab. The Discover query and the expanded brief row are kept.
-- CP16: An agent gets one concept with its declaration, sources, flows, interactions, inferred code and tests, record problems and open changes in one MCP call, by identity or by exact title.
+- CP16: An agent gets one concept with its declaration, sources, flows, interactions, inferred code and tests, record problems and open changes in one MCP call, by identity or by exact title. `get_flow` names the concept of each resolved participant.
 - CP17: An agent can ask `search_flows` for concepts. Without the new filter, `search_flows` answers as in 1.24.0.
 - CP18: Each fact on the concept page has the same wording basis in the MCP answer.
 - CP19: The concept page action "What does <concept> affect?" ships only if Impact for a concept and its describing documents holds an entity that the concept page does not list.
@@ -59,7 +59,7 @@ Facts on 20 October 2026, Artifact Plane 1.24.0 at 0eecce1:
 - CPA9: A browser test filters the sidebar with a concept title, sees the concept row, opens the concept page, and follows the Discover link with the same query. The `/` key focuses the search.
 - CPA10: Browser tests return with browser Back from the concept page to Discover with its results, and to the change page with the expanded brief row.
 - CPA11: An MCP test calls `get_concept` by identity and by exact title and gets the CP16 facts; an ambiguous title gives candidates. A parity test maps each concept page string to an answer field.
-- CPA12: Server tests show that `search_flows` with the concept filter returns concepts, and that its answer without the filter equals the 1.24.0 answer, except timing metrics.
+- CPA12: Server tests show that `search_flows` with the concept filter returns concepts, and that its data and pagination without the filter equal the 1.24.0 answer.
 - CPA13: A server test compares the Impact entities of a fixture concept and its describing documents with the concept page facts and finds an entity that the page does not list. The action ships only while this test passes.
 - CPA14: The existing Node, browser and Go suites, the authoring scenario limits S1 to S8, the executable smoke check and the knowledge validator pass.
 
