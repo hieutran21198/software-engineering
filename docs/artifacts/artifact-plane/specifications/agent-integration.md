@@ -120,7 +120,7 @@ For each supported event, the hook first records the observation as the observer
 | Stop, SubagentStop | Stop check | `{"decision":"block","reason":"<text>"}` when the check fails, else `{}` |
 | Other events | none | `{}` |
 
-Both harnesses accept these shapes. The hook writes no other field and no plain text.
+Both harnesses accept these shapes. The hook writes no other field and no plain text, except the workbench parts of the SessionStart output (specifications/ui-discovery.md, Hook output).
 
 Each step has its own error boundary. An error, a timeout or a missing repository makes that step return `{}`, and the hook writes one line "Artifact Plane hook unavailable; execution continues." to standard error. In a Git repository without `docs/artifacts`, the steps return `{}`; only SessionStart also writes the line. A step also returns `{}` when it runs longer than its limit: 2 seconds for PreToolUse, 5 seconds for SessionStart and 20 seconds for the stop check. The observer step keeps its existing bounds: Git reads stop after 5 seconds and SQLite waits at most 2 seconds for a lock. On Windows the runtime store refuses its directory because the file system reports no private POSIX modes, as it does from source; the observer step then fails on each call and the guidance steps still work. The hook stores no prompt, tool input, command, tool output, assistant message or transcript path. It reads `tool_input` only in memory, for the reserved actions and the task path.
 

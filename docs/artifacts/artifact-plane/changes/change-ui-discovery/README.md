@@ -22,3 +22,4 @@ Excluded: opening a browser, the MCP tools, `se-adopt`, the ADD bundle and the i
 Knowledge is edited in place on this branch. The unit brief is [Plane UI discovery](../../../units-of-work/plane-ui-discovery/README.md).
 
 - [Requirements: workbench discovery](../../requirements/ui-discovery.md)
+- [Specification: workbench discovery](../../specifications/ui-discovery.md)

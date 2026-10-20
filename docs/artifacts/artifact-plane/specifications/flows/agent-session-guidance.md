@@ -4,7 +4,8 @@ flow:
   title: Guide an agent session with the change state and the ADD limits
   trigger: Claude Code or Codex runs the hook command of the executable, or an
     agent calls an MCP tool of the Plane.
-  outcome: The agent knows the state of its change, cannot run the three actions
+  outcome: The person sees the workbench address of the repository, the agent
+    knows the state of its change, cannot run the three actions
     that ADD reserves for people through a recognized command, and fixes or
     explains record errors before it stops.
   entry_steps:
@@ -19,6 +20,9 @@ flow:
         - mcp
         - guidance-tests
         - mcp-tests
+        - workbench-contract
+        - workbench
+        - workbench-tests
     - id: act
       title: Refuse a commit or push to main or master and a pull request merge
       supports:
@@ -90,6 +94,26 @@ flow:
       symbol: createFlowMcpServer
       requires: Offer get_change_status and check_records with the same results
         as the hook and the validator, and send the instructions.
+      basis: static
+    - id: workbench-contract
+      kind: element
+      artifact: artifact-plane
+      element: specifications/ui-discovery.md
+      requires: Define the identity route, the workbench step, its states and
+        lines, and the parts of the SessionStart output.
+      basis: documented
+    - id: workbench
+      kind: implementation
+      path: apps/artifact-plane/server/workbench.js
+      symbol: workbenchStep
+      requires: Find or start a Plane server at the port and give the line for
+        the person without opening a browser.
+      basis: static
+    - id: workbench-tests
+      kind: test
+      path: apps/artifact-plane/test/workbench.test.js
+      requires: Check the four states, the turn-off variable, the port variable
+        and the hook output with a free, a Plane and another server.
       basis: static
     - id: guidance-tests
       kind: test
