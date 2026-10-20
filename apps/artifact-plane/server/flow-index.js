@@ -24,6 +24,18 @@ const digest = (x) => createHash("sha256").update(x).digest("hex");
 // the expected flows of the benchmark queries score at least 0.59; see README, Flow discovery.
 export const SEMANTIC_CUTOFF = 0.5;
 const normalizedName = value => String(value || "").trim().normalize("NFC").toLowerCase();
+const KINDS = ["flow", "concept"];
+// The cursor selector of search and impact; kinds enters the digest only when it is present.
+const selectorDigest = body => digest(JSON.stringify(body.kinds ? [body.query, body.ids, body.match, body.artifact, body.kinds] : [body.query, body.ids, body.match, body.artifact]));
+// Concept search: every matching item, ranked by exact identity, exact title, a title
+// substring, then a description substring; an empty query lists every concept.
+function rankedConcepts(concepts, raw) {
+  const query = normalizedName(raw);
+  if (!query) return concepts;
+  const rank = c => [normalizedName(c.logicalId), normalizedName(c.entity)].includes(query) ? 0
+    : normalizedName(c.title) === query ? 1 : normalizedName(c.title).includes(query) ? 2 : normalizedName(c.description).includes(query) ? 3 : null;
+  return concepts.map(c => [rank(c), c]).filter(([r]) => r !== null).sort((a, b) => a[0] - b[0]).map(([, c]) => c);
+}
 const inside = (root, path) => {
   const r = relative(root, path);
   return !r || (r !== ".." && !r.startsWith("../") && !isAbsolute(r));
@@ -73,7 +85,7 @@ function validate(body) {
     !isAbsolute(body.path)
   )
     throw new ExploreError(422, "Select an absolute repository path");
-  const keys=['path','worktree','knowledge','operation','query','flow','ids','source','cursor','limit','budget','match','artifact','concept'];
+  const keys=['path','worktree','knowledge','operation','query','flow','ids','source','cursor','limit','budget','match','artifact','concept','kinds'];
   if(Object.keys(body).some(key=>!keys.includes(key))||body.path.includes('\0'))throw new ExploreError(422,'Invalid flow query fields');
   const knowledge = body.knowledge ?? "planning",
     operation = body.operation;
@@ -91,6 +103,10 @@ function validate(body) {
     throw new ExploreError(422, 'Invalid match selector');
   if (body.artifact !== undefined && (!['search','impact','concepts'].includes(operation) || !safeFlowID(body.artifact)))
     throw new ExploreError(422, 'Invalid artifact selector');
+  // kinds: a list of flow and concept, for search only; without it, search answers as in 1.24.0.
+  if (body.kinds !== undefined && (operation !== 'search' || !Array.isArray(body.kinds) || !body.kinds.length || body.kinds.length > KINDS.length
+    || !body.kinds.every(k => KINDS.includes(k)) || new Set(body.kinds).size !== body.kinds.length))
+    throw new ExploreError(422, 'Invalid kinds selector');
   const limit = body.limit ?? 10,
     budget = body.budget ?? 12000;
   if (
@@ -141,6 +157,7 @@ function validate(body) {
     ...body,
     match: operation === 'search' ? body.match ?? 'discovery' : undefined,
     query: body.match === 'title' ? normalizedName(body.query) : body.query?.trim(),
+    kinds: body.kinds && KINDS.filter(k => body.kinds.includes(k)),
     knowledge, operation, limit, budget,
   };
 }
@@ -337,7 +354,8 @@ export function createFlowService({
     const titleMode = body.operation === 'search' && body.match === 'title';
     // Only discovery search chunks sources and prepares embeddings. Title search, detail,
     // impact and source never load the model and never rebuild documents for an unchanged revision.
-    const discovery = body.operation === 'search' && !titleMode;
+    const wantsFlows = !body.kinds || body.kinds.includes('flow');
+    const discovery = body.operation === 'search' && !titleMode && wantsFlows;
     const context = digest(
       JSON.stringify([record.repository.path, record.worktree, body.knowledge, body.match, body.artifact]),
     );
@@ -514,6 +532,11 @@ export function createFlowService({
         return {id, kind: node.kind, resolved: node.kind === "model", title: node.title, description: node.description || null, artifact: node.artifact || participants[0]?.artifact, source: node.source || null, logicalId: node.logicalId || `${participants[0]?.artifact}:${participants[0]?.model}`, file: node.file || null, sources, missingSources: (node.sources || []).filter((path) => !sources.some((file) => file.endsWith("/" + path))), selector: node.selector || null, participants: participants.map((p) => ({id: p.id, requires: p.requires})), knownFlows, coverage: "Known participation in recorded flows only."};
       });
     }
+    // A resolved participant names its concept: the logical id and the title of its model node.
+    function participant(p) {
+      const node = p.resolved ? record.graph.nodes.find((n) => n.id === p.nodeId && n.kind === "model") : null;
+      return node ? {...p, concept: node.logicalId, title: node.title} : p;
+    }
     function flowSources(flow) {
       const modelFiles = flowModels(flow).flatMap((m) => [m.file, ...m.sources]).filter(Boolean);
       const paths = new Set([
@@ -541,7 +564,9 @@ export function createFlowService({
         });
       return { ...source, text };
     }
-    if (titleMode) {
+    if (body.operation === 'search' && !wantsFlows) {
+      data = {flows: [], total, semantic: false, artifactOptions, coverage: participation?.coverage || "Explicit known relationships only; participation requires contract impact review."};
+    } else if (titleMode) {
       const query = body.query || "";
       items = eligibleFlows
         .filter(f => !query || [f.title,f.id,f.logicalId,f.localId].some(v => normalizedName(v).includes(query)))
@@ -646,7 +671,7 @@ export function createFlowService({
           file: flow.file,
           entry_steps:flow.entry_steps||[],
           steps: flow.steps,
-          participants: flow.participants || [],
+          participants: (flow.participants || []).map(participant),
           support: flow.support,
           transitions: flow.transitions,
           diagnostics: flow.diagnostics,
@@ -713,6 +738,10 @@ export function createFlowService({
         next:nextOffset<source.text.length&&text.length?Buffer.from(JSON.stringify({context,revision:record.revision,operation:'source',flow:flow.id,source:source.id,offset:nextOffset})).toString('base64url'):null,
       };
     }
+    if (body.operation === 'search' && body.kinds?.includes('concept')) {
+      data.concepts = rankedConcepts((await conceptList(record, {artifact: body.artifact})).concepts, body.query);
+      data.totals = {concepts: data.concepts.length};
+    }
     if (items.length || ["search", "impact"].includes(body.operation)) {
       let offset = 0;
       if (body.cursor) {
@@ -722,7 +751,7 @@ export function createFlowService({
             c.context !== context ||
             c.revision !== record.revision ||
             c.operation !== body.operation ||
-            c.selector !== digest(JSON.stringify([body.query, body.ids, body.match, body.artifact])) ||
+            c.selector !== selectorDigest(body) ||
             !Number.isInteger(c.offset) ||
             c.offset < 0
           )
@@ -749,7 +778,7 @@ export function createFlowService({
                 context,
                 revision: record.revision,
                 operation: body.operation,
-                selector: digest(JSON.stringify([body.query, body.ids, body.match, body.artifact])),
+                selector: selectorDigest(body),
                 offset: offset + body.limit,
               }),
             ).toString("base64url")
