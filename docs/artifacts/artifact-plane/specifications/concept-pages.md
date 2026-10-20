@@ -8,8 +8,11 @@ claims:
     statement: The concept facts come from two new operations, concepts and
       concept, of POST /api/flows/query, and get_concept uses the concept
       operation.
-    status: open
-    basis: static
+    status: supported
+    basis: observed
+    evidence:
+      - docs/artifacts/artifact-plane/changes/change-concept-pages/tasks/02-concept-graph.md#evidence
+      - docs/artifacts/artifact-plane/changes/change-concept-pages/tasks/03-concept-mcp.md#evidence
     rejected:
       - option: New GET routes /api/concepts and /api/concepts/:artifact/:model.
         reason: Every data route of the server is an allowlisted POST query
@@ -26,8 +29,10 @@ claims:
     statement: buildFlowGraph adds one model node and one declares edge for
       each logical id of the selected knowledge, and the active-change
       declaration replaces the current-source one, as for flows.
-    status: open
-    basis: static
+    status: supported
+    basis: observed
+    evidence:
+      - docs/artifacts/artifact-plane/changes/change-concept-pages/tasks/02-concept-graph.md#evidence
     rejected:
       - option: A separate model list next to the graph.
         reason: Impact, get_flow and the concept page would read two sources of
@@ -45,8 +50,10 @@ claims:
     kind: decision
     statement: An Impact model origin starts at the model entity, not at its
       declaring document.
-    status: open
-    basis: static
+    status: supported
+    basis: observed
+    evidence:
+      - docs/artifacts/artifact-plane/changes/change-concept-pages/tasks/02-concept-graph.md#evidence
     rejected:
       - option: Keep the declaring document as the origin of a model.
         reason: Every model declared in the same document then shows as
@@ -64,6 +71,7 @@ claims:
     basis: observed
     evidence:
       - docs/artifacts/artifact-plane/specifications/concept-pages.md#facts-observed-on-0eecce1
+      - docs/artifacts/artifact-plane/changes/change-concept-pages/tasks/02-concept-graph.md#evidence
     rejected:
       - option: The supports of every step of each flow that uses the concept.
         reason: Repository snapshot would then list the code of steps where it
@@ -77,8 +85,11 @@ claims:
     statement: Every concept page shows the action "What does <title> affect?",
       because the CPA13 test finds an Impact entity that the page does not
       list.
-    status: open
-    basis: inferred
+    status: supported
+    basis: observed
+    evidence:
+      - docs/artifacts/artifact-plane/changes/change-concept-pages/tasks/02-concept-graph.md#evidence
+      - docs/artifacts/artifact-plane/changes/change-concept-pages/tasks/05-concept-page.md#evidence
     rejected:
       - option: Show the action only on concepts whose Impact adds an entity.
         reason: The page would compute Impact before it shows its header, and
@@ -122,8 +133,10 @@ claims:
     kind: decision
     statement: Each browser Back press moves the active project tab one page
       back while its trail is not empty, and changes no page otherwise.
-    status: open
-    basis: static
+    status: supported
+    basis: observed
+    evidence:
+      - docs/artifacts/artifact-plane/changes/change-concept-pages/tasks/04-browser-back.md#evidence
     rejected:
       - option: URL routes for each page.
         reason: The owner excluded URL deep links from this change.
@@ -140,8 +153,11 @@ claims:
     statement: A script captures the text and control names of the 1.24.0 pages
       once from a 0eecce1 checkout and commits them as JSON; the CP1 test
       compares the new build with that JSON.
-    status: open
-    basis: static
+    status: supported
+    basis: observed
+    evidence:
+      - docs/artifacts/artifact-plane/changes/change-concept-pages/tasks/01-golden-captures.md#evidence
+      - docs/artifacts/artifact-plane/changes/change-concept-pages/tasks/07-wave-1-review.md#evidence
     rejected:
       - option: Pixel screenshots.
         reason: Fonts and the browser version change pixels; CI and local
@@ -216,7 +232,7 @@ The declaration base is the merge base of the protected ref and HEAD of the sele
 | `changes` | `{open[{artifact, change, title}]}` of the owning artifact, from the snapshot. |
 | `diagnostics` | The graph diagnostics whose `model` and `file` are those of the concept. |
 
-An unknown concept gives the diagnostic `concept-unknown` with the message `No concept <query> is declared in the selected knowledge.` Several title matches give `concept-ambiguous` with `candidates`. Both have severity info, and they stay out of the graph diagnostics.
+An unknown concept gives the diagnostic `concept-unknown` with the message `No concept <query> is declared in the selected knowledge.` Several title matches give `concept-ambiguous` with `candidates` and the message `Several concepts are titled <query>; select one by its identity.` Both have severity info, and they stay out of the graph diagnostics. In established knowledge and without a merge base, `declaration` is null and `branchChanged` is empty.
 
 ## Concept page
 
@@ -242,7 +258,7 @@ The page column is 880 px. Top to bottom:
 
 | Page | Change |
 | --- | --- |
-| Artifact | A section `Concepts N` after Flows and before Versions, only when `concepts` for the artifact is not empty and not only removed. Rows use the doc-list with a title and a muted detail: the first sentence of the description, on one line at 1440 px. `Show all N concepts` shows above 5 rows. The section has no New action. |
+| Artifact | A section `Concepts N` after Flows and before Versions, only when `concepts` for the artifact is not empty and not only removed. Rows use the doc-list with a title and a muted detail: the first sentence of the description, on one line at 1440 px. `Show all N concepts` shows above 5 rows. The section has no New action. A removed concept is not a row, and rows have no DiffBadge. |
 | Document | A Prop `Concepts` after Kind, only for a declaring or describing document: `Declares <names>` and `Describes <names>`. Each name links to its concept page. A `new`, `changed` or `removed` declaration adds its DiffBadge. A removed name is plain text. |
 | Flow | In the Model section, the model title of a resolved participant is a link to its concept page with the aria-label `Open concept <title>`. The line order, the heading and the text of an unresolved participant stay. |
 | Impact | KIND_NAMES gives `concept` for a model. entityLabel uses the title. pageFor gives the concept page. The detail shows the link `Open concept` and no entity path line. |
@@ -250,11 +266,12 @@ The page column is 880 px. Top to bottom:
 ## Browser Back
 
 - go() calls history.pushState when it pushes a trail entry, with the state `{plane: true}`. go() pushes a returnFocus entry only when it pushes a trail entry. A replacement in place calls history.replaceState.
-- The active ProjectExplorer handles popstate: when its trail is not empty, it runs back(); otherwise it changes no page. A Forward press changes no page.
+- The active ProjectExplorer handles popstate: when its trail is not empty, it runs back(); otherwise it changes no page. A Forward press changes no page; the handler tells Forward from Back with the Navigation API (`navigation.currentEntry.index`), and a browser without that API treats each press as Back. A Back press to a fragment entry of a claim link only scrolls.
 - When leave() refuses, the handler pushes `{plane: true}` again, so the browser position stays.
 - resetRoute() writes no history entry.
 - Discover writes its submitted query into its page object (`query`) with go() in place. DiscoverPage searches again when `page.query` is a nonempty string that differs from its current search. `query` stays out of pageKey, so a submit keeps focus and the TopBar entry keeps the results.
 - The change page writes its open brief rows into its page object as `brief`, the list of open questions; an absent `brief` means the 1.24.0 default.
+- A same-page change keeps `query` and `brief` unless the new page object names them. After a page renders again, focus returns to the control with the same tag, name and page area as the opening control.
 - No Back control is added.
 
 ## Change brief
@@ -289,7 +306,7 @@ The PR description (server/change-description.js) Impact section starts with the
 ## MCP
 
 - New read-only tool `get_concept`, registered on its own with `{path, worktree, knowledge, concept}`. It returns the concept operation answer with freshness and completeness. The default tool count goes from 12 to 13.
-- `search_flows` takes `kinds`, a list of `flow` and `concept`. Without `kinds`, the data and pagination are the 1.24.0 ones; `kinds` enters the cursor selector digest only when it is present. With `concept` in `kinds`, `data.concepts` holds all matching concept items, not paged, ranked by exact identity, then exact title, then a title substring, then a description substring; an empty query lists all concepts, and `data.totals.concepts` gives their count. With `kinds` that omit `flow`, `data.flows` is empty and `total` is 0.
+- `search_flows` takes `kinds`, a list of `flow` and `concept`. Without `kinds`, the data and pagination are the 1.24.0 ones; `kinds` enters the cursor selector digest only when it is present. With `concept` in `kinds`, `data.concepts` holds all matching concept items, not paged, ranked by exact identity, then exact title, then a title substring, then a description substring; an empty query lists all concepts, and `data.totals.concepts` gives their count. With `kinds` that omit `flow`, `data.flows` is empty and `total` is 0. `kinds` is valid only on `search`, holds one or two unique values and is stored in the order flow, concept. Concept items with `declaration: removed` match like the others. The record revision covers the graph diagnostics, so a 1.24.0 cursor of a repository with a `missing-model-source` diagnostic is stale after the upgrade.
 - `get_flow` participants add `concept` (the logical id) and `title` when they resolve.
 - The server instructions add the line `Concepts: get_concept; search_flows with kinds.`; specifications/agent-integration.md shows the block.
 
