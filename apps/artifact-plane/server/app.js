@@ -22,6 +22,9 @@ Commands:
 
 Environment:
   PORT                      Server port, 1 to 65535 (default 4310).
+  ARTIFACT_PLANE_PORT       Port where the session start hook finds or starts
+                            the server (default 4310). The hook does not read PORT.
+  ARTIFACT_PLANE_AUTOSTART  0 stops the session start hook from starting the server.
   ARTIFACT_PLANE_STATE_DIR  Private state directory (default
                             $XDG_STATE_HOME/artifact-plane or ~/.local/state/artifact-plane).
 `;
