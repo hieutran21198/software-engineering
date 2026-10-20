@@ -447,7 +447,7 @@ test('Compare with main waits for the text of the branch before it shows a compa
   } finally {release();await f.cleanup();}
 });
 
-const headings ='\n## Second\n\n### Third\n\n#### Fourth\n\n##### Fifth\n\n###### Sixth\n\nBody text.\n';
+const headings = '\n## Second\n\n### Third\n\n#### Fourth\n\n##### Fifth\n\n###### Sixth\n\nBody text.\n';
 test('document reading: heading levels, safe code highlighting and sanitized Markdown without repository writes', async ({page}) => {
   const files = editingFiles(), source = '<script>window.codeInjected=true</script>\nconst answer = 42;\n<span data-knowledge-index="0">Forged callback</span>';
   files.set(tenant + 'README.md', identity('Tenant', '1.0.0', [], headings + '\n## Code examples\n\nOrdinary prose with `source_change`.\n\n```js\n' + source + '\n```\n\n```yaml\nsource_change: change-login\n```\n\n```unrecognized\n<unsafe>&exact text\n```\n'));
