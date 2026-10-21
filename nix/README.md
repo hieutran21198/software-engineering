@@ -61,6 +61,7 @@ nix flake check
 ```
 
 The package check exercises adoption of both bundles, the embedded validator, Plane help and version, native module loading, HTTP assets and an MCP handshake.
+On aarch64-linux, ONNX Runtime reads the CPU list from `/sys/devices/system/cpu`, which the build sandbox does not contain. Add `extra-sandbox-paths = /sys/devices/system/cpu` to the Nix configuration of a trusted user before you run the check there. The installed command does not need this setting.
 Model installation and inference require a separate runtime check because model downloads are excluded from sandboxed builds.
 Run that check against a built package:
 
@@ -70,8 +71,8 @@ node nix/tests/semantic.mjs ./result
 ```
 
 The semantic check needs Node.js 24 or later, network access and temporary disk space for the model. It removes its temporary state after the check.
-All four targets evaluate. Native package checks and real model installation/inference pass on x86_64-linux.
-Native verification for aarch64-linux, x86_64-darwin and aarch64-darwin remains pending; evaluation alone does not establish platform support.
+The Nix workflow in `.github/workflows/nix.yml` runs the package check natively on x86_64-linux, aarch64-linux, x86_64-darwin and aarch64-darwin.
+Real model installation and inference were checked on x86_64-linux.
 
 ## Dependency updates
 
