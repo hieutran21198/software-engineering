@@ -77,7 +77,9 @@ flow:
       path: apps/artifact-plane/test/opencode-bridge.test.js
       requires: Verify child isolation, worktree moves, task inference,
         missing turns, stale terminals and private payload exclusion.
-      basis: static
+      basis: observed
+      evidence:
+        - docs/artifacts/artifact-plane/changes/change-opencode-support/tasks/02-lifecycle-bridge.md#implementation-and-checks
     - id: opencode-contract
       kind: element
       artifact: artifact-plane

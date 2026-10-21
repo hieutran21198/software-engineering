@@ -83,7 +83,9 @@ flow:
       path: apps/artifact-plane/test/opencode-bridge.test.js
       requires: Exercise native hooks, context, permission preservation,
         identity, lifecycle uncertainty and fail-open behavior.
-      basis: static
+      basis: observed
+      evidence:
+        - docs/artifacts/artifact-plane/changes/change-opencode-support/tasks/02-lifecycle-bridge.md#implementation-and-checks
     - id: opencode-contract
       kind: element
       artifact: artifact-plane
