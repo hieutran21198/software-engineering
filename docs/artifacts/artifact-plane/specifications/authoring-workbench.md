@@ -155,7 +155,7 @@ The rules are CSS only and use the existing `level-N` row classes and aria attri
   - "+ Add task" is the last row and opens an inline row form with title, prerequisites and DoD lines.
   - Record plan self-check appears when tasks exist and no plan self-check is recorded.
   - Graph shows the existing task canvas inline.
-- Changed knowledge section: the knowledge of this change that differs from main, by title and kind with badges. Compare opens the existing line comparison inline.
+- Changed knowledge section: the knowledge of this change that differs from main, by title and kind with badges. Compare opens the existing line comparison inline. When the change is `merged` and no knowledge differs, the section says "The knowledge of this change is already on main." (W10).
 - Ready for a version section:
   - the 1.16.0 readiness items, each unmet item with a link to the place that fixes it;
   - Prepare version, enabled when all items are met or after the person acknowledges unchecked DoD items. It opens the 1.16.0 inline form with the preview of both files.
@@ -287,4 +287,5 @@ The steps of knowledge-authoring, repository-exploration, source-retrieval, unit
 - The superseded requirement statements are amended in place.
 - change-browser-suite-fixes: the step form rule maps to W11 and to the browser test of a late reply in flow-page.spec.js.
 - change-human-guidance amends the Labels table and the empty state; specifications/human-guidance.md holds the statuses, the version labels and the visual grammar.
+- change-merged-change-status: the Changed knowledge text for a merged change maps to W10.
 - No blocker prevents Plan.
