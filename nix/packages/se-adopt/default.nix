@@ -8,18 +8,10 @@ let
   repositoryRoot = inputs.self.outPath;
   root = /. + builtins.unsafeDiscardStringContext repositoryRoot;
   validator = callPackage ../../lib/validator.nix { inherit repositoryRoot; };
-  # se-adopt releases carry the ADD version: tag v<current_version>.
-  addVersion = lib.pipe "${repositoryRoot}/docs/artifacts/artifact-driven/README.md" [
-    builtins.readFile
-    (lib.splitString "\n")
-    (map (builtins.match "current_version: ([0-9]+\\.[0-9]+\\.[0-9]+)"))
-    (lib.findFirst (match: match != null) (throw "The ADD identity record has no current_version."))
-    builtins.head
-  ];
 in
 buildGoModule {
   pname = "se-adopt";
-  version = addVersion;
+  version = "3.1.0";
   src = lib.fileset.toSource {
     inherit root;
     fileset = lib.fileset.unions (

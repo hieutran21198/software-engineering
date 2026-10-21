@@ -31,5 +31,3 @@ It runs the adopted add-validate.mjs against a temporary ADD repository and requ
 The builder generates that validator from the existing application entry point with Vite and embeds it before Go compilation.
 Source filtering retains the Go module, command, adoption engine, architecture sources, skill sources and ADD bundle. Unrelated workspace files are excluded.
 
-
-The package version was the fixed string 3.1.0 after ADD moved to 3.2.0. It now reads `current_version` from docs/artifacts/artifact-driven/README.md, the ADD version that names se-adopt release tags. Ran nix eval --raw .#se-adopt.version and the same for aarch64-darwin: 3.2.0. Ran nix build .#checks.x86_64-linux.packages: se-adopt-3.2.0 built and the package smoke check passed.
