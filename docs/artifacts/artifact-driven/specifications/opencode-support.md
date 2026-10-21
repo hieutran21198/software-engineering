@@ -30,7 +30,7 @@ Update the current project harness inventory and knowledge contract to include O
 
 ## Impact and verification
 
-The embedded bundle and adoption consumers receive additive guidance. No record schema, CLI flag, copy behavior or ADD flow step changes. Plane consumes this contract through its OpenCode specification; its dependent implementation waits until this supplier change establishes. Story-Driven and Nix packaging have no new runtime dependency or changed package input in this member.
+The embedded bundle and adoption consumers receive additive guidance. No record schema, CLI flag, copy behavior or ADD flow step changes. Plane consumes this contract through its OpenCode specification; its dependent implementation waits until this supplier change establishes. Story-Driven and Nix packaging have no new runtime dependency. Nix derives the adoption package version from the ADD identity record, so the approved minor version automatically updates its package metadata without a Nix implementation change.
 
 Verify six canonical skill targets, four native profiles, no pinned model or permission expansion, bundle/adoption Go tests, documentation links and knowledge records. The implementation task records actual results.
 

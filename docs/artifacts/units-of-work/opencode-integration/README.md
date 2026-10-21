@@ -33,7 +33,11 @@ acceptance:
     criterion: Combined knowledge, bundle, bridge and regression checks pass,
       with live and fixture evidence distinguished.
     integration: true
-evidence: []
+evidence:
+  - criterion: add-setup
+    method: Run static registration and native profile checks, bundle and adoption Go suites, website build and knowledge validation.
+    result: passed
+    source: docs/artifacts/artifact-driven/changes/change-opencode-support/tasks/02-validation.md#automated-checks
 ---
 
 # Integrate ADD with OpenCode V2
@@ -59,4 +63,4 @@ The Plane consumes established ADD knowledge. Implement and publish the ADD memb
 
 ## Combined checks
 
-No implementation checks have run. The concrete tasks own their future evidence.
+The ADD member's implementation checks are recorded in its validation task. The Plane member has not started because the ADD supplier change is not established. The unit's lifecycle and combined-integration criteria are not yet satisfied. No live OpenCode activation is claimed.
