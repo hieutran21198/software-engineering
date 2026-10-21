@@ -1,8 +1,10 @@
 # Connect agents to the Plane
 
-The released executable `artifact-plane` connects to Claude Code, Codex and Antigravity in two ways: a stdio MCP server and one hook command. Put the executable on the path as `artifact-plane` (see the Install section of the Plane README). The hooks and the MCP server read knowledge and Git. They never approve work, push, merge or establish versions.
+The released executable `artifact-plane` connects to Claude Code, Codex and Antigravity through a stdio MCP server and one hook command. OpenCode V2 uses the same MCP server and a native plugin bridge to that command. Put the executable on `PATH` as `artifact-plane` in the environment that starts the harness. The hooks and the MCP server read knowledge and Git. They never approve work, push, merge or establish versions.
 
 ## What the hooks do
+
+This table describes the command-hook harnesses. OpenCode's supported mapping and completion limits are listed separately below.
 
 | Event | Effect |
 | --- | --- |
@@ -49,6 +51,39 @@ The refusals and the stop request apply only in a repository with `docs/artifact
 3. Activation: Antigravity discovers workspace skills from `.agents/skills/`, workspace rules from `AGENTS.md`, workspace hooks from `.agents/hooks.json`, and workspace MCP servers from `.agents/plugins/<name>/mcp_config.json`.
 
 The examples use a POSIX shell. On Windows, use `artifact-plane hook` (or `artifact-plane hook --event <Event>`) without `|| true`, with an executable of the same version as the configuration.
+
+## OpenCode V2
+
+The target runtime and published SDK are **2.1.2**. This integration does not use OpenCode V1 hooks.
+
+1. MCP: merge [opencode.example.json](opencode.example.json) into project `opencode.json`. This repository already contains that configuration:
+
+   ```json
+   {
+     "$schema": "https://opencode.ai/config.json",
+     "mcp": {
+       "servers": {
+         "artifact-plane": {
+           "type": "local",
+           "command": ["artifact-plane", "mcp"]
+         }
+       }
+     }
+   }
+   ```
+
+2. Plugin: this repository's `.opencode/plugins/artifact-plane/index.ts` re-exports the default native `{id: "artifact-plane", setup}` object from `apps/artifact-plane/integration/opencode/index.js`. OpenCode discovers the project entry automatically. Do not add a duplicate `plugins` entry. For another repository, copy the reusable bridge directory and provide one local plugin entry that re-exports its default export at the correct relative path. The bridge uses Node builtins; it needs no runtime SDK dependency or plugin dependency manifest.
+3. Activation: open the project in a trusted environment. The native plugin executes local code, and the MCP server starts a local executable. Accept applicable project trust and organization policy requirements; do not bypass permission prompts or change global settings. Keep existing model selection, default agent and permission rules. Run `opencode plugin list` to inspect activation, and `opencode mcp list` or `/mcps` to confirm the server is connected. Registration alone is not activation. After bridge source changes, restart OpenCode if the local dependency has not reloaded.
+
+The plugin appends change context and the workbench address before model requests for the session's actual location, including after a move. Supported tool observations bind task reads without storing prompts, commands, tool results or transcripts. Session and worktree identify observations; a named profile such as `build` is not a unique child agent.
+
+For the verified 2.1.2 built-in shell, the bridge correlates the final tool-before `command` and `workdir` with permission source IDs (session, message and call). It resolves the effective directory from the session location. It never joins scanned permission resources into a command. Explicit reserved-action denials remain denials; other allow, ask and deny decisions stay unchanged. Third-party `shell-create` command/cwd rewrites lack call identity and are outside verified protection. This is a guardrail, not a sandbox; aliases and nested programs can also escape recognition.
+
+OpenCode has **no stop blocking**. Use MCP `check_records` during work and before reporting completion. The bridge never creates prompts, automatically continues work, approves plans or marks DoD validated. It records a real completion or interruption only when durable user-delivery and execution events identify one unambiguous turn. Missing or ambiguous terminal turns, late attachment, stream loss and moves do not produce a guessed success; failed execution is not reported as success.
+
+Bridge requests fail open on missing executables, unavailable storage, malformed responses and timeouts: ordinary agent work continues without relaxing existing permissions. Context requests are bounded to 12 seconds and tool/permission requests to 8 seconds. An unavailable observer does not erase a valid policy denial. Fail-open bridge behavior does **not** mean MCP is connected: if `artifact-plane` is missing from `PATH`, its MCP tools, including `check_records`, are unavailable until the executable is installed and the server connects.
+
+The official V2 [configuration](https://opencode.ai/v2/docs/config), [MCP](https://opencode.ai/v2/docs/mcp-servers), [plugin loading](https://opencode.ai/v2/docs/plugins) and [plugin API](https://opencode.ai/v2/docs/build/plugins) guides describe native setup.
 
 ## Workbench
 
@@ -107,4 +142,4 @@ Multiple blue nodes represent observed concurrent execution. Implementation canv
 
 ## Verification limits
 
-Fixture tests cover the hook-to-store-to-browser flow with recorded inputs of all three harnesses and without model inference. Live activation requires the trust or plugin steps of each harness. Configuration parsing and hook lists alone do not prove that a live model ran a task. Keep live, fixture, reported-validation and establishment evidence distinct.
+Recorded-input fixture tests cover the command-hook-to-store-to-browser flow for Claude Code, Codex and Antigravity without model inference. OpenCode configuration checks cover registration, not bridge execution. A separate native 2.1.2 runtime probe verified the plugin object format and supported shell/lifecycle fields with a deterministic provider fixture; it did not activate the Plane bridge or use actual model inference. Final Plane bridge and MCP activation remain separate integration checks. Live activation requires each harness's trust or plugin steps. Configuration parsing and plugin lists alone do not prove that a live model ran a task. Keep mock-host fixtures, native-runtime provider fixtures, actual model execution, reported validation and establishment evidence distinct.
