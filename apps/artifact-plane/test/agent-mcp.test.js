@@ -20,7 +20,8 @@ const app = fileURLToPath(new URL('../server/app.js', import.meta.url));
 const INSTRUCTIONS = `Artifact Plane reads ADD knowledge and Git. It never approves, pushes, merges or establishes versions.
 Resume or start: get_change_status. Discover flows and specifications: search_flows, get_flow, read_flow_source.
 Specification and Plan: get_impact_context, get_change_impact. Review and context: get_change_review, get_change_context, read_change_context_source.
-Before a self-check or the PR: check_records, get_change_brief, get_change_description.`;
+Before a self-check or the PR: check_records, get_change_brief, get_change_description.
+Concepts: get_concept; search_flows with kinds.`;
 const READ_ONLY = {readOnlyHint: true, destructiveHint: false, idempotentHint: true, openWorldHint: false};
 const temporary = async t => {const dir = await realpath(await mkdtemp(join(tmpdir(), 'plane-agent-mcp-')));t.after(() => rm(dir, {recursive: true, force: true}));return dir;};
 // The change status fixture on a change branch, with a linked worktree.

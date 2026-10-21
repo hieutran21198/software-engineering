@@ -18,6 +18,8 @@ import { InMemoryTransport } from "@modelcontextprotocol/sdk/inMemory.js";
 import { createFlowMcpServer } from "../server/flow-mcp.js";
 import { createAppServer } from "../server/http.js";
 import { createFlowService } from "../server/flow-index.js";
+import {stringify} from "yaml";
+import {flowDoc} from "./impact-fixtures.js";
 import {
   registeredSourceFingerprint,
   repositoryFingerprint,
@@ -133,6 +135,7 @@ test("HTTP and MCP expose equivalent scoped search/detail/impact/source context"
     "get_change_impact",
     "get_change_review",
     "get_change_status",
+    "get_concept",
     "get_flow",
     "get_impact_context",
     "read_change_context_source",
@@ -350,7 +353,7 @@ test('real stdio client initializes, lists tools and reads only configured roots
  const transport=new StdioClientTransport({command:process.execPath,args:[fileURLToPath(new URL('../server/flow-mcp-stdio.js',import.meta.url)),'--repository',fixture.root,'--state-dir',stateDir],stderr:'pipe'});
  let stderr='';transport.stderr?.on('data',chunk=>stderr+=chunk);
  t.after(async()=>{await client.close();await fixture.cleanup();await other.cleanup();await rm(stateDir,{recursive:true,force:true});});
- await client.connect(transport);assert.equal((await client.listTools()).tools.length,12);
+ await client.connect(transport);assert.equal((await client.listTools()).tools.length,13);
  const result=await client.callTool({name:'search_flows',arguments:{query:'membership'}});
  assert.equal(result.isError,undefined);assert.equal(result.structuredContent.data.flows.length,2);assert.equal(result.structuredContent.freshness,'fresh');
  assert.ok(result.structuredContent.diagnostics.some(d=>d.code==='flow-model-unavailable'));
@@ -408,7 +411,7 @@ test('actual HTTP and MCP agree on complete named filtering and artifact partici
 
 // In-place layout: established flows come from the protected tree, planning
 // flows from the working tree, with the same facts over HTTP and MCP.
-import {inPlaceFixture} from "./fixtures.js";
+import {inPlaceFixture, rootReadme} from "./fixtures.js";
 test("L2/L7: in-place established and planning flows have HTTP and MCP parity", async (t) => {
   const input = inPlaceFixture();
   input.set("src/check.js", "export const membership = true;\n");
@@ -487,4 +490,92 @@ test("P4/P5: model detail, known participation and impact have HTTP and MCP pari
   // Reads never write: only the test's own edits and its worktree registration changed.
   const files = (value) => Object.fromEntries(Object.entries(value).filter(([path]) => !path.startsWith(".git/")));
   assert.deepEqual(files(await fingerprint(fixture.root)), files(before));
+});
+
+// Concept MCP (specifications/concept-pages.md: MCP; CP16, CP17, CPA11): the
+// in-place artifacts a and b both declare a concept titled Identity; login uses a:identity.
+const modelsDoc = (list, title) => '---\n' + stringify({models: list}) + `---\n# ${title}\n`;
+function conceptFiles() {
+  const login = {id: 'login', artifact: 'a', title: 'Login', trigger: 'A member signs in.', outcome: 'A session exists.', entry_steps: ['check'],
+    steps: [{id: 'check', title: 'Check identity', supports: ['contract', 'code', 'checks'], interactions: [{from: 'member', to: 'ghost', action: 'Check the identity', outcome: 'Checked.', supports: ['code']}]}],
+    transitions: [],
+    support: [
+      {id: 'contract', kind: 'element', artifact: 'a', element: 'specifications/contract.md', requires: 'Define the identity rules.', basis: 'documented'},
+      {id: 'code', kind: 'implementation', path: 'src/check.js', requires: 'Check the identity.', basis: 'static'},
+      {id: 'checks', kind: 'test', path: 'test/check.test.js', requires: 'Exercise the check.', basis: 'static'}],
+    participants: [{id: 'member', artifact: 'a', model: 'identity', requires: 'Supply the identity.'}, {id: 'ghost', artifact: 'a', model: 'unknown', requires: 'Receive the check.'}]};
+  return new Map([
+    ['docs/artifacts/a/README.md', rootReadme('A', '1.0.0')],
+    ['docs/artifacts/a/versions/1.0.0/README.md', '---\nsource_change: change-first\n---\n# A 1.0.0\n'],
+    ['docs/artifacts/a/changes/change-first/README.md', '# First change\n'],
+    ['docs/artifacts/a/specifications/contract.md', modelsDoc([
+      {id: 'identity', title: 'Identity', description: 'The identity of a member.', sources: ['specifications/identity.md']},
+      {id: 'session', title: 'Session', description: 'The period after an identity check.', sources: ['specifications/identity.md']}], 'Contract')],
+    ['docs/artifacts/a/specifications/identity.md', '# Identity rules\n'],
+    ['docs/artifacts/a/specifications/flows/login.md', flowDoc(login)],
+    ['docs/artifacts/b/README.md', rootReadme('B', '1.0.0')],
+    ['docs/artifacts/b/versions/1.0.0/README.md', '---\nsource_change: change-first\n---\n# B 1.0.0\n'],
+    ['docs/artifacts/b/changes/change-first/README.md', '# First change\n'],
+    ['docs/artifacts/b/specifications/terms.md', modelsDoc([{id: 'identity', title: 'Identity', description: 'A tenant identity.', sources: ['specifications/terms.md']}], 'Terms')],
+    ['src/check.js', 'export function check(){return true;}\n'],
+    ['test/check.test.js', "import {check} from '../src/check.js';\nexport const t=check;\n"],
+  ]);
+}
+const call = async (client, name, args) => {const r = await client.callTool({name, arguments: args});assert.equal(r.isError, undefined, JSON.stringify(r.content));assert.deepEqual(JSON.parse(r.content[0].text), r.structuredContent);return r.structuredContent;};
+
+test('CPA11, CP16: get_concept answers by identity and exact title like HTTP; an ambiguous title gives candidates', async t => {
+  const {fixture, client, http} = await setup(t, conceptFiles()), before = await fingerprint(fixture.root);
+  const tool = (await client.listTools()).tools.find(x => x.name === 'get_concept');
+  assert.deepEqual(Object.keys(tool.inputSchema.properties).sort(), ['concept', 'knowledge', 'path', 'worktree']);
+  assert.deepEqual(tool.annotations, {readOnlyHint: true, destructiveHint: false, idempotentHint: true, openWorldHint: false});
+  const byId = await call(client, 'get_concept', {concept: 'a:identity'});
+  const response = await http({path: fixture.root, operation: 'concept', concept: 'a:identity'});
+  assert.equal(response.status, 200);
+  assert.deepEqual(stable(byId), stable(response.body), 'HTTP and MCP give the same concept answer');
+  // The unresolved participant ghost gives a graph diagnostic, so the answer is partial.
+  assert.deepEqual([byId.freshness, byId.completeness], ['fresh', 'partial']);
+  assert.ok(byId.diagnostics.some(d => d.code === 'unresolved-model'));
+  const concept = byId.data.concept;
+  assert.deepEqual([concept.logicalId, concept.entity, concept.title, concept.artifact], ['a:identity', 'model:a:identity', 'Identity', 'a']);
+  assert.deepEqual(concept.declaredIn, {path: 'docs/artifacts/a/specifications/contract.md', title: 'Contract'});
+  assert.deepEqual(concept.sources, [{path: 'docs/artifacts/a/specifications/identity.md', title: 'Identity rules', missing: false}]);
+  assert.deepEqual(concept.flows.map(f => [f.flow, f.participant, f.interactions.map(i => [i.step, i.from, i.to])]), [['a:login', 'member', [['check', 'Identity', 'ghost']]]]);
+  assert.deepEqual(concept.implementation.groups.map(g => [g.flow, g.code.map(c => c.path), g.tests.map(c => c.path)]), [['a:login', ['src/check.js'], ['test/check.test.js']]]);
+  assert.deepEqual([concept.branchChanged, concept.changes, concept.diagnostics], [[], {open: []}, []]);
+  for (const value of ['model:a:identity', 'A:IDENTITY'])
+    assert.deepEqual(stable(await call(client, 'get_concept', {concept: value})).data, stable(byId).data, value);
+  const byTitle = await call(client, 'get_concept', {concept: 'session'});
+  assert.equal(byTitle.data.concept.logicalId, 'a:session');
+  assert.deepEqual(stable(byTitle), stable((await http({path: fixture.root, operation: 'concept', concept: 'session'})).body));
+  const ambiguous = await call(client, 'get_concept', {concept: 'Identity'});
+  assert.equal(ambiguous.data.concept, null);
+  const diagnostic = ambiguous.diagnostics.find(d => d.code === 'concept-ambiguous');
+  assert.equal(diagnostic.severity, 'info');
+  assert.deepEqual(diagnostic.candidates.map(c => c.logicalId), ['a:identity', 'b:identity']);
+  const unknown = await call(client, 'get_concept', {concept: 'Nothing'});
+  assert.deepEqual([unknown.data.concept, unknown.diagnostics.find(d => d.code === 'concept-unknown')?.message], [null, 'No concept Nothing is declared in the selected knowledge.']);
+  for (const args of [{}, {concept: ''}, {concept: 'a:identity', limit: 1}]) {
+    const refused = await client.callTool({name: 'get_concept', arguments: args}).catch(error => ({isError: true, error}));
+    assert.equal(refused.isError, true, JSON.stringify(args));
+  }
+  assert.deepEqual(await fingerprint(fixture.root), before);
+});
+
+test('CP17, CP16: search_flows with kinds lists concepts like HTTP, and get_flow participants name their concept', async t => {
+  const {fixture, client, http} = await setup(t, conceptFiles());
+  const listed = await call(client, 'search_flows', {kinds: ['concept']});
+  assert.deepEqual(listed.data.concepts.map(c => c.logicalId), ['a:identity', 'a:session', 'b:identity']);
+  assert.deepEqual([listed.data.totals, listed.data.flows, listed.data.total], [{concepts: 3}, [], 0]);
+  const ranked = await call(client, 'search_flows', {query: 'identity', kinds: ['flow', 'concept']});
+  assert.deepEqual(ranked.data.concepts.map(c => c.logicalId), ['a:identity', 'b:identity', 'a:session']);
+  assert.ok(ranked.data.flows.length);
+  assert.deepEqual(stable(ranked), stable((await http({path: fixture.root, operation: 'search', query: 'identity', kinds: ['flow', 'concept']})).body));
+  const plain = await call(client, 'search_flows', {query: 'identity'});
+  assert.ok(!('concepts' in plain.data) && !('totals' in plain.data));
+  assert.equal((await client.callTool({name: 'search_flows', arguments: {kinds: ['model']}}).catch(error => ({isError: true, error}))).isError, true);
+  const detail = await call(client, 'get_flow', {flow: 'a:login'});
+  const [member, ghost] = detail.data.flow.participants;
+  assert.deepEqual([member.id, member.concept, member.title, member.requires, member.resolved, typeof member.nodeId], ['member', 'a:identity', 'Identity', 'Supply the identity.', true, 'string']);
+  assert.deepEqual([ghost.id, ghost.resolved, 'concept' in ghost, 'title' in ghost, ghost.model], ['ghost', false, false, false, 'unknown']);
+  assert.deepEqual(stable(detail), stable((await http({path: fixture.root, operation: 'detail', flow: 'a:login'})).body));
 });

@@ -114,7 +114,7 @@ export function createImpactService({stateDir=defaultStateDir(),roots=[],loader=
           if(o.flow||o.step){const logical=o.flow||o.step.split(':').slice(0,2).join(':');const flow=record.graph.flows.find(f=>f.logicalId===logical);if(!flow){unresolved.push({entity:o.flow||o.step,reason:'Flow does not exist in the selected knowledge.'});continue;}
             if(o.step){const stepId=o.step.split(':')[2];if(!flow.steps.some(s=>s.id===stepId)){unresolved.push({entity:o.step,reason:'Step does not exist in the flow.'});continue;}origins.push({path:flow.file,status:'modified',id:o.step,step:stepId,sections:[stepId]});}
             else origins.push({path:flow.file,status:'modified',id:o.flow});continue;}
-          if(o.model){const node=record.graph.nodes.find(n=>n.kind==='model'&&n.logicalId===o.model);if(node)origins.push({path:node.file,status:'modified',id:o.model,model:o.model});else unresolved.push({entity:o.model,reason:'Model is not declared in the selected knowledge.'});}
+          if(o.model){const logical=o.model.replace(/^model:/,''),node=record.graph.nodes.find(n=>n.kind==='model'&&n.logicalId===logical);if(node)origins.push({path:`model:${logical}`,status:'modified',id:o.model,model:logical});else unresolved.push({entity:o.model,reason:'Model is not declared in the selected knowledge.'});}
         }
       }else{
         let d;
@@ -128,7 +128,9 @@ export function createImpactService({stateDir=defaultStateDir(),roots=[],loader=
         for(const [path,c] of d.files)origins.push({path,status:statusOf(c),from:c.from,ref:d.oldRev,change:c,diff:d});
       }
       // Detail per origin: declarations and sections from the change, or the whole document. Texts come from one batch reader.
+      // A model origin starts at its model entity, not at its declaring document.
       await Promise.all(origins.map(async o=>{
+        if(o.model)return;
         const known=tracked.has(o.path);
         if(!known&&o.status!=='deleted'){let hint='not tracked at this revision';try{const log=await git(worktree,['log','-1','-M','--diff-filter=DR','--name-status','--format=%h','--',o.path]);if(log){const [h,row]=log.split('\n');const parts=(row||'').split('\t');hint=parts[0]?.startsWith('R')?`renamed to ${parts[2]} in ${h}`:`deleted in ${h}`;}}catch{}o.status='unknown';o.reason=`Path is ${hint}.`;return;}
         const js=/\.(m?js|jsx)$/.test(o.path),md=o.path.endsWith('.md');
@@ -167,7 +169,7 @@ export function createImpactService({stateDir=defaultStateDir(),roots=[],loader=
         for(const st of f.steps.filter(s=>s.supports.includes(sp.id)))add(target,`step:${f.logicalId}:${st.id}`,'supports',{support:sp.id,supportKind:sp.kind,basis:sp.basis,requires:sp.requires,symbol:sp.symbol,resolved:sp.resolved!==false});}
       for(const p of f.participants||[]){const id=`model:${p.artifact}:${p.model}`;node(id,'model',{artifact:p.artifact});add(id,`flow:${f.logicalId}`,'participates',{requires:p.requires,resolved:p.resolved!==false});}
     }
-    for(const n of record.graph.nodes.filter(n=>n.kind==='model')){const id=`model:${n.logicalId}`;node(id,'model',{artifact:n.artifact,title:n.title});if(n.file)add(n.file,id,'declares',{});for(const s of n.sources||[]){const file=`docs/artifacts/${n.artifact}/${s}`;node(file,'element',{artifact:n.artifact});add(file,id,'describes',{});}}
+    for(const n of record.graph.nodes.filter(n=>n.kind==='model')){const id=`model:${n.logicalId}`;node(id,'model',{artifact:n.artifact}).title=n.title;if(n.file)add(n.file,id,'declares',{});for(const s of n.sources||[]){const file=`docs/artifacts/${n.artifact}/${s}`;node(file,'element',{artifact:n.artifact});add(file,id,'describes',{});}}
     return {rev,nodes,flowFile};
   }
 

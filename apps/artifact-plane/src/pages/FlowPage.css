@@ -78,3 +78,4 @@ button.flow-box:hover { border-color: var(--control); background: var(--soft); }
 .flow-step.affected .step-card { border-color: #9db5ec; }
 .react-flow__node.dimmed { opacity: .45; }
 .react-flow__node.affected .graph-node { border-color: var(--accent); box-shadow: 0 0 0 3px var(--accent-ring); }
+.flow-model button.link { font-weight: 400; }

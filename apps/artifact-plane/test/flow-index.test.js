@@ -4,6 +4,7 @@ import { mkdtemp, rm, writeFile, mkdir } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { DatabaseSync } from "node:sqlite";
+import { createHash } from "node:crypto";
 import { createFlowService, guardFlowDirectory, SEMANTIC_CUTOFF } from "../server/flow-index.js";
 import {
   createLocalEmbedder,
@@ -556,4 +557,76 @@ test('switching title and discovery preserves cached document vectors', async t 
   assert.deepEqual(db.prepare('SELECT hash,model,hex(vector) AS vector FROM vectors ORDER BY hash,model').all(),before);
   await service.query({...request,match:'discovery'});
   assert.deepEqual(calls.slice(prepared),[[]],'existing document vectors must not be embedded again');
+});
+
+// Concept search (specifications/concept-pages.md: MCP; CP17, CPA12): a record
+// on the protected branch, so the concepts operation reads no Git.
+function conceptRecord() {
+  const record = fixture();
+  record.graph.flows.push({...record.graph.flows[0], id: '/repo:other', localId: 'other', logicalId: 'owner:other', title: 'Other membership'});
+  record.snapshot = {repository: {branch: 'main'}, artifacts: [{id: 'owner', title: 'Owner', elements: []}, {id: 'consumer', title: 'Consumer', elements: []}]};
+  const model = (artifact, id, title, description) => ({id: `model-${artifact}-${id}`, kind: 'model', logicalId: `${artifact}:${id}`, artifact, title, description, file: `docs/artifacts/${artifact}/specifications/model.md`, sources: []});
+  record.graph.nodes.push(
+    model('owner', 'identity', 'Identity', 'The identity of a member.'),
+    model('consumer', 'identity', 'Identity', 'A tenant identity.'),
+    model('owner', 'provider', 'Identity provider', 'Issues tokens.'),
+    model('owner', 'session', 'Session', 'The period after an identity check.'),
+    model('owner', 'alias', 'owner:session', 'A title equal to another id.'),
+    model('owner', 'audit', 'Audit', 'A record of checks.'));
+  return record;
+}
+const ids = result => result.data.concepts.map(c => c.logicalId);
+const decoded = cursor => JSON.parse(Buffer.from(cursor, 'base64url'));
+const sha = value => createHash('sha256').update(JSON.stringify(value)).digest('hex');
+
+test('CP17: search with kinds concept ranks concepts by identity, title, title substring and description, and lists all for an empty query', async t => {
+  let calls = 0;
+  const {service} = await setup(t, {loader: async () => conceptRecord(), embedder: {signature: 'concept-search', embed: async texts => {calls++;return texts.map(() => [1, 0]);}}});
+  const search = body => service.query({path: '/repo', operation: 'search', kinds: ['concept'], ...body});
+  const all = await search({});
+  assert.deepEqual(ids(all), ['consumer:identity', 'owner:audit', 'owner:identity', 'owner:provider', 'owner:alias', 'owner:session']);
+  assert.deepEqual(all.data.totals, {concepts: 6});
+  assert.deepEqual(Object.keys(all.data.concepts[0]).sort(), ['artifact', 'declaration', 'declaredIn', 'description', 'entity', 'logicalId', 'sources', 'title']);
+  assert.deepEqual(ids(await search({query: '  '})), ids(all));
+  assert.deepEqual(ids(await search({query: 'identity'})), ['consumer:identity', 'owner:identity', 'owner:provider', 'owner:session']);
+  assert.deepEqual(ids(await search({query: 'OWNER:IDENTITY'})), ['owner:identity']);
+  assert.deepEqual(ids(await search({query: 'model:owner:session'})), ['owner:session']);
+  assert.deepEqual(ids(await search({query: 'owner:session'})), ['owner:session', 'owner:alias']);
+  assert.deepEqual(ids(await search({query: 'identity', match: 'title'})), ['consumer:identity', 'owner:identity', 'owner:provider', 'owner:session']);
+  assert.deepEqual(ids(await search({query: 'identity', artifact: 'consumer'})), ['consumer:identity']);
+  const none = await search({query: 'nothing'});
+  assert.deepEqual([none.data.concepts, none.data.totals], [[], {concepts: 0}]);
+  // Without flow in kinds, data.flows is empty, total is 0 and discovery prepares no embeddings.
+  assert.deepEqual([all.data.flows, all.data.total, all.data.next, all.pagination.total, all.pagination.next], [[], 0, null, 0, null]);
+  assert.equal(calls, 0);
+  const both = await search({query: 'identity', kinds: ['flow', 'concept'], limit: 1});
+  assert.equal(both.data.total, 2);assert.equal(both.data.flows.length, 1);
+  const page = await search({query: 'identity', kinds: ['flow', 'concept'], limit: 1, cursor: both.pagination.next});
+  assert.equal(page.data.flows.length, 1);
+  assert.deepEqual(ids(page), ids(both), 'concepts are not paged');
+  for (const kinds of [[], ['model'], ['flow', 'flow'], 'concept', ['flow', 'concept', 'flow']])
+    await assert.rejects(search({kinds}), {status: 422}, JSON.stringify(kinds));
+  await assert.rejects(service.query({path: '/repo', operation: 'detail', flow: 'owner:login', kinds: ['flow']}), {status: 422});
+});
+
+test('CPA12: search without kinds keeps the 1.24.0 data and cursors; kinds enters the cursor selector only when present', async t => {
+  const {service} = await setup(t, {loader: async () => conceptRecord(), embedder: {signature: 'concept-cursor', embed: async texts => texts.map(() => [1, 0])}});
+  const search = body => service.query({path: '/repo', operation: 'search', limit: 1, ...body});
+  const keys = ['artifactOptions', 'coverage', 'flows', 'next', 'semantic', 'total'];
+  for (const body of [{query: 'Membership', match: 'title'}, {query: 'membership'}, {}]) {
+    const plain = await search(body), flows = await search({...body, kinds: ['flow']}), mixed = await search({...body, kinds: ['concept', 'flow']});
+    assert.deepEqual(Object.keys(plain.data).sort(), keys, JSON.stringify(body));
+    assert.equal(plain.data.total, 2);
+    const query = body.match === 'title' ? body.query.toLowerCase() : body.query;
+    assert.equal(decoded(plain.pagination.next).selector, sha([query, undefined, body.match ?? 'discovery', undefined]), '1.24.0 selector');
+    assert.equal(decoded(flows.pagination.next).selector, sha([query, undefined, body.match ?? 'discovery', undefined, ['flow']]));
+    assert.equal(decoded(mixed.pagination.next).selector, sha([query, undefined, body.match ?? 'discovery', undefined, ['flow', 'concept']]));
+    assert.deepEqual(flows.data.flows, plain.data.flows);assert.deepEqual(mixed.data.flows, plain.data.flows);
+    assert.deepEqual(Object.keys(flows.data).sort(), keys);
+    const second = await search({...body, cursor: plain.pagination.next});
+    assert.equal(second.data.flows.length, 1);assert.notEqual(second.data.flows[0].id, plain.data.flows[0].id);
+    await assert.rejects(search({...body, kinds: ['flow'], cursor: plain.pagination.next}), {status: 422});
+    await assert.rejects(search({...body, cursor: mixed.pagination.next}), {status: 422});
+    assert.deepEqual((await search({...body, kinds: ['flow', 'concept'], cursor: mixed.pagination.next})).data.flows, second.data.flows);
+  }
 });

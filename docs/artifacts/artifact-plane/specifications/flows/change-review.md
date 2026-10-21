@@ -67,6 +67,10 @@ flow:
         - change-status-tests
         - delivery-support-contract
         - brief-contract
+        - concept-contract
+        - concept-brief
+        - concept-brief-checks
+        - concept-brief-browser
     - id: return
       title: Return to delivery or capture the reviewed context
       supports:
@@ -233,6 +237,31 @@ flow:
       element: specifications/delivery-support.md
       requires: Show the tier check and the PR description of the change.
       basis: documented
+    - id: concept-contract
+      kind: element
+      artifact: artifact-plane
+      element: specifications/concept-pages.md
+      requires: Define the concept rows of the change brief, their reasons and the concept line of the PR description.
+      basis: documented
+    - id: concept-brief
+      kind: implementation
+      path: apps/artifact-plane/server/change-brief.js
+      requires: Derive the concept rows of a change from its declaration, participation and describing-document differences.
+      basis: static
+    - id: concept-brief-checks
+      kind: test
+      path: apps/artifact-plane/test/change-brief.test.js
+      requires: Check each concept reason, the 89ed23a and 3c47a48 fixtures, a renamed participant and the summary prefix.
+      basis: observed
+      evidence:
+        - docs/artifacts/artifact-plane/changes/change-concept-pages/tasks/08-brief-concepts.md
+    - id: concept-brief-browser
+      kind: test
+      path: apps/artifact-plane/test/browser/change-brief.spec.js
+      requires: Check the concept and document links of brief rows at 1440 and 390 pixels.
+      basis: observed
+      evidence:
+        - docs/artifacts/artifact-plane/changes/change-concept-pages/tasks/08-brief-concepts.md
   gaps:
     - Declared current is not a historical code predecessor; recorded
       relationships are not exhaustive impact.

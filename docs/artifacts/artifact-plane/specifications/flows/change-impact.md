@@ -26,6 +26,8 @@ flow:
         - add-contract
         - impact-service
         - service-checks
+        - concept-contract
+        - model-graph
     - id: propagate
       title: Propagate through typed declared and derived relationships within the depth
       supports:
@@ -36,6 +38,9 @@ flow:
         - index-checks
         - service-checks
         - benchmark
+        - concept-contract
+        - model-graph
+        - concept-checks
     - id: explain
       title: Rank the tiers and attach paths, evidence and the coverage statement
       supports:
@@ -54,6 +59,8 @@ flow:
         - canvas-checks
         - impact-browser
         - layout-checks
+        - concept-contract
+        - concept-page-browser
     - id: handoff
       title: Return the compact context through HTTP, MCP or the packet
       supports:
@@ -191,6 +198,31 @@ flow:
       basis: observed
       evidence:
         - docs/artifacts/artifact-plane/changes/change-impact-intelligence/tasks/07-browser-suites.md
+    - id: concept-contract
+      kind: element
+      artifact: artifact-plane
+      element: specifications/concept-pages.md
+      requires: Define the model origin, the model titles and the concept destination of Impact rows.
+      basis: documented
+    - id: model-graph
+      kind: implementation
+      path: apps/artifact-plane/server/flow-model.js
+      requires: Add one model node and one declares edge for each declared concept.
+      basis: static
+    - id: concept-checks
+      kind: test
+      path: apps/artifact-plane/test/concepts.test.js
+      requires: Check model nodes, model origins and the entity that Impact adds to the concept facts.
+      basis: observed
+      evidence:
+        - docs/artifacts/artifact-plane/changes/change-concept-pages/tasks/02-concept-graph.md
+    - id: concept-page-browser
+      kind: test
+      path: apps/artifact-plane/test/browser/concept-page.spec.js
+      requires: Open Impact from the concept action and open a concept from an Impact row at 1440 and 390 pixels.
+      basis: observed
+      evidence:
+        - docs/artifacts/artifact-plane/changes/change-concept-pages/tasks/05-concept-page.md
   gaps:
     - Potential impact from history and vocabulary finds part of the hidden
       couplings only; the ground-truth cases record which.
@@ -206,4 +238,4 @@ The journey starts from any origin a person or agent can name and ends with one 
 
 ## Coverage and evidence
 
-Implemented in Artifact Plane 1.18.0. Observed supports point to the task evidence of change-impact-intelligence; the nine ground-truth cases and their measurements are in the impact-service task evidence. The research prototype measurements in decisions/016-typed-impact-ledger.md motivated the design and are not delivery evidence.
+Implemented in Artifact Plane 1.18.0. Artifact Plane 1.25.0 starts a model origin at the model entity and opens a concept page from an Impact row; the concept supports point to the task evidence of change-concept-pages. Observed supports point to the task evidence of change-impact-intelligence; the nine ground-truth cases and their measurements are in the impact-service task evidence. The research prototype measurements in decisions/016-typed-impact-ledger.md motivated the design and are not delivery evidence.

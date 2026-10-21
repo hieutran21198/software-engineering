@@ -1,9 +1,9 @@
 ---
-source_change: change-antigravity-support
+source_change: change-concept-pages
 ---
 
 # artifact-plane 1.25.0
 
-Minor: `artifact-plane hook` accepts `--event <name>`, normalizes Antigravity camelCase hook inputs (`conversationId`, `workspacePaths`, `toolCall`, `invocationNum`, `executionNum`, `terminationReason`), infers task bindings from Antigravity tool calls and emits Antigravity output shapes (`injectSteps`, `decision: "allow"` or `"deny"`, and `decision: "continue"`). This repository commits `.agents/hooks.json` and `.agents/plugins/artifact-plane/{plugin.json,mcp_config.json}`, and `apps/artifact-plane/integration/` adds `antigravity-hooks.example.json` and Antigravity setup instructions. Existing Claude Code and Codex hook behavior, MCP tools and HTTP routes do not change.
+Minor: declared models show as concepts on the pages people already read. The change adds the concept page, concept links on the artifact, document, flow and Impact pages, concept rows in the change brief and the sidebar search, browser Back, the `concepts` and `concept` query operations, the MCP tool `get_concept` and the `kinds` input of `search_flows`; a model origin of Impact now starts at its model entity. A repository without models looks as in 1.24.0, and no route, tool input or record format is removed.
 
-The plan and its evidence are in the [retained change](../../changes/change-antigravity-support/tasks/README.md).
+The plan and its evidence are in the [retained change](../../changes/change-concept-pages/tasks/README.md).

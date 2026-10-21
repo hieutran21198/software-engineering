@@ -1,0 +1,5353 @@
+{
+  "revision": "0eecce1",
+  "captures": {
+    "1440 work filter empty": {
+      "topbar": {
+        "text": [
+          "Artifact Plane",
+          "golden-plane",
+          "change-sign-in"
+        ],
+        "controls": [
+          {
+            "role": "tab",
+            "name": "golden-plane",
+            "title": "<root>"
+          },
+          {
+            "role": "button",
+            "name": "Close project <root>"
+          },
+          {
+            "role": "button",
+            "name": "New project tab"
+          },
+          {
+            "role": "button",
+            "name": "Branch change-sign-in, knowledge can be edited. Change worktree"
+          },
+          {
+            "role": "button",
+            "name": "Refresh"
+          },
+          {
+            "role": "button",
+            "name": "More"
+          }
+        ]
+      },
+      "sidebar": {
+        "text": [
+          "Current work",
+          "Sign in verified members",
+          "Authentication · Requirement",
+          "Artifacts",
+          "›",
+          "Authentication",
+          "›",
+          "Tenant",
+          "Show history"
+        ],
+        "controls": [
+          {
+            "role": "textbox",
+            "name": "Search knowledge",
+            "placeholder": "Search or jump to…"
+          },
+          {
+            "role": "treeitem",
+            "name": "Current work"
+          },
+          {
+            "role": "treeitem",
+            "name": "Sign in verified membersAuthentication · Requirement"
+          },
+          {
+            "role": "treeitem",
+            "name": "›Authentication"
+          },
+          {
+            "role": "treeitem",
+            "name": "›Tenant"
+          },
+          {
+            "role": "switch",
+            "name": "Show history"
+          }
+        ]
+      },
+      "main": {
+        "text": [
+          "Current work",
+          "golden-plane · 1 change in progress",
+          "Start a change",
+          "New unit",
+          "Authentication · change-sign-in · unit Member sign-in",
+          "Sign in verified members",
+          "Requirement",
+          "1",
+          "Requirement",
+          "(current)",
+          "2",
+          "Specification",
+          "3",
+          "Plan",
+          "4",
+          "Implementation",
+          "5",
+          "Version",
+          "Next: write the requirement and record its self-check.",
+          "Continue",
+          "Uncommitted knowledge",
+          "All knowledge is committed.",
+          "Dependencies",
+          "Show graph",
+          "Authentication depends on Tenant."
+        ],
+        "controls": [
+          {
+            "role": "button",
+            "name": "Start a change"
+          },
+          {
+            "role": "button",
+            "name": "New unit"
+          },
+          {
+            "role": "button",
+            "name": "Member sign-in, unit of Sign in verified members"
+          },
+          {
+            "role": "button",
+            "name": "Continue Sign in verified members"
+          },
+          {
+            "role": "button",
+            "name": "Show graph"
+          }
+        ]
+      }
+    },
+    "1440 work filter sign": {
+      "topbar": {
+        "text": [
+          "Artifact Plane",
+          "golden-plane",
+          "change-sign-in"
+        ],
+        "controls": [
+          {
+            "role": "tab",
+            "name": "golden-plane",
+            "title": "<root>"
+          },
+          {
+            "role": "button",
+            "name": "Close project <root>"
+          },
+          {
+            "role": "button",
+            "name": "New project tab"
+          },
+          {
+            "role": "button",
+            "name": "Branch change-sign-in, knowledge can be edited. Change worktree"
+          },
+          {
+            "role": "button",
+            "name": "Refresh"
+          },
+          {
+            "role": "button",
+            "name": "More"
+          }
+        ]
+      },
+      "sidebar": {
+        "text": [
+          "Current work",
+          "Sign in verified members",
+          "Authentication · Requirement",
+          "Artifacts",
+          "⌄",
+          "Tenant",
+          "⌄",
+          "Flows",
+          "1",
+          "Member sign-in",
+          "Show history"
+        ],
+        "controls": [
+          {
+            "role": "textbox",
+            "name": "Search knowledge",
+            "placeholder": "Search or jump to…"
+          },
+          {
+            "role": "button",
+            "name": "Clear search"
+          },
+          {
+            "role": "treeitem",
+            "name": "Current work"
+          },
+          {
+            "role": "treeitem",
+            "name": "Sign in verified membersAuthentication · Requirement"
+          },
+          {
+            "role": "treeitem",
+            "name": "⌄Tenant"
+          },
+          {
+            "role": "treeitem",
+            "name": "⌄Flows1"
+          },
+          {
+            "role": "treeitem",
+            "name": "Member sign-in"
+          },
+          {
+            "role": "switch",
+            "name": "Show history"
+          }
+        ]
+      },
+      "main": {
+        "text": [
+          "Current work",
+          "golden-plane · 1 change in progress",
+          "Start a change",
+          "New unit",
+          "Authentication · change-sign-in · unit Member sign-in",
+          "Sign in verified members",
+          "Requirement",
+          "1",
+          "Requirement",
+          "(current)",
+          "2",
+          "Specification",
+          "3",
+          "Plan",
+          "4",
+          "Implementation",
+          "5",
+          "Version",
+          "Next: write the requirement and record its self-check.",
+          "Continue",
+          "Uncommitted knowledge",
+          "All knowledge is committed.",
+          "Dependencies",
+          "Show graph",
+          "Authentication depends on Tenant."
+        ],
+        "controls": [
+          {
+            "role": "button",
+            "name": "Start a change"
+          },
+          {
+            "role": "button",
+            "name": "New unit"
+          },
+          {
+            "role": "button",
+            "name": "Member sign-in, unit of Sign in verified members"
+          },
+          {
+            "role": "button",
+            "name": "Continue Sign in verified members"
+          },
+          {
+            "role": "button",
+            "name": "Show graph"
+          }
+        ]
+      }
+    },
+    "1440 artifact filter empty": {
+      "topbar": {
+        "text": [
+          "Artifact Plane",
+          "golden-plane",
+          "change-sign-in"
+        ],
+        "controls": [
+          {
+            "role": "tab",
+            "name": "golden-plane",
+            "title": "<root>"
+          },
+          {
+            "role": "button",
+            "name": "Close project <root>"
+          },
+          {
+            "role": "button",
+            "name": "New project tab"
+          },
+          {
+            "role": "button",
+            "name": "Branch change-sign-in, knowledge can be edited. Change worktree"
+          },
+          {
+            "role": "button",
+            "name": "Refresh"
+          },
+          {
+            "role": "button",
+            "name": "More"
+          }
+        ]
+      },
+      "sidebar": {
+        "text": [
+          "Current work",
+          "Sign in verified members",
+          "Authentication · Requirement",
+          "Artifacts",
+          "⌄",
+          "Authentication",
+          "›",
+          "Requirements",
+          "1",
+          "›",
+          "Specifications",
+          "1",
+          "›",
+          "Decisions",
+          "0",
+          "›",
+          "Flows",
+          "0",
+          "›",
+          "Tenant",
+          "Show history"
+        ],
+        "controls": [
+          {
+            "role": "textbox",
+            "name": "Search knowledge",
+            "placeholder": "Search or jump to…"
+          },
+          {
+            "role": "treeitem",
+            "name": "Current work"
+          },
+          {
+            "role": "treeitem",
+            "name": "Sign in verified membersAuthentication · Requirement"
+          },
+          {
+            "role": "treeitem",
+            "name": "⌄Authentication"
+          },
+          {
+            "role": "treeitem",
+            "name": "›Requirements1"
+          },
+          {
+            "role": "treeitem",
+            "name": "›Specifications1"
+          },
+          {
+            "role": "treeitem",
+            "name": "›Decisions0"
+          },
+          {
+            "role": "treeitem",
+            "name": "›Flows0"
+          },
+          {
+            "role": "treeitem",
+            "name": "›Tenant"
+          },
+          {
+            "role": "switch",
+            "name": "Show history"
+          }
+        ]
+      },
+      "main": {
+        "text": [
+          "Authentication",
+          "Version 1.0.0 established",
+          "· depends on",
+          "Tenant",
+          "Remove",
+          "Edit",
+          "Show dependencies",
+          "Authentication signs members in.",
+          "Read the overview",
+          "Open change: Sign in verified members · Requirement",
+          "Requirements 1",
+          "New requirement",
+          "Login need",
+          "Specifications 1",
+          "New specification",
+          "Login rules",
+          "~",
+          "Changed",
+          "Decisions 0",
+          "New decision",
+          "No decisions yet.",
+          "Flows 0",
+          "New flow",
+          "No flows yet.",
+          "Versions 1",
+          "Latest: 1.0.0 from Initial authentication. Show versions"
+        ],
+        "controls": [
+          {
+            "role": "button",
+            "name": "established"
+          },
+          {
+            "role": "button",
+            "name": "Tenant"
+          },
+          {
+            "role": "button",
+            "name": "Remove dependency on Tenant"
+          },
+          {
+            "role": "button",
+            "name": "Edit dependencies"
+          },
+          {
+            "role": "button",
+            "name": "Show dependencies"
+          },
+          {
+            "role": "button",
+            "name": "Read the overview"
+          },
+          {
+            "role": "button",
+            "name": "Sign in verified members"
+          },
+          {
+            "role": "button",
+            "name": "New requirement"
+          },
+          {
+            "role": "button",
+            "name": "Login need"
+          },
+          {
+            "role": "button",
+            "name": "New specification"
+          },
+          {
+            "role": "button",
+            "name": "Login rules~Changed"
+          },
+          {
+            "role": "button",
+            "name": "New decision"
+          },
+          {
+            "role": "button",
+            "name": "New flow"
+          },
+          {
+            "role": "button",
+            "name": "Initial authentication"
+          },
+          {
+            "role": "button",
+            "name": "Show versions"
+          }
+        ]
+      }
+    },
+    "1440 artifact filter sign": {
+      "topbar": {
+        "text": [
+          "Artifact Plane",
+          "golden-plane",
+          "change-sign-in"
+        ],
+        "controls": [
+          {
+            "role": "tab",
+            "name": "golden-plane",
+            "title": "<root>"
+          },
+          {
+            "role": "button",
+            "name": "Close project <root>"
+          },
+          {
+            "role": "button",
+            "name": "New project tab"
+          },
+          {
+            "role": "button",
+            "name": "Branch change-sign-in, knowledge can be edited. Change worktree"
+          },
+          {
+            "role": "button",
+            "name": "Refresh"
+          },
+          {
+            "role": "button",
+            "name": "More"
+          }
+        ]
+      },
+      "sidebar": {
+        "text": [
+          "Current work",
+          "Sign in verified members",
+          "Authentication · Requirement",
+          "Artifacts",
+          "⌄",
+          "Tenant",
+          "⌄",
+          "Flows",
+          "1",
+          "Member sign-in",
+          "Show history"
+        ],
+        "controls": [
+          {
+            "role": "textbox",
+            "name": "Search knowledge",
+            "placeholder": "Search or jump to…"
+          },
+          {
+            "role": "button",
+            "name": "Clear search"
+          },
+          {
+            "role": "treeitem",
+            "name": "Current work"
+          },
+          {
+            "role": "treeitem",
+            "name": "Sign in verified membersAuthentication · Requirement"
+          },
+          {
+            "role": "treeitem",
+            "name": "⌄Tenant"
+          },
+          {
+            "role": "treeitem",
+            "name": "⌄Flows1"
+          },
+          {
+            "role": "treeitem",
+            "name": "Member sign-in"
+          },
+          {
+            "role": "switch",
+            "name": "Show history"
+          }
+        ]
+      },
+      "main": {
+        "text": [
+          "Authentication",
+          "Version 1.0.0 established",
+          "· depends on",
+          "Tenant",
+          "Remove",
+          "Edit",
+          "Show dependencies",
+          "Authentication signs members in.",
+          "Read the overview",
+          "Open change: Sign in verified members · Requirement",
+          "Requirements 1",
+          "New requirement",
+          "Login need",
+          "Specifications 1",
+          "New specification",
+          "Login rules",
+          "~",
+          "Changed",
+          "Decisions 0",
+          "New decision",
+          "No decisions yet.",
+          "Flows 0",
+          "New flow",
+          "No flows yet.",
+          "Versions 1",
+          "Latest: 1.0.0 from Initial authentication. Show versions"
+        ],
+        "controls": [
+          {
+            "role": "button",
+            "name": "established"
+          },
+          {
+            "role": "button",
+            "name": "Tenant"
+          },
+          {
+            "role": "button",
+            "name": "Remove dependency on Tenant"
+          },
+          {
+            "role": "button",
+            "name": "Edit dependencies"
+          },
+          {
+            "role": "button",
+            "name": "Show dependencies"
+          },
+          {
+            "role": "button",
+            "name": "Read the overview"
+          },
+          {
+            "role": "button",
+            "name": "Sign in verified members"
+          },
+          {
+            "role": "button",
+            "name": "New requirement"
+          },
+          {
+            "role": "button",
+            "name": "Login need"
+          },
+          {
+            "role": "button",
+            "name": "New specification"
+          },
+          {
+            "role": "button",
+            "name": "Login rules~Changed"
+          },
+          {
+            "role": "button",
+            "name": "New decision"
+          },
+          {
+            "role": "button",
+            "name": "New flow"
+          },
+          {
+            "role": "button",
+            "name": "Initial authentication"
+          },
+          {
+            "role": "button",
+            "name": "Show versions"
+          }
+        ]
+      }
+    },
+    "1440 document filter empty": {
+      "topbar": {
+        "text": [
+          "Artifact Plane",
+          "golden-plane",
+          "change-sign-in"
+        ],
+        "controls": [
+          {
+            "role": "tab",
+            "name": "golden-plane",
+            "title": "<root>"
+          },
+          {
+            "role": "button",
+            "name": "Close project <root>"
+          },
+          {
+            "role": "button",
+            "name": "New project tab"
+          },
+          {
+            "role": "button",
+            "name": "Branch change-sign-in, knowledge can be edited. Change worktree"
+          },
+          {
+            "role": "button",
+            "name": "Refresh"
+          },
+          {
+            "role": "button",
+            "name": "More"
+          }
+        ]
+      },
+      "sidebar": {
+        "text": [
+          "Current work",
+          "Sign in verified members",
+          "Authentication · Requirement",
+          "Artifacts",
+          "⌄",
+          "Authentication",
+          "›",
+          "Requirements",
+          "1",
+          "⌄",
+          "Specifications",
+          "1",
+          "Login rules",
+          "~",
+          "Changed",
+          "›",
+          "Decisions",
+          "0",
+          "›",
+          "Flows",
+          "0",
+          "›",
+          "Tenant",
+          "Show history"
+        ],
+        "controls": [
+          {
+            "role": "textbox",
+            "name": "Search knowledge",
+            "placeholder": "Search or jump to…"
+          },
+          {
+            "role": "treeitem",
+            "name": "Current work"
+          },
+          {
+            "role": "treeitem",
+            "name": "Sign in verified membersAuthentication · Requirement"
+          },
+          {
+            "role": "treeitem",
+            "name": "⌄Authentication"
+          },
+          {
+            "role": "treeitem",
+            "name": "›Requirements1"
+          },
+          {
+            "role": "treeitem",
+            "name": "⌄Specifications1"
+          },
+          {
+            "role": "treeitem",
+            "name": "Login rules~Changed"
+          },
+          {
+            "role": "treeitem",
+            "name": "›Decisions0"
+          },
+          {
+            "role": "treeitem",
+            "name": "›Flows0"
+          },
+          {
+            "role": "treeitem",
+            "name": "›Tenant"
+          },
+          {
+            "role": "switch",
+            "name": "Show history"
+          }
+        ]
+      },
+      "main": {
+        "text": [
+          "Authentication / Specifications",
+          "Login rules",
+          "Edit",
+          "A member signs in with the tenant identity.",
+          "PROPERTIES",
+          "Kind",
+          "Specification",
+          "In this branch",
+          "~",
+          "Changed",
+          "differs from main",
+          "Compare with main",
+          "Self-check",
+          "Not recorded",
+          "Record self-check",
+          "References",
+          "Identity",
+          "One verified identity per member.",
+          "Remove",
+          "Add reference",
+          "Used by",
+          "Change",
+          "Sign in verified members",
+          "Unit of work",
+          "Member sign-in",
+          "Where is this used?",
+          "File",
+          "docs/artifacts/authentication/specifications/login.md",
+          "Edit front matter",
+          "Delete document"
+        ],
+        "controls": [
+          {
+            "role": "button",
+            "name": "Authentication"
+          },
+          {
+            "role": "button",
+            "name": "Edit"
+          },
+          {
+            "role": "button",
+            "name": "Compare with main"
+          },
+          {
+            "role": "button",
+            "name": "Record self-check"
+          },
+          {
+            "role": "button",
+            "name": "Identity"
+          },
+          {
+            "role": "button",
+            "name": "Remove reference to Identity"
+          },
+          {
+            "role": "button",
+            "name": "Add reference"
+          },
+          {
+            "role": "button",
+            "name": "Sign in verified members (change)"
+          },
+          {
+            "role": "button",
+            "name": "Member sign-in (unit of work)"
+          },
+          {
+            "role": "button",
+            "name": "Where is this used?"
+          },
+          {
+            "role": "summary",
+            "name": "Edit front matter"
+          },
+          {
+            "role": "textbox",
+            "name": "Front matter"
+          },
+          {
+            "role": "button",
+            "name": "Save front matter"
+          },
+          {
+            "role": "button",
+            "name": "Delete document"
+          }
+        ]
+      }
+    },
+    "1440 document filter sign": {
+      "topbar": {
+        "text": [
+          "Artifact Plane",
+          "golden-plane",
+          "change-sign-in"
+        ],
+        "controls": [
+          {
+            "role": "tab",
+            "name": "golden-plane",
+            "title": "<root>"
+          },
+          {
+            "role": "button",
+            "name": "Close project <root>"
+          },
+          {
+            "role": "button",
+            "name": "New project tab"
+          },
+          {
+            "role": "button",
+            "name": "Branch change-sign-in, knowledge can be edited. Change worktree"
+          },
+          {
+            "role": "button",
+            "name": "Refresh"
+          },
+          {
+            "role": "button",
+            "name": "More"
+          }
+        ]
+      },
+      "sidebar": {
+        "text": [
+          "Current work",
+          "Sign in verified members",
+          "Authentication · Requirement",
+          "Artifacts",
+          "⌄",
+          "Tenant",
+          "⌄",
+          "Flows",
+          "1",
+          "Member sign-in",
+          "Show history"
+        ],
+        "controls": [
+          {
+            "role": "textbox",
+            "name": "Search knowledge",
+            "placeholder": "Search or jump to…"
+          },
+          {
+            "role": "button",
+            "name": "Clear search"
+          },
+          {
+            "role": "treeitem",
+            "name": "Current work"
+          },
+          {
+            "role": "treeitem",
+            "name": "Sign in verified membersAuthentication · Requirement"
+          },
+          {
+            "role": "treeitem",
+            "name": "⌄Tenant"
+          },
+          {
+            "role": "treeitem",
+            "name": "⌄Flows1"
+          },
+          {
+            "role": "treeitem",
+            "name": "Member sign-in"
+          },
+          {
+            "role": "switch",
+            "name": "Show history"
+          }
+        ]
+      },
+      "main": {
+        "text": [
+          "Authentication / Specifications",
+          "Login rules",
+          "Edit",
+          "A member signs in with the tenant identity.",
+          "PROPERTIES",
+          "Kind",
+          "Specification",
+          "In this branch",
+          "~",
+          "Changed",
+          "differs from main",
+          "Compare with main",
+          "Self-check",
+          "Not recorded",
+          "Record self-check",
+          "References",
+          "Identity",
+          "One verified identity per member.",
+          "Remove",
+          "Add reference",
+          "Used by",
+          "Change",
+          "Sign in verified members",
+          "Unit of work",
+          "Member sign-in",
+          "Where is this used?",
+          "File",
+          "docs/artifacts/authentication/specifications/login.md",
+          "Edit front matter",
+          "Delete document"
+        ],
+        "controls": [
+          {
+            "role": "button",
+            "name": "Authentication"
+          },
+          {
+            "role": "button",
+            "name": "Edit"
+          },
+          {
+            "role": "button",
+            "name": "Compare with main"
+          },
+          {
+            "role": "button",
+            "name": "Record self-check"
+          },
+          {
+            "role": "button",
+            "name": "Identity"
+          },
+          {
+            "role": "button",
+            "name": "Remove reference to Identity"
+          },
+          {
+            "role": "button",
+            "name": "Add reference"
+          },
+          {
+            "role": "button",
+            "name": "Sign in verified members (change)"
+          },
+          {
+            "role": "button",
+            "name": "Member sign-in (unit of work)"
+          },
+          {
+            "role": "button",
+            "name": "Where is this used?"
+          },
+          {
+            "role": "summary",
+            "name": "Edit front matter"
+          },
+          {
+            "role": "textbox",
+            "name": "Front matter"
+          },
+          {
+            "role": "button",
+            "name": "Save front matter"
+          },
+          {
+            "role": "button",
+            "name": "Delete document"
+          }
+        ]
+      }
+    },
+    "1440 flow filter empty": {
+      "topbar": {
+        "text": [
+          "Artifact Plane",
+          "golden-plane",
+          "change-sign-in"
+        ],
+        "controls": [
+          {
+            "role": "tab",
+            "name": "golden-plane",
+            "title": "<root>"
+          },
+          {
+            "role": "button",
+            "name": "Close project <root>"
+          },
+          {
+            "role": "button",
+            "name": "New project tab"
+          },
+          {
+            "role": "button",
+            "name": "Branch change-sign-in, knowledge can be edited. Change worktree"
+          },
+          {
+            "role": "button",
+            "name": "Refresh"
+          },
+          {
+            "role": "button",
+            "name": "More"
+          }
+        ]
+      },
+      "sidebar": {
+        "text": [
+          "Current work",
+          "Sign in verified members",
+          "Authentication · Requirement",
+          "Artifacts",
+          "⌄",
+          "Authentication",
+          "›",
+          "Requirements",
+          "1",
+          "⌄",
+          "Specifications",
+          "1",
+          "Login rules",
+          "~",
+          "Changed",
+          "›",
+          "Decisions",
+          "0",
+          "›",
+          "Flows",
+          "0",
+          "⌄",
+          "Tenant",
+          "›",
+          "Requirements",
+          "1",
+          "›",
+          "Specifications",
+          "1",
+          "›",
+          "Decisions",
+          "0",
+          "⌄",
+          "Flows",
+          "1",
+          "Member sign-in",
+          "Show history"
+        ],
+        "controls": [
+          {
+            "role": "textbox",
+            "name": "Search knowledge",
+            "placeholder": "Search or jump to…"
+          },
+          {
+            "role": "treeitem",
+            "name": "Current work"
+          },
+          {
+            "role": "treeitem",
+            "name": "Sign in verified membersAuthentication · Requirement"
+          },
+          {
+            "role": "treeitem",
+            "name": "⌄Authentication"
+          },
+          {
+            "role": "treeitem",
+            "name": "›Requirements1"
+          },
+          {
+            "role": "treeitem",
+            "name": "⌄Specifications1"
+          },
+          {
+            "role": "treeitem",
+            "name": "Login rules~Changed"
+          },
+          {
+            "role": "treeitem",
+            "name": "›Decisions0"
+          },
+          {
+            "role": "treeitem",
+            "name": "›Flows0"
+          },
+          {
+            "role": "treeitem",
+            "name": "⌄Tenant"
+          },
+          {
+            "role": "treeitem",
+            "name": "›Requirements1"
+          },
+          {
+            "role": "treeitem",
+            "name": "›Specifications1"
+          },
+          {
+            "role": "treeitem",
+            "name": "›Decisions0"
+          },
+          {
+            "role": "treeitem",
+            "name": "⌄Flows1"
+          },
+          {
+            "role": "treeitem",
+            "name": "Member sign-in"
+          },
+          {
+            "role": "switch",
+            "name": "Show history"
+          }
+        ]
+      },
+      "main": {
+        "text": [
+          "Tenant / Flows",
+          "Member sign-in",
+          "Steps",
+          "Diagram",
+          "Starts when",
+          "A member opens the sign-in form.",
+          "Ends with",
+          "The member is signed in.",
+          "Steps 2",
+          "Select a step to edit it.",
+          "1",
+          "Step 1:",
+          "Open the sign-in form",
+          "1 code",
+          "2",
+          "Step 2:",
+          "Check the identity rules",
+          "1 knowledge",
+          "1 test",
+          "+ Add step",
+          "Gaps 0",
+          "Edit",
+          "No gaps are recorded.",
+          "Exclusions 0",
+          "Edit",
+          "No exclusions are recorded.",
+          "Model"
+        ],
+        "controls": [
+          {
+            "role": "button",
+            "name": "Tenant"
+          },
+          {
+            "role": "button",
+            "name": "Steps"
+          },
+          {
+            "role": "button",
+            "name": "Diagram"
+          },
+          {
+            "role": "button",
+            "name": "Edit Starts when"
+          },
+          {
+            "role": "button",
+            "name": "Edit Ends with"
+          },
+          {
+            "role": "button",
+            "name": "Step 1: Open the sign-in form1 code"
+          },
+          {
+            "role": "button",
+            "name": "Step 2: Check the identity rules1 knowledge1 test"
+          },
+          {
+            "role": "button",
+            "name": "+ Add step"
+          },
+          {
+            "role": "button",
+            "name": "Edit gaps"
+          },
+          {
+            "role": "button",
+            "name": "Edit exclusions"
+          },
+          {
+            "role": "summary",
+            "name": "Model"
+          },
+          {
+            "role": "textbox",
+            "name": "Front matter"
+          },
+          {
+            "role": "button",
+            "name": "Save front matter"
+          }
+        ]
+      }
+    },
+    "1440 flow filter sign": {
+      "topbar": {
+        "text": [
+          "Artifact Plane",
+          "golden-plane",
+          "change-sign-in"
+        ],
+        "controls": [
+          {
+            "role": "tab",
+            "name": "golden-plane",
+            "title": "<root>"
+          },
+          {
+            "role": "button",
+            "name": "Close project <root>"
+          },
+          {
+            "role": "button",
+            "name": "New project tab"
+          },
+          {
+            "role": "button",
+            "name": "Branch change-sign-in, knowledge can be edited. Change worktree"
+          },
+          {
+            "role": "button",
+            "name": "Refresh"
+          },
+          {
+            "role": "button",
+            "name": "More"
+          }
+        ]
+      },
+      "sidebar": {
+        "text": [
+          "Current work",
+          "Sign in verified members",
+          "Authentication · Requirement",
+          "Artifacts",
+          "⌄",
+          "Tenant",
+          "⌄",
+          "Flows",
+          "1",
+          "Member sign-in",
+          "Show history"
+        ],
+        "controls": [
+          {
+            "role": "textbox",
+            "name": "Search knowledge",
+            "placeholder": "Search or jump to…"
+          },
+          {
+            "role": "button",
+            "name": "Clear search"
+          },
+          {
+            "role": "treeitem",
+            "name": "Current work"
+          },
+          {
+            "role": "treeitem",
+            "name": "Sign in verified membersAuthentication · Requirement"
+          },
+          {
+            "role": "treeitem",
+            "name": "⌄Tenant"
+          },
+          {
+            "role": "treeitem",
+            "name": "⌄Flows1"
+          },
+          {
+            "role": "treeitem",
+            "name": "Member sign-in"
+          },
+          {
+            "role": "switch",
+            "name": "Show history"
+          }
+        ]
+      },
+      "main": {
+        "text": [
+          "Tenant / Flows",
+          "Member sign-in",
+          "Steps",
+          "Diagram",
+          "Starts when",
+          "A member opens the sign-in form.",
+          "Ends with",
+          "The member is signed in.",
+          "Steps 2",
+          "Select a step to edit it.",
+          "1",
+          "Step 1:",
+          "Open the sign-in form",
+          "1 code",
+          "2",
+          "Step 2:",
+          "Check the identity rules",
+          "1 knowledge",
+          "1 test",
+          "+ Add step",
+          "Gaps 0",
+          "Edit",
+          "No gaps are recorded.",
+          "Exclusions 0",
+          "Edit",
+          "No exclusions are recorded.",
+          "Model"
+        ],
+        "controls": [
+          {
+            "role": "button",
+            "name": "Tenant"
+          },
+          {
+            "role": "button",
+            "name": "Steps"
+          },
+          {
+            "role": "button",
+            "name": "Diagram"
+          },
+          {
+            "role": "button",
+            "name": "Edit Starts when"
+          },
+          {
+            "role": "button",
+            "name": "Edit Ends with"
+          },
+          {
+            "role": "button",
+            "name": "Step 1: Open the sign-in form1 code"
+          },
+          {
+            "role": "button",
+            "name": "Step 2: Check the identity rules1 knowledge1 test"
+          },
+          {
+            "role": "button",
+            "name": "+ Add step"
+          },
+          {
+            "role": "button",
+            "name": "Edit gaps"
+          },
+          {
+            "role": "button",
+            "name": "Edit exclusions"
+          },
+          {
+            "role": "summary",
+            "name": "Model"
+          },
+          {
+            "role": "textbox",
+            "name": "Front matter"
+          },
+          {
+            "role": "button",
+            "name": "Save front matter"
+          }
+        ]
+      }
+    },
+    "1440 change filter empty": {
+      "topbar": {
+        "text": [
+          "Artifact Plane",
+          "golden-plane",
+          "change-sign-in"
+        ],
+        "controls": [
+          {
+            "role": "tab",
+            "name": "golden-plane",
+            "title": "<root>"
+          },
+          {
+            "role": "button",
+            "name": "Close project <root>"
+          },
+          {
+            "role": "button",
+            "name": "New project tab"
+          },
+          {
+            "role": "button",
+            "name": "Branch change-sign-in, knowledge can be edited. Change worktree"
+          },
+          {
+            "role": "button",
+            "name": "Refresh"
+          },
+          {
+            "role": "button",
+            "name": "More"
+          }
+        ]
+      },
+      "sidebar": {
+        "text": [
+          "Current work",
+          "Sign in verified members",
+          "Authentication · Requirement",
+          "Artifacts",
+          "⌄",
+          "Authentication",
+          "›",
+          "Requirements",
+          "1",
+          "⌄",
+          "Specifications",
+          "1",
+          "Login rules",
+          "~",
+          "Changed",
+          "›",
+          "Decisions",
+          "0",
+          "›",
+          "Flows",
+          "0",
+          "⌄",
+          "Tenant",
+          "›",
+          "Requirements",
+          "1",
+          "›",
+          "Specifications",
+          "1",
+          "›",
+          "Decisions",
+          "0",
+          "⌄",
+          "Flows",
+          "1",
+          "Member sign-in",
+          "Show history"
+        ],
+        "controls": [
+          {
+            "role": "textbox",
+            "name": "Search knowledge",
+            "placeholder": "Search or jump to…"
+          },
+          {
+            "role": "treeitem",
+            "name": "Current work"
+          },
+          {
+            "role": "treeitem",
+            "name": "Sign in verified membersAuthentication · Requirement"
+          },
+          {
+            "role": "treeitem",
+            "name": "⌄Authentication"
+          },
+          {
+            "role": "treeitem",
+            "name": "›Requirements1"
+          },
+          {
+            "role": "treeitem",
+            "name": "⌄Specifications1"
+          },
+          {
+            "role": "treeitem",
+            "name": "Login rules~Changed"
+          },
+          {
+            "role": "treeitem",
+            "name": "›Decisions0"
+          },
+          {
+            "role": "treeitem",
+            "name": "›Flows0"
+          },
+          {
+            "role": "treeitem",
+            "name": "⌄Tenant"
+          },
+          {
+            "role": "treeitem",
+            "name": "›Requirements1"
+          },
+          {
+            "role": "treeitem",
+            "name": "›Specifications1"
+          },
+          {
+            "role": "treeitem",
+            "name": "›Decisions0"
+          },
+          {
+            "role": "treeitem",
+            "name": "⌄Flows1"
+          },
+          {
+            "role": "treeitem",
+            "name": "Member sign-in"
+          },
+          {
+            "role": "switch",
+            "name": "Show history"
+          }
+        ]
+      },
+      "main": {
+        "text": [
+          "Authentication · change-sign-in · unit Member sign-in",
+          "Sign in verified members",
+          "Read reason and scope",
+          "1",
+          "Requirement",
+          "(current)",
+          "2",
+          "Specification",
+          "3",
+          "Plan",
+          "4",
+          "Implementation",
+          "5",
+          "Version",
+          "Requirement",
+          "Write the requirement and record its self-check.",
+          "Branch change-sign-in",
+          "Change brief",
+          "Plan",
+          "Changed knowledge",
+          "Ready for a version",
+          "PR description",
+          "Change brief Difference with main.",
+          "What changed?",
+          "1 requirement, specification or decision document, 4 other knowledge files and 0 code and test files.",
+          "Why?",
+          "Only verified members sign in.",
+          "What is affected?",
+          "0 flows reached: 0 declared, 0 decided by a claim, 0 undecided. 0 unresolved items.",
+          "What needs my decision?",
+          "0 items and the goal.",
+          "How to read the steps",
+          "Plan · 1 task · 0 done",
+          "Record plan self-check",
+          "ID",
+          "Task",
+          "After",
+          "Done",
+          "01",
+          "Verify",
+          "—",
+          "0 of 1",
+          "+ Add task",
+          "Changed knowledge · compared with main",
+          "What does this change affect?",
+          "Export context",
+          "Login rules · specification",
+          "~",
+          "Changed",
+          "Compare",
+          "Ready for a version",
+          "✓",
+          "The plan is valid and has tasks",
+          "(met)",
+          "○",
+          "Requirement, specification and plan self-checks are recorded",
+          "(not met)",
+          "Record the self-checks",
+          "✓",
+          "No error diagnostics",
+          "(met)",
+          "○",
+          "All Definition of Done items are checked · 1 open",
+          "(not met)",
+          "Check the open items",
+          "✓",
+          "The branch is not protected",
+          "(met)",
+          "Prepare version",
+          "PR description Tier medium declared; the criteria give medium.",
+          "Copy",
+          "one-artifact",
+          "pass",
+          "5 changed knowledge files under docs/artifacts, all in docs/artifacts/authentication/.",
+          "one-repository",
+          "coordinator",
+          "The coordinator decides whether a companion change in another repository is needed.",
+          "patch-level",
+          "fail",
+          "The plan declares no compatibility.",
+          "no-contract",
+          "pass",
+          "No flow added or removed, no decision added, no requirement ID added and no referenced element changed.",
+          "upstream-established",
+          "pass",
+          "1 upstream artifact with an established version.",
+          "code-limit",
+          "pass",
+          "0 changed code and test lines; the limit is fewer than 100.",
+          "impact-contained",
+          "pass",
+          "0 reached entities, none outside authentication; completeness complete.",
+          "Markdown, 1,570 characters",
+          "Approval is not recorded by this description. The Plane never pushes or opens a PR."
+        ],
+        "controls": [
+          {
+            "role": "button",
+            "name": "Authentication"
+          },
+          {
+            "role": "button",
+            "name": "Member sign-in"
+          },
+          {
+            "role": "button",
+            "name": "Read reason and scope"
+          },
+          {
+            "role": "link",
+            "name": "Change brief section"
+          },
+          {
+            "role": "link",
+            "name": "Plan section"
+          },
+          {
+            "role": "link",
+            "name": "Changed knowledge section"
+          },
+          {
+            "role": "link",
+            "name": "Ready for a version section"
+          },
+          {
+            "role": "link",
+            "name": "PR description section"
+          },
+          {
+            "role": "summary",
+            "name": "What changed?1 requirement, specification or decision document, 4 other knowledge files and 0 code and test files."
+          },
+          {
+            "role": "button",
+            "name": "Fact from Git"
+          },
+          {
+            "role": "summary",
+            "name": "Why?Only verified members sign in."
+          },
+          {
+            "role": "summary",
+            "name": "What is affected?0 flows reached: 0 declared, 0 decided by a claim, 0 undecided. 0 unresolved items."
+          },
+          {
+            "role": "summary",
+            "name": "What needs my decision?0 items and the goal."
+          },
+          {
+            "role": "summary",
+            "name": "How to read the steps"
+          },
+          {
+            "role": "button",
+            "name": "Record plan self-check"
+          },
+          {
+            "role": "button",
+            "name": "01 Verify, Not started, 0 of 1 done"
+          },
+          {
+            "role": "button",
+            "name": "+ Add task"
+          },
+          {
+            "role": "button",
+            "name": "What does this change affect?"
+          },
+          {
+            "role": "button",
+            "name": "Export context"
+          },
+          {
+            "role": "button",
+            "name": "Login rules"
+          },
+          {
+            "role": "button",
+            "name": "Compare Login rules"
+          },
+          {
+            "role": "button",
+            "name": "Record the self-checks"
+          },
+          {
+            "role": "button",
+            "name": "Check the open items"
+          },
+          {
+            "role": "button",
+            "name": "Prepare version"
+          },
+          {
+            "role": "button",
+            "name": "Tier"
+          },
+          {
+            "role": "button",
+            "name": "medium"
+          },
+          {
+            "role": "button",
+            "name": "Copy"
+          },
+          {
+            "role": "button",
+            "name": "coordinator"
+          },
+          {
+            "role": "summary",
+            "name": "Markdown, 1,570 characters"
+          }
+        ]
+      }
+    },
+    "1440 change filter sign": {
+      "topbar": {
+        "text": [
+          "Artifact Plane",
+          "golden-plane",
+          "change-sign-in"
+        ],
+        "controls": [
+          {
+            "role": "tab",
+            "name": "golden-plane",
+            "title": "<root>"
+          },
+          {
+            "role": "button",
+            "name": "Close project <root>"
+          },
+          {
+            "role": "button",
+            "name": "New project tab"
+          },
+          {
+            "role": "button",
+            "name": "Branch change-sign-in, knowledge can be edited. Change worktree"
+          },
+          {
+            "role": "button",
+            "name": "Refresh"
+          },
+          {
+            "role": "button",
+            "name": "More"
+          }
+        ]
+      },
+      "sidebar": {
+        "text": [
+          "Current work",
+          "Sign in verified members",
+          "Authentication · Requirement",
+          "Artifacts",
+          "⌄",
+          "Tenant",
+          "⌄",
+          "Flows",
+          "1",
+          "Member sign-in",
+          "Show history"
+        ],
+        "controls": [
+          {
+            "role": "textbox",
+            "name": "Search knowledge",
+            "placeholder": "Search or jump to…"
+          },
+          {
+            "role": "button",
+            "name": "Clear search"
+          },
+          {
+            "role": "treeitem",
+            "name": "Current work"
+          },
+          {
+            "role": "treeitem",
+            "name": "Sign in verified membersAuthentication · Requirement"
+          },
+          {
+            "role": "treeitem",
+            "name": "⌄Tenant"
+          },
+          {
+            "role": "treeitem",
+            "name": "⌄Flows1"
+          },
+          {
+            "role": "treeitem",
+            "name": "Member sign-in"
+          },
+          {
+            "role": "switch",
+            "name": "Show history"
+          }
+        ]
+      },
+      "main": {
+        "text": [
+          "Authentication · change-sign-in · unit Member sign-in",
+          "Sign in verified members",
+          "Read reason and scope",
+          "1",
+          "Requirement",
+          "(current)",
+          "2",
+          "Specification",
+          "3",
+          "Plan",
+          "4",
+          "Implementation",
+          "5",
+          "Version",
+          "Requirement",
+          "Write the requirement and record its self-check.",
+          "Branch change-sign-in",
+          "Change brief",
+          "Plan",
+          "Changed knowledge",
+          "Ready for a version",
+          "PR description",
+          "Change brief Difference with main.",
+          "What changed?",
+          "1 requirement, specification or decision document, 4 other knowledge files and 0 code and test files.",
+          "Why?",
+          "Only verified members sign in.",
+          "What is affected?",
+          "0 flows reached: 0 declared, 0 decided by a claim, 0 undecided. 0 unresolved items.",
+          "What needs my decision?",
+          "0 items and the goal.",
+          "How to read the steps",
+          "Plan · 1 task · 0 done",
+          "Record plan self-check",
+          "ID",
+          "Task",
+          "After",
+          "Done",
+          "01",
+          "Verify",
+          "—",
+          "0 of 1",
+          "+ Add task",
+          "Changed knowledge · compared with main",
+          "What does this change affect?",
+          "Export context",
+          "Login rules · specification",
+          "~",
+          "Changed",
+          "Compare",
+          "Ready for a version",
+          "✓",
+          "The plan is valid and has tasks",
+          "(met)",
+          "○",
+          "Requirement, specification and plan self-checks are recorded",
+          "(not met)",
+          "Record the self-checks",
+          "✓",
+          "No error diagnostics",
+          "(met)",
+          "○",
+          "All Definition of Done items are checked · 1 open",
+          "(not met)",
+          "Check the open items",
+          "✓",
+          "The branch is not protected",
+          "(met)",
+          "Prepare version",
+          "PR description Tier medium declared; the criteria give medium.",
+          "Copy",
+          "one-artifact",
+          "pass",
+          "5 changed knowledge files under docs/artifacts, all in docs/artifacts/authentication/.",
+          "one-repository",
+          "coordinator",
+          "The coordinator decides whether a companion change in another repository is needed.",
+          "patch-level",
+          "fail",
+          "The plan declares no compatibility.",
+          "no-contract",
+          "pass",
+          "No flow added or removed, no decision added, no requirement ID added and no referenced element changed.",
+          "upstream-established",
+          "pass",
+          "1 upstream artifact with an established version.",
+          "code-limit",
+          "pass",
+          "0 changed code and test lines; the limit is fewer than 100.",
+          "impact-contained",
+          "pass",
+          "0 reached entities, none outside authentication; completeness complete.",
+          "Markdown, 1,570 characters",
+          "Approval is not recorded by this description. The Plane never pushes or opens a PR."
+        ],
+        "controls": [
+          {
+            "role": "button",
+            "name": "Authentication"
+          },
+          {
+            "role": "button",
+            "name": "Member sign-in"
+          },
+          {
+            "role": "button",
+            "name": "Read reason and scope"
+          },
+          {
+            "role": "link",
+            "name": "Change brief section"
+          },
+          {
+            "role": "link",
+            "name": "Plan section"
+          },
+          {
+            "role": "link",
+            "name": "Changed knowledge section"
+          },
+          {
+            "role": "link",
+            "name": "Ready for a version section"
+          },
+          {
+            "role": "link",
+            "name": "PR description section"
+          },
+          {
+            "role": "summary",
+            "name": "What changed?1 requirement, specification or decision document, 4 other knowledge files and 0 code and test files."
+          },
+          {
+            "role": "button",
+            "name": "Fact from Git"
+          },
+          {
+            "role": "summary",
+            "name": "Why?Only verified members sign in."
+          },
+          {
+            "role": "summary",
+            "name": "What is affected?0 flows reached: 0 declared, 0 decided by a claim, 0 undecided. 0 unresolved items."
+          },
+          {
+            "role": "summary",
+            "name": "What needs my decision?0 items and the goal."
+          },
+          {
+            "role": "summary",
+            "name": "How to read the steps"
+          },
+          {
+            "role": "button",
+            "name": "Record plan self-check"
+          },
+          {
+            "role": "button",
+            "name": "01 Verify, Not started, 0 of 1 done"
+          },
+          {
+            "role": "button",
+            "name": "+ Add task"
+          },
+          {
+            "role": "button",
+            "name": "What does this change affect?"
+          },
+          {
+            "role": "button",
+            "name": "Export context"
+          },
+          {
+            "role": "button",
+            "name": "Login rules"
+          },
+          {
+            "role": "button",
+            "name": "Compare Login rules"
+          },
+          {
+            "role": "button",
+            "name": "Record the self-checks"
+          },
+          {
+            "role": "button",
+            "name": "Check the open items"
+          },
+          {
+            "role": "button",
+            "name": "Prepare version"
+          },
+          {
+            "role": "button",
+            "name": "Tier"
+          },
+          {
+            "role": "button",
+            "name": "medium"
+          },
+          {
+            "role": "button",
+            "name": "Copy"
+          },
+          {
+            "role": "button",
+            "name": "coordinator"
+          },
+          {
+            "role": "summary",
+            "name": "Markdown, 1,570 characters"
+          }
+        ]
+      }
+    },
+    "1440 discover filter empty": {
+      "topbar": {
+        "text": [
+          "Artifact Plane",
+          "golden-plane",
+          "change-sign-in"
+        ],
+        "controls": [
+          {
+            "role": "tab",
+            "name": "golden-plane",
+            "title": "<root>"
+          },
+          {
+            "role": "button",
+            "name": "Close project <root>"
+          },
+          {
+            "role": "button",
+            "name": "New project tab"
+          },
+          {
+            "role": "button",
+            "name": "Branch change-sign-in, knowledge can be edited. Change worktree"
+          },
+          {
+            "role": "button",
+            "name": "Refresh"
+          },
+          {
+            "role": "button",
+            "name": "More"
+          }
+        ]
+      },
+      "sidebar": {
+        "text": [
+          "Current work",
+          "Sign in verified members",
+          "Authentication · Requirement",
+          "Artifacts",
+          "⌄",
+          "Authentication",
+          "›",
+          "Requirements",
+          "1",
+          "⌄",
+          "Specifications",
+          "1",
+          "Login rules",
+          "~",
+          "Changed",
+          "›",
+          "Decisions",
+          "0",
+          "›",
+          "Flows",
+          "0",
+          "⌄",
+          "Tenant",
+          "›",
+          "Requirements",
+          "1",
+          "›",
+          "Specifications",
+          "1",
+          "›",
+          "Decisions",
+          "0",
+          "⌄",
+          "Flows",
+          "1",
+          "Member sign-in",
+          "Show history"
+        ],
+        "controls": [
+          {
+            "role": "textbox",
+            "name": "Search knowledge",
+            "placeholder": "Search or jump to…"
+          },
+          {
+            "role": "treeitem",
+            "name": "Current work"
+          },
+          {
+            "role": "treeitem",
+            "name": "Sign in verified membersAuthentication · Requirement"
+          },
+          {
+            "role": "treeitem",
+            "name": "⌄Authentication"
+          },
+          {
+            "role": "treeitem",
+            "name": "›Requirements1"
+          },
+          {
+            "role": "treeitem",
+            "name": "⌄Specifications1"
+          },
+          {
+            "role": "treeitem",
+            "name": "Login rules~Changed"
+          },
+          {
+            "role": "treeitem",
+            "name": "›Decisions0"
+          },
+          {
+            "role": "treeitem",
+            "name": "›Flows0"
+          },
+          {
+            "role": "treeitem",
+            "name": "⌄Tenant"
+          },
+          {
+            "role": "treeitem",
+            "name": "›Requirements1"
+          },
+          {
+            "role": "treeitem",
+            "name": "›Specifications1"
+          },
+          {
+            "role": "treeitem",
+            "name": "›Decisions0"
+          },
+          {
+            "role": "treeitem",
+            "name": "⌄Flows1"
+          },
+          {
+            "role": "treeitem",
+            "name": "Member sign-in"
+          },
+          {
+            "role": "switch",
+            "name": "Show history"
+          }
+        ]
+      },
+      "main": {
+        "text": [
+          "Discover behavior",
+          "Describe a behavior. The Plane lists the flows that describe related behavior, most relevant first.",
+          "Behavior",
+          "Search",
+          "Semantic search is not available. Keyword search and graph discovery still work.",
+          "1 flows found",
+          "Member sign-in",
+          "Tenant · Starts when a member opens the sign-in form."
+        ],
+        "controls": [
+          {
+            "role": "textbox",
+            "name": "Behavior",
+            "placeholder": "For example: commit knowledge files on a branch"
+          },
+          {
+            "role": "button",
+            "name": "Search"
+          },
+          {
+            "role": "button",
+            "name": "Member sign-inTenant · Starts when a member opens the sign-in form."
+          }
+        ]
+      }
+    },
+    "1440 discover filter sign": {
+      "topbar": {
+        "text": [
+          "Artifact Plane",
+          "golden-plane",
+          "change-sign-in"
+        ],
+        "controls": [
+          {
+            "role": "tab",
+            "name": "golden-plane",
+            "title": "<root>"
+          },
+          {
+            "role": "button",
+            "name": "Close project <root>"
+          },
+          {
+            "role": "button",
+            "name": "New project tab"
+          },
+          {
+            "role": "button",
+            "name": "Branch change-sign-in, knowledge can be edited. Change worktree"
+          },
+          {
+            "role": "button",
+            "name": "Refresh"
+          },
+          {
+            "role": "button",
+            "name": "More"
+          }
+        ]
+      },
+      "sidebar": {
+        "text": [
+          "Current work",
+          "Sign in verified members",
+          "Authentication · Requirement",
+          "Artifacts",
+          "⌄",
+          "Tenant",
+          "⌄",
+          "Flows",
+          "1",
+          "Member sign-in",
+          "Show history"
+        ],
+        "controls": [
+          {
+            "role": "textbox",
+            "name": "Search knowledge",
+            "placeholder": "Search or jump to…"
+          },
+          {
+            "role": "button",
+            "name": "Clear search"
+          },
+          {
+            "role": "treeitem",
+            "name": "Current work"
+          },
+          {
+            "role": "treeitem",
+            "name": "Sign in verified membersAuthentication · Requirement"
+          },
+          {
+            "role": "treeitem",
+            "name": "⌄Tenant"
+          },
+          {
+            "role": "treeitem",
+            "name": "⌄Flows1"
+          },
+          {
+            "role": "treeitem",
+            "name": "Member sign-in"
+          },
+          {
+            "role": "switch",
+            "name": "Show history"
+          }
+        ]
+      },
+      "main": {
+        "text": [
+          "Discover behavior",
+          "Describe a behavior. The Plane lists the flows that describe related behavior, most relevant first.",
+          "Behavior",
+          "Search",
+          "Semantic search is not available. Keyword search and graph discovery still work.",
+          "1 flows found",
+          "Member sign-in",
+          "Tenant · Starts when a member opens the sign-in form."
+        ],
+        "controls": [
+          {
+            "role": "textbox",
+            "name": "Behavior",
+            "placeholder": "For example: commit knowledge files on a branch"
+          },
+          {
+            "role": "button",
+            "name": "Search"
+          },
+          {
+            "role": "button",
+            "name": "Member sign-inTenant · Starts when a member opens the sign-in form."
+          }
+        ]
+      }
+    },
+    "1440 impact filter empty": {
+      "topbar": {
+        "text": [
+          "Artifact Plane",
+          "golden-plane",
+          "change-sign-in"
+        ],
+        "controls": [
+          {
+            "role": "tab",
+            "name": "golden-plane",
+            "title": "<root>"
+          },
+          {
+            "role": "button",
+            "name": "Close project <root>"
+          },
+          {
+            "role": "button",
+            "name": "New project tab"
+          },
+          {
+            "role": "button",
+            "name": "Branch change-sign-in, knowledge can be edited. Change worktree"
+          },
+          {
+            "role": "button",
+            "name": "Refresh"
+          },
+          {
+            "role": "button",
+            "name": "More"
+          }
+        ]
+      },
+      "sidebar": {
+        "text": [
+          "Current work",
+          "Sign in verified members",
+          "Authentication · Requirement",
+          "Artifacts",
+          "⌄",
+          "Authentication",
+          "›",
+          "Requirements",
+          "1",
+          "⌄",
+          "Specifications",
+          "1",
+          "Login rules",
+          "~",
+          "Changed",
+          "›",
+          "Decisions",
+          "0",
+          "›",
+          "Flows",
+          "0",
+          "⌄",
+          "Tenant",
+          "›",
+          "Requirements",
+          "1",
+          "›",
+          "Specifications",
+          "1",
+          "›",
+          "Decisions",
+          "0",
+          "⌄",
+          "Flows",
+          "1",
+          "Member sign-in",
+          "Show history"
+        ],
+        "controls": [
+          {
+            "role": "textbox",
+            "name": "Search knowledge",
+            "placeholder": "Search or jump to…"
+          },
+          {
+            "role": "treeitem",
+            "name": "Current work"
+          },
+          {
+            "role": "treeitem",
+            "name": "Sign in verified membersAuthentication · Requirement"
+          },
+          {
+            "role": "treeitem",
+            "name": "⌄Authentication"
+          },
+          {
+            "role": "treeitem",
+            "name": "›Requirements1"
+          },
+          {
+            "role": "treeitem",
+            "name": "⌄Specifications1"
+          },
+          {
+            "role": "treeitem",
+            "name": "Login rules~Changed"
+          },
+          {
+            "role": "treeitem",
+            "name": "›Decisions0"
+          },
+          {
+            "role": "treeitem",
+            "name": "›Flows0"
+          },
+          {
+            "role": "treeitem",
+            "name": "⌄Tenant"
+          },
+          {
+            "role": "treeitem",
+            "name": "›Requirements1"
+          },
+          {
+            "role": "treeitem",
+            "name": "›Specifications1"
+          },
+          {
+            "role": "treeitem",
+            "name": "›Decisions0"
+          },
+          {
+            "role": "treeitem",
+            "name": "⌄Flows1"
+          },
+          {
+            "role": "treeitem",
+            "name": "Member sign-in"
+          },
+          {
+            "role": "switch",
+            "name": "Show history"
+          }
+        ]
+      },
+      "main": {
+        "text": [
+          "Impact",
+          "What does identity.md affect?",
+          "Affected knowledge, flows, code and tests, with the relationship that connects each one to the change.",
+          "Ask about something else",
+          "CHANGED",
+          "docs/artifacts/tenant/specifications/identity.md",
+          "2",
+          "Direct",
+          "0",
+          "Transitive",
+          "0",
+          "Potential",
+          "1",
+          "Verify",
+          "0",
+          "Investigate",
+          "0",
+          "Unresolved",
+          "Kind",
+          "All kinds",
+          "Flows",
+          "Knowledge",
+          "Code",
+          "Tests",
+          "One more hop (0)",
+          "Show as graph",
+          "DIRECT",
+          "2",
+          "One relationship away from a change.",
+          "AUTHENTICATION",
+          "KNOWLEDGE",
+          "Login rules",
+          "docs/artifacts/authentication/specifications/login.md",
+          "references · declared",
+          "TENANT",
+          "FLOW",
+          "Member sign-in",
+          "steps check",
+          "supports · declared",
+          "VERIFY",
+          "1",
+          "Tests that support affected steps. Run them.",
+          "TEST",
+          "TEST",
+          "sign-in.test.js",
+          "supports Member sign-in, step check · declared, static",
+          "Coverage"
+        ],
+        "controls": [
+          {
+            "role": "button",
+            "name": "Ask about something else"
+          },
+          {
+            "role": "button",
+            "name": "2 Direct"
+          },
+          {
+            "role": "button",
+            "name": "0 Transitive"
+          },
+          {
+            "role": "button",
+            "name": "0 Potential"
+          },
+          {
+            "role": "button",
+            "name": "1 Verify"
+          },
+          {
+            "role": "button",
+            "name": "0 Investigate"
+          },
+          {
+            "role": "button",
+            "name": "0 Unresolved"
+          },
+          {
+            "role": "combobox",
+            "name": "Kind"
+          },
+          {
+            "role": "button",
+            "name": "One more hop (0)",
+            "title": "Nothing lies beyond this depth"
+          },
+          {
+            "role": "button",
+            "name": "Show as graph"
+          },
+          {
+            "role": "button",
+            "name": "knowledgeLogin rulesdocs/artifacts/authentication/specifications/login.mdreferences · declared"
+          },
+          {
+            "role": "button",
+            "name": "flowMember sign-insteps checksupports · declared"
+          },
+          {
+            "role": "button",
+            "name": "testsign-in.test.jssupports Member sign-in, step check · declared, static"
+          },
+          {
+            "role": "summary",
+            "name": "Coverage"
+          }
+        ]
+      }
+    },
+    "1440 impact filter sign": {
+      "topbar": {
+        "text": [
+          "Artifact Plane",
+          "golden-plane",
+          "change-sign-in"
+        ],
+        "controls": [
+          {
+            "role": "tab",
+            "name": "golden-plane",
+            "title": "<root>"
+          },
+          {
+            "role": "button",
+            "name": "Close project <root>"
+          },
+          {
+            "role": "button",
+            "name": "New project tab"
+          },
+          {
+            "role": "button",
+            "name": "Branch change-sign-in, knowledge can be edited. Change worktree"
+          },
+          {
+            "role": "button",
+            "name": "Refresh"
+          },
+          {
+            "role": "button",
+            "name": "More"
+          }
+        ]
+      },
+      "sidebar": {
+        "text": [
+          "Current work",
+          "Sign in verified members",
+          "Authentication · Requirement",
+          "Artifacts",
+          "⌄",
+          "Tenant",
+          "⌄",
+          "Flows",
+          "1",
+          "Member sign-in",
+          "Show history"
+        ],
+        "controls": [
+          {
+            "role": "textbox",
+            "name": "Search knowledge",
+            "placeholder": "Search or jump to…"
+          },
+          {
+            "role": "button",
+            "name": "Clear search"
+          },
+          {
+            "role": "treeitem",
+            "name": "Current work"
+          },
+          {
+            "role": "treeitem",
+            "name": "Sign in verified membersAuthentication · Requirement"
+          },
+          {
+            "role": "treeitem",
+            "name": "⌄Tenant"
+          },
+          {
+            "role": "treeitem",
+            "name": "⌄Flows1"
+          },
+          {
+            "role": "treeitem",
+            "name": "Member sign-in"
+          },
+          {
+            "role": "switch",
+            "name": "Show history"
+          }
+        ]
+      },
+      "main": {
+        "text": [
+          "Impact",
+          "What does identity.md affect?",
+          "Affected knowledge, flows, code and tests, with the relationship that connects each one to the change.",
+          "Ask about something else",
+          "CHANGED",
+          "docs/artifacts/tenant/specifications/identity.md",
+          "2",
+          "Direct",
+          "0",
+          "Transitive",
+          "0",
+          "Potential",
+          "1",
+          "Verify",
+          "0",
+          "Investigate",
+          "0",
+          "Unresolved",
+          "Kind",
+          "All kinds",
+          "Flows",
+          "Knowledge",
+          "Code",
+          "Tests",
+          "One more hop (0)",
+          "Show as graph",
+          "DIRECT",
+          "2",
+          "One relationship away from a change.",
+          "AUTHENTICATION",
+          "KNOWLEDGE",
+          "Login rules",
+          "docs/artifacts/authentication/specifications/login.md",
+          "references · declared",
+          "TENANT",
+          "FLOW",
+          "Member sign-in",
+          "steps check",
+          "supports · declared",
+          "VERIFY",
+          "1",
+          "Tests that support affected steps. Run them.",
+          "TEST",
+          "TEST",
+          "sign-in.test.js",
+          "supports Member sign-in, step check · declared, static",
+          "Coverage"
+        ],
+        "controls": [
+          {
+            "role": "button",
+            "name": "Ask about something else"
+          },
+          {
+            "role": "button",
+            "name": "2 Direct"
+          },
+          {
+            "role": "button",
+            "name": "0 Transitive"
+          },
+          {
+            "role": "button",
+            "name": "0 Potential"
+          },
+          {
+            "role": "button",
+            "name": "1 Verify"
+          },
+          {
+            "role": "button",
+            "name": "0 Investigate"
+          },
+          {
+            "role": "button",
+            "name": "0 Unresolved"
+          },
+          {
+            "role": "combobox",
+            "name": "Kind"
+          },
+          {
+            "role": "button",
+            "name": "One more hop (0)",
+            "title": "Nothing lies beyond this depth"
+          },
+          {
+            "role": "button",
+            "name": "Show as graph"
+          },
+          {
+            "role": "button",
+            "name": "knowledgeLogin rulesdocs/artifacts/authentication/specifications/login.mdreferences · declared"
+          },
+          {
+            "role": "button",
+            "name": "flowMember sign-insteps checksupports · declared"
+          },
+          {
+            "role": "button",
+            "name": "testsign-in.test.jssupports Member sign-in, step check · declared, static"
+          },
+          {
+            "role": "summary",
+            "name": "Coverage"
+          }
+        ]
+      }
+    },
+    "390 work filter empty": {
+      "topbar": {
+        "text": [
+          "golden-plane",
+          "change-sign-in"
+        ],
+        "controls": [
+          {
+            "role": "button",
+            "name": "Navigation"
+          },
+          {
+            "role": "button",
+            "name": "Branch change-sign-in, knowledge can be edited. Change worktree"
+          },
+          {
+            "role": "button",
+            "name": "More"
+          }
+        ]
+      },
+      "sidebar": {
+        "text": [
+          "Current work",
+          "Sign in verified members",
+          "Authentication · Requirement",
+          "Artifacts",
+          "›",
+          "Authentication",
+          "›",
+          "Tenant",
+          "Show history"
+        ],
+        "controls": [
+          {
+            "role": "textbox",
+            "name": "Search knowledge",
+            "placeholder": "Search or jump to…"
+          },
+          {
+            "role": "treeitem",
+            "name": "Current work"
+          },
+          {
+            "role": "treeitem",
+            "name": "Sign in verified membersAuthentication · Requirement"
+          },
+          {
+            "role": "treeitem",
+            "name": "›Authentication"
+          },
+          {
+            "role": "treeitem",
+            "name": "›Tenant"
+          },
+          {
+            "role": "switch",
+            "name": "Show history"
+          }
+        ]
+      },
+      "main": {
+        "text": [
+          "Current work",
+          "golden-plane · 1 change in progress",
+          "Authentication · change-sign-in · unit Member sign-in",
+          "Sign in verified members",
+          "Requirement",
+          "Phase 1 of 5: Requirement",
+          "Next: write the requirement and record its self-check.",
+          "Continue",
+          "Uncommitted knowledge",
+          "All knowledge is committed.",
+          "Dependencies",
+          "Show graph",
+          "Authentication depends on Tenant.",
+          "Start a change",
+          "New unit"
+        ],
+        "controls": [
+          {
+            "role": "button",
+            "name": "Member sign-in, unit of Sign in verified members"
+          },
+          {
+            "role": "button",
+            "name": "Continue Sign in verified members"
+          },
+          {
+            "role": "button",
+            "name": "Show graph"
+          },
+          {
+            "role": "button",
+            "name": "Start a change"
+          },
+          {
+            "role": "button",
+            "name": "New unit"
+          }
+        ]
+      }
+    },
+    "390 work filter sign": {
+      "topbar": {
+        "text": [
+          "golden-plane",
+          "change-sign-in"
+        ],
+        "controls": [
+          {
+            "role": "button",
+            "name": "Navigation"
+          },
+          {
+            "role": "button",
+            "name": "Branch change-sign-in, knowledge can be edited. Change worktree"
+          },
+          {
+            "role": "button",
+            "name": "More"
+          }
+        ]
+      },
+      "sidebar": {
+        "text": [
+          "Current work",
+          "Sign in verified members",
+          "Authentication · Requirement",
+          "Artifacts",
+          "⌄",
+          "Tenant",
+          "⌄",
+          "Flows",
+          "1",
+          "Member sign-in",
+          "Show history"
+        ],
+        "controls": [
+          {
+            "role": "textbox",
+            "name": "Search knowledge",
+            "placeholder": "Search or jump to…"
+          },
+          {
+            "role": "button",
+            "name": "Clear search"
+          },
+          {
+            "role": "treeitem",
+            "name": "Current work"
+          },
+          {
+            "role": "treeitem",
+            "name": "Sign in verified membersAuthentication · Requirement"
+          },
+          {
+            "role": "treeitem",
+            "name": "⌄Tenant"
+          },
+          {
+            "role": "treeitem",
+            "name": "⌄Flows1"
+          },
+          {
+            "role": "treeitem",
+            "name": "Member sign-in"
+          },
+          {
+            "role": "switch",
+            "name": "Show history"
+          }
+        ]
+      },
+      "main": {
+        "text": [
+          "Current work",
+          "golden-plane · 1 change in progress",
+          "Authentication · change-sign-in · unit Member sign-in",
+          "Sign in verified members",
+          "Requirement",
+          "Phase 1 of 5: Requirement",
+          "Next: write the requirement and record its self-check.",
+          "Continue",
+          "Uncommitted knowledge",
+          "All knowledge is committed.",
+          "Dependencies",
+          "Show graph",
+          "Authentication depends on Tenant.",
+          "Start a change",
+          "New unit"
+        ],
+        "controls": [
+          {
+            "role": "button",
+            "name": "Member sign-in, unit of Sign in verified members"
+          },
+          {
+            "role": "button",
+            "name": "Continue Sign in verified members"
+          },
+          {
+            "role": "button",
+            "name": "Show graph"
+          },
+          {
+            "role": "button",
+            "name": "Start a change"
+          },
+          {
+            "role": "button",
+            "name": "New unit"
+          }
+        ]
+      }
+    },
+    "390 artifact filter empty": {
+      "topbar": {
+        "text": [
+          "golden-plane",
+          "change-sign-in"
+        ],
+        "controls": [
+          {
+            "role": "button",
+            "name": "Navigation"
+          },
+          {
+            "role": "button",
+            "name": "Branch change-sign-in, knowledge can be edited. Change worktree"
+          },
+          {
+            "role": "button",
+            "name": "More"
+          }
+        ]
+      },
+      "sidebar": {
+        "text": [
+          "Current work",
+          "Sign in verified members",
+          "Authentication · Requirement",
+          "Artifacts",
+          "⌄",
+          "Authentication",
+          "›",
+          "Requirements",
+          "1",
+          "›",
+          "Specifications",
+          "1",
+          "›",
+          "Decisions",
+          "0",
+          "›",
+          "Flows",
+          "0",
+          "›",
+          "Tenant",
+          "Show history"
+        ],
+        "controls": [
+          {
+            "role": "textbox",
+            "name": "Search knowledge",
+            "placeholder": "Search or jump to…"
+          },
+          {
+            "role": "treeitem",
+            "name": "Current work"
+          },
+          {
+            "role": "treeitem",
+            "name": "Sign in verified membersAuthentication · Requirement"
+          },
+          {
+            "role": "treeitem",
+            "name": "⌄Authentication"
+          },
+          {
+            "role": "treeitem",
+            "name": "›Requirements1"
+          },
+          {
+            "role": "treeitem",
+            "name": "›Specifications1"
+          },
+          {
+            "role": "treeitem",
+            "name": "›Decisions0"
+          },
+          {
+            "role": "treeitem",
+            "name": "›Flows0"
+          },
+          {
+            "role": "treeitem",
+            "name": "›Tenant"
+          },
+          {
+            "role": "switch",
+            "name": "Show history"
+          }
+        ]
+      },
+      "main": {
+        "text": [
+          "Authentication",
+          "Version 1.0.0 established",
+          "· depends on",
+          "Tenant",
+          "Remove",
+          "Edit",
+          "Show dependencies",
+          "Authentication signs members in.",
+          "Read the overview",
+          "Open change: Sign in verified members · Requirement",
+          "Requirements 1",
+          "New requirement",
+          "Login need",
+          "Specifications 1",
+          "New specification",
+          "Login rules",
+          "~",
+          "Changed",
+          "Decisions 0",
+          "New decision",
+          "No decisions yet.",
+          "Flows 0",
+          "New flow",
+          "No flows yet.",
+          "Versions 1",
+          "Latest: 1.0.0 from Initial authentication. Show versions"
+        ],
+        "controls": [
+          {
+            "role": "button",
+            "name": "established"
+          },
+          {
+            "role": "button",
+            "name": "Tenant"
+          },
+          {
+            "role": "button",
+            "name": "Remove dependency on Tenant"
+          },
+          {
+            "role": "button",
+            "name": "Edit dependencies"
+          },
+          {
+            "role": "button",
+            "name": "Show dependencies"
+          },
+          {
+            "role": "button",
+            "name": "Read the overview"
+          },
+          {
+            "role": "button",
+            "name": "Sign in verified members"
+          },
+          {
+            "role": "button",
+            "name": "New requirement"
+          },
+          {
+            "role": "button",
+            "name": "Login need"
+          },
+          {
+            "role": "button",
+            "name": "New specification"
+          },
+          {
+            "role": "button",
+            "name": "Login rules~Changed"
+          },
+          {
+            "role": "button",
+            "name": "New decision"
+          },
+          {
+            "role": "button",
+            "name": "New flow"
+          },
+          {
+            "role": "button",
+            "name": "Initial authentication"
+          },
+          {
+            "role": "button",
+            "name": "Show versions"
+          }
+        ]
+      }
+    },
+    "390 artifact filter sign": {
+      "topbar": {
+        "text": [
+          "golden-plane",
+          "change-sign-in"
+        ],
+        "controls": [
+          {
+            "role": "button",
+            "name": "Navigation"
+          },
+          {
+            "role": "button",
+            "name": "Branch change-sign-in, knowledge can be edited. Change worktree"
+          },
+          {
+            "role": "button",
+            "name": "More"
+          }
+        ]
+      },
+      "sidebar": {
+        "text": [
+          "Current work",
+          "Sign in verified members",
+          "Authentication · Requirement",
+          "Artifacts",
+          "⌄",
+          "Tenant",
+          "⌄",
+          "Flows",
+          "1",
+          "Member sign-in",
+          "Show history"
+        ],
+        "controls": [
+          {
+            "role": "textbox",
+            "name": "Search knowledge",
+            "placeholder": "Search or jump to…"
+          },
+          {
+            "role": "button",
+            "name": "Clear search"
+          },
+          {
+            "role": "treeitem",
+            "name": "Current work"
+          },
+          {
+            "role": "treeitem",
+            "name": "Sign in verified membersAuthentication · Requirement"
+          },
+          {
+            "role": "treeitem",
+            "name": "⌄Tenant"
+          },
+          {
+            "role": "treeitem",
+            "name": "⌄Flows1"
+          },
+          {
+            "role": "treeitem",
+            "name": "Member sign-in"
+          },
+          {
+            "role": "switch",
+            "name": "Show history"
+          }
+        ]
+      },
+      "main": {
+        "text": [
+          "Authentication",
+          "Version 1.0.0 established",
+          "· depends on",
+          "Tenant",
+          "Remove",
+          "Edit",
+          "Show dependencies",
+          "Authentication signs members in.",
+          "Read the overview",
+          "Open change: Sign in verified members · Requirement",
+          "Requirements 1",
+          "New requirement",
+          "Login need",
+          "Specifications 1",
+          "New specification",
+          "Login rules",
+          "~",
+          "Changed",
+          "Decisions 0",
+          "New decision",
+          "No decisions yet.",
+          "Flows 0",
+          "New flow",
+          "No flows yet.",
+          "Versions 1",
+          "Latest: 1.0.0 from Initial authentication. Show versions"
+        ],
+        "controls": [
+          {
+            "role": "button",
+            "name": "established"
+          },
+          {
+            "role": "button",
+            "name": "Tenant"
+          },
+          {
+            "role": "button",
+            "name": "Remove dependency on Tenant"
+          },
+          {
+            "role": "button",
+            "name": "Edit dependencies"
+          },
+          {
+            "role": "button",
+            "name": "Show dependencies"
+          },
+          {
+            "role": "button",
+            "name": "Read the overview"
+          },
+          {
+            "role": "button",
+            "name": "Sign in verified members"
+          },
+          {
+            "role": "button",
+            "name": "New requirement"
+          },
+          {
+            "role": "button",
+            "name": "Login need"
+          },
+          {
+            "role": "button",
+            "name": "New specification"
+          },
+          {
+            "role": "button",
+            "name": "Login rules~Changed"
+          },
+          {
+            "role": "button",
+            "name": "New decision"
+          },
+          {
+            "role": "button",
+            "name": "New flow"
+          },
+          {
+            "role": "button",
+            "name": "Initial authentication"
+          },
+          {
+            "role": "button",
+            "name": "Show versions"
+          }
+        ]
+      }
+    },
+    "390 document filter empty": {
+      "topbar": {
+        "text": [
+          "golden-plane",
+          "change-sign-in"
+        ],
+        "controls": [
+          {
+            "role": "button",
+            "name": "Navigation"
+          },
+          {
+            "role": "button",
+            "name": "Branch change-sign-in, knowledge can be edited. Change worktree"
+          },
+          {
+            "role": "button",
+            "name": "More"
+          }
+        ]
+      },
+      "sidebar": {
+        "text": [
+          "Current work",
+          "Sign in verified members",
+          "Authentication · Requirement",
+          "Artifacts",
+          "⌄",
+          "Authentication",
+          "›",
+          "Requirements",
+          "1",
+          "⌄",
+          "Specifications",
+          "1",
+          "Login rules",
+          "~",
+          "Changed",
+          "›",
+          "Decisions",
+          "0",
+          "›",
+          "Flows",
+          "0",
+          "›",
+          "Tenant",
+          "Show history"
+        ],
+        "controls": [
+          {
+            "role": "textbox",
+            "name": "Search knowledge",
+            "placeholder": "Search or jump to…"
+          },
+          {
+            "role": "treeitem",
+            "name": "Current work"
+          },
+          {
+            "role": "treeitem",
+            "name": "Sign in verified membersAuthentication · Requirement"
+          },
+          {
+            "role": "treeitem",
+            "name": "⌄Authentication"
+          },
+          {
+            "role": "treeitem",
+            "name": "›Requirements1"
+          },
+          {
+            "role": "treeitem",
+            "name": "⌄Specifications1"
+          },
+          {
+            "role": "treeitem",
+            "name": "Login rules~Changed"
+          },
+          {
+            "role": "treeitem",
+            "name": "›Decisions0"
+          },
+          {
+            "role": "treeitem",
+            "name": "›Flows0"
+          },
+          {
+            "role": "treeitem",
+            "name": "›Tenant"
+          },
+          {
+            "role": "switch",
+            "name": "Show history"
+          }
+        ]
+      },
+      "main": {
+        "text": [
+          "Authentication / Specifications",
+          "Login rules",
+          "Edit",
+          "Properties",
+          "A member signs in with the tenant identity."
+        ],
+        "controls": [
+          {
+            "role": "button",
+            "name": "Authentication"
+          },
+          {
+            "role": "button",
+            "name": "Edit"
+          },
+          {
+            "role": "summary",
+            "name": "Properties"
+          },
+          {
+            "role": "button",
+            "name": "Compare with main"
+          },
+          {
+            "role": "button",
+            "name": "Record self-check"
+          },
+          {
+            "role": "button",
+            "name": "Identity"
+          },
+          {
+            "role": "button",
+            "name": "Remove reference to Identity"
+          },
+          {
+            "role": "button",
+            "name": "Add reference"
+          },
+          {
+            "role": "button",
+            "name": "Sign in verified members (change)"
+          },
+          {
+            "role": "button",
+            "name": "Member sign-in (unit of work)"
+          },
+          {
+            "role": "button",
+            "name": "Where is this used?"
+          },
+          {
+            "role": "summary",
+            "name": "Edit front matter"
+          },
+          {
+            "role": "textbox",
+            "name": "Front matter"
+          },
+          {
+            "role": "button",
+            "name": "Save front matter"
+          },
+          {
+            "role": "button",
+            "name": "Delete document"
+          }
+        ]
+      }
+    },
+    "390 document filter sign": {
+      "topbar": {
+        "text": [
+          "golden-plane",
+          "change-sign-in"
+        ],
+        "controls": [
+          {
+            "role": "button",
+            "name": "Navigation"
+          },
+          {
+            "role": "button",
+            "name": "Branch change-sign-in, knowledge can be edited. Change worktree"
+          },
+          {
+            "role": "button",
+            "name": "More"
+          }
+        ]
+      },
+      "sidebar": {
+        "text": [
+          "Current work",
+          "Sign in verified members",
+          "Authentication · Requirement",
+          "Artifacts",
+          "⌄",
+          "Tenant",
+          "⌄",
+          "Flows",
+          "1",
+          "Member sign-in",
+          "Show history"
+        ],
+        "controls": [
+          {
+            "role": "textbox",
+            "name": "Search knowledge",
+            "placeholder": "Search or jump to…"
+          },
+          {
+            "role": "button",
+            "name": "Clear search"
+          },
+          {
+            "role": "treeitem",
+            "name": "Current work"
+          },
+          {
+            "role": "treeitem",
+            "name": "Sign in verified membersAuthentication · Requirement"
+          },
+          {
+            "role": "treeitem",
+            "name": "⌄Tenant"
+          },
+          {
+            "role": "treeitem",
+            "name": "⌄Flows1"
+          },
+          {
+            "role": "treeitem",
+            "name": "Member sign-in"
+          },
+          {
+            "role": "switch",
+            "name": "Show history"
+          }
+        ]
+      },
+      "main": {
+        "text": [
+          "Authentication / Specifications",
+          "Login rules",
+          "Edit",
+          "Properties",
+          "A member signs in with the tenant identity."
+        ],
+        "controls": [
+          {
+            "role": "button",
+            "name": "Authentication"
+          },
+          {
+            "role": "button",
+            "name": "Edit"
+          },
+          {
+            "role": "summary",
+            "name": "Properties"
+          },
+          {
+            "role": "button",
+            "name": "Compare with main"
+          },
+          {
+            "role": "button",
+            "name": "Record self-check"
+          },
+          {
+            "role": "button",
+            "name": "Identity"
+          },
+          {
+            "role": "button",
+            "name": "Remove reference to Identity"
+          },
+          {
+            "role": "button",
+            "name": "Add reference"
+          },
+          {
+            "role": "button",
+            "name": "Sign in verified members (change)"
+          },
+          {
+            "role": "button",
+            "name": "Member sign-in (unit of work)"
+          },
+          {
+            "role": "button",
+            "name": "Where is this used?"
+          },
+          {
+            "role": "summary",
+            "name": "Edit front matter"
+          },
+          {
+            "role": "textbox",
+            "name": "Front matter"
+          },
+          {
+            "role": "button",
+            "name": "Save front matter"
+          },
+          {
+            "role": "button",
+            "name": "Delete document"
+          }
+        ]
+      }
+    },
+    "390 flow filter empty": {
+      "topbar": {
+        "text": [
+          "golden-plane",
+          "change-sign-in"
+        ],
+        "controls": [
+          {
+            "role": "button",
+            "name": "Navigation"
+          },
+          {
+            "role": "button",
+            "name": "Branch change-sign-in, knowledge can be edited. Change worktree"
+          },
+          {
+            "role": "button",
+            "name": "More"
+          }
+        ]
+      },
+      "sidebar": {
+        "text": [
+          "Current work",
+          "Sign in verified members",
+          "Authentication · Requirement",
+          "Artifacts",
+          "⌄",
+          "Authentication",
+          "›",
+          "Requirements",
+          "1",
+          "⌄",
+          "Specifications",
+          "1",
+          "Login rules",
+          "~",
+          "Changed",
+          "›",
+          "Decisions",
+          "0",
+          "›",
+          "Flows",
+          "0",
+          "⌄",
+          "Tenant",
+          "›",
+          "Requirements",
+          "1",
+          "›",
+          "Specifications",
+          "1",
+          "›",
+          "Decisions",
+          "0",
+          "⌄",
+          "Flows",
+          "1",
+          "Member sign-in",
+          "Show history"
+        ],
+        "controls": [
+          {
+            "role": "textbox",
+            "name": "Search knowledge",
+            "placeholder": "Search or jump to…"
+          },
+          {
+            "role": "treeitem",
+            "name": "Current work"
+          },
+          {
+            "role": "treeitem",
+            "name": "Sign in verified membersAuthentication · Requirement"
+          },
+          {
+            "role": "treeitem",
+            "name": "⌄Authentication"
+          },
+          {
+            "role": "treeitem",
+            "name": "›Requirements1"
+          },
+          {
+            "role": "treeitem",
+            "name": "⌄Specifications1"
+          },
+          {
+            "role": "treeitem",
+            "name": "Login rules~Changed"
+          },
+          {
+            "role": "treeitem",
+            "name": "›Decisions0"
+          },
+          {
+            "role": "treeitem",
+            "name": "›Flows0"
+          },
+          {
+            "role": "treeitem",
+            "name": "⌄Tenant"
+          },
+          {
+            "role": "treeitem",
+            "name": "›Requirements1"
+          },
+          {
+            "role": "treeitem",
+            "name": "›Specifications1"
+          },
+          {
+            "role": "treeitem",
+            "name": "›Decisions0"
+          },
+          {
+            "role": "treeitem",
+            "name": "⌄Flows1"
+          },
+          {
+            "role": "treeitem",
+            "name": "Member sign-in"
+          },
+          {
+            "role": "switch",
+            "name": "Show history"
+          }
+        ]
+      },
+      "main": {
+        "text": [
+          "Tenant / Flows",
+          "Member sign-in",
+          "Steps",
+          "Diagram",
+          "Starts when",
+          "A member opens the sign-in form.",
+          "Ends with",
+          "The member is signed in.",
+          "Steps 2",
+          "Select a step to edit it.",
+          "1",
+          "Step 1:",
+          "Open the sign-in form",
+          "1 code",
+          "2",
+          "Step 2:",
+          "Check the identity rules",
+          "1 knowledge",
+          "1 test",
+          "+ Add step",
+          "Gaps 0",
+          "Edit",
+          "No gaps are recorded.",
+          "Exclusions 0",
+          "Edit",
+          "No exclusions are recorded.",
+          "Model"
+        ],
+        "controls": [
+          {
+            "role": "button",
+            "name": "Tenant"
+          },
+          {
+            "role": "button",
+            "name": "Steps"
+          },
+          {
+            "role": "button",
+            "name": "Diagram"
+          },
+          {
+            "role": "button",
+            "name": "Edit Starts when"
+          },
+          {
+            "role": "button",
+            "name": "Edit Ends with"
+          },
+          {
+            "role": "button",
+            "name": "Step 1: Open the sign-in form1 code"
+          },
+          {
+            "role": "button",
+            "name": "Step 2: Check the identity rules1 knowledge1 test"
+          },
+          {
+            "role": "button",
+            "name": "+ Add step"
+          },
+          {
+            "role": "button",
+            "name": "Edit gaps"
+          },
+          {
+            "role": "button",
+            "name": "Edit exclusions"
+          },
+          {
+            "role": "summary",
+            "name": "Model"
+          },
+          {
+            "role": "textbox",
+            "name": "Front matter"
+          },
+          {
+            "role": "button",
+            "name": "Save front matter"
+          }
+        ]
+      }
+    },
+    "390 flow filter sign": {
+      "topbar": {
+        "text": [
+          "golden-plane",
+          "change-sign-in"
+        ],
+        "controls": [
+          {
+            "role": "button",
+            "name": "Navigation"
+          },
+          {
+            "role": "button",
+            "name": "Branch change-sign-in, knowledge can be edited. Change worktree"
+          },
+          {
+            "role": "button",
+            "name": "More"
+          }
+        ]
+      },
+      "sidebar": {
+        "text": [
+          "Current work",
+          "Sign in verified members",
+          "Authentication · Requirement",
+          "Artifacts",
+          "⌄",
+          "Tenant",
+          "⌄",
+          "Flows",
+          "1",
+          "Member sign-in",
+          "Show history"
+        ],
+        "controls": [
+          {
+            "role": "textbox",
+            "name": "Search knowledge",
+            "placeholder": "Search or jump to…"
+          },
+          {
+            "role": "button",
+            "name": "Clear search"
+          },
+          {
+            "role": "treeitem",
+            "name": "Current work"
+          },
+          {
+            "role": "treeitem",
+            "name": "Sign in verified membersAuthentication · Requirement"
+          },
+          {
+            "role": "treeitem",
+            "name": "⌄Tenant"
+          },
+          {
+            "role": "treeitem",
+            "name": "⌄Flows1"
+          },
+          {
+            "role": "treeitem",
+            "name": "Member sign-in"
+          },
+          {
+            "role": "switch",
+            "name": "Show history"
+          }
+        ]
+      },
+      "main": {
+        "text": [
+          "Tenant / Flows",
+          "Member sign-in",
+          "Steps",
+          "Diagram",
+          "Starts when",
+          "A member opens the sign-in form.",
+          "Ends with",
+          "The member is signed in.",
+          "Steps 2",
+          "Select a step to edit it.",
+          "1",
+          "Step 1:",
+          "Open the sign-in form",
+          "1 code",
+          "2",
+          "Step 2:",
+          "Check the identity rules",
+          "1 knowledge",
+          "1 test",
+          "+ Add step",
+          "Gaps 0",
+          "Edit",
+          "No gaps are recorded.",
+          "Exclusions 0",
+          "Edit",
+          "No exclusions are recorded.",
+          "Model"
+        ],
+        "controls": [
+          {
+            "role": "button",
+            "name": "Tenant"
+          },
+          {
+            "role": "button",
+            "name": "Steps"
+          },
+          {
+            "role": "button",
+            "name": "Diagram"
+          },
+          {
+            "role": "button",
+            "name": "Edit Starts when"
+          },
+          {
+            "role": "button",
+            "name": "Edit Ends with"
+          },
+          {
+            "role": "button",
+            "name": "Step 1: Open the sign-in form1 code"
+          },
+          {
+            "role": "button",
+            "name": "Step 2: Check the identity rules1 knowledge1 test"
+          },
+          {
+            "role": "button",
+            "name": "+ Add step"
+          },
+          {
+            "role": "button",
+            "name": "Edit gaps"
+          },
+          {
+            "role": "button",
+            "name": "Edit exclusions"
+          },
+          {
+            "role": "summary",
+            "name": "Model"
+          },
+          {
+            "role": "textbox",
+            "name": "Front matter"
+          },
+          {
+            "role": "button",
+            "name": "Save front matter"
+          }
+        ]
+      }
+    },
+    "390 change filter empty": {
+      "topbar": {
+        "text": [
+          "golden-plane",
+          "change-sign-in"
+        ],
+        "controls": [
+          {
+            "role": "button",
+            "name": "Navigation"
+          },
+          {
+            "role": "button",
+            "name": "Branch change-sign-in, knowledge can be edited. Change worktree"
+          },
+          {
+            "role": "button",
+            "name": "More"
+          }
+        ]
+      },
+      "sidebar": {
+        "text": [
+          "Current work",
+          "Sign in verified members",
+          "Authentication · Requirement",
+          "Artifacts",
+          "⌄",
+          "Authentication",
+          "›",
+          "Requirements",
+          "1",
+          "⌄",
+          "Specifications",
+          "1",
+          "Login rules",
+          "~",
+          "Changed",
+          "›",
+          "Decisions",
+          "0",
+          "›",
+          "Flows",
+          "0",
+          "⌄",
+          "Tenant",
+          "›",
+          "Requirements",
+          "1",
+          "›",
+          "Specifications",
+          "1",
+          "›",
+          "Decisions",
+          "0",
+          "⌄",
+          "Flows",
+          "1",
+          "Member sign-in",
+          "Show history"
+        ],
+        "controls": [
+          {
+            "role": "textbox",
+            "name": "Search knowledge",
+            "placeholder": "Search or jump to…"
+          },
+          {
+            "role": "treeitem",
+            "name": "Current work"
+          },
+          {
+            "role": "treeitem",
+            "name": "Sign in verified membersAuthentication · Requirement"
+          },
+          {
+            "role": "treeitem",
+            "name": "⌄Authentication"
+          },
+          {
+            "role": "treeitem",
+            "name": "›Requirements1"
+          },
+          {
+            "role": "treeitem",
+            "name": "⌄Specifications1"
+          },
+          {
+            "role": "treeitem",
+            "name": "Login rules~Changed"
+          },
+          {
+            "role": "treeitem",
+            "name": "›Decisions0"
+          },
+          {
+            "role": "treeitem",
+            "name": "›Flows0"
+          },
+          {
+            "role": "treeitem",
+            "name": "⌄Tenant"
+          },
+          {
+            "role": "treeitem",
+            "name": "›Requirements1"
+          },
+          {
+            "role": "treeitem",
+            "name": "›Specifications1"
+          },
+          {
+            "role": "treeitem",
+            "name": "›Decisions0"
+          },
+          {
+            "role": "treeitem",
+            "name": "⌄Flows1"
+          },
+          {
+            "role": "treeitem",
+            "name": "Member sign-in"
+          },
+          {
+            "role": "switch",
+            "name": "Show history"
+          }
+        ]
+      },
+      "main": {
+        "text": [
+          "Authentication · change-sign-in · unit Member sign-in",
+          "Sign in verified members",
+          "Read reason and scope",
+          "Phase 1 of 5: Requirement",
+          "Requirement",
+          "Write the requirement and record its self-check.",
+          "Branch change-sign-in",
+          "Change brief",
+          "Plan",
+          "Changed knowledge",
+          "Ready for a version",
+          "PR description",
+          "Change brief Difference with main.",
+          "What changed?",
+          "1 requirement, specification or decision document, 4 other knowledge files and 0 code and test files.",
+          "Why?",
+          "Only verified members sign in.",
+          "What is affected?",
+          "0 flows reached: 0 declared, 0 decided by a claim, 0 undecided. 0 unresolved items.",
+          "What needs my decision?",
+          "0 items and the goal.",
+          "How to read the steps",
+          "Plan · 1 task · 0 done",
+          "Record plan self-check",
+          "ID",
+          "Task",
+          "Done",
+          "01",
+          "Verify",
+          "0 of 1",
+          "+ Add task",
+          "Changed knowledge · compared with main",
+          "What does this change affect?",
+          "Export context",
+          "Login rules · specification",
+          "~",
+          "Changed",
+          "Compare",
+          "Ready for a version",
+          "✓",
+          "The plan is valid and has tasks",
+          "(met)",
+          "○",
+          "Requirement, specification and plan self-checks are recorded",
+          "(not met)",
+          "Record the self-checks",
+          "✓",
+          "No error diagnostics",
+          "(met)",
+          "○",
+          "All Definition of Done items are checked · 1 open",
+          "(not met)",
+          "Check the open items",
+          "✓",
+          "The branch is not protected",
+          "(met)",
+          "Prepare version",
+          "PR description Tier medium declared; the criteria give medium.",
+          "Copy",
+          "one-artifact",
+          "pass",
+          "5 changed knowledge files under docs/artifacts, all in docs/artifacts/authentication/.",
+          "one-repository",
+          "coordinator",
+          "The coordinator decides whether a companion change in another repository is needed.",
+          "patch-level",
+          "fail",
+          "The plan declares no compatibility.",
+          "no-contract",
+          "pass",
+          "No flow added or removed, no decision added, no requirement ID added and no referenced element changed.",
+          "upstream-established",
+          "pass",
+          "1 upstream artifact with an established version.",
+          "code-limit",
+          "pass",
+          "0 changed code and test lines; the limit is fewer than 100.",
+          "impact-contained",
+          "pass",
+          "0 reached entities, none outside authentication; completeness complete.",
+          "Markdown, 1,570 characters",
+          "Approval is not recorded by this description. The Plane never pushes or opens a PR."
+        ],
+        "controls": [
+          {
+            "role": "button",
+            "name": "Authentication"
+          },
+          {
+            "role": "button",
+            "name": "Member sign-in"
+          },
+          {
+            "role": "button",
+            "name": "Read reason and scope"
+          },
+          {
+            "role": "link",
+            "name": "Change brief section"
+          },
+          {
+            "role": "link",
+            "name": "Plan section"
+          },
+          {
+            "role": "link",
+            "name": "Changed knowledge section"
+          },
+          {
+            "role": "link",
+            "name": "Ready for a version section"
+          },
+          {
+            "role": "link",
+            "name": "PR description section"
+          },
+          {
+            "role": "summary",
+            "name": "What changed?1 requirement, specification or decision document, 4 other knowledge files and 0 code and test files."
+          },
+          {
+            "role": "button",
+            "name": "Fact from Git"
+          },
+          {
+            "role": "summary",
+            "name": "Why?Only verified members sign in."
+          },
+          {
+            "role": "summary",
+            "name": "What is affected?0 flows reached: 0 declared, 0 decided by a claim, 0 undecided. 0 unresolved items."
+          },
+          {
+            "role": "summary",
+            "name": "What needs my decision?0 items and the goal."
+          },
+          {
+            "role": "summary",
+            "name": "How to read the steps"
+          },
+          {
+            "role": "button",
+            "name": "Record plan self-check"
+          },
+          {
+            "role": "button",
+            "name": "01 Verify, Not started, 0 of 1 done"
+          },
+          {
+            "role": "button",
+            "name": "+ Add task"
+          },
+          {
+            "role": "button",
+            "name": "What does this change affect?"
+          },
+          {
+            "role": "button",
+            "name": "Export context"
+          },
+          {
+            "role": "button",
+            "name": "Login rules"
+          },
+          {
+            "role": "button",
+            "name": "Compare Login rules"
+          },
+          {
+            "role": "button",
+            "name": "Record the self-checks"
+          },
+          {
+            "role": "button",
+            "name": "Check the open items"
+          },
+          {
+            "role": "button",
+            "name": "Prepare version"
+          },
+          {
+            "role": "button",
+            "name": "Tier"
+          },
+          {
+            "role": "button",
+            "name": "medium"
+          },
+          {
+            "role": "button",
+            "name": "Copy"
+          },
+          {
+            "role": "button",
+            "name": "coordinator"
+          },
+          {
+            "role": "summary",
+            "name": "Markdown, 1,570 characters"
+          }
+        ]
+      }
+    },
+    "390 change filter sign": {
+      "topbar": {
+        "text": [
+          "golden-plane",
+          "change-sign-in"
+        ],
+        "controls": [
+          {
+            "role": "button",
+            "name": "Navigation"
+          },
+          {
+            "role": "button",
+            "name": "Branch change-sign-in, knowledge can be edited. Change worktree"
+          },
+          {
+            "role": "button",
+            "name": "More"
+          }
+        ]
+      },
+      "sidebar": {
+        "text": [
+          "Current work",
+          "Sign in verified members",
+          "Authentication · Requirement",
+          "Artifacts",
+          "⌄",
+          "Tenant",
+          "⌄",
+          "Flows",
+          "1",
+          "Member sign-in",
+          "Show history"
+        ],
+        "controls": [
+          {
+            "role": "textbox",
+            "name": "Search knowledge",
+            "placeholder": "Search or jump to…"
+          },
+          {
+            "role": "button",
+            "name": "Clear search"
+          },
+          {
+            "role": "treeitem",
+            "name": "Current work"
+          },
+          {
+            "role": "treeitem",
+            "name": "Sign in verified membersAuthentication · Requirement"
+          },
+          {
+            "role": "treeitem",
+            "name": "⌄Tenant"
+          },
+          {
+            "role": "treeitem",
+            "name": "⌄Flows1"
+          },
+          {
+            "role": "treeitem",
+            "name": "Member sign-in"
+          },
+          {
+            "role": "switch",
+            "name": "Show history"
+          }
+        ]
+      },
+      "main": {
+        "text": [
+          "Authentication · change-sign-in · unit Member sign-in",
+          "Sign in verified members",
+          "Read reason and scope",
+          "Phase 1 of 5: Requirement",
+          "Requirement",
+          "Write the requirement and record its self-check.",
+          "Branch change-sign-in",
+          "Change brief",
+          "Plan",
+          "Changed knowledge",
+          "Ready for a version",
+          "PR description",
+          "Change brief Difference with main.",
+          "What changed?",
+          "1 requirement, specification or decision document, 4 other knowledge files and 0 code and test files.",
+          "Why?",
+          "Only verified members sign in.",
+          "What is affected?",
+          "0 flows reached: 0 declared, 0 decided by a claim, 0 undecided. 0 unresolved items.",
+          "What needs my decision?",
+          "0 items and the goal.",
+          "How to read the steps",
+          "Plan · 1 task · 0 done",
+          "Record plan self-check",
+          "ID",
+          "Task",
+          "Done",
+          "01",
+          "Verify",
+          "0 of 1",
+          "+ Add task",
+          "Changed knowledge · compared with main",
+          "What does this change affect?",
+          "Export context",
+          "Login rules · specification",
+          "~",
+          "Changed",
+          "Compare",
+          "Ready for a version",
+          "✓",
+          "The plan is valid and has tasks",
+          "(met)",
+          "○",
+          "Requirement, specification and plan self-checks are recorded",
+          "(not met)",
+          "Record the self-checks",
+          "✓",
+          "No error diagnostics",
+          "(met)",
+          "○",
+          "All Definition of Done items are checked · 1 open",
+          "(not met)",
+          "Check the open items",
+          "✓",
+          "The branch is not protected",
+          "(met)",
+          "Prepare version",
+          "PR description Tier medium declared; the criteria give medium.",
+          "Copy",
+          "one-artifact",
+          "pass",
+          "5 changed knowledge files under docs/artifacts, all in docs/artifacts/authentication/.",
+          "one-repository",
+          "coordinator",
+          "The coordinator decides whether a companion change in another repository is needed.",
+          "patch-level",
+          "fail",
+          "The plan declares no compatibility.",
+          "no-contract",
+          "pass",
+          "No flow added or removed, no decision added, no requirement ID added and no referenced element changed.",
+          "upstream-established",
+          "pass",
+          "1 upstream artifact with an established version.",
+          "code-limit",
+          "pass",
+          "0 changed code and test lines; the limit is fewer than 100.",
+          "impact-contained",
+          "pass",
+          "0 reached entities, none outside authentication; completeness complete.",
+          "Markdown, 1,570 characters",
+          "Approval is not recorded by this description. The Plane never pushes or opens a PR."
+        ],
+        "controls": [
+          {
+            "role": "button",
+            "name": "Authentication"
+          },
+          {
+            "role": "button",
+            "name": "Member sign-in"
+          },
+          {
+            "role": "button",
+            "name": "Read reason and scope"
+          },
+          {
+            "role": "link",
+            "name": "Change brief section"
+          },
+          {
+            "role": "link",
+            "name": "Plan section"
+          },
+          {
+            "role": "link",
+            "name": "Changed knowledge section"
+          },
+          {
+            "role": "link",
+            "name": "Ready for a version section"
+          },
+          {
+            "role": "link",
+            "name": "PR description section"
+          },
+          {
+            "role": "summary",
+            "name": "What changed?1 requirement, specification or decision document, 4 other knowledge files and 0 code and test files."
+          },
+          {
+            "role": "button",
+            "name": "Fact from Git"
+          },
+          {
+            "role": "summary",
+            "name": "Why?Only verified members sign in."
+          },
+          {
+            "role": "summary",
+            "name": "What is affected?0 flows reached: 0 declared, 0 decided by a claim, 0 undecided. 0 unresolved items."
+          },
+          {
+            "role": "summary",
+            "name": "What needs my decision?0 items and the goal."
+          },
+          {
+            "role": "summary",
+            "name": "How to read the steps"
+          },
+          {
+            "role": "button",
+            "name": "Record plan self-check"
+          },
+          {
+            "role": "button",
+            "name": "01 Verify, Not started, 0 of 1 done"
+          },
+          {
+            "role": "button",
+            "name": "+ Add task"
+          },
+          {
+            "role": "button",
+            "name": "What does this change affect?"
+          },
+          {
+            "role": "button",
+            "name": "Export context"
+          },
+          {
+            "role": "button",
+            "name": "Login rules"
+          },
+          {
+            "role": "button",
+            "name": "Compare Login rules"
+          },
+          {
+            "role": "button",
+            "name": "Record the self-checks"
+          },
+          {
+            "role": "button",
+            "name": "Check the open items"
+          },
+          {
+            "role": "button",
+            "name": "Prepare version"
+          },
+          {
+            "role": "button",
+            "name": "Tier"
+          },
+          {
+            "role": "button",
+            "name": "medium"
+          },
+          {
+            "role": "button",
+            "name": "Copy"
+          },
+          {
+            "role": "button",
+            "name": "coordinator"
+          },
+          {
+            "role": "summary",
+            "name": "Markdown, 1,570 characters"
+          }
+        ]
+      }
+    },
+    "390 discover filter empty": {
+      "topbar": {
+        "text": [
+          "golden-plane",
+          "change-sign-in"
+        ],
+        "controls": [
+          {
+            "role": "button",
+            "name": "Navigation"
+          },
+          {
+            "role": "button",
+            "name": "Branch change-sign-in, knowledge can be edited. Change worktree"
+          },
+          {
+            "role": "button",
+            "name": "More"
+          }
+        ]
+      },
+      "sidebar": {
+        "text": [
+          "Current work",
+          "Sign in verified members",
+          "Authentication · Requirement",
+          "Artifacts",
+          "⌄",
+          "Authentication",
+          "›",
+          "Requirements",
+          "1",
+          "⌄",
+          "Specifications",
+          "1",
+          "Login rules",
+          "~",
+          "Changed",
+          "›",
+          "Decisions",
+          "0",
+          "›",
+          "Flows",
+          "0",
+          "⌄",
+          "Tenant",
+          "›",
+          "Requirements",
+          "1",
+          "›",
+          "Specifications",
+          "1",
+          "›",
+          "Decisions",
+          "0",
+          "⌄",
+          "Flows",
+          "1",
+          "Member sign-in",
+          "Show history"
+        ],
+        "controls": [
+          {
+            "role": "textbox",
+            "name": "Search knowledge",
+            "placeholder": "Search or jump to…"
+          },
+          {
+            "role": "treeitem",
+            "name": "Current work"
+          },
+          {
+            "role": "treeitem",
+            "name": "Sign in verified membersAuthentication · Requirement"
+          },
+          {
+            "role": "treeitem",
+            "name": "⌄Authentication"
+          },
+          {
+            "role": "treeitem",
+            "name": "›Requirements1"
+          },
+          {
+            "role": "treeitem",
+            "name": "⌄Specifications1"
+          },
+          {
+            "role": "treeitem",
+            "name": "Login rules~Changed"
+          },
+          {
+            "role": "treeitem",
+            "name": "›Decisions0"
+          },
+          {
+            "role": "treeitem",
+            "name": "›Flows0"
+          },
+          {
+            "role": "treeitem",
+            "name": "⌄Tenant"
+          },
+          {
+            "role": "treeitem",
+            "name": "›Requirements1"
+          },
+          {
+            "role": "treeitem",
+            "name": "›Specifications1"
+          },
+          {
+            "role": "treeitem",
+            "name": "›Decisions0"
+          },
+          {
+            "role": "treeitem",
+            "name": "⌄Flows1"
+          },
+          {
+            "role": "treeitem",
+            "name": "Member sign-in"
+          },
+          {
+            "role": "switch",
+            "name": "Show history"
+          }
+        ]
+      },
+      "main": {
+        "text": [
+          "Discover behavior",
+          "Describe a behavior. The Plane lists the flows that describe related behavior, most relevant first.",
+          "Behavior",
+          "Search",
+          "Semantic search is not available. Keyword search and graph discovery still work.",
+          "1 flows found",
+          "Member sign-in",
+          "Tenant · Starts when a member opens the sign-in form."
+        ],
+        "controls": [
+          {
+            "role": "textbox",
+            "name": "Behavior",
+            "placeholder": "For example: commit knowledge files on a branch"
+          },
+          {
+            "role": "button",
+            "name": "Search"
+          },
+          {
+            "role": "button",
+            "name": "Member sign-inTenant · Starts when a member opens the sign-in form."
+          }
+        ]
+      }
+    },
+    "390 discover filter sign": {
+      "topbar": {
+        "text": [
+          "golden-plane",
+          "change-sign-in"
+        ],
+        "controls": [
+          {
+            "role": "button",
+            "name": "Navigation"
+          },
+          {
+            "role": "button",
+            "name": "Branch change-sign-in, knowledge can be edited. Change worktree"
+          },
+          {
+            "role": "button",
+            "name": "More"
+          }
+        ]
+      },
+      "sidebar": {
+        "text": [
+          "Current work",
+          "Sign in verified members",
+          "Authentication · Requirement",
+          "Artifacts",
+          "⌄",
+          "Tenant",
+          "⌄",
+          "Flows",
+          "1",
+          "Member sign-in",
+          "Show history"
+        ],
+        "controls": [
+          {
+            "role": "textbox",
+            "name": "Search knowledge",
+            "placeholder": "Search or jump to…"
+          },
+          {
+            "role": "button",
+            "name": "Clear search"
+          },
+          {
+            "role": "treeitem",
+            "name": "Current work"
+          },
+          {
+            "role": "treeitem",
+            "name": "Sign in verified membersAuthentication · Requirement"
+          },
+          {
+            "role": "treeitem",
+            "name": "⌄Tenant"
+          },
+          {
+            "role": "treeitem",
+            "name": "⌄Flows1"
+          },
+          {
+            "role": "treeitem",
+            "name": "Member sign-in"
+          },
+          {
+            "role": "switch",
+            "name": "Show history"
+          }
+        ]
+      },
+      "main": {
+        "text": [
+          "Discover behavior",
+          "Describe a behavior. The Plane lists the flows that describe related behavior, most relevant first.",
+          "Behavior",
+          "Search",
+          "Semantic search is not available. Keyword search and graph discovery still work.",
+          "1 flows found",
+          "Member sign-in",
+          "Tenant · Starts when a member opens the sign-in form."
+        ],
+        "controls": [
+          {
+            "role": "textbox",
+            "name": "Behavior",
+            "placeholder": "For example: commit knowledge files on a branch"
+          },
+          {
+            "role": "button",
+            "name": "Search"
+          },
+          {
+            "role": "button",
+            "name": "Member sign-inTenant · Starts when a member opens the sign-in form."
+          }
+        ]
+      }
+    },
+    "390 impact filter empty": {
+      "topbar": {
+        "text": [
+          "golden-plane",
+          "change-sign-in"
+        ],
+        "controls": [
+          {
+            "role": "button",
+            "name": "Navigation"
+          },
+          {
+            "role": "button",
+            "name": "Branch change-sign-in, knowledge can be edited. Change worktree"
+          },
+          {
+            "role": "button",
+            "name": "More"
+          }
+        ]
+      },
+      "sidebar": {
+        "text": [
+          "Current work",
+          "Sign in verified members",
+          "Authentication · Requirement",
+          "Artifacts",
+          "⌄",
+          "Authentication",
+          "›",
+          "Requirements",
+          "1",
+          "⌄",
+          "Specifications",
+          "1",
+          "Login rules",
+          "~",
+          "Changed",
+          "›",
+          "Decisions",
+          "0",
+          "›",
+          "Flows",
+          "0",
+          "⌄",
+          "Tenant",
+          "›",
+          "Requirements",
+          "1",
+          "›",
+          "Specifications",
+          "1",
+          "›",
+          "Decisions",
+          "0",
+          "⌄",
+          "Flows",
+          "1",
+          "Member sign-in",
+          "Show history"
+        ],
+        "controls": [
+          {
+            "role": "textbox",
+            "name": "Search knowledge",
+            "placeholder": "Search or jump to…"
+          },
+          {
+            "role": "treeitem",
+            "name": "Current work"
+          },
+          {
+            "role": "treeitem",
+            "name": "Sign in verified membersAuthentication · Requirement"
+          },
+          {
+            "role": "treeitem",
+            "name": "⌄Authentication"
+          },
+          {
+            "role": "treeitem",
+            "name": "›Requirements1"
+          },
+          {
+            "role": "treeitem",
+            "name": "⌄Specifications1"
+          },
+          {
+            "role": "treeitem",
+            "name": "Login rules~Changed"
+          },
+          {
+            "role": "treeitem",
+            "name": "›Decisions0"
+          },
+          {
+            "role": "treeitem",
+            "name": "›Flows0"
+          },
+          {
+            "role": "treeitem",
+            "name": "⌄Tenant"
+          },
+          {
+            "role": "treeitem",
+            "name": "›Requirements1"
+          },
+          {
+            "role": "treeitem",
+            "name": "›Specifications1"
+          },
+          {
+            "role": "treeitem",
+            "name": "›Decisions0"
+          },
+          {
+            "role": "treeitem",
+            "name": "⌄Flows1"
+          },
+          {
+            "role": "treeitem",
+            "name": "Member sign-in"
+          },
+          {
+            "role": "switch",
+            "name": "Show history"
+          }
+        ]
+      },
+      "main": {
+        "text": [
+          "Impact",
+          "What does identity.md affect?",
+          "Affected knowledge, flows, code and tests, with the relationship that connects each one to the change.",
+          "Ask about something else",
+          "CHANGED",
+          "docs/artifacts/tenant/specifications/identity.md",
+          "2",
+          "Direct",
+          "0",
+          "Transitive",
+          "0",
+          "Potential",
+          "1",
+          "Verify",
+          "0",
+          "Investigate",
+          "0",
+          "Unresolved",
+          "Kind",
+          "All kinds",
+          "Flows",
+          "Knowledge",
+          "Code",
+          "Tests",
+          "One more hop (0)",
+          "Show as graph",
+          "DIRECT",
+          "2",
+          "One relationship away from a change.",
+          "AUTHENTICATION",
+          "KNOWLEDGE",
+          "Login rules",
+          "docs/artifacts/authentication/specifications/login.md",
+          "references · declared",
+          "TENANT",
+          "FLOW",
+          "Member sign-in",
+          "steps check",
+          "supports · declared",
+          "VERIFY",
+          "1",
+          "Tests that support affected steps. Run them.",
+          "TEST",
+          "TEST",
+          "sign-in.test.js",
+          "supports Member sign-in, step check · declared, static",
+          "Coverage"
+        ],
+        "controls": [
+          {
+            "role": "button",
+            "name": "Ask about something else"
+          },
+          {
+            "role": "button",
+            "name": "2 Direct"
+          },
+          {
+            "role": "button",
+            "name": "0 Transitive"
+          },
+          {
+            "role": "button",
+            "name": "0 Potential"
+          },
+          {
+            "role": "button",
+            "name": "1 Verify"
+          },
+          {
+            "role": "button",
+            "name": "0 Investigate"
+          },
+          {
+            "role": "button",
+            "name": "0 Unresolved"
+          },
+          {
+            "role": "combobox",
+            "name": "Kind"
+          },
+          {
+            "role": "button",
+            "name": "One more hop (0)",
+            "title": "Nothing lies beyond this depth"
+          },
+          {
+            "role": "button",
+            "name": "Show as graph"
+          },
+          {
+            "role": "button",
+            "name": "knowledgeLogin rulesdocs/artifacts/authentication/specifications/login.mdreferences · declared"
+          },
+          {
+            "role": "button",
+            "name": "flowMember sign-insteps checksupports · declared"
+          },
+          {
+            "role": "button",
+            "name": "testsign-in.test.jssupports Member sign-in, step check · declared, static"
+          },
+          {
+            "role": "summary",
+            "name": "Coverage"
+          }
+        ]
+      }
+    },
+    "390 impact filter sign": {
+      "topbar": {
+        "text": [
+          "golden-plane",
+          "change-sign-in"
+        ],
+        "controls": [
+          {
+            "role": "button",
+            "name": "Navigation"
+          },
+          {
+            "role": "button",
+            "name": "Branch change-sign-in, knowledge can be edited. Change worktree"
+          },
+          {
+            "role": "button",
+            "name": "More"
+          }
+        ]
+      },
+      "sidebar": {
+        "text": [
+          "Current work",
+          "Sign in verified members",
+          "Authentication · Requirement",
+          "Artifacts",
+          "⌄",
+          "Tenant",
+          "⌄",
+          "Flows",
+          "1",
+          "Member sign-in",
+          "Show history"
+        ],
+        "controls": [
+          {
+            "role": "textbox",
+            "name": "Search knowledge",
+            "placeholder": "Search or jump to…"
+          },
+          {
+            "role": "button",
+            "name": "Clear search"
+          },
+          {
+            "role": "treeitem",
+            "name": "Current work"
+          },
+          {
+            "role": "treeitem",
+            "name": "Sign in verified membersAuthentication · Requirement"
+          },
+          {
+            "role": "treeitem",
+            "name": "⌄Tenant"
+          },
+          {
+            "role": "treeitem",
+            "name": "⌄Flows1"
+          },
+          {
+            "role": "treeitem",
+            "name": "Member sign-in"
+          },
+          {
+            "role": "switch",
+            "name": "Show history"
+          }
+        ]
+      },
+      "main": {
+        "text": [
+          "Impact",
+          "What does identity.md affect?",
+          "Affected knowledge, flows, code and tests, with the relationship that connects each one to the change.",
+          "Ask about something else",
+          "CHANGED",
+          "docs/artifacts/tenant/specifications/identity.md",
+          "2",
+          "Direct",
+          "0",
+          "Transitive",
+          "0",
+          "Potential",
+          "1",
+          "Verify",
+          "0",
+          "Investigate",
+          "0",
+          "Unresolved",
+          "Kind",
+          "All kinds",
+          "Flows",
+          "Knowledge",
+          "Code",
+          "Tests",
+          "One more hop (0)",
+          "Show as graph",
+          "DIRECT",
+          "2",
+          "One relationship away from a change.",
+          "AUTHENTICATION",
+          "KNOWLEDGE",
+          "Login rules",
+          "docs/artifacts/authentication/specifications/login.md",
+          "references · declared",
+          "TENANT",
+          "FLOW",
+          "Member sign-in",
+          "steps check",
+          "supports · declared",
+          "VERIFY",
+          "1",
+          "Tests that support affected steps. Run them.",
+          "TEST",
+          "TEST",
+          "sign-in.test.js",
+          "supports Member sign-in, step check · declared, static",
+          "Coverage"
+        ],
+        "controls": [
+          {
+            "role": "button",
+            "name": "Ask about something else"
+          },
+          {
+            "role": "button",
+            "name": "2 Direct"
+          },
+          {
+            "role": "button",
+            "name": "0 Transitive"
+          },
+          {
+            "role": "button",
+            "name": "0 Potential"
+          },
+          {
+            "role": "button",
+            "name": "1 Verify"
+          },
+          {
+            "role": "button",
+            "name": "0 Investigate"
+          },
+          {
+            "role": "button",
+            "name": "0 Unresolved"
+          },
+          {
+            "role": "combobox",
+            "name": "Kind"
+          },
+          {
+            "role": "button",
+            "name": "One more hop (0)",
+            "title": "Nothing lies beyond this depth"
+          },
+          {
+            "role": "button",
+            "name": "Show as graph"
+          },
+          {
+            "role": "button",
+            "name": "knowledgeLogin rulesdocs/artifacts/authentication/specifications/login.mdreferences · declared"
+          },
+          {
+            "role": "button",
+            "name": "flowMember sign-insteps checksupports · declared"
+          },
+          {
+            "role": "button",
+            "name": "testsign-in.test.jssupports Member sign-in, step check · declared, static"
+          },
+          {
+            "role": "summary",
+            "name": "Coverage"
+          }
+        ]
+      }
+    }
+  }
+}

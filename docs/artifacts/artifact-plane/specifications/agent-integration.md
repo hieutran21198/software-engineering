@@ -232,9 +232,10 @@ Artifact Plane reads ADD knowledge and Git. It never approves, pushes, merges or
 Resume or start: get_change_status. Discover flows and specifications: search_flows, get_flow, read_flow_source.
 Specification and Plan: get_impact_context, get_change_impact. Review and context: get_change_review, get_change_context, read_change_context_source.
 Before a self-check or the PR: check_records, get_change_brief, get_change_description.
+Concepts: get_concept; search_flows with kinds.
 ```
 
-The existing tools keep their inputs and results.
+The existing tools keep their inputs and results, except the additive `get_concept` tool, the `kinds` input of `search_flows` and the participant concepts of `get_flow` in [concept pages](concept-pages.md).
 
 ## Configuration
 

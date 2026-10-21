@@ -193,6 +193,13 @@ fieldset.checks legend { font-size: 13px; font-weight: 500; margin-bottom: 6px; 
 .tree-row .tree-count { color: var(--muted); font-size: 12px; font-weight: 400; }
 .tree-row.show-all { color: var(--accent); margin-top: 0; }
 .tree-empty { padding: 0 8px; color: var(--muted); font-size: 13px; }
+/* A concept row keeps its one-word detail on the title line. */
+.tree-row.concept .tree-label { flex-direction: row; align-items: baseline; gap: 8px; }
+.tree-row.concept .tree-detail { margin-left: auto; flex: none; }
+/* The Discover link after the filtered tree, outside the tree. */
+/* The icon sits in the twisty column, so the text starts with the row titles; a long query wraps under the text. */
+.sidebar-discover { display: flex; align-items: flex-start; gap: 6px; margin-top: -10px; padding: 10px 4px 0 8px; border-top: 1px solid var(--border); font-size: 13px; line-height: 18px; overflow-wrap: anywhere; text-wrap: pretty; }
+.sidebar-discover svg { flex: none; margin-top: 2px; }
 .sidebar-foot { flex: none; display: flex; align-items: center; justify-content: space-between; padding: 10px 20px; border-top: 1px solid var(--border); font-size: 13px; color: var(--muted); }
 .switch { position: relative; width: 32px; height: 18px; padding: 0; border: 0; border-radius: 9px; background: #c9c8c2; }
 .switch::after { content: ""; position: absolute; left: 2px; top: 2px; width: 14px; height: 14px; border-radius: 50%; background: #fff; transition: transform .15s; }

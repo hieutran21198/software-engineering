@@ -149,3 +149,38 @@ test('sidebar tree indents children, draws joined guide lines, spaces groups and
     expect(facts.weights).toEqual(['500', '400', '400']);
   } finally {await f.cleanup();}
 });
+
+// CP14, CPA9 (specifications/concept-pages.md, Sidebar search): the `/` key and the input title.
+test('the / key focuses the sidebar search, opens the drawer at 390 px and does nothing in a field, an editable element or an open form', async ({page}) => {
+  const f = await fixture(), errors = [];page.on('pageerror', e => errors.push(e.message));
+  try {
+    await openRepository(page, f.root);
+    const search = page.getByLabel('Search knowledge', {exact: true});
+    await expect(search).toHaveAttribute('title', 'Search or jump to… (/)');await expect(search).toHaveAttribute('aria-keyshortcuts', '/');
+    await region(page, 'Work page').getByRole('heading', {level: 1}).click();
+    await page.keyboard.press('/');await expect(search).toBeFocused();await expect(search).toHaveValue('');
+    // In a text field the key types; in a select, an editable element or an open form it does nothing.
+    await page.getByRole('button', {name: 'More', exact: true}).click();
+    await page.getByRole('menu', {name: 'More'}).getByRole('menuitem', {name: /^Discover behavior/}).click();
+    const behavior = region(page, 'Discover behavior').getByLabel('Behavior', {exact: true});
+    await behavior.focus();await page.keyboard.press('/');await expect(behavior).toHaveValue('/');await expect(behavior).toBeFocused();
+    await page.evaluate(() => {
+      const host = document.createElement('div');host.id = 'key-probe';
+      host.innerHTML = '<textarea aria-label="Probe text"></textarea><select aria-label="Probe select"><option>One</option></select><div contenteditable="true" aria-label="Probe editor">x</div><form aria-label="Probe form"><button type="button">Probe button</button></form>';
+      document.querySelector('main').append(host);
+    });
+    for (const probe of [page.getByLabel('Probe text'), page.getByLabel('Probe select'), page.getByLabel('Probe editor'), page.getByRole('button', {name: 'Probe button'})]) {
+      await probe.focus();await page.keyboard.press('/');await expect(probe).toBeFocused();
+    }
+    await expect(page.getByLabel('Probe text')).toHaveValue('/');
+    await page.evaluate(() => document.getElementById('key-probe').remove());
+    // At 390 px the key opens the drawer first, then focuses the search.
+    await page.setViewportSize({width: 390, height: 844});
+    await expect(tree(page)).toBeHidden();
+    await region(page, 'Discover behavior').getByRole('heading', {level: 1}).click();
+    await page.keyboard.press('/');
+    await expect(tree(page)).toBeVisible();await expect(search).toBeFocused();await expect(search).toHaveValue('');
+    expect(await noOverflow(page)).toBe(true);
+    expect(errors).toEqual([]);
+  } finally {await f.cleanup();}
+});

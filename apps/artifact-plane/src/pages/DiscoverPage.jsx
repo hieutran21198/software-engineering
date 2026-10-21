@@ -28,7 +28,10 @@ export default function DiscoverPage({page}) {
       .finally(() => {if (!controller.signal.aborted) setLoading(false);});
     return () => controller.abort();
   }, [search, cursor, attempt, root, worktreePath, epoch]);
-  const submit = event => {event.preventDefault();const value = text.trim();if (!value) return;setCursor(null);setResult(null);setSearch(value);setAttempt(n => n + 1);};
+  // The page object keeps the submitted query, so browser Back returns to the same results.
+  const start = value => {setCursor(null);setResult(null);setSearch(value);setAttempt(n => n + 1);};
+  useEffect(() => {if (typeof page.query === 'string' && page.query && page.query !== search) {setText(page.query);start(page.query);}}, [page.query]);
+  const submit = event => {event.preventDefault();const value = text.trim();if (!value) return;start(value);go({...page, query: value});};
   const flows = result?.data?.flows || [];
   const notes = [...new Set((result?.diagnostics || []).map(d => NOTES[d.code]).filter(Boolean))];
 

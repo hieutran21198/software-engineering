@@ -58,7 +58,7 @@ export function entityLabel(id, snapshot, title) {
   const artifact = snapshot?.artifacts?.find(a => a.id === parsed.artifact);
   if (parsed.type === 'flow') return title || flowTitle(snapshot, parsed.flow) || parsed.flow;
   if (parsed.type === 'step') return `${flowTitle(snapshot, parsed.flow) || parsed.flow} · step ${parsed.step}`;
-  if (parsed.type === 'model') return `Model ${parsed.model}`;
+  if (parsed.type === 'model') return title || `Model ${parsed.model}`;
   if (parsed.type === 'artifact') return artifact?.title || parsed.artifact;
   if (parsed.type === 'knowledge') return artifact?.elements?.find(e => e.file === parsed.path)?.title || parsed.path.split('/').at(-1).replace(/\.md$/, '');
   return parsed.path.split('/').at(-1);
@@ -77,6 +77,7 @@ export function pageFor(id, extra = {}) {
     ? {kind: 'flow', artifact: parsed.artifact, flow: `${parsed.artifact}:${parsed.path.split('/').at(-1).replace(/\.md$/, '')}`}
     : {kind: 'document', artifact: parsed.artifact, source: parsed.path};
   if (parsed.type === 'artifact') return {kind: 'artifact', artifact: parsed.artifact};
+  if (parsed.type === 'model') return {kind: 'concept', artifact: parsed.artifact, model: parsed.model};
   return null;
 }
 export const impactPage = query => ({kind: 'impact', context: JSON.stringify(query)});

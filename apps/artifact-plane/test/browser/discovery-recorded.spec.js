@@ -4,7 +4,8 @@ import {fixtureRepository, fingerprint, git, sourceFixture} from '../fixtures.js
 import {RuntimeStore} from '../../server/runtime-store.js';
 import {runtimeFixture, bind} from '../runtime-fixtures.js';
 import {editingFiles, tenant, billing} from './editing-fixtures.js';
-import {openRepository, region, refresh, noOverflow, showSidebar, treeItem, layoutFacts} from './workbench.js';
+import {add, plane, conceptFiles, conceptRepository} from '../concept-fixtures.js';
+import {openRepository, region, refresh, noOverflow, showSidebar, sidebar, tree, treeItem, layoutFacts} from './workbench.js';
 // The More menu pages: Discover behavior (search flows by a described
 // behavior) and Recorded executions (captured task attempts of this machine).
 const discover = page => region(page, 'Discover behavior');
@@ -75,6 +76,133 @@ test('the sidebar search finds flows by normalized title and opens the first mat
     await expect(page.getByRole('status').filter({hasText: 'Nothing matches this title or ID.'})).toBeVisible();
     await page.getByRole('button', {name: 'Clear search', exact: true}).click();
     await expect(field).toHaveValue('');await expect(treeItem(page, /^Tenant$/)).toBeVisible();
+  } finally {await f.cleanup();}
+});
+
+// CP13, CP14, CPA9 (specifications/concept-pages.md, Sidebar search): concept rows and the Discover link.
+for (const width of [1440, 390]) test(`CPA9 at ${width} px: the sidebar search finds a concept, opens its page and follows the Discover link with the query`, async ({page}) => {
+  test.setTimeout(60000);
+  await page.setViewportSize({width, height: width < 500 ? 844 : 1000});
+  const f = await conceptRepository(), before = await fingerprint(f.root), errors = [], loads = [], reads = [];
+  page.on('pageerror', e => errors.push(e.message));
+  // Each sidebar concepts load records the count of overview reads before it; an overview read starts a new shell epoch.
+  // Page links load the concepts of one artifact and are not counted.
+  page.on('request', r => {
+    const body = r.method() === 'POST' ? r.postDataJSON() : null;
+    if (r.url().endsWith('/api/flows/query') && body?.operation === 'concepts' && !('artifact' in body)) loads.push({...body, after: reads.length});
+    if (r.url().endsWith('/api/repository/query') && body?.section === 'overview') reads.push(body);
+  });
+  try {
+    await openRepository(page, f.root);await showSidebar(page);
+    const field = page.getByLabel('Search knowledge', {exact: true}), link = name => sidebar(page).getByRole('link', {name, exact: true});
+    // An empty filter loads no concepts and shows no Discover link.
+    await expect(link(/Discover behavior$/)).toHaveCount(0);expect(loads).toEqual([]);
+    await field.fill('version');
+    const row = treeItem(page, /^Version/);
+    await expect(row).toHaveText(/^Version\s*Concept$/);
+    // The concept row is the first child of its artifact, before its kind rows.
+    const names = await tree(page).getByRole('treeitem').evaluateAll(rows => rows.map(r => `${r.getAttribute('aria-level')}:${r.querySelector('.tree-title').textContent}`));
+    expect(names.slice(0, 3)).toEqual(['1:Current work', '1:Artifact-Driven Development', '2:Version']);
+    await expect(link('Find “version” in Discover behavior')).toBeVisible();
+    // The logical id matches only its concept row.
+    await field.fill('plane:snapshot');
+    await expect(tree(page).getByRole('treeitem')).toHaveText([/Current work$/, /Artifact Plane$/, /^Repository snapshot\s*Concept$/]);
+    // Enter opens the first match, never the Discover link.
+    await field.fill('Version');await field.press('Enter');
+    await expect(region(page, 'Concept page').getByRole('heading', {level: 1})).toHaveText('Version');
+    // At 390 px opening a page closes the drawer, and the drawer starts with an empty filter, as in 1.24.0.
+    // With the drawer closed no filter has text, so a new shell epoch loads no concepts.
+    if (width < 500) {
+      const count = loads.length, overviews = reads.length;
+      await page.evaluate(() => window.dispatchEvent(new Event('focus')));
+      await expect.poll(() => reads.length).toBeGreaterThan(overviews);
+      await expect(page.getByRole('button', {name: 'Refresh', exact: true, includeHidden: true})).toHaveAttribute('aria-busy', 'false');
+      await page.waitForTimeout(500);expect(loads.length).toBe(count);
+    }
+    await showSidebar(page);if (width < 500) await field.fill('Version');
+    await expect(treeItem(page, /^Version/)).toHaveAttribute('aria-selected', 'true');
+    // The link is a Tab stop after the tree.
+    await treeItem(page, /^Version/).focus();await page.keyboard.press('Tab');
+    await expect(link('Find “Version” in Discover behavior')).toBeFocused();
+    // A filter without matches keeps the no-match text above the link.
+    await field.fill('absent words');
+    const status = sidebar(page).getByRole('status').filter({hasText: 'Nothing matches this title or ID.'});
+    await expect(status).toBeVisible();await expect(link('Find “absent words” in Discover behavior')).toBeVisible();
+    expect(await status.evaluate(node => Boolean(node.compareDocumentPosition(document.querySelector('.sidebar-discover')) & Node.DOCUMENT_POSITION_FOLLOWING))).toBe(true);
+    await field.fill('version');await link('Find “version” in Discover behavior').click();
+    const discover = region(page, 'Discover behavior');
+    await expect(discover.getByLabel('Behavior', {exact: true})).toHaveValue('version');
+    await expect(discover.getByRole('status')).toHaveText(/flows found$/, {timeout: 20000});
+    // Concepts load once for each worktree and epoch: never twice without an overview read between.
+    expect(loads.length).toBeGreaterThan(0);expect(loads[0]).toMatchObject({operation: 'concepts', knowledge: 'planning', worktree: f.root});
+    expect(new Set(loads.map(l => l.after)).size).toBe(loads.length);
+    expect(await noOverflow(page)).toBe(true);
+    expect(await fingerprint(f.root)).toEqual(before);expect(errors).toEqual([]);
+  } finally {await f.cleanup();}
+});
+
+// CP13, claim sidebar-enter-exact-concept (specifications/concept-pages.md, Sidebar search): Enter opens an exact concept title.
+// The open change change-version-gates has a name that contains version and change, as change-legacy-conversion does in this repository.
+for (const width of [1440, 390]) test(`claim sidebar-enter-exact-concept at ${width} px: Enter opens the concept whose title equals the filter, else the first match`, async ({page}) => {
+  test.setTimeout(60000);
+  await page.setViewportSize({width, height: width < 500 ? 844 : 1000});
+  const files = conceptFiles();
+  files.set(add + 'changes/change-version-gates/README.md', '# Gate releases\n\nGate the releases.\n');
+  files.set(add + 'changes/change-version-gates/tasks/README.md', '---\ntasks: []\n---\n# Plan\n');
+  // The open change Repository snapshot cache of plane matches snapshot, the model id of the concept Repository snapshot, by its title and name.
+  files.set(plane + 'changes/change-snapshot-cache/README.md', '# Repository snapshot cache\n\nCache the snapshots.\n');
+  files.set(plane + 'changes/change-snapshot-cache/tasks/README.md', '---\ntasks: []\n---\n# Plan\n');
+  const f = await fixtureRepository(files), before = await fingerprint(f.root), errors = [];
+  page.on('pageerror', e => errors.push(e.message));
+  try {
+    await openRepository(page, f.root);
+    // Enter waits for the concept row, so the concepts are loaded when it chooses.
+    const enter = async (query, row) => {
+      await showSidebar(page);const field = page.getByLabel('Search knowledge', {exact: true});await field.fill(query);
+      await expect(tree(page).locator('.tree-row.concept', {hasText: row})).toBeVisible();await field.press('Enter');
+    };
+    const concept = region(page, 'Concept page').getByRole('heading', {level: 1});
+    // The 1.24.0 rule alone opens the change Gate releases for these queries: it is the first matching row in tree order.
+    for (const query of ['version', 'Version', 'Version ', '  VERSION']) {await enter(query, 'Version');await expect(concept).toHaveText('Version');}
+    await enter('change', 'Change');await expect(concept).toHaveText('Change');
+    // A query that equals no concept title keeps the first match: the change in Current work.
+    await enter('versio', 'Version');await expect(region(page, 'Change page')).toBeVisible();
+    await showSidebar(page);await page.getByLabel('Search knowledge', {exact: true}).fill('versio');
+    await expect(treeItem(page, /^Gate releases/)).toHaveAttribute('aria-selected', 'true');
+    // Enter compares the concept title only: the model id snapshot keeps the first match, the change; the exact title opens the concept.
+    await enter('snapshot', 'Repository snapshot');await expect(region(page, 'Change page')).toBeVisible();
+    await showSidebar(page);await page.getByLabel('Search knowledge', {exact: true}).fill('snapshot');
+    await expect(treeItem(page, /^Repository snapshot cache/)).toHaveAttribute('aria-selected', 'true');
+    await enter('Repository snapshot', 'Repository snapshot');await expect(concept).toHaveText('Repository snapshot');
+    expect(await noOverflow(page)).toBe(true);
+    expect(await fingerprint(f.root)).toEqual(before);expect(errors).toEqual([]);
+  } finally {await f.cleanup();}
+});
+
+// Claim sidebar-enter-exact-concept: Enter pressed before the concepts arrive waits for them.
+test('Enter right after the fill waits for the concepts and still opens the exact concept title', async ({page}) => {
+  test.setTimeout(60000);
+  const files = conceptFiles();
+  files.set(add + 'changes/change-version-gates/README.md', '# Gate releases\n\nGate the releases.\n');
+  files.set(add + 'changes/change-version-gates/tasks/README.md', '---\ntasks: []\n---\n# Plan\n');
+  const f = await fixtureRepository(files), errors = [];
+  page.on('pageerror', e => errors.push(e.message));
+  let release, held = 0;const gate = new Promise(r => {release = r;});
+  await page.route('**/api/flows/query', async route => {
+    const b = route.request().postDataJSON();
+    if (b.operation === 'concepts' && !b.artifact) {held++;await gate;}
+    return route.continue();
+  });
+  try {
+    await openRepository(page, f.root);
+    await showSidebar(page);const field = page.getByLabel('Search knowledge', {exact: true});
+    await field.fill('version');await field.press('Enter');
+    await expect.poll(() => held).toBe(1);
+    // The concepts are held: Enter opens nothing yet, not the change Gate releases.
+    await page.waitForTimeout(300);await expect(region(page, 'Change page')).toHaveCount(0);
+    release();
+    await expect(region(page, 'Concept page').getByRole('heading', {level: 1})).toHaveText('Version');
+    expect(errors).toEqual([]);
   } finally {await f.cleanup();}
 });
 

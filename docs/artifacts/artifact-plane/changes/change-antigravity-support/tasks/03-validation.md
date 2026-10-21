@@ -28,6 +28,6 @@ Coordinator. Claim verification (`antigravity-hook-adapter`), `npm test` and `np
 | DoD item | Check | Result |
 | --- | --- | --- |
 | Claim `antigravity-hook-adapter` | Verified in `docs/artifacts/artifact-plane/specifications/agent-integration.md` (`status: verified`, `basis: observed`, `verified_by: agent`) from `test/agent-hook.test.js` (`AIA1`, `AIA8`), `test/runtime-binding.test.js` and live Antigravity `PreToolUse` execution in this workspace | Passed |
-| Plane test and build suites | `npm --prefix apps/artifact-plane test`, `npm --prefix apps/artifact-plane run build` and `node apps/artifact-plane/scripts/check-release-version.mjs plane-v1.25.0` pass | Passed |
+| Plane test and build suites | `npm --prefix apps/artifact-plane test`, `npm --prefix apps/artifact-plane run build` and `node apps/artifact-plane/scripts/check-release-version.mjs plane-v1.26.0` pass | Passed |
 | Knowledge validator | `node apps/artifact-plane/scripts/validate-knowledge.mjs --change artifact-plane/change-antigravity-support` and full repository validation report `ok: true` with 0 errors | Passed |
-| Combined unit evidence and version | `docs/artifacts/units-of-work/antigravity-support/README.md` records passing evidence for all four acceptance criteria; `versions/1.25.0/README.md` (`artifact-plane`) and `versions/3.2.0/README.md` (`artifact-driven`) are prepared | Passed |
+| Combined unit evidence and version | `docs/artifacts/units-of-work/antigravity-support/README.md` records passing evidence for all four acceptance criteria; `versions/1.26.0/README.md` (`artifact-plane`, renumbered after `origin/main` 1.25.0) and `versions/3.2.0/README.md` (`artifact-driven`) are prepared | Passed |

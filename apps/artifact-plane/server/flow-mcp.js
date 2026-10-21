@@ -19,7 +19,8 @@ import pkg from '../package.json' with {type:'json'};
 export const INSTRUCTIONS=`Artifact Plane reads ADD knowledge and Git. It never approves, pushes, merges or establishes versions.
 Resume or start: get_change_status. Discover flows and specifications: search_flows, get_flow, read_flow_source.
 Specification and Plan: get_impact_context, get_change_impact. Review and context: get_change_review, get_change_context, read_change_context_source.
-Before a self-check or the PR: check_records, get_change_brief, get_change_description.`;
+Before a self-check or the PR: check_records, get_change_brief, get_change_description.
+Concepts: get_concept; search_flows with kinds.`;
 const USAGE='Configure at least one --repository root.';
 
 // Both adapters pass selectors through the same read-only query service.
@@ -33,18 +34,21 @@ export function createFlowMcpServer({service,reviewService,impactService,knowled
  const server=new McpServer({name:'artifact-plane-flows',version:pkg.version},{instructions:INSTRUCTIONS});
  const common={path:z.string().optional(),worktree:z.string().optional(),knowledge:z.enum(['planning','established','all']).optional(),limit:z.number().int().min(1).max(100).optional(),budget:z.number().int().min(0).max(100000).optional(),cursor:z.string().max(10000).optional()};
  const tools=[
-  ['search_flows','Filter flow titles and IDs, or rank by exact ID, keywords and local semantic similarity.','search',{query:z.string().max(4000).optional(),match:z.enum(['title','discovery']).optional(),artifact:z.string().optional()}],
+  ['search_flows','Filter flow titles and IDs, or rank by exact ID, keywords and local semantic similarity.','search',{query:z.string().max(4000).optional(),match:z.enum(['title','discovery']).optional(),artifact:z.string().optional(),kinds:z.array(z.enum(['flow','concept'])).min(1).max(2).optional().describe('Result kinds. With concept, data.concepts holds all matching concepts, not paged, and data.totals.concepts their count. Without kinds, only flows.')}],
   ['get_flow','Read a flow, its steps and explicit supporting relationships.','detail',{flow:z.string().min(1).max(10000)}],
   ['get_impact_context','Traverse all known reverse relationships independently of search ranking.','impact',{ids:z.array(z.string().max(10000)).min(1).max(100),artifact:z.string().optional()}],
   ['read_flow_source','Read a registered source belonging to the selected flow context.','source',{flow:z.string().min(1).max(10000),source:z.string().max(10000)}],
  ];
- for(const [name,description,operation,selectors] of tools)server.registerTool(name,{description,inputSchema:z.strictObject({...common,...selectors}),annotations:{readOnlyHint:true,destructiveHint:false,idempotentHint:true,openWorldHint:false}},async args=>{
+ const flowTool=(name,description,operation,input)=>server.registerTool(name,{description,inputSchema:z.strictObject(input),annotations:{readOnlyHint:true,destructiveHint:false,idempotentHint:true,openWorldHint:false}},async args=>{
   try{
    const path=args.path??(roots.length===1?roots[0]:undefined);
    const result=await getService().query({...args,path,operation});
    return {content:[{type:'text',text:JSON.stringify(result)}],structuredContent:result};
   }catch(error){return {isError:true,content:[{type:'text',text:JSON.stringify({error:error.status?error.message:'Flow retrieval failed.',status:error.status||500})}]};}
  });
+ for(const [name,description,operation,selectors] of tools)flowTool(name,description,operation,{...common,...selectors});
+ // get_concept: the concept operation answer of the flow service, with freshness and completeness.
+ flowTool('get_concept','Read one concept (a declared model) by identity, entity or exact title: its declaration, sources, flows and interactions, inferred code and tests, record problems and open changes. An ambiguous title gives candidates.','concept',{path:common.path,worktree:common.worktree,knowledge:common.knowledge,concept:z.string().min(1).max(4000)});
  const reviewCommon={path:common.path,worktree:common.worktree,artifact:z.string().min(1).max(10000),change:z.string().min(1).max(10000),limit:common.limit,budget:common.budget,cursor:common.cursor};
  for(const [name,description,operation,selectors]of [
   ['get_change_review','Compare a change with established knowledge (the protected-ref tree for in-place artifacts, the declared-current snapshot for legacy artifacts) and recorded flow impact.','review',{}],

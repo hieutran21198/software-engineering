@@ -37,3 +37,9 @@
 .artifact-page .page-header + .dependency-confirm { margin: -4px 0 24px; }
 .dependency-confirm p { margin: 0 0 10px; }
 @media (max-width: 800px) { .artifact-page .dependency-remove { height: 32px; } }
+/* Concepts: the title and the first sentence of the description on one line; two lines on a phone. */
+.concept-list .unstyled { padding: 10px 4px; }
+.concept-list .doc-title { display: flex; flex-direction: column; gap: 2px; }
+.concept-list .concept-title { color: var(--accent); font-weight: 500; }
+.concept-list .concept-detail { font-size: 13px; color: var(--muted); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+@media (max-width: 800px) { .concept-list .concept-detail { white-space: normal; display: -webkit-box; -webkit-box-orient: vertical; -webkit-line-clamp: 2; } }

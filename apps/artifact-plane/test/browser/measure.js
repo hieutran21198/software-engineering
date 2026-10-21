@@ -50,11 +50,12 @@ export function measure(page, root) {
         validationErrors: validation.diagnostics.filter(d => d.severity === 'error').map(d => `${d.code} ${d.path}`), log: state.log, ...extra};
     }};
 }
-const REPORT = fileURLToPath(new URL('../../test-results/authoring-scenarios.json', import.meta.url));
-export async function report(result) {
-  await mkdir(dirname(REPORT), {recursive: true});
-  const current = JSON.parse(await readFile(REPORT, 'utf8').catch(() => '{}'));
+// Each scenario suite writes its results to test-results/<name>.json.
+export async function report(result, name = 'authoring-scenarios') {
+  const file = fileURLToPath(new URL(`../../test-results/${name}.json`, import.meta.url));
+  await mkdir(dirname(file), {recursive: true});
+  const current = JSON.parse(await readFile(file, 'utf8').catch(() => '{}'));
   current[result.scenario] = result;
-  await writeFile(REPORT, JSON.stringify(current, null, 1));
+  await writeFile(file, JSON.stringify(current, null, 1));
 }
 export const text = (root, path) => readFile(join(root, path), 'utf8');
