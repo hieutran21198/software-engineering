@@ -1,4 +1,5 @@
 import {createHash} from 'node:crypto';
+import {execFile} from 'node:child_process';
 import {realpath} from 'node:fs/promises';
 import {homedir} from 'node:os';
 import {resolve} from 'node:path';
@@ -8,6 +9,12 @@ import {createRunner} from './transport.js';
 // no public call identity and are outside this input mapping (not a sandbox).
 const TTL = 5000, CALL_TTL = 60000, MAX_ENTRIES = 1024;
 const hash = text => createHash('sha256').update(text).digest('hex');
+const plainID = id => /^[a-zA-Z0-9_-]+$/.test(id);
+const sessionLabel = (id, root) => {
+  const suffix = hash(root), visible = `opencode:${id}:${suffix}`;
+  return visible.length <= 160 && plainID(id) ? visible : `opencode:sha256:${hash(id)}:${suffix}`;
+};
+const childLabel = id => id.length <= 160 && plainID(id) ? id : `opencode:sha256:${hash(id)}`;
 const callKey = e => JSON.stringify([e.sessionID, e.messageID, e.id]);
 const pathAt = (base, path) => resolve(base, path === '~' ? homedir() : path.startsWith('~/') ? resolve(homedir(), path.slice(2)) : path);
 const boundedSet = (map, key, value) => {
@@ -23,31 +30,59 @@ export function createPlugin({runner, clock = Date.now} = {}) {
       const run = runner || createRunner();
       const sessions = new Map(), calls = new Map(), registrations = [];
       const controller = new AbortController();
+      let rootRead;
+      const owner = await realpath(ctx.location.directory);
       let closed = false;
       const safeRun = async (input, timeout = 8000) => {
         if (closed) return {};
         try {return await run(input, {timeout});} catch {return {};}
       };
       const invalidate = s => {s.turn = undefined;s.window = undefined;s.admitted.clear();};
+      const forget = id => {
+        const s = sessions.get(id);
+        if (s) invalidate(s);
+        sessions.delete(id);
+        for (const [key, call] of calls) if (call.event.sessionID === id) calls.delete(key);
+      };
+      const worktree = () => {
+        // Every owned session has this exact directory. Coalesce concurrent Git
+        // reads, without caching a root after the subprocess has completed.
+        rootRead ??= new Promise((done, reject) => {
+          let result;
+          const child = execFile('git', ['-C', owner, 'rev-parse', '--show-toplevel'], {
+            timeout: 2000, maxBuffer: 64 * 1024, killSignal: 'SIGKILL', signal: controller.signal,
+            encoding: 'utf8', windowsHide: true, shell: false,
+          }, (error, stdout) => {result = {error, stdout};});
+          // Abort can invoke execFile's callback before the process exits. Wait
+          // for close so unload and deadlines also reap the Git subprocess.
+          child.once('close', () => result?.error ? reject(result.error) : done(result.stdout.replace(/\r?\n$/, '')));
+        }).then(root => realpath(root)).finally(() => {rootRead = undefined;});
+        return rootRead;
+      };
       async function session(sessionID) {
         const info = await ctx.session.get({sessionID});
-        if (!info.location?.directory) throw Error('Session location unavailable');
-        const cwd = await realpath(info.location.directory);
+        if (!info?.location?.directory) {forget(sessionID);return null;}
+        const directory = info.location.directory;
+        let cwd;
+        try {cwd = await realpath(directory);} catch {forget(sessionID);return null;}
         if (closed) throw Error('Plugin unloaded');
+        if (cwd !== owner) {forget(sessionID);return null;}
+        let root;
+        try {root = await worktree();} catch {forget(sessionID);return null;}
+        const current = await ctx.session.get({sessionID});
+        if (closed || current?.location?.directory !== directory) {forget(sessionID);return null;}
         let s = sessions.get(sessionID);
+        if (s && (s.cwd !== cwd || s.root !== root)) {forget(sessionID);s = undefined;}
         if (!s) {
-          s = {cwd, admitted: new Set(), seq: undefined, turn: undefined};
+          s = {cwd, root, admitted: new Set(), seq: undefined, turn: undefined};
           boundedSet(sessions, sessionID, s);
-        } else if (s.cwd !== cwd) {
-          invalidate(s);s.cache = undefined;s.cwd = cwd;
-          for (const [key, call] of calls) if (call.event.sessionID === sessionID) calls.delete(key);
         }
-        // Keep the runtime label bounded even for hosts with unusually long IDs.
-        s.identity = {cwd, session_id: `opencode:${sessionID.length <= 350 ? sessionID : hash(sessionID)}:${hash(cwd)}`,
-          agent_id: typeof info.parentID === 'string' && info.parentID ? sessionID : ''};
+        // RuntimeStore labels truncate at 160 characters. Never truncate a hash.
+        s.identity = {cwd, session_id: sessionLabel(sessionID, root),
+          agent_id: typeof current.parentID === 'string' && current.parentID ? childLabel(sessionID) : ''};
         return s;
       }
-      const inputFor = (s, hook_event_name, turn = s.turn) => ({...s.identity, hook_event_name, ...(turn ? {turn_id: turn} : {})});
+      const inputFor = (s, hook_event_name, turn) => ({...s.identity, hook_event_name, ...(turn ? {turn_id: turn} : {})});
       const sweep = () => {for (const [key, call] of calls) if (clock() - call.time >= CALL_TTL) calls.delete(key);};
       const toolInput = (event, s) => {
         const input = event.input;
@@ -64,7 +99,8 @@ export function createPlugin({runner, clock = Date.now} = {}) {
       // Shell-before is deferred until permission evaluation sees the final mutable
       // event. One promise covers all scanner resources and repeated evaluations.
       const pre = (call, s) => {
-        call.pre ??= safeRun({...inputFor(s, 'PreToolUse', call.turn), ...toolInput(call.event, s)});
+        const turn = call.turn === s.turn ? call.turn : undefined;
+        call.pre ??= safeRun({...inputFor(s, 'PreToolUse', turn), ...toolInput(call.event, s)});
         return call.pre;
       };
       const guard = fn => async event => {
@@ -73,10 +109,11 @@ export function createPlugin({runner, clock = Date.now} = {}) {
       };
       try {
         registrations.push(await ctx.session.hook('context', guard(async event => {
-          const s = await session(event.sessionID), cwd = s.cwd;
+          const s = await session(event.sessionID);
+          if (!s) return;
           if (!s.cache || clock() - s.cache.at >= TTL) {
-            const result = await safeRun(inputFor(s, 'SessionStart'), 12000);
-            if (s.cwd !== cwd || closed) return;
+            const result = await safeRun(inputFor(s, 'SessionStart', s.turn), 12000);
+            if (await session(event.sessionID) !== s || closed) return;
             s.cache = {at: clock(), text: result?.hookSpecificOutput?.additionalContext};
           }
           if (typeof s.cache.text === 'string' && s.cache.text) event.system.push({type: 'text', text: s.cache.text});
@@ -84,21 +121,22 @@ export function createPlugin({runner, clock = Date.now} = {}) {
         registrations.push(await ctx.tool.hook('execute.before', guard(async event => {
           sweep();
           const s = await session(event.sessionID), key = callKey(event);
+          if (!s) return;
           if (calls.has(key)) return;
-          const call = {event, cwd: s.cwd, turn: s.turn, time: clock()};
+          const call = {event, state: s, turn: s.turn, time: clock()};
           boundedSet(calls, key, call);
           if (event.tool !== 'shell') await pre(call, s);
         })));
         registrations.push(await ctx.permission.hook('evaluate', guard(async event => {
           if (event.action !== 'shell' || event.source?.type !== 'tool') return;
           sweep();
-          const key = callKey({sessionID: event.sessionID, ...event.source});
+          const key = callKey({messageID: event.source.messageID, id: event.source.id, sessionID: event.sessionID});
           const call = calls.get(key);
           if (!call || call.event.tool !== 'shell') return;
           const s = await session(event.sessionID);
-          if (call.cwd !== s.cwd || calls.get(key) !== call || call.turn !== s.turn) return;
+          if (!s || call.state !== s || calls.get(key) !== call) return;
           const result = await pre(call, s), output = result?.hookSpecificOutput;
-          if (!closed && output?.permissionDecision === 'deny' && event.effect !== 'deny') {
+          if (!closed && await session(event.sessionID) === s && calls.get(key) === call && output?.permissionDecision === 'deny' && event.effect !== 'deny') {
             event.effect = 'deny';
             if (typeof output.permissionDecisionReason === 'string') event.message = output.permissionDecisionReason;
           }
@@ -108,8 +146,9 @@ export function createPlugin({runner, clock = Date.now} = {}) {
           if (!call) return;
           try {
             const s = await session(event.sessionID);
-            if (call.cwd !== s.cwd || calls.get(key) !== call || call.turn !== s.turn) return;
+            if (!s || call.state !== s || calls.get(key) !== call || (call.turn && call.turn !== s.turn)) return;
             await pre(call, s);
+            if (await session(event.sessionID) !== s || calls.get(key) !== call || (call.turn && call.turn !== s.turn)) return;
             await safeRun({...inputFor(s, 'PostToolUse', call.turn), tool_name: call.event.tool});
           } finally {calls.delete(key);}
         })));
@@ -123,11 +162,13 @@ export function createPlugin({runner, clock = Date.now} = {}) {
         if (!id || !Number.isSafeInteger(event.durable.seq)) return;
         if (!sessions.has(id) && !event.type.startsWith('session.') && event.data?.sessionID !== id) return;
         const s = await session(id), seq = event.durable.seq;
+        if (!s) return;
+        if (event.location?.directory && await realpath(event.location.directory) !== owner) {forget(id);return;}
         if (s.seq !== undefined && seq <= s.seq) return;
         if (s.seq === undefined || seq !== s.seq + 1) invalidate(s);
         s.seq = seq;
         const data = event.data;
-        if (event.type === 'session.moved') {invalidate(s);s.cache = undefined;return;}
+        if (event.type === 'session.moved') {forget(id);return;}
         if (event.type === 'session.inbox.enqueued') {
           if (data?.sessionID !== id || data.item?.type !== 'user' || typeof data.inboxID !== 'string') return;
           s.admitted.add(data.inboxID);
@@ -142,7 +183,7 @@ export function createPlugin({runner, clock = Date.now} = {}) {
             s.window.count++;
             s.window.certain &&= known && s.window.count === 1;
           }
-          if (known) await safeRun(inputFor(s, 'UserPromptSubmit'));
+          if (known) await safeRun(inputFor(s, 'UserPromptSubmit', s.turn));
         } else if (['session.execution.succeeded', 'session.execution.interrupted', 'session.execution.failed'].includes(event.type)) {
           const turn = s.turn, window = s.window;
           invalidate(s);
@@ -155,13 +196,14 @@ export function createPlugin({runner, clock = Date.now} = {}) {
         try {
           for await (const event of ctx.event.subscribe({signal: controller.signal})) {
             if (closed) break;
-            try {await observe(event);} catch {for (const s of sessions.values()) invalidate(s);}
+            try {await observe(event);} catch {forget(event.durable?.aggregateID);}
           }
         } catch {/* stream loss cannot supply a completion */}
         finally {for (const s of sessions.values()) invalidate(s);}
       })();
       return async () => {
         closed = true;controller.abort();await run.close?.();
+        await Promise.allSettled([rootRead]);
         await Promise.allSettled(registrations.map(r => r.dispose()));
         sessions.clear();calls.clear();
         // Subscription cancellation is owned by the host. Do not block unload on

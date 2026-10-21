@@ -1,6 +1,6 @@
 import {test} from 'node:test';
 import assert from 'node:assert/strict';
-import {realpath} from 'node:fs/promises';
+import {realpath, mkdtemp, rm, writeFile, readFile, access} from 'node:fs/promises';
 import {homedir} from 'node:os';
 import {resolve} from 'node:path';
 import {createPlugin} from '../integration/opencode/index.js';
@@ -9,16 +9,16 @@ import {RuntimeStore} from '../server/runtime-store.js';
 import {runtimeFixture, bind} from './runtime-fixtures.js';
 import {fileURLToPath} from 'node:url';
 
-async function host({runner, clock} = {}) {
+async function host({runner, clock, directory = process.cwd(), locations: sharedLocations} = {}) {
   const hooks = {}, observed = [], disposed = [], queue = [];
   let wake, aborted = false, streamError;
-  const locations = new Map(['a', 'b', 'child'].map(id => [id, {location: {directory: process.cwd(), subpath: 'never-append'}, ...(id === 'child' ? {parentID: 'a'} : {})}]));
+  const locations = sharedLocations || new Map(['a', 'b', 'child'].map(id => [id, {location: {directory, subpath: 'never-append'}, ...(id === 'child' ? {parentID: 'a'} : {})}]));
   const domain = name => ({hook: async (kind, fn) => {
     hooks[`${name}.${kind}`] = fn;
     return {dispose: async () => disposed.push(`${name}.${kind}`)};
   }});
   const ctx = {
-    app: {version: '2.1.2'}, location: {directory: '/wrong-plugin-instance'},
+    app: {version: '2.1.2'}, location: {directory, project: {canonical: '/wrong-project-root'}},
     session: {...domain('session'), get: async ({sessionID}) => locations.get(sessionID)},
     permission: domain('permission'), tool: domain('tool'),
     event: {async *subscribe({signal}) {
@@ -74,8 +74,10 @@ test('V2 context preserves parts, actual directory and five-second session/workt
     now = 5000;await h.context({sessionID: 'a', system: []});assert.equal(h.observed.length, 2);
     await h.context({sessionID: 'b', system: []});assert.equal(h.observed.length, 3);
     h.locations.get('a').location.directory = '/tmp/opencode';
+    const moved = {sessionID: 'a', system: []};await h.context(moved);assert.equal(h.observed.length, 3);assert.deepEqual(moved.system, []);
+    h.locations.get('a').location.directory = process.cwd();
     await h.context({sessionID: 'a', system: []});assert.equal(h.observed.length, 4);
-    assert.notEqual(h.observed[0].input.session_id, h.observed[3].input.session_id);
+    assert.equal(h.observed[0].input.session_id, h.observed[3].input.session_id);
   } finally {await h.cleanup();}
   assert.equal(h.disposed.length, 4);assert.equal(h.aborted, true);
 });
@@ -153,6 +155,7 @@ for (const scenario of ['gap', 'missing-admission', 'multiple', 'late', 'failed'
       await send(scenario === 'failed' ? 'execution.failed' : 'execution.succeeded');
       assert.equal(h.observed.filter(e => ['Stop', 'Interrupt'].includes(e.input.hook_event_name)).length, 0);
       if (scenario === 'gap' || scenario === 'move') {
+        if (scenario === 'move') h.locations.get('a').location.directory = process.cwd();
         await h.before(tool('a', 'read', {path: 'a.md'}, 'read'));assert.ok(!h.observed.at(-1).input.turn_id);
       }
     } finally {await h.cleanup();}
@@ -210,7 +213,7 @@ test('real hook subprocess keeps policy, task attempts and persistence privacy b
   const inputs = [];
   const runner = async (input, options) => {inputs.push(input);return run(input, options);};
   runner.close = run.close;
-  const h = await host({runner}), send = events(h);
+  const h = await host({runner, directory: f.root}), send = events(h);
   h.locations.get('a').location.directory = f.root;
   let store;
   try {
@@ -246,7 +249,7 @@ test('real hook subprocess keeps policy, task attempts and persistence privacy b
 test('real reserved-action denial survives unavailable observation storage', async () => {
   const f = await runtimeFixture();
   const run = createRunner({command: process.execPath, args: [fileURLToPath(new URL('../server/app.js', import.meta.url)), 'hook', '--state-dir', '/dev/null/unavailable']});
-  const h = await host({runner: run});h.locations.get('a').location.directory = f.root;
+  const h = await host({runner: run, directory: f.root});
   try {
     await h.before(tool('a', 'call', {command: 'gh pr merge'}));
     const p = permission();await h.permission(p);assert.equal(p.effect, 'deny');assert.match(p.message, /reserved|people|human/i);
@@ -256,7 +259,7 @@ test('real reserved-action denial survives unavailable observation storage', asy
 test('real child task read infers one binding without permission duplication', async () => {
   const f = await runtimeFixture();
   const run = createRunner({command: process.execPath, args: [fileURLToPath(new URL('../server/app.js', import.meta.url)), 'hook', '--state-dir', f.stateDir]});
-  const h = await host({runner: run});h.locations.get('child').location.directory = f.root;
+  const h = await host({runner: run, directory: f.root});
   let store;
   try {
     const read = tool('child', 'read', {path: 'docs/artifacts/demo/changes/change-live/tasks/a.md'}, 'read');
@@ -274,4 +277,168 @@ test('real child task read infers one binding without permission duplication', a
     await h.after({...shell, status: 'completed'});
     assert.equal(store.query(f.root).attempts.length, 1);
   } finally {store?.close();await h.cleanup();await f.cleanup();}
+});
+
+test('160-character runtime labels preserve long session and child identities across Git worktrees', async () => {
+  const f = await runtimeFixture(), g = await runtimeFixture();
+  const long = 'ses_' + 'common'.repeat(70), ids = [long + 'a', long + 'b'];
+  const first = await host({directory: f.root}), second = await host({directory: g.root});
+  try {
+    for (const h of [first, second]) for (const id of ids) {
+      h.locations.set(id, {location: {directory: h === first ? f.root : g.root}, parentID: 'parent'});
+      await h.context({sessionID: id, system: []});
+    }
+    const inputs = [...first.observed, ...second.observed].map(e => e.input);
+    assert.equal(new Set(inputs.map(i => i.session_id)).size, 4);
+    assert.ok(inputs.every(i => i.session_id.length <= 160 && i.agent_id.length <= 160));
+    assert.notEqual(inputs[0].agent_id, inputs[1].agent_id);
+    assert.equal(inputs[0].agent_id, inputs[2].agent_id);
+    // The store applies its real truncating label function without collisions.
+    const store = new RuntimeStore({stateDir: f.stateDir});
+    try {
+      for (const i of inputs) store.observe({...i, hook_event_name: 'PreToolUse'});
+      const stored = store.db.prepare('SELECT session,agent FROM events').all();
+      assert.equal(new Set(stored.map(i => i.session)).size, 4);
+      assert.deepEqual(stored.map(i => i.session), inputs.map(i => i.session_id));
+    } finally {store.close();}
+  } finally {await first.cleanup();await second.cleanup();await f.cleanup();await g.cleanup();}
+});
+
+test('nested location identity uses canonical Git top-level, not location directory', async () => {
+  const f = await runtimeFixture(), nested = resolve(f.root, 'docs');
+  const rootHost = await host({directory: f.root}), nestedHost = await host({directory: nested});
+  try {
+    await rootHost.context({sessionID: 'a', system: []});await nestedHost.context({sessionID: 'a', system: []});
+    const a = rootHost.observed[0].input, b = nestedHost.observed[0].input;
+    assert.equal(a.session_id, b.session_id);assert.match(a.session_id, /^opencode:a:/);
+    assert.equal(a.cwd, f.root);assert.equal(b.cwd, nested);
+    const other = tool('a', 'call', {command: 'pwd', workdir: '../'});
+    await nestedHost.before(other);await nestedHost.permission(permission());
+    assert.equal(nestedHost.observed.at(-1).input.cwd, f.root);
+    assert.equal(nestedHost.observed.at(-1).input.session_id, a.session_id);
+  } finally {await rootHost.cleanup();await nestedHost.cleanup();await f.cleanup();}
+});
+
+for (const priorTurn of [undefined, 'old']) test(`policy survives new user delivery without borrowing a turn (snapshot ${priorTurn})`, async () => {
+  const inputs = [];
+  const h = await host({runner: async input => {
+    inputs.push(input);
+    return {hookSpecificOutput: {permissionDecision: 'deny', permissionDecisionReason: 'Reserved for people'}};
+  }}), send = events(h);
+  try {
+    if (priorTurn) await turn(send, priorTurn);
+    await h.before(tool('a', 'call', {command: 'gh pr merge'}));
+    if (priorTurn) {await admitted(send, 'new');await send('inbox.delivered', {inboxID: 'new'});}
+    else await turn(send, 'new');
+    const p = permission();await h.permission(p);assert.equal(p.effect, 'deny');
+    const pre = inputs.filter(i => i.hook_event_name === 'PreToolUse');assert.equal(pre.length, 1);assert.ok(!('turn_id' in pre[0]));
+    await h.after({...tool(), status: 'completed'});
+    const post = inputs.filter(i => i.hook_event_name === 'PostToolUse');
+    assert.equal(post.length, priorTurn ? 0 : 1);
+    assert.ok(post.every(i => !('turn_id' in i)));
+  } finally {await h.cleanup();}
+});
+
+test('two exact-location owners observe shared public stream once through moves out and back', async () => {
+  const f = await runtimeFixture(), nested = resolve(f.root, 'docs');
+  const locations = new Map([['a', {location: {directory: f.root}}], ['b', {location: {directory: nested}}]]);
+  const a = await host({directory: f.root, locations}), b = await host({directory: nested, locations});
+  const shared = {emit: event => Promise.all([a.emit(event), b.emit(event)])};
+  const sendA = events(shared, 'a'), sendB = events(shared, 'b');
+  const lifecycle = h => h.observed.map(i => i.input.hook_event_name);
+  try {
+    await turn(sendA, 'a1');await turn(sendB, 'b1');
+    // An inaccessible unrelated aggregate must not invalidate an owned session.
+    await shared.emit({type: 'session.unknown', durable: {aggregateID: 'missing', seq: 0}, data: {sessionID: 'missing'}});
+    await sendA('execution.succeeded');await sendB('execution.succeeded');
+    assert.deepEqual(lifecycle(a), ['UserPromptSubmit', 'Stop']);assert.deepEqual(lifecycle(b), ['UserPromptSubmit', 'Stop']);
+    await a.before(tool());
+    locations.get('a').location.directory = nested;
+    await sendA('moved');
+    const p = permission();await a.permission(p);assert.equal(p.effect, 'ask');
+    await sendA('execution.succeeded'); // No delivered user in this owner's window.
+    assert.equal(a.observed.length, 2);assert.equal(b.observed.length, 2);
+    await turn(sendA, 'a2');await sendA('execution.interrupted');
+    assert.deepEqual(lifecycle(b), ['UserPromptSubmit', 'Stop', 'UserPromptSubmit', 'Interrupt']);
+    locations.get('a').location.directory = f.root;await sendA('moved');
+    await sendA('execution.succeeded');
+    await turn(sendA, 'a3');await sendA('execution.succeeded');
+    assert.deepEqual(lifecycle(a), ['UserPromptSubmit', 'Stop', 'UserPromptSubmit', 'Stop']);
+    assert.equal(b.observed.length, 4);
+    assert.equal(a.observed[0].input.session_id, b.observed[2].input.session_id);
+  } finally {await a.cleanup();await b.cleanup();await f.cleanup();}
+});
+
+test('non-Git locations fail open without observations', async () => {
+  const directory = await mkdtemp('/tmp/opencode/bridge-nongit-'), h = await host({directory});
+  try {
+    const e = {sessionID: 'a', system: []};await h.context(e);await h.before(tool());
+    const p = permission();await h.permission(p);assert.equal(p.effect, 'ask');
+    assert.deepEqual(e.system, []);assert.equal(h.observed.length, 0);
+  } finally {await h.cleanup();await rm(directory, {recursive: true, force: true});}
+});
+
+test('a move during policy execution cannot apply an old-directory response or reuse its correlation', async () => {
+  let release, entered;
+  const started = new Promise(r => {entered = r;});
+  const h = await host({runner: async () => {entered();return new Promise(r => {release = r;});}});
+  try {
+    await h.before(tool());const p = permission();const pending = h.permission(p);await started;
+    h.locations.get('a').location.directory = '/tmp/opencode';
+    release({hookSpecificOutput: {permissionDecision: 'deny'}});await pending;
+    assert.equal(p.effect, 'ask');
+    h.locations.get('a').location.directory = process.cwd();
+    const next = permission();await h.permission(next);assert.equal(next.effect, 'ask');
+  } finally {await h.cleanup();}
+});
+
+test('permission source cannot override the enclosing session identity', async () => {
+  const h = await host();
+  try {
+    await h.before(tool('b'));
+    const p = permission('a');p.source.sessionID = 'b';await h.permission(p);
+    assert.equal(p.effect, 'ask');assert.equal(h.observed.length, 0);
+  } finally {await h.cleanup();}
+});
+
+test('a durable move discards correlations even after the session has already moved back', async () => {
+  const h = await host(), send = events(h);
+  try {
+    await h.context({sessionID: 'a', system: []});await h.before(tool());
+    // Current location is already back at the owner while the stream catches up.
+    await send('moved', {location: {directory: '/tmp/opencode'}});
+    await send('moved', {location: {directory: process.cwd()}});
+    const p = permission();await h.permission(p);assert.equal(p.effect, 'ask');
+    assert.equal(h.observed.length, 1);
+    await h.context({sessionID: 'a', system: []});assert.equal(h.observed.length, 2);
+  } finally {await h.cleanup();}
+});
+
+test('Git identity lookup fails open on missing executable, excess output and timeout, and reaps on unload', async () => {
+  const directory = await mkdtemp('/tmp/opencode/bridge-git-'), git = resolve(directory, 'git'), marker = resolve(directory, 'pid');
+  const h = await host(), prior = process.env.PATH;
+  const context = () => h.context({sessionID: 'a', system: []});
+  const script = body => writeFile(git, `#!${process.execPath}\nrequire('node:fs').writeFileSync(${JSON.stringify(marker)},String(process.pid));\n${body}\n`, {mode: 0o700});
+  const assertReaped = async () => {
+    const pid = Number(await readFile(marker, 'utf8'));
+    assert.throws(() => process.kill(pid, 0), {code: 'ESRCH'});
+  };
+  try {
+    process.env.PATH = directory;
+    await context();assert.equal(h.observed.length, 0);
+    await script('process.stdout.write("x".repeat(65537));setInterval(()=>{},1000);');
+    await context();assert.equal(h.observed.length, 0);await assertReaped();
+    await script('setInterval(()=>{},1000);');
+    await context();assert.equal(h.observed.length, 0);await assertReaped();
+    await rm(marker);
+    const pending = context();
+    for (let i = 0; i < 100; i++) {
+      try {await access(marker);break;} catch {await new Promise(r => setTimeout(r, 10));}
+    }
+    await access(marker);await h.cleanup();await pending;await assertReaped();
+    assert.equal(h.observed.length, 0);
+  } finally {
+    if (prior === undefined) delete process.env.PATH;else process.env.PATH = prior;
+    await h.cleanup();await rm(directory, {recursive: true, force: true});
+  }
 });
