@@ -6,7 +6,7 @@ self_check:
 
 # Package requirements
 
-- NP1: Users can install se-adopt through the repository flake.
+- NP1: Users can install se-adopt through the repository flake. The package version is the ADD version that names se-adopt releases.
 - NP2: Users can install artifact-plane through the repository flake.
 - NP3: Both packages support x86_64 and aarch64 on Linux and macOS.
 - NP4: Installed commands run outside the source checkout and retain existing arguments and environment settings.
@@ -32,3 +32,5 @@ No application feature or existing artifact contract changes are required by the
 The user confirmed all four targets. Each requirement has an observable acceptance check.
 The scope reuses the existing flake and introduces no service or workflow registry.
 The requirements distinguish platform verification from package declarations.
+
+change-se-adopt-version amends NP1 and keeps its ID. The defect is observable: the flake builds se-adopt-3.1.0 while ADD and the source it embeds are at 3.2.0. No requirement ID is added.
