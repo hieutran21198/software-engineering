@@ -155,6 +155,18 @@ test('L3: in-place phases derive from declarations without git log; undeclared s
   assert.ok(!calls.includes('log'), calls.join(','));
   assert.deepEqual(diagnostics, []);
 });
+test('L3: a change whose README is on main reads the self-checks of its committed documents', async t => {
+  const files = inPlaceFixture(), auth = 'docs/artifacts/authentication/';
+  for (const kind of ['requirements', 'specifications']) files.set(`${auth}${kind}/login.md`, `---\nself_check:\n  result: passed\n  source: ${auth}${kind}/login.md#self-check\n---\n# Login\n\n## Self-check\n\nChecked.\n`);
+  const f = await fixtureRepository(files); t.after(f.cleanup);
+  const diagnostics = [], changes = await evidenceFor(f.root, await scanRepository(f.root), readerGit, null, diagnostics);
+  const login = changes.find(c => c.artifact === 'authentication' && c.name === 'change-login');
+  assert.equal(login.merged, true);
+  assert.equal(login.steps.find(s => s.name === 'Requirement').state, 'documented-complete');
+  assert.equal(login.steps.find(s => s.name === 'Specification').state, 'documented-complete');
+  assert.notEqual(login.currentStep, 'Requirement');
+  assert.deepEqual(diagnostics, []);
+});
 test('L3: malformed or unresolvable declarations are diagnostics, not positive evidence', async t => {
   const files = inPlaceFixture(), plan = 'docs/artifacts/authentication/changes/change-login/tasks/';
   files.set(`${plan}README.md`, `---\ntasks: [01-login.md]\nself_check: {result: successful, source: "${plan}README.md"}\n---\n# Plan\n`);

@@ -24,7 +24,7 @@ const knowledgePath = rest => KNOWLEDGE_KINDS.includes(rest.split('/')[0]) && re
 // the in-place layout or, during a transition, the legacy snapshot layout.
 async function establishedView(root, git, id, ref, tree) {
   const base = `docs/artifacts/${id}/`;
-  if (!tree.has(`${base}README.md`)) return {state: 'available', ref: ref.ref, oid: ref.oid, layout: null, currentVersion: null, dependsOn: [], knowledgePrefix: base, entries: new Map(), versionRecords: [], versionBlobs: new Map()};
+  if (!tree.has(`${base}README.md`)) return {state: 'available', ref: ref.ref, oid: ref.oid, layout: null, currentVersion: null, dependsOn: [], knowledgePrefix: base, entries: new Map(), versionRecords: [], versionBlobs: new Map(), changeRecords: []};
   const entries = [...tree].filter(([path]) => path.startsWith(base));
   const layout = entries.some(([path]) => knowledgePath(path.slice(base.length))) ? 'in-place' : 'legacy';
   const readme = await git(root, ['show', `${ref.oid}:${base}README.md`], true).catch(() => null);
@@ -45,7 +45,9 @@ async function establishedView(root, git, id, ref, tree) {
   // versionBlobs maps each protected version number to the blob ID of its record.
   const versionBlobs = new Map(entries.map(([path, oid]) => [path.slice(base.length).match(/^versions\/(\d+\.\d+\.\d+)\/README\.md$/)?.[1], oid]).filter(([version]) => version));
   const versionRecords = [...versionBlobs.keys()];
-  return {state: 'available', ref: ref.ref, oid: ref.oid, layout, currentVersion: parsed.currentVersion, dependsOn: parsed.dependsOn, publicationReviews: parsed.publicationReviews, knowledgePrefix, entries: knowledge, versionRecords, versionBlobs};
+  // changeRecords names each change whose README is on the protected tree.
+  const changeRecords = entries.map(([path]) => path.slice(base.length).match(/^changes\/([^/]+)\/README\.md$/)?.[1]).filter(Boolean);
+  return {state: 'available', ref: ref.ref, oid: ref.oid, layout, currentVersion: parsed.currentVersion, dependsOn: parsed.dependsOn, publicationReviews: parsed.publicationReviews, knowledgePrefix, entries: knowledge, versionRecords, versionBlobs, changeRecords};
 }
 // Compare working knowledge with the established view: added, modified,
 // unchanged, and removed paths. Both protected refs must agree when present.

@@ -12,7 +12,7 @@ import {protectedRefs} from './knowledge-baseline.js';
 const BASE = 'docs/artifacts/';
 const LOCKFILES = new Set(['package-lock.json', 'npm-shrinkwrap.json', 'yarn.lock', 'pnpm-lock.yaml', 'go.sum', 'Cargo.lock', 'poetry.lock', 'Gemfile.lock', 'composer.lock']);
 export const CRITERIA = ['one-artifact', 'one-repository', 'patch-level', 'no-contract', 'upstream-established', 'code-limit', 'impact-contained'];
-const codePath = path => !path.startsWith(BASE) && !path.startsWith('docs/artifact-driven/') && !LOCKFILES.has(path.split('/').at(-1)) && !path.split('/').includes('dist');
+const codePath = path => !path.startsWith(BASE) && !path.startsWith('docs/artifact-driven/') && !path.endsWith('.md') && !LOCKFILES.has(path.split('/').at(-1)) && !path.split('/').includes('dist');
 const count = (n, one, many = `${one}s`) => `${n} ${n === 1 ? one : many}`;
 const list = (items, n = 5) => items.slice(0, n).join(', ') + (items.length > n ? ` and ${items.length - n} more` : '');
 // The artifact that owns an impact entity, or null for code paths.
@@ -54,7 +54,10 @@ export async function tierCheck({root, scan, git, artifact, change, impactServic
   const set = (id, result, detail) => results.set(id, {id, result, detail});
   const diff = await difference(root, git);
   const gitCriteria = ['one-artifact', 'no-contract', 'code-limit'];
+  // A change whose README is on the protected branch, with no file of its artifact in the difference.
+  const merged = !!baselines[artifact]?.changeRecords?.includes(change) && !!diff && !diff.status.some(s => s.path.startsWith(prefix)), MERGED = 'The change record is already on the protected branch; the difference no longer holds this change.';
   if (!diff) for (const id of gitCriteria) set(id, 'unresolved', 'No protected branch or merge base is available in local Git.');
+  else if (merged) for (const id of gitCriteria) set(id, 'unresolved', MERGED);
   else {
     // one-artifact
     const briefs = path => /^docs\/artifacts\/units-of-work\/[^/]+\/README\.md$/.test(path);
@@ -101,6 +104,7 @@ export async function tierCheck({root, scan, git, artifact, change, impactServic
   set('upstream-established', missing.length ? 'fail' : 'pass', missing.length ? `No established version on the protected branch: ${list(missing)}.` : (working.dependsOn || []).length ? `${count(working.dependsOn.length, 'upstream artifact')} with an established version.` : 'The artifact has no upstream artifact.');
   // impact-contained
   if (standalone) set('impact-contained', 'coordinator', 'The standalone validator builds no impact index; the coordinator records the impact assessment in the change README.');
+  else if (merged) set('impact-contained', 'unresolved', MERGED);
   else if (!impactService) set('impact-contained', 'unresolved', 'No impact index is available.');
   else {
     try {
