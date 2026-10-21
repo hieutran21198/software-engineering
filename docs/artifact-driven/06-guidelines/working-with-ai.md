@@ -4,7 +4,7 @@
 
 Give the agent the adopted bundle location, knowledge workspace, implementation repositories, intended capability, and relevant constraints. Ask it to use the coordinator skill at `docs/artifact-driven/03-execution/skills/add-coordinator/SKILL.md`.
 
-Ask the consumer AI to adopt the bundle and configure its own harness, such as Command Code, Codex, Claude Code, or Antigravity. Use the [adoption request](adopting-from-git.md#ask-an-ai-agent-to-adopt). It determines the supported skill and agent setup from the installed tool. Keep the canonical ADD bundle intact so skill and pattern references remain available.
+Ask the consumer AI to adopt the bundle and configure its own harness, such as Command Code, Codex, Claude Code, Antigravity, or OpenCode V2. Use the [adoption request](adopting-from-git.md#ask-an-ai-agent-to-adopt). It determines the supported skill and agent setup from the installed tool. Keep the canonical ADD bundle intact so skill and pattern references remain available.
 
 ## Required Skills
 
@@ -18,9 +18,30 @@ Make `kiss` and `asd-ste-100` available to every ADD role. Their canonical instr
 - Implementers execute approved tasks and record DoD evidence. Independent implementation agents use separate Git worktrees.
 - The coordinator validates the integrated change and dependencies, prepares the proposed version, opens required PRs, and stops for team review and merge.
 
-Register the role skills where the harness finds them, and point each entry to the canonical skill directory in the bundle so that its `reference.md` and links resolve. Antigravity and Codex read `.agents/skills` (and Antigravity also reads `.agents/skills.json`); Codex reads role profiles in `.codex/agents`; Claude Code reads `.claude/skills`. Roles can share a session; a role profile does not require a separate agent run. Do not start another session only to change roles. The consumer AI registers or adapts the bundled skills using native harness capabilities. If a required capability is unavailable, it reports the limitation and uses an explicit sequential fallback where possible.
+Register the role skills where the harness finds them, and point each entry to the canonical skill directory in the bundle so that its `reference.md` and links resolve. Antigravity, Codex and OpenCode V2 read `.agents/skills` (and Antigravity also reads `.agents/skills.json`); Codex reads role profiles in `.codex/agents`; Claude Code reads `.claude/skills`. Roles can share a session; a role profile does not require a separate agent run. Do not start another session only to change roles. The consumer AI registers or adapts the bundled skills using native harness capabilities. If a required capability is unavailable, it reports the limitation and uses an explicit sequential fallback where possible.
 
 Add concise ADD instructions to the applicable existing `AGENTS.md`, `CLAUDE.md`, or `GEMINI.md`. Preserve unrelated guidance and avoid duplicate instructions. Point to the canonical bundle, identify the knowledge and implementation workspaces, require the KISS and STE checklists, and state the change tiers and the plan-approval, dependency, worktree, and merge boundaries. Do not duplicate the full methodology or introduce a workflow state layer. Resolve conflicts with existing instructions through the user rather than overwriting them.
+
+## OpenCode V2 setup
+
+Use the official V2 [skills](https://opencode.ai/v2/docs/skills), [agents](https://opencode.ai/v2/docs/agents) and [instructions](https://opencode.ai/v2/docs/instructions) guides for native setup. OpenCode reads `AGENTS.md`, not `CLAUDE.md` as a fallback. Preserve existing instructions and configuration.
+
+OpenCode discovers the existing `.agents/skills/<id>/SKILL.md` entries. Reuse them when present. A consumer can instead register skills under `.opencode/skills`, but needs only one registration per skill. This repository uses the six `.agents/skills` symlinks and adds no `.opencode/skills` copies. Each entry targets the following directory within the canonical bundle:
+
+| Skill ID | Canonical directory |
+| --- | --- |
+| `add-coordinator` | `03-execution/skills/add-coordinator` |
+| `add-product-owner` | `03-execution/skills/add-product-owner` |
+| `add-technical-lead` | `03-execution/skills/add-technical-lead` |
+| `add-implementer` | `03-execution/skills/add-implementer` |
+| `kiss` | `required-skills/kiss` |
+| `asd-ste-100` | `required-skills/asd-ste-100` |
+
+Keep the full bundle available. Resolve `reference.md` and skill-relative paths from these canonical directories, not from a native profile or a copied skill entry.
+
+Native role profiles live in `.opencode/agents/add-coordinator.md`, `add-product-owner.md`, `add-technical-lead.md` and `add-implementer.md`. Give each a description and `mode: all` so it can serve as a primary agent or a subagent. Its body must direct the role to load its canonical skill core and retain KISS/STE checks, plan approval, upstream establishment and team review. Omit model and permission fields: keep the selected model and existing access controls. Report capability limits rather than raising permissions. Roles can share the current session; use separate worktrees for independent approved implementation agents.
+
+`se-adopt` copies the bundle only. It does not register skills, install native profiles, configure MCP or change user instructions. The consumer configures its harness after adoption; this setup does not authorize a domain change or bypass ADD gates.
 
 ## Reuse Context in One Session
 

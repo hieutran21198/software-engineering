@@ -157,6 +157,8 @@ The bundle includes the [system-flow format](../06-guidelines/system-flows.md) a
 
 ## After Adoption
 
+OpenCode V2 is a supported harness. Follow [OpenCode V2 setup](../06-guidelines/working-with-ai.md#opencode-v2-setup) for skill discovery, native role profiles and `AGENTS.md` instructions. Reuse existing `.agents/skills` entries rather than adding duplicate registrations. `se-adopt` does not install profiles, configure MCP or change user instructions.
+
 Do these steps in order after a successful copy:
 
 1. Check the result. Run the same `se-adopt` command again with `--dry-run`. A complete adoption reports `0 new files`. Confirm that the destination contains `README.md`, `required-skills/kiss/SKILL.md`, `required-skills/asd-ste-100/SKILL.md` and `tools/README.md`. When `tools/add-validate.mjs` is present, run it once; exit status 0 means that the project knowledge has no error.
