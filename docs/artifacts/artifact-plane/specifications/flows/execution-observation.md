@@ -20,12 +20,16 @@ flow:
         - inferred-binding
         - binding-tests
         - opencode-contract
+        - opencode-bridge
+        - opencode-tests
     - id: observe
       title: Record allowlisted lifecycle observations
       supports:
         - store
         - hook-command
         - opencode-contract
+        - opencode-bridge
+        - opencode-tests
     - id: query
       title: Retrieve attempts and local SSE updates
       supports:
@@ -61,6 +65,21 @@ flow:
       to: retain
       condition: Observation ends, disconnects or becomes stale.
   support:
+    - id: opencode-bridge
+      kind: implementation
+      path: apps/artifact-plane/integration/opencode/index.js
+      symbol: createPlugin
+      requires: Translate allowlisted V2 events and task reads with scoped
+        identity and no fabricated terminal correlation.
+      basis: static
+    - id: opencode-tests
+      kind: test
+      path: apps/artifact-plane/test/opencode-bridge.test.js
+      requires: Verify child isolation, worktree moves, task inference,
+        missing turns, stale terminals and private payload exclusion.
+      basis: observed
+      evidence:
+        - docs/artifacts/artifact-plane/changes/change-opencode-support/tasks/02-lifecycle-bridge.md
     - id: opencode-contract
       kind: element
       artifact: artifact-plane
@@ -164,8 +183,9 @@ flow:
       requires: Check one title, one navigation, unique control names and no horizontal overflow on every page.
       basis: static
   gaps:
-    - OpenCode V2 event shapes and installed plugin activation need current
-      delivery evidence. Missing turn metadata stays unknown, not inferred.
+    - OpenCode V2 terminals contain no user-message or run ID. Late attachment,
+      moves, missing stream events and several delivered inputs can prevent
+      attribution. Missing turn metadata stays unknown, not inferred.
     - Observed lifecycle activity and reported checks do not prove task DoD,
       plan approval or artifact establishment.
   exclusions:

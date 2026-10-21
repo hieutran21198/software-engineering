@@ -1,15 +1,15 @@
 ---
-current_version: 1.26.1
+current_version: 1.27.0
 depends_on: [artifact-driven]
 ---
 
 # Artifact Plane
 
-Artifact Plane is the local workbench for exploring and authoring ADD repositories, with optional local Codex execution observation.
+Artifact Plane is the local workbench for exploring and authoring ADD repositories, with optional local agent execution observation.
 
 ## Scope
 
-Discover artifact knowledge and visualize artifact dependencies, knowledge references and maintained system flows. Create and maintain artifacts, changes, documents, dependencies, references, tasks, units, flows and versions through deterministic operations that write only inside docs/artifacts of a selected worktree on a non-protected branch. Retrieve source-backed context through local keyword, semantic and graph discovery, HTTP and stdio MCP. Inspect local worktrees and workflow evidence. Observe explicitly bound Codex attempts and retain their graph context outside repositories. Implementation belongs in apps/artifact-plane.
+Discover artifact knowledge and visualize artifact dependencies, knowledge references and maintained system flows. Create and maintain artifacts, changes, documents, dependencies, references, tasks, units, flows and versions through deterministic operations that write only inside docs/artifacts of a selected worktree on a non-protected branch. Retrieve source-backed context through local keyword, semantic and graph discovery, HTTP and stdio MCP. Inspect local worktrees and workflow evidence. Observe supported agent attempts with explicit or inferred task bindings and retain their graph context outside repositories. Implementation belongs in apps/artifact-plane.
 
 ## Ownership
 

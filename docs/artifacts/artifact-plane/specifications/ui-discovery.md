@@ -159,6 +159,8 @@ The SessionStart output adds two parts for Claude Code and Codex:
 
 For Antigravity, the combined `additionalContext` string (the session context text and `Workbench for people: <line>`, or either one alone) is returned in `{"injectSteps":[{"systemMessage":{"systemMessage":"<context>"}}]}`.
 
+The [OpenCode 2 bridge](opencode-support.md) invokes SessionStart and appends its combined additionalContext as an outgoing text system part. The workbench address is available to the agent; this does not promise a native user-visible toast. Its short session/worktree cache and failure boundaries are owned by that contract. No browser rendering or address format changes.
+
 With no line and no session context text, the output stays `{}`. The other events and their outputs do not change. Outside an ADD repository the step starts nothing and gives no line.
 
 ## Repository address

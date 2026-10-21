@@ -1,6 +1,6 @@
 {
   "name": "artifact-plane",
-  "version": "1.26.1",
+  "version": "1.27.0",
   "private": true,
   "type": "module",
   "engines": {
@@ -13,6 +13,7 @@
     "build:app": "node scripts/build-app.mjs",
     "test": "state=$(mktemp -d) && ARTIFACT_PLANE_STATE_DIR=$state node --test test/*.test.js; status=$?; rm -rf \"$state\"; exit $status",
     "test:browser": "playwright test",
+    "test:opencode": "node scripts/opencode-smoke.mjs",
     "validate": "node scripts/validate-knowledge.mjs --repository ../..",
     "flow:model-install": "node scripts/install-flow-model.mjs",
     "mcp": "node server/flow-mcp-stdio.js"

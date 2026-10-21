@@ -25,6 +25,9 @@ flow:
         - workbench
         - workbench-tests
         - opencode-contract
+        - opencode-bridge
+        - opencode-transport
+        - opencode-tests
     - id: act
       title: Refuse a commit or push to main or master and a pull request merge
       supports:
@@ -34,8 +37,11 @@ flow:
         - guidance-tests
         - hook-tests
         - opencode-contract
+        - opencode-bridge
+        - opencode-transport
+        - opencode-tests
     - id: finish
-      title: Ask once for a fix of record errors before the agent stops
+      title: Check record errors through a supported stop check or MCP
       supports:
         - contract
         - stop
@@ -44,6 +50,7 @@ flow:
         - guidance-tests
         - hook-tests
         - opencode-contract
+        - opencode-tests
   transitions:
     - from: start
       to: act
@@ -52,11 +59,33 @@ flow:
       condition: The agent calls another tool.
     - from: act
       to: finish
-      condition: The agent stops.
+      condition: The harness runs a supported stop check or the agent requests MCP record validation.
     - from: finish
       to: act
-      condition: The stop check fails and the agent continues.
+      condition: Record errors require a fix and the agent continues; OpenCode never forces continuation.
   support:
+    - id: opencode-bridge
+      kind: implementation
+      path: apps/artifact-plane/integration/opencode/index.js
+      symbol: createPlugin
+      requires: Append native session context and translate only verified
+        reserved-action denials without relaxing permissions or forcing continuation.
+      basis: static
+    - id: opencode-transport
+      kind: implementation
+      path: apps/artifact-plane/integration/opencode/transport.js
+      symbol: createRunner
+      requires: Bound hook subprocess input, output and time; retain valid
+        denials even when observer diagnostics appear on standard error.
+      basis: static
+    - id: opencode-tests
+      kind: test
+      path: apps/artifact-plane/test/opencode-bridge.test.js
+      requires: Exercise native hooks, context, permission preservation,
+        identity, lifecycle uncertainty and fail-open behavior.
+      basis: observed
+      evidence:
+        - docs/artifacts/artifact-plane/changes/change-opencode-support/tasks/02-lifecycle-bridge.md
     - id: opencode-contract
       kind: element
       artifact: artifact-plane
@@ -155,8 +184,9 @@ flow:
         - docs/artifacts/artifact-plane/changes/change-agent-integration/tasks/04-mcp-tools.md
   gaps:
     - OpenCode V2 has no documented stop-blocking API. Its entry uses MCP
-      record checks rather than forcing continuation. Live activation and
-      complete shell resource mapping await the OpenCode delivery checks.
+      record checks rather than forcing continuation. Its native bridge maps
+      verified built-in tool inputs, not arbitrary shell-create rewrites by
+      other plugins. Native activation evidence is scoped to its recorded version.
     - An alias, a script, a subshell or command substitution that runs git is
       not inspected; the skills and the team review remain the control.
     - The live behavior of each harness is checked on the versions recorded in
