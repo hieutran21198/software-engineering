@@ -19,6 +19,7 @@ Build cmd/se-adopt from repository sources, including the embedded src/archs bun
 Install bin/se-adopt. Preserve all CLI arguments and adoption behavior.
 Run existing Go command and adoption tests, then exercise the installed command outside the source checkout.
 Do not introduce fetched Go dependencies when go.mod needs none.
+Set the package version to `current_version` of docs/artifacts/artifact-driven/README.md, the ADD version that names se-adopt release tags, as the Plane package takes its version from package.json. Fail evaluation when the record has no version.
 
 ## Artifact Plane
 
@@ -44,3 +45,5 @@ The package contract covers the five requirements without changing application i
 The two packages share the flake but have independent builders. The integration task joins them.
 No artifact-level dependency is introduced. Existing application code supplies the runtime interfaces.
 Native dependency compatibility is unverified until implementation checks run.
+
+change-se-adopt-version: NP1 maps to the version rule of the se-adopt section. Reading the version of the ADD identity record adds no artifact dependency, because se-adopt already embeds the ADD bundle without one.
