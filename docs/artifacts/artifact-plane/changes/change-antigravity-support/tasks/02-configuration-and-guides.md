@@ -18,6 +18,14 @@ Coordinator. `.agents/hooks.json`, `.agents/plugins/artifact-plane/plugin.json`,
 
 ## Definition of Done
 
-- [ ] `.agents/hooks.json` and `apps/artifact-plane/integration/antigravity-hooks.example.json` define the `"artifact-plane"` hook group with `SessionStart`, `PreInvocation`, `PreToolUse`, `PostToolUse` and `Stop` calling `artifact-plane hook --event <Event> || true`.
-- [ ] `.agents/plugins/artifact-plane/plugin.json` and `.agents/plugins/artifact-plane/mcp_config.json` register the `artifact-plane` stdio MCP server (`command: "artifact-plane"`, `args: ["mcp"]`).
-- [ ] `apps/artifact-plane/integration/README.md` and `apps/artifact-plane/README.md` document Antigravity hook and MCP setup (workspace plugin and global `~/.gemini/config/mcp_config.json`) alongside Claude Code and Codex.
+- [x] `.agents/hooks.json` and `apps/artifact-plane/integration/antigravity-hooks.example.json` define the `"artifact-plane"` hook group with `SessionStart`, `PreInvocation`, `PreToolUse`, `PostToolUse` and `Stop` calling `artifact-plane hook --event <Event>` with fail-open guards.
+- [x] `.agents/plugins/artifact-plane/plugin.json` and `.agents/plugins/artifact-plane/mcp_config.json` register the `artifact-plane` stdio MCP server (`command: "artifact-plane"`, `args: ["mcp"]`).
+- [x] `apps/artifact-plane/integration/README.md` and `apps/artifact-plane/README.md` document Antigravity hook and MCP setup (workspace plugin and global `~/.gemini/config/mcp_config.json`) alongside Claude Code and Codex.
+
+## Evidence
+
+| DoD item | Check | Result |
+| --- | --- | --- |
+| Hook configuration files | `.agents/hooks.json` and `apps/artifact-plane/integration/antigravity-hooks.example.json` define the `"artifact-plane"` hook group (`SessionStart`, `PreInvocation`, `PreToolUse`, `PostToolUse`, `Stop`); `test/agent-config.test.js` verifies both files and live Antigravity execution confirmed `PreToolUse` allows tool calls when Plane 1.24.0 is on `$PATH` | Passed |
+| Workspace MCP plugin files | `.agents/plugins/artifact-plane/plugin.json` and `.agents/plugins/artifact-plane/mcp_config.json` register `artifact-plane mcp`; verified by `test/agent-config.test.js` | Passed |
+| Integration and Plane READMEs | `apps/artifact-plane/integration/README.md` and `apps/artifact-plane/README.md` document Antigravity MCP and hook setup alongside Claude Code and Codex | Passed |

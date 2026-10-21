@@ -94,9 +94,13 @@ claims:
       Antigravity camelCase payloads (conversationId, workspacePaths, toolCall,
       invocationNum, executionNum, terminationReason) to the observer and
       guidance inputs while writing Antigravity output shapes (injectSteps,
-      decision deny and decision continue).
-    status: open
-    basis: documented
+      decision allow or deny, and decision continue).
+    status: verified
+    basis: observed
+    verified_by: agent
+    evidence:
+      - docs/artifacts/artifact-plane/changes/change-antigravity-support/tasks/01-antigravity-hook-adapter.md#evidence
+      - docs/artifacts/artifact-plane/changes/change-antigravity-support/tasks/03-validation.md#evidence
     rejected:
       - option: A separate antigravity-hook subcommand or wrapper script.
         reason: A second command or script splits the fail-open and observer
@@ -152,13 +156,13 @@ For each supported event, the hook first records the observation as the observer
 | Event | Work | Output (Claude Code and Codex) | Output (Antigravity) |
 | --- | --- | --- | --- |
 | SessionStart | Session context | `{"hookSpecificOutput":{"hookEventName":"SessionStart","additionalContext":"<text>"}}`, or `{}` when the text is empty | `{"injectSteps":[{"systemMessage":{"systemMessage":"<text>"}}]}`, or `{}` when the text is empty |
-| PreToolUse | Reserved actions, then inferred binding | `{"hookSpecificOutput":{"hookEventName":"PreToolUse","permissionDecision":"deny","permissionDecisionReason":"<reason>"}}` for a reserved action, else `{}` | `{"decision":"deny","reason":"<reason>"}` for a reserved action, else `{}` |
+| PreToolUse | Reserved actions, then inferred binding | `{"hookSpecificOutput":{"hookEventName":"PreToolUse","permissionDecision":"deny","permissionDecisionReason":"<reason>"}}` for a reserved action, else `{}` | `{"decision":"deny","reason":"<reason>"}` for a reserved action, else `{"decision":"allow"}` |
 | Stop, SubagentStop | Stop check | `{"decision":"block","reason":"<text>"}` when the check fails, else `{}` | `{"decision":"continue","reason":"<text>"}` when the check fails, else `{}` |
 | Other events | none | `{}` | `{}` |
 
 All three harnesses accept their respective shapes. The hook writes no other field and no plain text, except the workbench parts of the SessionStart output (specifications/ui-discovery.md, Hook output).
 
-Each step has its own error boundary. An error, a timeout or a missing repository makes that step return `{}`, and the hook writes one line "Artifact Plane hook unavailable; execution continues." to standard error. In a Git repository without `docs/artifacts`, the steps return `{}`; only SessionStart also writes the line. A step also returns `{}` when it runs longer than its limit: 2 seconds for PreToolUse, 5 seconds for SessionStart and 20 seconds for the stop check. The observer step keeps its existing bounds: Git reads stop after 5 seconds and SQLite waits at most 2 seconds for a lock. On Windows the runtime store refuses its directory because the file system reports no private POSIX modes, as it does from source; the observer step then fails on each call and the guidance steps still work. The hook stores no prompt, tool input, command, tool output, assistant message or transcript path. It reads `tool_input` only in memory, for the reserved actions and the task path.
+Each step has its own error boundary. An error, a timeout or a missing repository makes that step return `{}` (or `{"decision":"allow"}` for an Antigravity `PreToolUse` event, where `decision` is required), and the hook writes one line "Artifact Plane hook unavailable; execution continues." to standard error. In a Git repository without `docs/artifacts`, the steps return `{}` (or `{"decision":"allow"}` for Antigravity `PreToolUse`); only SessionStart also writes the line. A step also returns `{}` (or `{"decision":"allow"}` for Antigravity `PreToolUse`) when it runs longer than its limit: 2 seconds for PreToolUse, 5 seconds for SessionStart and 20 seconds for the stop check. The observer step keeps its existing bounds: Git reads stop after 5 seconds and SQLite waits at most 2 seconds for a lock. On Windows the runtime store refuses its directory because the file system reports no private POSIX modes, as it does from source; the observer step then fails on each call and the guidance steps still work. The hook stores no prompt, tool input, command, tool output, assistant message or transcript path. It reads `tool_input` only in memory, for the reserved actions and the task path.
 
 An ADD repository is a Git work tree whose top level has `docs/artifacts`. The protected branches are `main` and `master`, as in the other readers of the Plane.
 
@@ -244,7 +248,7 @@ Hook entries for Claude Code and Codex use the command `artifact-plane hook || t
 | SessionEnd | none | 3 |
 | Interrupt (Codex only) | none | 3 |
 
-Hook entries for Antigravity use a top-level named hook `"artifact-plane"` in `.agents/hooks.json` with `artifact-plane hook --event <Event> || true`:
+Hook entries for Antigravity use a top-level named hook `"artifact-plane"` in `.agents/hooks.json` with `artifact-plane hook --event <Event> || true` (and `artifact-plane hook --event PreToolUse | grep '"decision"' || echo '{"decision":"allow"}'` on `PreToolUse` so a missing or pre-1.25.0 executable still returns `{"decision":"allow"}`):
 
 | Event | Structure | Matcher | Timeout |
 | --- | --- | --- | --- |
@@ -253,7 +257,7 @@ Hook entries for Antigravity use a top-level named hook `"artifact-plane"` in `.
 | PreToolUse, PostToolUse | grouped with `matcher` and `hooks` | `*` | 5 |
 | Stop | flat handler list | none | 30 |
 
-`|| true` makes a missing or older executable return status 0 with no output.
+`|| true` (and the `PreToolUse` fallback) makes a missing or older executable return status 0 without blocking the agent.
 
 This repository commits:
 

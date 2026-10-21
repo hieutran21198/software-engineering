@@ -24,3 +24,4 @@ Knowledge is edited in place on this branch. The unit brief is [Antigravity supp
 - [Requirements: agent integration](../../requirements/agent-integration.md)
 - [Specification: agent integration](../../specifications/agent-integration.md)
 - [Plan](tasks/README.md)
+- [Version 1.25.0](../../versions/1.25.0/README.md)

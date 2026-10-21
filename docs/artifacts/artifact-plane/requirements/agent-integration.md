@@ -25,7 +25,7 @@ Facts on 19 October 2026, Plane 1.22.0:
 - The validator takes 1.0 to 1.4 seconds on this repository. The executable starts and prints its version in 0.12 seconds after its first start.
 - Claude Code 2.1.301 and codex-cli 0.163.0, installed on this machine, support command hooks at session start (with the sources startup, resume, clear and compact), before and after a tool call, and at stop. Both accept added context at session start, a deny decision before a tool call, and a block decision with a reason at stop.
 - The owner decided on 19 October 2026: keep the observer and bind automatically; commit the MCP and hook configuration of this repository; the technical lead selects the hook behaviors from research. Playbooks are out of scope.
-- On 20 October 2026, the owner asked to support Google Antigravity alongside Claude Code and Codex. Antigravity loads workspace hooks from `.agents/hooks.json` and workspace MCP servers from plugins under `.agents/plugins/<name>/mcp_config.json` (or globally from `~/.gemini/config/mcp_config.json`). Its hook payloads use camelCase (`conversationId`, `workspacePaths`, `toolCall`, `invocationNum`, `executionNum`, `terminationReason`) and its hook outputs use `injectSteps`, `decision: "deny"` and `decision: "continue"`.
+- On 20 October 2026, the owner asked to support Google Antigravity alongside Claude Code and Codex. Antigravity loads workspace hooks from `.agents/hooks.json` and workspace MCP servers from plugins under `.agents/plugins/<name>/mcp_config.json` (or globally from `~/.gemini/config/mcp_config.json`). Its hook payloads use camelCase (`conversationId`, `workspacePaths`, `toolCall`, `invocationNum`, `executionNum`, `terminationReason`) and its hook outputs use `injectSteps`, `decision: "allow"` or `"deny"`, and `decision: "continue"`.
 
 ## Requirements
 
@@ -53,7 +53,7 @@ Facts on 19 October 2026, Plane 1.22.0:
 - AIA5: An MCP client lists the new tools, reads the instructions and the package version, and gets the same status as the change page and the same result as the validator for one change.
 - AIA6: In this repository, a Claude Code session and a Codex session with the committed configuration start, receive the context of AI3 and list the MCP tools. The evidence records the harness versions.
 - AIA7: The existing Node, browser and Go suites and the executable smoke check pass.
-- AIA8: A Node test sends recorded Antigravity hook inputs (`SessionStart`, `PreInvocation`, `PreToolUse`, `PostToolUse`, `Stop` with `NO_TOOL_CALL` and `executionNum` 1 versus 2) and verifies the Antigravity `injectSteps`, `decision: "deny"` and `decision: "continue"` outputs, inferred task binding from `toolCall.args.Path`, and observer turn progression.
+- AIA8: A Node test sends recorded Antigravity hook inputs (`SessionStart`, `PreInvocation`, `PreToolUse`, `PostToolUse`, `Stop` with `NO_TOOL_CALL` and `executionNum` 1 versus 2) and verifies the Antigravity `injectSteps`, `decision: "allow"`, `decision: "deny"` and `decision: "continue"` outputs, inferred task binding from `toolCall.args.Path`, and observer turn progression.
 - AIA9: This repository contains `.agents/hooks.json` and `.agents/plugins/artifact-plane/{plugin.json,mcp_config.json}`, and `apps/artifact-plane/integration/` contains `antigravity-hooks.example.json` and Antigravity setup instructions.
 
 ## Affected artifacts and flows

@@ -1,5 +1,5 @@
 ---
-current_version: 3.1.0
+current_version: 3.2.0
 depends_on: []
 ---
 

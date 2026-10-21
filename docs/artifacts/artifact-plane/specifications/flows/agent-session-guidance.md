@@ -133,6 +133,7 @@ flow:
       basis: observed
       evidence:
         - docs/artifacts/artifact-plane/changes/change-agent-integration/tasks/03-hook-command.md
+        - docs/artifacts/artifact-plane/changes/change-antigravity-support/tasks/01-antigravity-hook-adapter.md
     - id: mcp-tests
       kind: test
       path: apps/artifact-plane/test/agent-mcp.test.js

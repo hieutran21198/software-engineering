@@ -24,7 +24,7 @@ Facts observed on this repository on 20 October 2026:
 - AGY2: The ADD harness guidance explains how Antigravity discovers the four role skills and the two required skills through `.agents/skills` or `.agents/skills.json` while keeping the canonical bundle intact.
 - AGY3: The ADD adoption and working-with-AI guidance includes `GEMINI.md` alongside `AGENTS.md` and `CLAUDE.md` when describing where to add concise project ADD instructions, and states that `se-adopt` does not modify those files.
 - AGY4: This repository's `AGENTS.md` states how Antigravity discovers the six bundled skills alongside Codex and Claude Code.
-- AGY5: Canonical (`docs/artifact-driven`) and packaged (`src/archs/artifact-driven`) bundle files stay byte-identical, relative links resolve without parent links, and `se-adopt` copy behavior does not change.
+- AGY5: The embedded ADD bundle in `docs/artifact-driven` passes its filesystem and link tests, relative links resolve without parent links, and `se-adopt` copy behavior does not change.
 
 ## Acceptance criteria
 

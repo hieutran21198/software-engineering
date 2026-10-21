@@ -26,7 +26,7 @@ acceptance:
   - id: add-harness-guidance
     criterion: The ADD bundle, adoption guidance and repository instructions
       document Antigravity skill discovery, rule files and role execution
-      alongside Claude Code and Codex, with both bundle copies identical.
+      alongside Claude Code and Codex.
   - id: plane-antigravity-hooks
     criterion: Recorded Antigravity hook inputs for SessionStart, PreInvocation,
       PreToolUse, PostToolUse and Stop produce the session context, workbench
@@ -40,7 +40,23 @@ acceptance:
     criterion: Go, Node, bundle parity, link and knowledge-validator checks pass
       for the combined change.
     integration: true
-evidence: []
+evidence:
+  - criterion: add-harness-guidance
+    method: Inspected docs/artifact-driven/06-guidelines/working-with-ai.md, docs/artifact-driven/05-adoption/README.md, docs/artifact-driven/06-guidelines/adopting-from-git.md and AGENTS.md against AGY1–AGY5.
+    result: passed
+    source: docs/artifacts/artifact-driven/changes/change-antigravity-support/tasks/01-bundle-and-repo-guidance.md#evidence
+  - criterion: plane-antigravity-hooks
+    method: Ran test/agent-hook.test.js and test/runtime-binding.test.js with recorded Antigravity inputs across SessionStart, PreInvocation, PreToolUse, PostToolUse and Stop, and verified live PreToolUse hook execution in Antigravity.
+    result: passed
+    source: docs/artifacts/artifact-plane/changes/change-antigravity-support/tasks/01-antigravity-hook-adapter.md#evidence
+  - criterion: workspace-configuration
+    method: Ran test/agent-config.test.js verifying .agents/hooks.json, .agents/plugins/artifact-plane/{plugin.json,mcp_config.json} and integration/antigravity-hooks.example.json, and inspected integration/README.md and apps/artifact-plane/README.md.
+    result: passed
+    source: docs/artifacts/artifact-plane/changes/change-antigravity-support/tasks/02-configuration-and-guides.md#evidence
+  - criterion: integration
+    method: Ran go test ./..., go vet ./..., npm --prefix apps/artifact-plane test, npm --prefix apps/artifact-plane run build, npm --prefix website run build and validate-knowledge.mjs.
+    result: passed
+    source: docs/artifacts/artifact-plane/changes/change-antigravity-support/tasks/03-validation.md#evidence
 ---
 
 # Support Google Antigravity across ADD and Artifact Plane
