@@ -25,6 +25,9 @@ flow:
         - workbench
         - workbench-tests
         - opencode-contract
+        - opencode-bridge
+        - opencode-transport
+        - opencode-tests
     - id: act
       title: Refuse a commit or push to main or master and a pull request merge
       supports:
@@ -34,6 +37,9 @@ flow:
         - guidance-tests
         - hook-tests
         - opencode-contract
+        - opencode-bridge
+        - opencode-transport
+        - opencode-tests
     - id: finish
       title: Check record errors through a supported stop check or MCP
       supports:
@@ -44,6 +50,7 @@ flow:
         - guidance-tests
         - hook-tests
         - opencode-contract
+        - opencode-tests
   transitions:
     - from: start
       to: act
@@ -57,6 +64,26 @@ flow:
       to: act
       condition: Record errors require a fix and the agent continues; OpenCode never forces continuation.
   support:
+    - id: opencode-bridge
+      kind: implementation
+      path: apps/artifact-plane/integration/opencode/index.js
+      symbol: createPlugin
+      requires: Append native session context and translate only verified
+        reserved-action denials without relaxing permissions or forcing continuation.
+      basis: static
+    - id: opencode-transport
+      kind: implementation
+      path: apps/artifact-plane/integration/opencode/transport.js
+      symbol: createRunner
+      requires: Bound hook subprocess input, output and time; retain valid
+        denials even when observer diagnostics appear on standard error.
+      basis: static
+    - id: opencode-tests
+      kind: test
+      path: apps/artifact-plane/test/opencode-bridge.test.js
+      requires: Exercise native hooks, context, permission preservation,
+        identity, lifecycle uncertainty and fail-open behavior.
+      basis: static
     - id: opencode-contract
       kind: element
       artifact: artifact-plane

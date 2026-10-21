@@ -20,12 +20,16 @@ flow:
         - inferred-binding
         - binding-tests
         - opencode-contract
+        - opencode-bridge
+        - opencode-tests
     - id: observe
       title: Record allowlisted lifecycle observations
       supports:
         - store
         - hook-command
         - opencode-contract
+        - opencode-bridge
+        - opencode-tests
     - id: query
       title: Retrieve attempts and local SSE updates
       supports:
@@ -61,6 +65,19 @@ flow:
       to: retain
       condition: Observation ends, disconnects or becomes stale.
   support:
+    - id: opencode-bridge
+      kind: implementation
+      path: apps/artifact-plane/integration/opencode/index.js
+      symbol: createPlugin
+      requires: Translate allowlisted V2 events and task reads with scoped
+        identity and no fabricated terminal correlation.
+      basis: static
+    - id: opencode-tests
+      kind: test
+      path: apps/artifact-plane/test/opencode-bridge.test.js
+      requires: Verify child isolation, worktree moves, task inference,
+        missing turns, stale terminals and private payload exclusion.
+      basis: static
     - id: opencode-contract
       kind: element
       artifact: artifact-plane
