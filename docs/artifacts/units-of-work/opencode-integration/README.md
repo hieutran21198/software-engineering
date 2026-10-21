@@ -27,10 +27,12 @@ claims:
     kind: assumption
     statement: Adding OpenCode context output to the shared discovery contract
       does not change the project-tabs journey.
-    status: supported
-    basis: static
+    status: verified
+    basis: observed
+    verified_by: agent
     evidence:
       - docs/artifacts/units-of-work/opencode-integration/README.md#impact-assessment
+      - docs/artifacts/artifact-plane/changes/change-opencode-support/tasks/04-integration-validation.md#reached-browser-suites
     check: Compare the branch with protected browser and workbench sources and
       run the reached project-tabs and recorded-execution browser suites.
     risk_if_wrong: A reached flow would be omitted from the declared change scope.
@@ -53,6 +55,18 @@ evidence:
     method: Run static registration and native profile checks, bundle and adoption Go suites, website build and knowledge validation.
     result: passed
     source: docs/artifacts/artifact-driven/changes/change-opencode-support/tasks/02-validation.md#automated-checks
+  - criterion: plane-setup
+    method: Run native project configuration checks, the full Node suite and a real OpenCode 2.1.2 activation with a private MCP connection.
+    result: passed
+    source: docs/artifacts/artifact-plane/changes/change-opencode-support/tasks/04-integration-validation.md#final-combined-checks
+  - criterion: lifecycle
+    method: Run both OpenCode bridge suites and the native activation check covering context, MCP catalog, an allowed command and a refused reserved action.
+    result: passed
+    source: docs/artifacts/artifact-plane/changes/change-opencode-support/tasks/04-integration-validation.md#native-opencode-activation
+  - criterion: integration
+    method: Run the combined Node, Go, executable smoke, reached browser suites and both knowledge validators, then classify the one flaky browser case.
+    result: passed
+    source: docs/artifacts/artifact-plane/changes/change-opencode-support/tasks/04-integration-validation.md#final-combined-checks
 publication_reviews:
   - artifact: artifact-driven
     version: 3.3.0
@@ -86,7 +100,15 @@ The Plane consumes established ADD knowledge. Implement and publish the ADD memb
 
 ## Combined checks
 
-The ADD member's implementation checks are recorded in its validation task. Its required knowledge and code have landed. The Plane member is checking its target runtime contracts before releasing bridge implementation. The unit's lifecycle and combined-integration criteria are not yet satisfied. No live OpenCode activation is claimed.
+The ADD member's implementation checks are recorded in its validation task. Its required knowledge and code have landed. The Plane member is implemented and validated, and its proposed 1.27.0 version awaits team review. OpenCode has no stop blocking, ambiguous execution terminals stay unknown, and third-party shell rewrites remain outside the verified mapping. Final completion requires the Plane PR to merge.
+
+## Combined checks
+
+All member checks are recorded in the tasks they belong to. The Plane validation task holds the final combined Node, Go, executable, browser and native OpenCode results with their commands. The ADD validation task holds the bundle, profile and website results. This brief references them rather than copying results.
+
+## Native activation evidence
+
+The real OpenCode 2.1.2 runtime loaded the committed plugin entry, connected the Plane MCP server with 13 tools, received the change context and workbench line in model requests, ran a permitted command, and refused a reserved commit on a local protected branch before starting a process. The check used a deterministic local provider, so it proves harness activation and policy behavior, not model inference, validation or establishment.
 
 ## Upstream publication
 

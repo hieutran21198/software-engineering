@@ -85,7 +85,7 @@ flow:
         identity, lifecycle uncertainty and fail-open behavior.
       basis: observed
       evidence:
-        - docs/artifacts/artifact-plane/changes/change-opencode-support/tasks/02-lifecycle-bridge.md#implementation-and-checks
+        - docs/artifacts/artifact-plane/changes/change-opencode-support/tasks/02-lifecycle-bridge.md
     - id: opencode-contract
       kind: element
       artifact: artifact-plane
