@@ -1,0 +1,49 @@
+name: Nix packages
+on:
+  push:
+    branches: [main, master]
+    paths:
+      - flake.nix
+      - flake.lock
+      - nix/**
+      - go.mod
+      - cmd/se-adopt/**
+      - internal/adopt/**
+      - src/archs/**
+      - src/utils/agents/skills/**
+      - docs/artifact-driven/**
+      - apps/artifact-plane/**
+      - .github/workflows/nix.yml
+  pull_request:
+    paths:
+      - flake.nix
+      - flake.lock
+      - nix/**
+      - go.mod
+      - cmd/se-adopt/**
+      - internal/adopt/**
+      - src/archs/**
+      - src/utils/agents/skills/**
+      - docs/artifact-driven/**
+      - apps/artifact-plane/**
+      - .github/workflows/nix.yml
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  packages:
+    # Build both packages and run the package smoke check natively on each
+    # declared system.
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - { system: x86_64-linux, runner: ubuntu-24.04 }
+          - { system: aarch64-linux, runner: ubuntu-24.04-arm }
+          - { system: aarch64-darwin, runner: macos-15 }
+          - { system: x86_64-darwin, runner: macos-15-intel }
+    runs-on: ${{ matrix.runner }}
+    steps:
+      - uses: actions/checkout@v6
+      - uses: cachix/install-nix-action@v31
+      - run: nix build .#checks.${{ matrix.system }}.packages -L
