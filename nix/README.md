@@ -61,6 +61,7 @@ nix flake check
 ```
 
 The package check exercises adoption of both bundles, the embedded validator, Plane help and version, native module loading, HTTP assets and an MCP handshake.
+On aarch64-linux, ONNX Runtime reads the CPU list from `/sys/devices/system/cpu`, which the build sandbox does not contain. Add `extra-sandbox-paths = /sys/devices/system/cpu` to the Nix configuration of a trusted user before you run the check there. The installed command does not need this setting.
 Model installation and inference require a separate runtime check because model downloads are excluded from sandboxed builds.
 Run that check against a built package:
 

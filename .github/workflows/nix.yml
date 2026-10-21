@@ -46,4 +46,7 @@ jobs:
     steps:
       - uses: actions/checkout@v6
       - uses: cachix/install-nix-action@v31
+        with:
+          # ONNX Runtime reads the CPU list on aarch64-linux; the build sandbox has no /sys.
+          extra_nix_config: extra-sandbox-paths = /sys/devices/system/cpu
       - run: nix build .#checks.${{ matrix.system }}.packages -L
