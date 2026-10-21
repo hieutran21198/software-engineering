@@ -35,7 +35,7 @@ flow:
         - hook-tests
         - opencode-contract
     - id: finish
-      title: Ask once for a fix of record errors before the agent stops
+      title: Check record errors through a supported stop check or MCP
       supports:
         - contract
         - stop
@@ -52,10 +52,10 @@ flow:
       condition: The agent calls another tool.
     - from: act
       to: finish
-      condition: The agent stops.
+      condition: The harness runs a supported stop check or the agent requests MCP record validation.
     - from: finish
       to: act
-      condition: The stop check fails and the agent continues.
+      condition: Record errors require a fix and the agent continues; OpenCode never forces continuation.
   support:
     - id: opencode-contract
       kind: element
@@ -155,8 +155,9 @@ flow:
         - docs/artifacts/artifact-plane/changes/change-agent-integration/tasks/04-mcp-tools.md
   gaps:
     - OpenCode V2 has no documented stop-blocking API. Its entry uses MCP
-      record checks rather than forcing continuation. Live activation and
-      complete shell resource mapping await the OpenCode delivery checks.
+      record checks rather than forcing continuation. Its native bridge maps
+      verified built-in tool inputs, not arbitrary shell-create rewrites by
+      other plugins. Native activation evidence is scoped to its recorded version.
     - An alias, a script, a subshell or command substitution that runs git is
       not inspected; the skills and the team review remain the control.
     - The live behavior of each harness is checked on the versions recorded in

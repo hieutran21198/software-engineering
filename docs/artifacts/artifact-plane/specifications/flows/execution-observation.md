@@ -164,8 +164,9 @@ flow:
       requires: Check one title, one navigation, unique control names and no horizontal overflow on every page.
       basis: static
   gaps:
-    - OpenCode V2 event shapes and installed plugin activation need current
-      delivery evidence. Missing turn metadata stays unknown, not inferred.
+    - OpenCode V2 terminals contain no user-message or run ID. Late attachment,
+      moves, missing stream events and several delivered inputs can prevent
+      attribution. Missing turn metadata stays unknown, not inferred.
     - Observed lifecycle activity and reported checks do not prove task DoD,
       plan approval or artifact establishment.
   exclusions:
