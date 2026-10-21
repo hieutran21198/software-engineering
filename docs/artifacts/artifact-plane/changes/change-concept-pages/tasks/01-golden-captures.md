@@ -23,7 +23,7 @@ specifications/concept-pages.md: Validation (CP1), claim golden-captures.
 - [x] Two runs of the script on 0eecce1 give the same JSON byte for byte; the JSON is committed.
 - [x] `golden.spec.js` captures the current build the same way and passes on an unchanged 1.24.0 tree; a scratch change of one page label makes it fail (claim golden-captures).
 - [x] The test allows only the differences that CP1 names: the input title, aria-keyshortcuts and the Discover link while the filter has text.
-- [ ] `npm test` and `npm run test:browser` pass.
+- [x] `npm test` and `npm run test:browser` pass.
 
 ## Evidence
 
@@ -39,3 +39,4 @@ Browsers: Nix Chromium 149 (`/nix/store/0fxasn1rwqc65s8y14ip1ym4hk2rxjwx-playwri
 - `npm run test:browser` with Nix Chromium: 119 passed, 1 failed: change-page.spec.js:38 timed out on `Edit task`. An earlier full run failed change-page.spec.js:302 and :449. Result: failed in the full suite. Commit 697327c.
 - `npm run test:browser` with the CI browser: 117 passed, 3 failed: change-page.spec.js:496, :520 and :542, `Copy Markdown` stayed disabled for 5 s. golden.spec.js passed in both full runs. Result: failed in the full suite. Commit 697327c.
 - `npx playwright test change-page.spec.js` alone: 15 passed with Nix Chromium and 15 passed with the CI browser. The failing tests differ from run to run, run before golden.spec.js, and this task changes no application code or change-page test. Result: passed alone; the full-suite failures are timing failures of change-page.spec.js, open for the coordinator. Commit 697327c.
+- Coordinator: the change-page.spec.js timeouts of the task runs came from concurrent suites on a loaded machine. On the integrated branch, the full browser suite passed 136 of 136 on CI Chrome 156 at b7d7836 (task 07) and 163 of 163 on CI Chrome 156 and Nix Chromium 149 at 2d830c1 (task 10), with golden.spec.js; `npm test` passed.
