@@ -4,7 +4,7 @@
 
 Give the agent the adopted bundle location, knowledge workspace, implementation repositories, intended capability, and relevant constraints. Ask it to use the coordinator skill at `docs/artifact-driven/03-execution/skills/add-coordinator/SKILL.md`.
 
-Ask the consumer AI to adopt the bundle and configure its own harness, such as Command Code, Codex, or Claude Code. Use the [adoption request](adopting-from-git.md#ask-an-ai-agent-to-adopt). It determines the supported skill and agent setup from the installed tool. Keep the canonical ADD bundle intact so skill and pattern references remain available.
+Ask the consumer AI to adopt the bundle and configure its own harness, such as Command Code, Codex, Claude Code, or Antigravity. Use the [adoption request](adopting-from-git.md#ask-an-ai-agent-to-adopt). It determines the supported skill and agent setup from the installed tool. Keep the canonical ADD bundle intact so skill and pattern references remain available.
 
 ## Required Skills
 
@@ -18,9 +18,9 @@ Make `kiss` and `asd-ste-100` available to every ADD role. Their canonical instr
 - Implementers execute approved tasks and record DoD evidence. Independent implementation agents use separate Git worktrees.
 - The coordinator validates the integrated change and dependencies, prepares the proposed version, opens required PRs, and stops for team review and merge.
 
-Register the role skills where the harness finds them, and point each entry to the canonical skill directory in the bundle so that its `reference.md` and links resolve. Codex reads `.agents/skills` and role profiles in `.codex/agents`; Claude Code reads `.claude/skills`. Roles can share a session; a role profile does not require a separate agent run. Do not start another session only to change roles. The consumer AI registers or adapts the bundled skills using native harness capabilities. If a required capability is unavailable, it reports the limitation and uses an explicit sequential fallback where possible.
+Register the role skills where the harness finds them, and point each entry to the canonical skill directory in the bundle so that its `reference.md` and links resolve. Antigravity and Codex read `.agents/skills` (and Antigravity also reads `.agents/skills.json`); Codex reads role profiles in `.codex/agents`; Claude Code reads `.claude/skills`. Roles can share a session; a role profile does not require a separate agent run. Do not start another session only to change roles. The consumer AI registers or adapts the bundled skills using native harness capabilities. If a required capability is unavailable, it reports the limitation and uses an explicit sequential fallback where possible.
 
-Add concise ADD instructions to the applicable existing `AGENTS.md` or `CLAUDE.md`. Preserve unrelated guidance and avoid duplicate instructions. Point to the canonical bundle, identify the knowledge and implementation workspaces, require the KISS and STE checklists, and state the change tiers and the plan-approval, dependency, worktree, and merge boundaries. Do not duplicate the full methodology or introduce a workflow state layer. Resolve conflicts with existing instructions through the user rather than overwriting them.
+Add concise ADD instructions to the applicable existing `AGENTS.md`, `CLAUDE.md`, or `GEMINI.md`. Preserve unrelated guidance and avoid duplicate instructions. Point to the canonical bundle, identify the knowledge and implementation workspaces, require the KISS and STE checklists, and state the change tiers and the plan-approval, dependency, worktree, and merge boundaries. Do not duplicate the full methodology or introduce a workflow state layer. Resolve conflicts with existing instructions through the user rather than overwriting them.
 
 ## Reuse Context in One Session
 

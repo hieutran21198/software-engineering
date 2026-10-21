@@ -1,0 +1,49 @@
+{
+  "artifact-plane": {
+    "SessionStart": [
+      {
+        "type": "command",
+        "command": "artifact-plane hook --event SessionStart || true",
+        "timeout": 10
+      }
+    ],
+    "PreInvocation": [
+      {
+        "type": "command",
+        "command": "artifact-plane hook --event PreInvocation || true",
+        "timeout": 5
+      }
+    ],
+    "PreToolUse": [
+      {
+        "matcher": "*",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "artifact-plane hook --event PreToolUse | grep '\"decision\"' || echo '{\"decision\":\"allow\"}'",
+            "timeout": 5
+          }
+        ]
+      }
+    ],
+    "PostToolUse": [
+      {
+        "matcher": "*",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "artifact-plane hook --event PostToolUse || true",
+            "timeout": 5
+          }
+        ]
+      }
+    ],
+    "Stop": [
+      {
+        "type": "command",
+        "command": "artifact-plane hook --event Stop || true",
+        "timeout": 30
+      }
+    ]
+  }
+}

@@ -8,5 +8,5 @@ fetchNpmDeps {
     path = "${repositoryRoot}/apps/artifact-plane";
     name = "artifact-plane-source";
   };
-  hash = "sha256-kduYyaKwe6Vs+izipZmKuQ9xADz2D700k5q9QI4pN2k=";
+  hash = "sha256-izj8vBT+4ke6Yp2lYKLAwv28k2rTHAuRjoAKEDimGDs=";
 }

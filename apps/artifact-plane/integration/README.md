@@ -1,6 +1,6 @@
 # Connect agents to the Plane
 
-The released executable `artifact-plane` connects to Claude Code and Codex in two ways: a stdio MCP server and one hook command. Put the executable on the path as `artifact-plane` (see the Install section of the Plane README). The hooks and the MCP server read knowledge and Git. They never approve work, push, merge or establish versions.
+The released executable `artifact-plane` connects to Claude Code, Codex and Antigravity in two ways: a stdio MCP server and one hook command. Put the executable on the path as `artifact-plane` (see the Install section of the Plane README). The hooks and the MCP server read knowledge and Git. They never approve work, push, merge or establish versions.
 
 ## What the hooks do
 
@@ -37,7 +37,18 @@ The refusals and the stop request apply only in a repository with `docs/artifact
 2. Hooks: merge the entries of [codex-hooks.example.json](codex-hooks.example.json) into `.codex/hooks.json` of the project, or `~/.codex/hooks.json`.
 3. Trust: Codex loads project configuration only for a trusted project (`[projects."<absolute path>"] trust_level = "trusted"` in `~/.codex/config.toml`, or the trust prompt). Then open `/hooks` and trust each hook. Codex skips a hook again after its command changes, until you trust it again.
 
-The examples use a POSIX shell. On Windows, use `artifact-plane hook` without `|| true`, with an executable of the same version as the configuration.
+## Antigravity
+
+1. MCP: add the workspace plugin files `.agents/plugins/artifact-plane/plugin.json` (`{"name": "artifact-plane"}`) and `.agents/plugins/artifact-plane/mcp_config.json`, or merge the `mcpServers` entry into your global `~/.gemini/config/mcp_config.json`:
+
+   ```json
+   {"mcpServers": {"artifact-plane": {"command": "artifact-plane", "args": ["mcp"]}}}
+   ```
+
+2. Hooks: merge the `"artifact-plane"` entry of [antigravity-hooks.example.json](antigravity-hooks.example.json) into `.agents/hooks.json` of the workspace, or `~/.gemini/antigravity/hooks.json`. Each entry passes `--event <Event>` so `PreToolUse` and `PostToolUse` are distinct even when a tool call has no error.
+3. Activation: Antigravity discovers workspace skills from `.agents/skills/`, workspace rules from `AGENTS.md`, workspace hooks from `.agents/hooks.json`, and workspace MCP servers from `.agents/plugins/<name>/mcp_config.json`.
+
+The examples use a POSIX shell. On Windows, use `artifact-plane hook` (or `artifact-plane hook --event <Event>`) without `|| true`, with an executable of the same version as the configuration.
 
 ## Workbench
 
@@ -96,4 +107,4 @@ Multiple blue nodes represent observed concurrent execution. Implementation canv
 
 ## Verification limits
 
-Fixture tests cover the hook-to-store-to-browser flow with recorded inputs of both harnesses and without model inference. Live activation requires the trust steps of each harness. Configuration parsing and hook lists alone do not prove that a live model ran a task. Keep live, fixture, reported-validation and establishment evidence distinct.
+Fixture tests cover the hook-to-store-to-browser flow with recorded inputs of all three harnesses and without model inference. Live activation requires the trust or plugin steps of each harness. Configuration parsing and hook lists alone do not prove that a live model ran a task. Keep live, fixture, reported-validation and establishment evidence distinct.

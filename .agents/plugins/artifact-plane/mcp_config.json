@@ -1,0 +1,8 @@
+{
+  "mcpServers": {
+    "artifact-plane": {
+      "command": "artifact-plane",
+      "args": ["mcp"]
+    }
+  }
+}

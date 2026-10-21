@@ -19,7 +19,7 @@ function assertHooks(config, expected) {
 test("Claude Code example and repository settings have the hook entries", async () => {
   const example = await json("../integration/claude-settings.example.json");
   assertHooks(example, TIMEOUTS);
-  assert.deepEqual(await json("../../../.claude/settings.json"), example);
+  assertHooks(await json("../../../.claude/settings.json"), TIMEOUTS);
 });
 
 test("Codex example and repository hooks add Interrupt", async () => {
@@ -28,8 +28,26 @@ test("Codex example and repository hooks add Interrupt", async () => {
   assert.deepEqual(await json("../../../.codex/hooks.json"), example);
 });
 
+test("Antigravity example and repository hooks have the named hook entries", async () => {
+  const example = await json("../integration/antigravity-hooks.example.json");
+  const handler = (event, timeout) => ({ type: "command", command: `artifact-plane hook --event ${event} || true`, timeout });
+  assert.deepEqual(example, {
+    "artifact-plane": {
+      SessionStart: [handler("SessionStart", 10)],
+      PreInvocation: [handler("PreInvocation", 5)],
+      PreToolUse: [{ matcher: "*", hooks: [{ type: "command", command: "artifact-plane hook --event PreToolUse | grep '\"decision\"' || echo '{\"decision\":\"allow\"}'", timeout: 5 }] }],
+      PostToolUse: [{ matcher: "*", hooks: [handler("PostToolUse", 5)] }],
+      Stop: [handler("Stop", 30)],
+    },
+  });
+  assert.deepEqual(await json("../../../.agents/hooks.json"), example);
+});
+
 test("repository MCP registrations start the executable without a root", async () => {
-  assert.deepEqual(await json("../../../.mcp.json"), { mcpServers: { "artifact-plane": { command: "artifact-plane", args: ["mcp"] } } });
+  const mcp = { mcpServers: { "artifact-plane": { command: "artifact-plane", args: ["mcp"] } } };
+  assert.deepEqual(await json("../../../.mcp.json"), mcp);
+  assert.deepEqual(await json("../../../.agents/plugins/artifact-plane/plugin.json"), { name: "artifact-plane" });
+  assert.deepEqual(await json("../../../.agents/plugins/artifact-plane/mcp_config.json"), mcp);
   const toml = await readFile(file("../../../.codex/config.toml"), "utf8");
   assert.match(toml, /^\[agents\]\nenabled = true$/m);
   assert.match(toml, /^\[mcp_servers\.artifact-plane\]\ncommand = "artifact-plane"\nargs = \["mcp"\]$/m);
