@@ -72,6 +72,10 @@ evidence:
     method: golden.spec.js compares the build with the 1.24.0 captures of a repository without models on CI Chrome 156 and Nix Chromium 149.
     result: passed
     source: docs/artifacts/artifact-plane/changes/change-concept-pages/tasks/01-golden-captures.md#evidence
+  - criterion: usability
+    method: Owner review of screenshots of the built pages at 1440 and 390 px against the approved mockups, after wave 1 and after wave 2.
+    result: passed
+    source: docs/artifacts/artifact-plane/changes/change-concept-pages/tasks/10-validation.md#evidence
   - criterion: integration
     method: npm test, npm run build, the full browser suite on CI Chrome 156 and Nix Chromium 149, go test and go vet, the executable smoke check, the S1 to S8 limits and the validator on the integrated branch.
     result: passed

@@ -18,13 +18,13 @@ specifications/concept-pages.md: all sections; units-of-work/concept-pages/READM
 
 ## Definition of Done
 
-- [ ] The five affected flows name the new steps and supports, with basis observed and evidence where a test runs.
-- [ ] The Plane README and the integration README list `get_concept` and the `kinds` input.
-- [ ] On the integrated branch, `npm test`, `npm run build`, `npm run test:browser` on the CI browser, `go test ./...`, the executable smoke check and the validator pass, and the golden test passes (CPA1, CPA14).
-- [ ] The S1 to S8 limits hold, and the S-A to S-F counts are measured at 1440 and 390 px and recorded as the new baseline.
-- [ ] Screenshots of wave 2 (a brief with concept rows, a PR description, the sidebar search with a concept and the Discover link) at 1440 and 390 px are reviewed as a user, and the owner accepts them.
-- [ ] Each claim of the specification has a status and evidence.
-- [ ] The unit brief has evidence for each acceptance criterion, and the version record 1.25.0 (or the renumbered version after the merge order) is prepared with `current_version`, package.json and the Nix npm dependency hash.
+- [x] The five affected flows name the new steps and supports, with basis observed and evidence where a test runs.
+- [x] The Plane README and the integration README list `get_concept` and the `kinds` input.
+- [x] On the integrated branch, `npm test`, `npm run build`, `npm run test:browser` on the CI browser, `go test ./...`, the executable smoke check and the validator pass, and the golden test passes (CPA1, CPA14).
+- [x] The S1 to S8 limits hold, and the S-A to S-F counts are measured at 1440 and 390 px and recorded as the new baseline.
+- [x] Screenshots of wave 2 (a brief with concept rows, a PR description, the sidebar search with a concept and the Discover link) at 1440 and 390 px are reviewed as a user, and the owner accepts them.
+- [x] Each claim of the specification has a status and evidence.
+- [x] The unit brief has evidence for each acceptance criterion, and the version record 1.25.0 (or the renumbered version after the merge order) is prepared with `current_version`, package.json and the Nix npm dependency hash.
 
 ## Evidence
 
@@ -55,3 +55,6 @@ specifications/concept-pages.md: all sections; units-of-work/concept-pages/READM
 - Combined checks at 3625f35: npm test 510 passed, 1 skipped, 0 failed; npm run build, build:validator, go test ./... and go vet ./... passed; build:app and app-smoke of release/artifact-plane-linux-amd64 passed; validator ok; full browser suite 145 of 145 on CI Chrome 156 and 145 of 145 on Nix Chromium 149, including golden.spec.js (CPA1, CPA14).
 - Claims: each claim of specifications/concept-pages.md has a status; sidebar-enter-unchanged is superseded by sidebar-enter-exact-concept after the owner's amendment of 20 October 2026; the others are supported with task evidence.
 - Version: versions/1.25.0/README.md with source_change change-concept-pages, current_version 1.25.0, package.json and package-lock.json 1.25.0, Nix npm hash sha256-izj8vBT+4ke6Yp2lYKLAwv28k2rTHAuRjoAKEDimGDs= from prefetch-npm-deps, which gives the committed 1.24.0 hash for the 0eecce1 lockfile; check-release-version.mjs plane-v1.25.0 matches (98a4416). origin/main is 0eecce1, so the number is 1.25.0; the owner decided that this change merges before change-antigravity-support.
+- Final combined checks at 2d830c1 (head after the Enter fix 0f2e88e and the version 98a4416): npm test 510 passed, 1 skipped, 0 failed; npm run build, build:validator, go test ./... and go vet ./... passed; build:app and app-smoke of release/artifact-plane-linux-amd64 passed; validator ok, 0 errors; full browser suite 163 of 163 on CI Chrome 156 and 163 of 163 on Nix Chromium 149, including golden.spec.js, reading-scenarios.spec.js and authoring-scenarios.spec.js.
+- Wave 2 screenshots at 1440 and 390 px on the CI browser, from the brief test fixture and a disposable clone of 2d830c1 with local main at 0eecce1: the brief with New, Removed, Participation changed and describing rows; the PR Impact section with the concept line; the brief and PR description of change-visual-knowledge (3c47a48) with describing rows only; the sidebar filter version with the Version concept row and the Discover link, and the drawer at 390 px. On the clone, Enter on version and on change opens the concept pages Version and Change. Reviewed as a user against the mockups; no defect found. Published: https://claude.ai/artifact/Jkp3ApCHxVEGG5iJXPeest.
+- Owner acceptance: on 21 October 2026 the owner accepted the wave 2 screenshots.
