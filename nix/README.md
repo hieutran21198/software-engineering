@@ -71,8 +71,8 @@ node nix/tests/semantic.mjs ./result
 ```
 
 The semantic check needs Node.js 24 or later, network access and temporary disk space for the model. It removes its temporary state after the check.
-All four targets evaluate. Native package checks and real model installation/inference pass on x86_64-linux.
-Native verification for aarch64-linux, x86_64-darwin and aarch64-darwin remains pending; evaluation alone does not establish platform support.
+The Nix workflow in `.github/workflows/nix.yml` runs the package check natively on x86_64-linux, aarch64-linux, x86_64-darwin and aarch64-darwin.
+Real model installation and inference were checked on x86_64-linux.
 
 ## Dependency updates
 

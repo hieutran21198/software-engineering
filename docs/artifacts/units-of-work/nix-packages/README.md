@@ -13,9 +13,9 @@ acceptance:
     integration: true
 evidence:
   - criterion: packages
-    method: Evaluate all package outputs and inspect the native platform coverage record.
-    result: incomplete
-    source: docs/artifacts/nix-packages/changes/change-initial/tasks/04-integration.md#incomplete-native-checks
+    method: Build both packages and run the package smoke check natively on each of the four systems in the Nix workflow.
+    result: passed
+    source: docs/artifacts/nix-packages/changes/change-initial/tasks/04-integration.md#native-checks
   - criterion: integration
     method: Run installed package integration and semantic runtime checks on the available Linux host.
     result: passed
@@ -31,4 +31,4 @@ Exclude application features, system services, editor integration and external p
 ## Combined checks
 
 The originating tasks record the x86_64-linux build, adoption, native module, HTTP, MCP and semantic runtime results.
-All four systems evaluate. Native checks on the other three systems remain incomplete, so this outcome has no prepared version record and is not complete or established.
+The Nix workflow builds both packages and passes the package smoke check natively on x86_64-linux, aarch64-linux, x86_64-darwin and aarch64-darwin. Model installation and inference ran on x86_64-linux. The outcome completes when nix-packages 1.0.0 establishes.
