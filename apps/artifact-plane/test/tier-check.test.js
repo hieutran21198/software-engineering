@@ -72,3 +72,22 @@ test('a configuration limit changes the code-limit result, and a declared small 
   assert.deepEqual(diagnostics.map(d => [d.code, d.severity, d.path]), [['tier-mismatch', 'error', 'docs/artifacts/artifact-plane/changes/change-hidden-tab-streams/README.md']]);
   assert.match(diagnostics[0].message, /code-limit is fail/);
 });
+
+test('a change merged to main: the criteria that use the difference are unresolved, and no impact query runs', async () => {
+  const f = await caseRepository('hidden-tab-streams');
+  try {
+    git(f.root, 'checkout', '-q', 'main');git(f.root, 'merge', '-q', '--ff-only', f.c.change);
+    let calls = 0;
+    const {tier} = await tierCheck({root: f.root, scan: await scanRepository(f.root), git: readerGit, artifact: f.c.artifact, change: f.c.change, impactService: {query: async () => {calls++;return {completeness: 'complete', data: {}};}}});
+    const r = results(tier);
+    for (const id of ['one-artifact', 'no-contract', 'code-limit', 'impact-contained']) {assert.equal(r[id], 'unresolved', id);assert.match(tier.criteria.find(c => c.id === id).detail, /already on the protected branch/);}
+    assert.equal(calls, 0);assert.equal(tier.allowed, 'medium');
+    const standalone = await tierCheck({root: f.root, scan: await scanRepository(f.root), git: readerGit, artifact: f.c.artifact, change: f.c.change, standalone: true});
+    assert.equal(results(standalone.tier)['impact-contained'], 'coordinator');
+  } finally {await f.cleanup();}
+});
+
+test('code-limit counts no Markdown file', async () => {
+  const {tier} = await check('hidden-tab-streams', {standalone: true}, {'notes/review.md': Array.from({length: 300}, (_, i) => `line ${i}`).join('\n') + '\n'});
+  assert.match(tier.criteria.find(c => c.id === 'code-limit').detail, /^57 changed/);assert.equal(tier.allowed, 'small');
+});

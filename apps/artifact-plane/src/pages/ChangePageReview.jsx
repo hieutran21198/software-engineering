@@ -106,7 +106,7 @@ export function ChangedKnowledge({change, artifact, review, onLoadReview}) {
       </div>
       {open === doc.file && <Comparison artifact={change.artifact} doc={doc}/>}
     </React.Fragment>)}</div>
-    {docs.length > shown.length && <button className="link show-all" onClick={() => setAll(true)}>Show all {docs.length}</button>}</> : <p className="muted">No knowledge of {artifact?.title || change.artifact} differs from main.</p>}
+    {docs.length > shown.length && <button className="link show-all" onClick={() => setAll(true)}>Show all {docs.length}</button>}</> : <p className="muted">{change.merged ? 'The knowledge of this change is already on main.' : `No knowledge of ${artifact?.title || change.artifact} differs from main.`}</p>}
   </Section>;
 }
 

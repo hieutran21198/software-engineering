@@ -45,7 +45,7 @@ Compare working knowledge with the baseline through `git diff --name-status <ref
 
 ## Declared evidence instead of history
 
-For in-place changes, evidenceFor derives the six displayed steps from declared fields: Requirement, Specification and Plan from self_check records in changed requirement, specification or decision documents and in tasks/README.md; Implementation and Validation from evidence_records and checklists in listed tasks; Version preparation from the presence of a version record naming the change. A step without a declaration is "not declared". Git history is not replayed, and no phase is inferred from prose or commit subjects. Legacy changes keep the existing inference. Approval remains "not verified by this reader".
+For in-place changes, evidenceFor derives the six displayed steps from declared fields: Requirement, Specification and Plan from self_check records in changed requirement, specification or decision documents and in tasks/README.md; when the protected branch already has the change README `changes/<change>/README.md`, from the self_check records of every working requirement, specification or decision document of the artifact (L3); Implementation and Validation from evidence_records and checklists in listed tasks; Version preparation from the presence of a version record naming the change. A step without a declaration is "not declared". Git history is not replayed, and no phase is inferred from prose or commit subjects. Legacy changes keep the existing inference. Approval remains "not verified by this reader".
 
 ## Version snapshots and unit completion
 
@@ -68,3 +68,5 @@ Add fixtures for in-place, mixed and transition repositories beside the legacy f
 ## Self-check
 
 L1 to L7 map to detection, Git comparison, declared evidence, snapshot resolution, presentation, scripts and compatibility. Legacy behavior is retained on its own path and existing tests remain required. KISS extends existing modules and adds two scripts without a new service; STE separates derived facts from unverifiable approval. Self-check: passed.
+
+change-merged-change-status: the protected baseline lists the change names whose README is on the protected tree as `changeRecords`. The declared evidence and the change object (`merged`) use it. On a branch that continues a merged change, the committed documents include the changed ones. Self-check: passed.

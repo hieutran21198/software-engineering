@@ -85,8 +85,10 @@ Existing records without these fields read as before. The diagnostic codes are t
 | patch-level | plan `compatibility` |
 | no-contract | added or removed flow files, changed elements named by another artifact's `references`, added decision files, added requirement IDs |
 | upstream-established | identity `depends_on` targets against protected-ref identity records |
-| code-limit | `git diff --numstat` against the merge base, without `docs/artifacts/**`, `docs/artifact-driven/**`, lockfiles and `dist/` |
+| code-limit | `git diff --numstat` against the merge base, without `docs/artifacts/**`, `docs/artifact-driven/**`, Markdown files, lockfiles and `dist/` |
 | impact-contained | the impact service with the branch difference as origin, depth 2: pass when no reached entity belongs to another artifact and the coverage statement has no unresolved reached item; `unresolved` when the index is not available; `coordinator` in the standalone validator |
+
+When the protected baseline lists the change in `changeRecords` and the difference has no file under `docs/artifacts/<artifact>/`, the difference no longer holds the change. Then one-artifact, no-contract, code-limit and impact-contained are `unresolved` with the detail "The change record is already on the protected branch; the difference no longer holds this change." The standalone validator keeps `coordinator` for impact-contained.
 
 The allowed tier is small when every criterion is `pass` or `coordinator`, large when one-artifact fails or no-contract fails on an element that another artifact references, and medium otherwise.
 
@@ -137,3 +139,5 @@ Requests with unknown fields, unknown changes or unsafe paths return the errors 
 ## Specification self-check
 
 PI1 maps to Readers, PI2 to Shared checks and the validator entry point, PI3 to change.scaffold, PI4 to version.prepare, PI5 to Tier check, PI6 to PR description, PI7 to the configuration row of Readers, PI8 to the unchanged writer and the additive fields. Each PA has a test in the validation plan. Claims: one open decision with its check. KISS: the scaffold composes existing operations; the description renders data that the review and brief services already compute; the validator reuses the readers. STE: one rule per row or sentence. Representations: the reader, criterion, operation and interface tables were checked against PI1 to PI7 and the ADD contracts. Impact: the knowledge-authoring, change-review and context-handoff flows change; change-impact keeps its steps. No blocker prevents Plan.
+
+change-merged-change-status: PI5 maps to the merged-change rule after the criterion table and to the Markdown exclusion of code-limit. A branch that continues a merged change with knowledge edits keeps the difference criteria. Markdown is documentation, not code or test lines, so the count follows the ADD criterion. No blocker prevents Plan.

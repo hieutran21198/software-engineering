@@ -93,8 +93,10 @@ export function declaredChange(artifact, name, files, data, diagnostics) {
   };
   const meta = change => artifact.changes.find(c => c.name === change);
   const version = meta(name)?.version ?? null, open = artifact.activeChange === name;
-  // Requirement and Specification evidence lives in the documents this change edits.
-  if (open) for (const element of artifact.elements.filter(e => e.source === 'working' && ['added', 'modified'].includes(e.state))) {
+  const merged = !!data.baselines?.[artifact.id]?.changeRecords?.includes(name);
+  // Requirement and Specification evidence lives in the documents this change edits;
+  // once the change README is on the protected branch, in every committed document.
+  if (open) for (const element of artifact.elements.filter(e => e.source === 'working' && (merged || ['added', 'modified'].includes(e.state)))) {
     const value = frontMatter(element.markdown).value?.self_check;
     if (value !== undefined) record(element.path.startsWith('requirements/') ? 'Requirement' : 'Specification', value, element.file);
   }
@@ -118,7 +120,7 @@ export function declaredChange(artifact, name, files, data, diagnostics) {
   if (version) {const s = step('Version preparation');s.state = 'documented-complete';s.evidence.push(note('declared', `docs/artifacts/${artifact.id}/versions/${version}/README.md`, 'Version record names this change.'));}
   const delivered = !!(version && artifact.baseline && data.baselines?.[artifact.id]?.versionRecords?.includes(version));
   const current = steps.find(s => s.state !== 'documented-complete');
-  return {artifact: artifact.id, name, layout: 'in-place', version, delivered, declaredActive: open, currentStep: open ? current?.name ?? null : null,
+  return {artifact: artifact.id, name, layout: 'in-place', version, delivered, merged, declaredActive: open, currentStep: open ? current?.name ?? null : null,
     inferenceReason: open ? 'Derived from declared evidence; undeclared steps are not declared.' : 'Retained change record.',
     steps, tasks, taskGraph, history: !open, lastCommitAt: null,
     historyReason: delivered ? 'Its version record is on the protected ref.' : version ? 'Its version record is proposed on this branch.' : open ? '' : meta(name)?.layout === 'legacy' ? 'Retained legacy change record with copied knowledge.' : 'Another open change record exists.'};
