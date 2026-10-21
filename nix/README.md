@@ -76,6 +76,7 @@ Real model installation and inference were checked on x86_64-linux.
 
 ## Dependency updates
 
+The se-adopt package version is `current_version` of `docs/artifacts/artifact-driven/README.md`, the ADD version that names se-adopt releases. The Artifact Plane package version is the version in `apps/artifact-plane/package.json`.
 `flake.lock` pins Nixpkgs and Snowfall. Nixpkgs 26.05 retains Intel macOS support; 26.11 removes that target.
 Update the pin deliberately if the supported targets change.
 After updating `apps/artifact-plane/package-lock.json`, temporarily set the hash in `lib/npm-deps.nix` to `sha256-AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA=`, build either package, and replace it with the reported hash.
