@@ -10,7 +10,7 @@ import {impactCanvas} from '../impact-canvas.js';
 import {TIERS, KINDS, STRENGTH_LABELS, VIA_LABELS, entityLabel, flowHighlight, groupRows, impactPage, kindGroup, lastRelationship, pageFor, parseEntity, readContext, sectionItems} from '../impact-model.js';
 import './ImpactPage.css';
 
-const KIND_NAMES = {flow: 'flow', step: 'step', document: 'knowledge', element: 'knowledge', module: 'code', test: 'test', model: 'model', 'go-package': 'package', build: 'build', file: 'file', unresolved: 'unknown'};
+const KIND_NAMES = {flow: 'flow', step: 'step', document: 'knowledge', element: 'knowledge', module: 'code', test: 'test', model: 'concept', 'go-package': 'package', build: 'build', file: 'file', unresolved: 'unknown'};
 const kindName = item => KIND_NAMES[item.kind] || (kindGroup(item) === 'knowledge' ? 'knowledge' : item.kind || 'file');
 const plural = (n, one, many = one + 's') => `${n} ${n === 1 ? one : many}`;
 // A tier name: the Kind family for direct, transitive, potential and verify, the
@@ -96,13 +96,15 @@ function Detail({item, data, snapshot, go, onClose}) {
   const highlight = parsed.type === 'flow' ? flowHighlight(item, data.steps) : null;
   const page = pageFor(item.entity, {highlight});
   const isPath = parsed.type === 'path' || parsed.type === 'knowledge';
+  // A path step to a model shows its title, from the model items of the answer.
+  const titleOf = id => TIERS.flatMap(([tier]) => data[tier] || []).find(i => i.entity === id)?.title;
   return <aside className="impact-detail" aria-label="Selected entity">
     <div className="impact-detail-head">
       <div><TierName tier={item.tier} small/> <span className="muted small">{kindName(item)}</span></div>
       <button className="icon" aria-label="Close details" onClick={onClose}>×</button>
     </div>
     <h3>{name}</h3>
-    {name !== item.entity && !item.entity.startsWith('flow:') && <p className="impact-path">{item.entity}</p>}
+    {name !== item.entity && !item.entity.startsWith('flow:') && parsed.type !== 'model' && <p className="impact-path">{item.entity}</p>}
     <dl className="impact-facts">
       {item.strength && <><dt>Evidence</dt><dd>{STRENGTH_LABELS[item.strength] || item.strength}</dd></>}
       {item.hops !== undefined && <><dt>Distance</dt><dd>{plural(item.hops, 'relationship')}</dd></>}
@@ -121,12 +123,12 @@ function Detail({item, data, snapshot, go, onClose}) {
         <li className="origin"><span className="impact-path">{path[0]?.from || item.origins?.[0]}</span></li>
         {path.map((edge, j) => <li key={j}>
           <span className="via">{VIA_LABELS[edge.via] || edge.via}{edge.symbols?.length ? ` (${edge.symbols.join(', ')})` : ''}</span>
-          <span className={['path', 'knowledge'].includes(parseEntity(edge.to).type) ? 'impact-path' : 'impact-node-name'}>{['path'].includes(parseEntity(edge.to).type) ? edge.to : entityLabel(edge.to, snapshot)}</span>
+          <span className={['path', 'knowledge'].includes(parseEntity(edge.to).type) ? 'impact-path' : 'impact-node-name'}>{['path'].includes(parseEntity(edge.to).type) ? edge.to : entityLabel(edge.to, snapshot, titleOf(edge.to))}</span>
           {(edge.reason || edge.basis || edge.sameBytes === false) && <span className="small muted">{[edge.basis, edge.reason && `“${edge.reason}”`, edge.sameBytes === false && 'copy differs'].filter(Boolean).join(' · ')}</span>}
         </li>)}
       </ol>)}</>}
     <div className="impact-links">
-      {page && <button className="quiet" onClick={() => go(page)}>{parsed.type === 'flow' ? 'Open flow with affected steps' : 'Open'}</button>}
+      {page && <button className="quiet" onClick={() => go(page)}>{parsed.type === 'flow' ? 'Open flow with affected steps' : parsed.type === 'model' ? 'Open concept' : 'Open'}</button>}
       {isPath && <button className="quiet" onClick={() => go(impactPage({origins: [{path: item.entity}], title: item.entity.split('/').at(-1)}))}>What does this affect?</button>}
     </div>
   </aside>;

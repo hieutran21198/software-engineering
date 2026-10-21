@@ -141,5 +141,5 @@ export async function readFlowRepository(path, {worktree,knowledge='planning',ro
   for(const source of sources)source.sourcePublication=publication(source.path,source.text);
   if(knowledge==='established')for(const flow of graph.flows)if(flow.sourcePublication.state!=='published-source')graph.diagnostics.push({code:'unpublished-flow-source',path:flow.file,message:'Declared version flow bytes differ from the protected baseline; do not treat this as confirmed established knowledge.'});
   const fingerprint=sourceDigest(JSON.stringify([scan.revision,head,refs,sources.map(s=>[s.id,s.fingerprint]),graph.diagnostics,graph.flows.map(f=>[f.id,f.createdAt]),units.map(u=>[u.id,u.affectedFlows,u.flowAssessment])]));
-  return {repository:base.snapshot.repository,worktree:target,snapshot,graph,sources,units,tracked,revision:fingerprint,knowledge,protectedRefs:refs};
+  return {repository:base.snapshot.repository,worktree:target,snapshot,graph,sources,units,tracked,revision:fingerprint,knowledge,protectedRefs:refs,baselines:scan.baselines||{}};
 }

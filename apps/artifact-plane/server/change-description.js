@@ -12,6 +12,7 @@ import {frontMatter} from './units-of-work.js';
 import {tierCheck} from './tier-check.js';
 import {recordChecks, nextVersion} from './record-checks.js';
 import {protectedRefs} from './knowledge-baseline.js';
+import {conceptPrefix, reasonWords} from './change-brief.js';
 
 export const DESCRIPTION_LIMIT = 60000;
 export const APPROVAL_NOTE = 'Approval is not recorded by this description.';
@@ -114,7 +115,11 @@ export async function buildDescription({root, worktree = root, artifact, change,
 
   const affected = brief.answers.find(a => a.question === 'What is affected?');
   const statement = affected?.items.find(i => i.text.startsWith('Coverage:'))?.text;
-  add('Impact', affected?.summary ? [affected.summary, ...(statement ? ['', statement] : [])] : [brief.origin.reason ?? 'The impact answer is not available.']);
+  // The concept line names declaration and participation reasons; describing rows add no line.
+  const concepts = brief.concepts || [], declared = concepts.filter(c => c.reason !== 'describing-document-changed');
+  const conceptLine = declared.length ? [`Concepts declared or changed: ${declared.map(c => `${c.title} (${reasonWords(c)})`).join('; ')}.`] : [];
+  const lead = conceptPrefix(concepts), sentence = affected?.summary?.slice(affected.summary.startsWith(lead) ? lead.length : 0).trim();
+  add('Impact', [...conceptLine, ...(sentence ? [sentence, ...(statement ? ['', statement] : [])] : [brief.origin.reason ?? 'The impact answer is not available.'])]);
 
   const level = planCompatibility(files.get(`${changePath}tasks/README.md`) || '').compatibility;
   const current = await protectedVersion(worktree, git, artifact, baselines);

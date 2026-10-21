@@ -34,7 +34,7 @@ async function setup(t,{roots}={}){
 }
 test('real stdio MCP and HTTP return identical review/packet facts, pages and omissions without writes',async t=>{
  const {fixture,client,http,selectors,stderr}=await setup(t),before=await fingerprint(fixture.root);
- assert.equal((await client.listTools()).tools.length,12);
+ assert.equal((await client.listTools()).tools.length,13);
  const implicit=await client.callTool({name:'get_change_context',arguments:{artifact:'demo',change:'change-review',budget:0}});assert.equal(implicit.structuredContent.repository.path,fixture.root);assert.ok(implicit.structuredContent.data.sources.every(s=>s.text===''&&s.nextCursor===null));
  for(const [operation,name]of [['review','get_change_review'],['packet','get_change_context']]){
   const args={...selectors,budget:7,limit:1};let cursor;const records=[];

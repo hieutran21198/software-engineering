@@ -12,6 +12,7 @@ import {createFlowMcpServer} from '../server/flow-mcp.js';
 import {createAppServer} from '../server/http.js';
 import {SECTIONS, APPROVAL_NOTE, DESCRIPTION_LIMIT, fitSections} from '../server/change-description.js';
 import {formatContextMarkdown} from '../src/context-packet.js';
+import {conceptBrief, add, declaring, declarations, version, delivery, models} from './concept-brief-fixtures.js';
 
 const A = 'docs/artifacts/a/', X = A + 'changes/change-x/', Y = A + 'changes/change-y/';
 const headings = markdown => [...markdown.matchAll(/^## (.+)$/gm)].map(m => m[1]);
@@ -146,4 +147,34 @@ test('PA5: the description of change-review-brief in this repository has every s
   assert.equal(tier.criteria.find(c => c.id === 'impact-contained').result, 'unresolved');
   assert.match(section(markdown, 'Plan'), /^- Claims reader \(`claims-reader`\)/);
   assert.match(section(markdown, 'DoD and evidence'), /- `brief-service`: 6 of 6 DoD items checked/);
+});
+
+// CP12 (specifications/concept-pages.md, Change brief): the concept line of the Impact section.
+const GATES = 'Resolve implementation dependency gates';
+const conceptChange = async ({put, flow}) => {
+  await put(declaring, declarations([version, models.change, models.release, delivery]));
+  await flow(add + 'specifications/flows/gates.md', f => {f.participants[0].requires = 'Provide the established contract.';});
+  await put(add + 'specifications/knowledge.md', '# Knowledge and execution contract\n\nVersions hold knowledge and provenance.\n');
+};
+test('CP12: the Impact section has the concept line, the flow sentence, a blank line and the Coverage line', async t => {
+  const {brief, describe} = await conceptBrief(t, conceptChange);
+  const b = await brief(), impact = section(await describe(), 'Impact').split('\n');
+  assert.ok(b.concepts.some(c => c.reason === 'describing-document-changed'));
+  assert.equal(impact[0], `Concepts declared or changed: Delivery record (new declaration); Ledger (declaration removed); Version (participation changed in ${GATES}).`);
+  const summary = b.answers.find(a => a.question === 'What is affected?').summary;
+  const prefix = 'New concept: Delivery record. Removed concept: Ledger. Participation changed: Version. ';
+  assert.ok(summary.startsWith(prefix), summary);
+  // The flow sentence without the prefix.
+  assert.equal(impact[1], summary.slice(prefix.length));
+  assert.match(impact[1], /^\d+ flows? reached: \d+ declared, \d+ decided by a claim, \d+ undecided\. \d+ unresolved items?\.$/);
+  assert.equal(impact[2], '');
+  assert.match(impact[3], /^Coverage: depth 2/);
+  assert.equal(impact.length, 4);
+});
+test('CP12: without Impact data the concept line precedes the fallback text', async t => {
+  const {f} = await conceptBrief(t, conceptChange);
+  const unavailable = {query: async () => {throw Object.assign(new Error('Impact is off.'), {status: 503});}};
+  const review = createReviewService({roots: [f.root], impactService: unavailable});
+  const markdown = (await review.query({path: f.root, artifact: 'add', change: 'change-next', operation: 'description'})).data.markdown;
+  assert.equal(section(markdown, 'Impact'), `Concepts declared or changed: Delivery record (new declaration); Ledger (declaration removed); Version (participation changed in ${GATES}).\nThe impact answer is not available.`);
 });

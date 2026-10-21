@@ -42,6 +42,8 @@ flow:
         - evidence-usability-contract
         - layout-reading
         - brief-contract
+        - concept-contract
+        - concept-packet-checks
     - id: deliver
       title: Copy or download locally, or return through configured MCP
       supports:
@@ -194,6 +196,19 @@ flow:
       element: specifications/delivery-support.md
       requires: Add the PR description to the packet as data.description.
       basis: documented
+    - id: concept-contract
+      kind: element
+      artifact: artifact-plane
+      element: specifications/concept-pages.md
+      requires: Define the concepts that the packet brief copies from the change brief.
+      basis: documented
+    - id: concept-packet-checks
+      kind: test
+      path: apps/artifact-plane/test/context-packet.test.js
+      requires: Check that the packet brief, the brief operation and get_change_brief give the same concepts.
+      basis: observed
+      evidence:
+        - docs/artifacts/artifact-plane/changes/change-concept-pages/tasks/08-brief-concepts.md
   gaps:
     - A captured packet cannot prove continuing freshness or authorize
       implementation.

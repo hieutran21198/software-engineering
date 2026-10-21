@@ -1,5 +1,5 @@
 import {parseDocument} from 'yaml';
-import {safeElementPath, currentSource} from '../src/model.js';
+import {safeElementPath, currentSource, documentTitle} from '../src/model.js';
 
 export const safeFlowID = value => typeof value === 'string' && /^[a-z0-9][a-z0-9-]*$/.test(value);
 const text = value => typeof value === 'string' && value.trim().length > 0;
@@ -128,10 +128,19 @@ export function buildFlowGraph(snapshot, {context = '', knowledge = 'planning'} 
     for (const m of parsed.models) {
       const key = JSON.stringify([m.artifact, m.source, m.id]);
       if (models.has(key)) {const first = models.get(key);if (first) diagnostics.push({code: 'duplicate-model', path: m.file, message: `Model ${m.logicalId} is declared more than once in ${m.source} (${first.file}).`});models.set(key, null);continue;}
-      const known = new Set(artifact.elements.filter(e => e.source === m.source).map(e => e.path)), missing = m.sources.filter(p => !known.has(p));
-      if (missing.length) {diagnostics.push({code: 'missing-model-source', path: m.file, message: `Model ${m.logicalId} sources do not exist: ${missing.join(', ')}.`});m.missingSources = missing;}
+      const known = new Set(artifact.elements.filter(e => e.source === m.source).map(e => e.path));
+      m.missingSources = m.sources.filter(p => !known.has(p));
       models.set(key, m);
     }
+  }
+  // One declaration for each logical id: the current source, replaced by the
+  // active change outside established knowledge, as for flows.
+  const declared = new Map();
+  const pick = (artifact, source) => {for (const [key, m] of models) {const [a, s, id] = JSON.parse(key);if (a === artifact && s === source) declared.set(`${a}:${id}`, m);}};
+  for (const artifact of snapshot.artifacts) {
+    const current = currentSource(artifact);
+    if (current) pick(artifact.id, current);
+    if (knowledge !== 'established' && artifact.activeChange) pick(artifact.id, `change:${artifact.activeChange}`);
   }
   const selected = new Map();
   for (const artifact of snapshot.artifacts) {
@@ -144,6 +153,25 @@ export function buildFlowGraph(snapshot, {context = '', knowledge = 'planning'} 
   const nodes = new Map(), edges = [], sources = new Map(), elements = new Map(snapshot.artifacts.flatMap(a => a.elements.map(e => [JSON.stringify([a.id,e.source,e.path]),e])));
   const add = node => {if (!nodes.has(node.id)) nodes.set(node.id,node);return node.id;};
   const link = (source,target,kind,extra = {}) => edges.push({id:JSON.stringify([source,target,kind,edges.length]),source,target,kind,...extra});
+  // One model node for each logical id. Only the declaration of the node gives
+  // the missing-model-source diagnostic; a declaration that no flow uses
+  // registers no flow source.
+  const modelNodes = new Map(), modelId = m => flowKey(context, m.artifact, m.source, 'model', m.id);
+  function modelNode(m, used) {
+    if (modelNodes.has(m.logicalId)) return modelId(modelNodes.get(m.logicalId));
+    const id = add({id: modelId(m), kind: 'model', title: m.title, description: m.description, artifact: m.artifact, source: m.source, logicalId: m.logicalId, file: m.file, sources: m.sources, missingSources: m.missingSources});
+    modelNodes.set(m.logicalId, m);
+    if (m.missingSources.length) diagnostics.push({code: 'missing-model-source', path: m.file, message: `Model ${m.logicalId} sources do not exist: ${m.missingSources.join(', ')}.`, model: m.logicalId, file: m.file});
+    if (used) {const declaring = flowKey(context, m.artifact, m.source, 'element', m.file);sources.set(declaring, {id: declaring, path: m.file, kind: 'element', artifact: m.artifact, source: m.source});}
+    for (const path of m.sources) {
+      const element = elements.get(JSON.stringify([m.artifact, m.source, path]));
+      if (!element) continue;
+      const target = add({id: flowKey(context, m.artifact, m.source, 'element', element.file), kind: 'element', title: path, artifact: m.artifact, source: m.source, file: element.file, elementId: element.id});
+      if (used) sources.set(target, {id: target, path: element.file, kind: 'element', artifact: m.artifact, source: m.source});
+      link(id, target, 'describes', {resolved: true});
+    }
+    return id;
+  }
   function knowledgeSource(s, flow) {const owner=byArtifact.get(s.artifact);if(owner?.layout==='in-place')return 'working';return s.status === 'proposed' ? `change:${s.change}` : s.artifact === flow.artifact && !s.status ? flow.source : owner?.currentVersion ? `version:${owner.currentVersion}` : null;}
   for (const flow of flows) {
     add({id:flow.id,kind:'flow',title:flow.title,artifact:flow.artifact,source:flow.source,logicalId:flow.logicalId,file:flow.file});
@@ -181,18 +209,10 @@ export function buildFlowGraph(snapshot, {context = '', knowledge = 'planning'} 
     }
     // Participants resolve like knowledge support; missing models stay named targets.
     for (const p of flow.participants || []) {
+      // A participant that resolves to another source of the same logical id links to the selected node.
       const source = knowledgeSource(p, flow), model = source ? models.get(JSON.stringify([p.artifact, source, p.model])) : undefined;
       if (model) {
-        p.nodeId = add({id: flowKey(context, p.artifact, source, 'model', p.model), kind: 'model', title: model.title, description: model.description, artifact: p.artifact, source, logicalId: model.logicalId, file: model.file, sources: model.sources});
-        const declaring = flowKey(context, p.artifact, source, 'element', model.file);
-        sources.set(declaring, {id: declaring, path: model.file, kind: 'element', artifact: p.artifact, source});
-        for (const path of model.sources) {
-          const element = elements.get(JSON.stringify([p.artifact, source, path]));
-          if (!element) continue;
-          const target = add({id: flowKey(context, p.artifact, source, 'element', element.file), kind: 'element', title: path, artifact: p.artifact, source, file: element.file, elementId: element.id});
-          sources.set(target, {id: target, path: element.file, kind: 'element', artifact: p.artifact, source});
-          if (!edges.some(e => e.source === p.nodeId && e.target === target && e.kind === 'describes')) link(p.nodeId, target, 'describes', {resolved: true});
-        }
+        p.nodeId = modelNode(declared.get(model.logicalId) || model, true);
       } else {
         p.nodeId = add({id: flowKey(context, p.artifact, source || 'unresolved', 'missing-model', p.model), kind: 'missing', title: `${p.artifact}:${p.model}`, artifact: p.artifact, source, selector: {status: p.status || 'established', ...(p.change ? {change: p.change} : {})}});
         const d = {code: model === null ? 'ambiguous-model' : 'unresolved-model', path: flow.file, message: `Participant ${p.id} has no unambiguous model ${p.artifact}:${p.model} in ${source || 'any declared source'}.`};
@@ -209,6 +229,17 @@ export function buildFlowGraph(snapshot, {context = '', knowledge = 'planning'} 
       link(from.nodeId, to.nodeId, 'interaction', {flow: flow.id, step: step.id, action: i.action, outcome: i.outcome, supports: i.supports, bases: i.bases, resolved: i.resolved});
     }
     for (const transition of flow.transitions) link(flow.steps.find(s => s.id===transition.from).nodeId,flow.steps.find(s => s.id===transition.to).nodeId,'transition',{condition:transition.condition || '',flow:flow.id});
+  }
+  // Models that no flow uses, then the declares edge of every model node.
+  for (const m of declared.values()) if (m) modelNode(m, false);
+  const byElement = new Map(snapshot.artifacts.flatMap(a => a.elements.map(e => [e.id, e])));
+  for (const m of modelNodes.values()) {
+    const element = byElement.get(m.elementId);
+    if (!element) continue;
+    // The declaring element shows its document title, also when a support created it.
+    const target = add({id: flowKey(context, m.artifact, m.source, 'element', element.file), kind: 'element', artifact: m.artifact, source: m.source, file: element.file, elementId: element.id});
+    nodes.get(target).title = documentTitle(element.markdown || '', element.path);
+    link(modelId(m), target, 'declares', {resolved: true});
   }
   // Existing element references can carry impact beyond a directly linked flow.
   for (const ref of snapshot.references || []) if (ref.resolved) {
@@ -227,7 +258,7 @@ export function flowImpact(graph, ids) {
   const matches=(node,id)=>node.id===id||node.logicalId===id||node.elementId===id||node.file===id||id.startsWith('artifact:')&&node.artifact===id.slice(9);
   for(const id of ids)for(const node of graph.nodes)if(matches(node,id))starts.add(node.id);
   for(const edge of graph.edges) {
-    if(!['supports','references','defines','participates','describes'].includes(edge.kind)||edge.resolved===false)continue;
+    if(!['supports','references','defines','participates','describes','declares'].includes(edge.kind)||edge.resolved===false)continue;
     if(!reverse.has(edge.target))reverse.set(edge.target,[]);reverse.get(edge.target).push(edge);
   }
   const queue=[...starts],visited=new Set(queue);for(const id of queue)paths.set(id,[]);

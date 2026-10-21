@@ -61,7 +61,7 @@ Set them in the environment that starts the harness, for example in your shell p
 
 ## MCP tools
 
-The server sends instructions that map ADD activities to its tools. `get_change_status` returns the state that the session start hook adds; `check_records` returns the validator result for a repository or one change. `--repository /absolute/root` (repeatable) selects other roots, `--state-dir /absolute/path` a private cache directory, and `--allow-writes` adds the knowledge edit tools.
+The server sends instructions that map ADD activities to its tools. `get_change_status` returns the state that the session start hook adds; `check_records` returns the validator result for a repository or one change. `get_concept` returns one declared concept, and `search_flows` with `kinds: ["concept"]` finds concepts. `--repository /absolute/root` (repeatable) selects other roots, `--state-dir /absolute/path` a private cache directory, and `--allow-writes` adds the knowledge edit tools.
 
 ## Observe execution
 

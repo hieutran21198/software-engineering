@@ -59,6 +59,10 @@ flow:
         - model-presentation
         - work-page
         - workbench-shell-tests
+        - concept-contract
+        - concept-links
+        - concept-search-tests
+        - concept-row-checks
       interactions:
         - from: snapshot
           to: version
@@ -93,6 +97,12 @@ flow:
         - diagram-rendering-contract
         - diagram-renderer
         - diagram-browser
+        - concept-contract
+        - concept-page
+        - concept-links
+        - concept-page-browser
+        - page-links-browser
+        - history-browser
       interactions:
         - from: snapshot
           to: change
@@ -345,6 +355,57 @@ flow:
       requires: Render fenced Mermaid blocks of knowledge as sanitized SVG with
         bundled code, and keep the code panel when a block does not render.
       basis: documented
+    - id: concept-contract
+      kind: element
+      artifact: artifact-plane
+      element: specifications/concept-pages.md
+      requires: Define the concept page, the concept links of existing pages, the sidebar concept rows and browser Back.
+      basis: documented
+    - id: concept-links
+      kind: implementation
+      path: apps/artifact-plane/src/pages/ConceptLinks.jsx
+      requires: Load the concepts of an artifact and link names to their concept pages.
+      basis: static
+    - id: concept-page
+      kind: implementation
+      path: apps/artifact-plane/src/pages/ConceptPage.jsx
+      requires: Show one concept with its documents, flows, inferred code and tests, branch changes and diagnostics.
+      basis: static
+    - id: concept-row-checks
+      kind: test
+      path: apps/artifact-plane/test/change-status.test.js
+      requires: Check the concept rows of the sidebar filter and their place under each artifact.
+      basis: observed
+      evidence:
+        - docs/artifacts/artifact-plane/changes/change-concept-pages/tasks/09-sidebar-search.md
+    - id: concept-search-tests
+      kind: test
+      path: apps/artifact-plane/test/browser/shell.spec.js
+      requires: Find a concept in the sidebar search, open Discover from it and focus the search with the / key at 1440 and 390 pixels.
+      basis: observed
+      evidence:
+        - docs/artifacts/artifact-plane/changes/change-concept-pages/tasks/09-sidebar-search.md
+    - id: concept-page-browser
+      kind: test
+      path: apps/artifact-plane/test/browser/concept-page.spec.js
+      requires: Check the concept page order, wording, rows, sections and layout at 1440 and 390 pixels.
+      basis: observed
+      evidence:
+        - docs/artifacts/artifact-plane/changes/change-concept-pages/tasks/05-concept-page.md
+    - id: page-links-browser
+      kind: test
+      path: apps/artifact-plane/test/browser/artifact-document.spec.js
+      requires: Check the artifact Concepts section and the document Concepts property, and their absence without models.
+      basis: observed
+      evidence:
+        - docs/artifacts/artifact-plane/changes/change-concept-pages/tasks/06-page-links.md
+    - id: history-browser
+      kind: test
+      path: apps/artifact-plane/test/browser/history.spec.js
+      requires: Check that browser Back moves the active tab one page back and restores the Discover query and the open brief rows.
+      basis: observed
+      evidence:
+        - docs/artifacts/artifact-plane/changes/change-concept-pages/tasks/04-browser-back.md
   gaps:
     - The flow documents discovery behavior, not complete knowledge coverage or
       artifact establishment.

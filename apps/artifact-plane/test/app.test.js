@@ -59,5 +59,5 @@ test("mcp runs the stdio MCP server and lists its tools", async (t) => {
   t.after(async () => {await client.close();await fixture.cleanup();});
   await client.connect(transport);
   const names = (await client.listTools()).tools.map((tool) => tool.name);
-  assert.equal(names.length, 12);assert.ok(names.includes("search_flows"));
+  assert.equal(names.length, 13);assert.ok(names.includes("search_flows") && names.includes("get_concept"));
 });

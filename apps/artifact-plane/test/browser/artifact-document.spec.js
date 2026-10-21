@@ -419,6 +419,34 @@ test('Compare with main, the unsaved guard and the Properties disclosure at narr
   } finally {await f.cleanup();}
 });
 
+test('Compare with main waits for the text of the branch before it shows a comparison', async ({page}) => {
+  const f = await editingRepository();
+  await put(f.root, spec, original.replace('Established identity rules.', 'Proposed identity rules.'));
+  // The read of the branch text waits until the text on main is shown.
+  let release, held = 0;const gate = new Promise(resolve => {release = resolve;});
+  await page.route('**/api/repository/query', async route => {
+    const body = route.request().postDataJSON();
+    if (body.section === 'markdown' && body.source === spec && !body.revision) {held++;await gate;}
+    // A refresh can abort a held read; its route is then gone.
+    await route.continue().catch(() => {});
+  });
+  try {
+    await openRepository(page, f.root);
+    const doc = await openDocument(page, 'Tenant', 'Specifications', 'Identity');
+    await expect.poll(() => held).toBeGreaterThan(0);
+    const main = page.waitForResponse(r => r.url().endsWith('/api/repository/query') && r.request().postDataJSON().revision === 'established');
+    await prop(page, 'In this branch').getByRole('button', {name: 'Compare with main', exact: true}).click();
+    await main;
+    // The text on main is read; without the branch text no line is compared.
+    const comparison = doc.getByRole('region', {name: 'Comparison with main'});
+    await expect(comparison.getByRole('status')).toHaveText('Reading the text…');
+    await expect(comparison.locator('.diff-line')).toHaveCount(0);
+    release();
+    await expect(comparison.locator('.diff-line.remove')).toHaveText([/Established identity rules\./]);
+    await expect(comparison.locator('.diff-line.add')).toHaveText([/Proposed identity rules\./]);
+  } finally {release();await f.cleanup();}
+});
+
 const headings = '\n## Second\n\n### Third\n\n#### Fourth\n\n##### Fifth\n\n###### Sixth\n\nBody text.\n';
 test('document reading: heading levels, safe code highlighting and sanitized Markdown without repository writes', async ({page}) => {
   const files = editingFiles(), source = '<script>window.codeInjected=true</script>\nconst answer = 42;\n<span data-knowledge-index="0">Forged callback</span>';
@@ -488,5 +516,121 @@ test('an error diagnostic of the artifact shows one notice with Fix', async ({pa
     await expect(notice).toBeVisible({timeout: 2000});
     await notice.getByRole('button', {name: 'Fix Identity', exact: true}).click();
     await expect(documentPage(page).getByRole('heading', {level: 1})).toHaveText('Identity');
+  } finally {await f.cleanup();}
+});
+
+// Concept links (CP7, CP8, CPA4, CPA6). The concept page is another task, so
+// the tests check the page object that a link opens, read from the props of
+// the rendered page.
+const shownPage = page => page.evaluate(() => {
+  const element = document.querySelector('main.page-area > section');
+  let fiber = element[Object.keys(element).find(k => k.startsWith('__reactFiber$'))];
+  while (fiber && !(typeof fiber.type === 'function' && fiber.memoizedProps?.page)) fiber = fiber.return;
+  return fiber?.memoizedProps.page;
+});
+const conceptsRead = (page, artifact) => page.waitForResponse(r => r.url().endsWith('/api/flows/query') && r.request().postDataJSON()?.operation === 'concepts' && r.request().postDataJSON()?.artifact === artifact);
+const models = list => '---\nmodels:\n' + list.map(m => `  - id: ${m.id}\n    title: ${m.title}\n    description: ${m.description}\n    sources: [${m.sources.join(', ')}]\n`).join('') + '---\n# Domain model\n\nThe models of the artifact.\n';
+const model = (id, title, description, sources = ['requirements/need.md']) => ({id, title, description, sources});
+const catalog = 'docs/artifacts/catalog/';
+const conceptTitles = section => section.locator('.concept-title');
+
+test('artifact page Concepts: first sentences on one line, Show all, the concept page object, and no section without models', async ({page}) => {
+  const files = editingFiles();
+  files.set(tenant + 'specifications/domain-model.md', models([
+    model('member', 'Member', 'The person who signs in to the tenant. A member has one identity.'),
+    model('session', 'Session', 'The signed-in period of a member, which starts when the member signs in with a valid identity and ends when the member signs out, when the session expires after its idle time or when an administrator revokes it for the tenant. It has a token.'),
+    model('team', 'Team', 'A group of members.'),
+  ]));
+  files.set(catalog + 'README.md', identity('Catalog', '1.0.0'));
+  files.set(catalog + 'requirements/need.md', '# Catalog need\n\nItems exist.\n');
+  files.set(catalog + 'versions/1.0.0/README.md', versionRecord('change-initial'));
+  files.set(catalog + 'changes/change-initial/README.md', '# Initial\n');
+  files.set(catalog + 'changes/change-initial/tasks/README.md', '---\ntasks: []\n---\n# Plan\n');
+  files.set(catalog + 'specifications/domain-model.md', models(['Alpha', 'Bravo', 'Charlie', 'Delta', 'Echo', 'Foxtrot'].map(t => model(t.toLowerCase(), t, `${t} item.`))));
+  const f = await fixtureRepository(files), before = await fingerprint(f.root), errors = [];page.on('pageerror', e => errors.push(e.message));
+  try {
+    await openRepository(page, f.root);
+    const tenantPage = await openArtifact(page, 'Tenant');
+    const concepts = tenantPage.getByRole('region', {name: 'Concepts', exact: true});
+    await expect(concepts.getByRole('heading', {level: 2})).toHaveText('Concepts 3');
+    // After Flows and before Versions, which stays last.
+    await expect(tenantPage.locator('.section-title')).toHaveText([/^Requirements/, /^Specifications/, /^Decisions/, /^Flows/, 'Concepts 3', /^Versions/]);
+    await expect(conceptTitles(concepts)).toHaveText(['Member', 'Session', 'Team']);
+    const details = concepts.locator('.concept-detail');
+    await expect(details).toHaveText(['The person who signs in to the tenant.', /^The signed-in period of a member, .* for the tenant\.$/, 'A group of members.']);
+    // One line at 1440 pixels: the long first sentence is cut, not wrapped.
+    const lines = () => details.evaluateAll(list => list.map(e => Math.round(e.getBoundingClientRect().height / parseFloat(getComputedStyle(e).lineHeight))));
+    expect(await lines()).toEqual([1, 1, 1]);
+    expect(await details.nth(1).evaluate(e => e.scrollWidth > e.clientWidth)).toBe(true);
+    await expect(concepts.getByRole('button', {name: /^Show all/})).toHaveCount(0);
+    await expect(concepts.getByRole('button', {name: /^New /})).toHaveCount(0);
+    await concepts.getByRole('button', {name: /^Session /}).click();
+    await expect.poll(() => shownPage(page)).toEqual({kind: 'concept', artifact: 'tenant', model: 'session'});
+    // Six concepts: five rows and Show all 6 concepts, in place.
+    const catalogPage = await openArtifact(page, 'Catalog');
+    const many = catalogPage.getByRole('region', {name: 'Concepts', exact: true});
+    await expect(many.getByRole('heading', {level: 2})).toHaveText('Concepts 6');
+    await expect(conceptTitles(many)).toHaveText(['Alpha', 'Bravo', 'Charlie', 'Delta', 'Echo']);
+    await many.getByRole('button', {name: 'Show all 6 concepts', exact: true}).click();
+    await expect(conceptTitles(many)).toHaveText(['Alpha', 'Bravo', 'Charlie', 'Delta', 'Echo', 'Foxtrot']);
+    await expect(many.getByRole('button', {name: 'Show first 5 concepts', exact: true})).toHaveAttribute('aria-expanded', 'true');
+    // An artifact without models has no Concepts section after its concepts read (CPA6).
+    const read = conceptsRead(page, 'billing');
+    const billingPage = await openArtifact(page, 'Billing');
+    expect((await (await read).json()).data.concepts).toEqual([]);
+    await expect(billingPage.getByRole('region', {name: 'Versions', exact: true})).toBeVisible();
+    await expect(billingPage.getByRole('region', {name: 'Concepts', exact: true})).toHaveCount(0);
+    await expect(billingPage.getByText(/concept/i)).toHaveCount(0);
+    // Two lines at most and no horizontal scroll at 390 pixels.
+    await page.setViewportSize({width: 390, height: 900});
+    await openArtifact(page, 'Tenant');
+    await expect(conceptTitles(concepts)).toHaveText(['Member', 'Session', 'Team']);
+    expect(Math.max(...await lines())).toBeLessThanOrEqual(2);
+    expect(await noOverflow(page)).toBe(true);
+    expect(errors).toEqual([]);
+    expect(changedPaths(before, await fingerprint(f.root))).toEqual([]);
+  } finally {await f.cleanup();}
+});
+
+test('document Concepts: Declares and Describes with New, Changed and Removed on a branch; none on other documents', async ({page}) => {
+  const files = editingFiles();
+  const domain = tenant + 'specifications/domain-model.md';
+  files.set(domain, models([model('member', 'Member', 'A person who signs in.'), model('session', 'Session', 'A signed-in period.'), model('legacy', 'Legacy', 'An old account.', ['specifications/identity.md'])]));
+  files.set(tenant + 'specifications/plain.md', '# Plain\n\nNo model here.\n');
+  const f = await editingRepository(files);
+  // The branch adds Audit, changes Session and removes Legacy.
+  await put(f.root, domain, models([model('member', 'Member', 'A person who signs in.'), model('session', 'Session', 'A signed-in period that expires.'), model('audit', 'Audit', 'A record of checks.')]));
+  const before = await fingerprint(f.root), errors = [];page.on('pageerror', e => errors.push(e.message));
+  try {
+    await openRepository(page, f.root);
+    await openDocument(page, 'Tenant', 'Specifications', 'Domain model');
+    const concepts = prop(page, 'Concepts');
+    await expect(concepts.locator('.prop-value')).toHaveText('Declares Audit +New, Legacy −Removed, Member, Session ~Changed');
+    await expect.poll(async () => (await properties(page).locator('.prop-key').allTextContents()).slice(0, 3)).toEqual(['Kind', 'Concepts', 'In this branch']);
+    // A removed declaration has no page: its name is plain text.
+    await expect(concepts.getByRole('button')).toHaveText(['Audit', 'Member', 'Session']);
+    await expect(concepts.locator('.concept-name').filter({hasText: 'Legacy'})).toHaveText('Legacy −Removed');
+    await openDocument(page, 'Tenant', 'Requirements', 'Need');
+    await expect(prop(page, 'Concepts').locator('.prop-value')).toHaveText('Describes Audit +New, Member, Session ~Changed');
+    await openDocument(page, 'Tenant', 'Specifications', 'Identity');
+    await expect(prop(page, 'Concepts').locator('.prop-value')).toHaveText('Describes Legacy −Removed');
+    await expect(prop(page, 'Concepts').getByRole('button')).toHaveCount(0);
+    // A document that declares and describes no model has no Concepts property (CPA6).
+    let read = conceptsRead(page, 'tenant');
+    await openDocument(page, 'Tenant', 'Specifications', 'Plain');
+    expect((await (await read).json()).data.concepts.length).toBe(4);
+    await expect(prop(page, 'Kind')).toBeVisible();
+    await expect(prop(page, 'Concepts')).toHaveCount(0);
+    read = conceptsRead(page, 'billing');
+    await openDocument(page, 'Billing', 'Requirements', 'Invoice');
+    await read;
+    await expect(prop(page, 'Kind')).toBeVisible();
+    await expect(prop(page, 'Concepts')).toHaveCount(0);
+    // A name opens the concept page object.
+    await openDocument(page, 'Tenant', 'Specifications', 'Domain model');
+    await prop(page, 'Concepts').getByRole('button', {name: 'Member', exact: true}).click();
+    await expect.poll(() => shownPage(page)).toEqual({kind: 'concept', artifact: 'tenant', model: 'member'});
+    expect(errors).toEqual([]);
+    expect(changedPaths(before, await fingerprint(f.root))).toEqual([]);
   } finally {await f.cleanup();}
 });

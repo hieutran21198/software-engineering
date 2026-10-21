@@ -117,3 +117,38 @@ test('P1: dependency edges carry explanations; parallel statuses and missing rea
   const inPlace = buildSnapshot(inPlaceFixture());
   assert.equal(inPlace.edges[0].explanations[0].selector.source, 'working');
 });
+test('claim one-node-per-concept: a legacy change that copies the declaring document gives one node, and version participants link to it', () => {
+  const change = 'docs/artifacts/tenant/changes/change-next/';
+  const input = files([
+    [change + 'README.md', '# Next'], [change + 'specifications/identity.md', '# Identity\n'],
+    [change + 'specifications/domain-model.md', models([{...model('member'), title: 'Member in change'}])],
+  ]);
+  const g = graphOf(input);
+  const nodes = g.nodes.filter(n => n.kind === 'model');
+  assert.deepEqual(nodes.map(n => [n.logicalId, n.source, n.title]), [['tenant:member', 'change:change-next', 'Member in change']]);
+  const login = g.flows.find(f => f.logicalId === 'tenant:login'), report = g.flows.find(f => f.logicalId === 'tenant:report');
+  assert.equal(login.source, 'version:1.0.0');
+  assert.equal(login.participants[0].source, 'version:1.0.0', 'the participant resolves in the version source');
+  assert.equal(login.participants[0].nodeId, nodes[0].id);
+  assert.equal(report.participants[0].nodeId, nodes[0].id);
+  assert.equal(g.edges.filter(e => e.kind === 'participates' && e.target === nodes[0].id).length, 2);
+  assert.equal(g.edges.filter(e => e.kind === 'declares' && e.source === nodes[0].id).length, 1);
+  const declaring = g.nodes.find(n => n.id === g.edges.find(e => e.kind === 'declares').target);
+  assert.deepEqual([declaring.file, declaring.title], [change + 'specifications/domain-model.md', 'Models']);
+  // A change to the declaring document reaches the flows through the declares edge.
+  assert.deepEqual(flowImpact(g, [change + 'specifications/domain-model.md']).flows.map(f => f.logicalId).sort(), ['tenant:login', 'tenant:report']);
+  // Established knowledge keeps the version declaration; all knowledge picks one declaration too.
+  const established = buildFlowGraph(buildSnapshot(input), {context: '/repo', knowledge: 'established'}).nodes.filter(n => n.kind === 'model');
+  assert.deepEqual(established.map(n => n.source), ['version:1.0.0']);
+  const all = buildFlowGraph(buildSnapshot(input), {context: '/repo', knowledge: 'all'}).nodes.filter(n => n.kind === 'model');
+  assert.deepEqual(all.map(n => n.source), ['change:change-next']);
+});
+test('CP10: a model that no flow uses has a node with missingSources and a declares edge, and registers no flow source', () => {
+  const g = graphOf(files([[v + 'specifications/domain-model.md', models([model('member'), model('unused', ['specifications/absent.md'])])]]));
+  const node = g.nodes.find(n => n.logicalId === 'tenant:unused');
+  assert.deepEqual([node.kind, node.missingSources], ['model', ['specifications/absent.md']]);
+  assert.deepEqual(g.nodes.find(n => n.logicalId === 'tenant:member').missingSources, []);
+  assert.ok(g.edges.some(e => e.kind === 'declares' && e.source === node.id));
+  assert.deepEqual(g.diagnostics.filter(d => d.code === 'missing-model-source').map(d => [d.model, d.file]), [['tenant:unused', v + 'specifications/domain-model.md']]);
+  assert.deepEqual(g.sources.map(s => s.path).sort(), graphOf(files()).sources.map(s => s.path).sort(), 'the flow sources stay those of the used model');
+});

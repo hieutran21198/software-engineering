@@ -13,6 +13,7 @@ import Workspace from './Workspace.jsx';
 import Sidebar from './Sidebar.jsx';
 import TopBar, {CreateBranchForm} from './TopBar.jsx';
 import {refreshQueue, repositoryQuery, mergeChange} from './reload.js';
+import {postJSON} from './request.js';
 import {RuntimeProvider, useRuntime} from './Runtime.jsx';
 import {usePageVisible} from './page-visible.js';
 import {taskSelection} from './task-canvas.js';
@@ -31,15 +32,35 @@ import DiscoverPage from './pages/DiscoverPage.jsx';
 import RecordedPage from './pages/RecordedPage.jsx';
 import SourcePage from './pages/SourcePage.jsx';
 import ImpactPage from './pages/ImpactPage.jsx';
+import ConceptPage from './pages/ConceptPage.jsx';
 
 const HOME = {kind: 'work'};
-const PAGES = {work: WorkPage, artifact: ArtifactPage, document: DocumentPage, change: ChangePage, unit: UnitPage, flow: FlowPage, discover: DiscoverPage, recorded: RecordedPage, source: SourcePage, impact: ImpactPage};
+const KEPT = ['query', 'brief'];
+const NONE = [];
+const PAGES = {work: WorkPage, artifact: ArtifactPage, document: DocumentPage, change: ChangePage, unit: UnitPage, flow: FlowPage, discover: DiscoverPage, recorded: RecordedPage, source: SourcePage, impact: ImpactPage, concept: ConceptPage};
 const VERBS = {'artifact.create': 'Created artifact', 'artifact.dependencies.set': 'Set dependencies in', 'change.start': 'Started change in', 'document.add': 'Added', 'document.save': 'Saved', 'document.delete': 'Deleted', 'document.properties.set': 'Saved front matter of', undo: 'Undid the change to'};
 const short = path => path.split('/').slice(-2).join('/');
 const describe = (operation, response) => {const files = response.files || [];return `${VERBS[operation] || 'Updated'} ${files.length === 1 ? short(files[0].path) : `${files.length} files`}.`;};
 const KIND = /^docs\/artifacts\/([^/]+)\/(requirements|specifications|decisions)\/(flows\/)?/;
 const session = (key, fallback) => {try {const value = sessionStorage.getItem(key);return value === null ? fallback : JSON.parse(value);} catch {return fallback;}};
 const remember = (key, value) => {try {sessionStorage.setItem(key, JSON.stringify(value));} catch {}};
+// Browser history (specifications/concept-pages.md, Browser Back): one entry for each trail push.
+// The Navigation API index tells a Forward press from a Back press; without it, every press counts as Back.
+const entryIndex = () => window.navigation?.currentEntry?.index ?? null;
+const shown = {index: entryIndex(), hash: location.hash};
+const seen = () => {shown.index = entryIndex();shown.hash = location.hash;};
+const pushEntry = () => {history.pushState({plane: true}, '');seen();};
+const replaceEntry = () => {history.replaceState({plane: true}, '');seen();};
+// The `/` key never acts in a text field, an editable element or an open form.
+const typing = node => Boolean(node?.closest?.('input, textarea, select, form:not([role="search"])') || node?.isContentEditable);
+// A focus target is the opening control; after a remount, the control with the same tag, name and landmark.
+const nameOf = node => node.getAttribute('aria-label') || node.textContent.trim();
+const focusTarget = node => node && node !== document.body ? {node, tag: node.tagName, name: nameOf(node), main: Boolean(node.closest('main'))} : null;
+function restoreFocus(target, tries = 20) {
+  const usable = node => node?.isConnected && !node.closest('[hidden]');
+  const node = usable(target.node) ? target.node : target.name && [...document.querySelectorAll(target.tag)].find(n => usable(n) && Boolean(n.closest('main')) === target.main && nameOf(n) === target.name);
+  if (node) node.focus();else if (tries) requestAnimationFrame(() => restoreFocus(target, tries - 1));
+}
 
 function RecordedAvailable({children}) {
   const runtime = useRuntime();
@@ -58,12 +79,24 @@ export function ProjectExplorer({active: isActive = true, initialPath = '', onOp
   const [loadedSession, setLoadedSession] = useState(0), [overviewEpoch, setOverviewEpoch] = useState(0), [disconnected, setDisconnected] = useState(false);
   const workspaceRef = useRef(null), returnFocus = useRef([]), mainRef = useRef(null);
   // Event streams stay open only while this project is active and its browser tab is visible.
-  const visible = usePageVisible(), observing = isActive && visible;
+  const visible = usePageVisible(), observing = isActive && visible, loaded = Boolean(snapshot);
   useEffect(() => {const measure = () => setNarrow(window.innerWidth <= 800);window.addEventListener('resize', measure);return () => window.removeEventListener('resize', measure);}, []);
   useEffect(() => {if (projectRoot) remember('plane-sidebar:' + projectRoot, [...expanded]);}, [expanded, projectRoot]);
   useEffect(() => {if (projectRoot) remember('plane-history:' + projectRoot, history);}, [history, projectRoot]);
   // Escape closes the drawer wherever the focus is, also in the top bar.
   useEffect(() => {if (!drawerOpen) return;const close = event => {if (event.key === 'Escape') setDrawerOpen(false);};document.addEventListener('keydown', close);return () => document.removeEventListener('keydown', close);}, [drawerOpen]);
+  // `/` focuses the sidebar search of the active tab; at 800 px or less it opens the drawer first.
+  useEffect(() => {
+    if (!isActive || !loaded || editingRepo) return;
+    const focusSearch = (tries = 20) => {const input = document.getElementById(drawerId)?.querySelector('.sidebar-search input');if (input) input.focus();else if (tries) requestAnimationFrame(() => focusSearch(tries - 1));};
+    const key = event => {
+      if (event.key !== '/' || event.ctrlKey || event.metaKey || event.altKey || event.defaultPrevented || typing(event.target)) return;
+      event.preventDefault();
+      if (window.innerWidth <= 800) setDrawerOpen(true);
+      focusSearch();
+    };
+    document.addEventListener('keydown', key);return () => document.removeEventListener('keydown', key);
+  }, [isActive, loaded, editingRepo]);
   const toggle = useCallback(key => setExpanded(current => {const next = new Set(current);next.has(key) ? next.delete(key) : next.add(key);return next;}), []);
 
   // Unsaved editor text asks for confirmation before another page opens.
@@ -75,6 +108,8 @@ export function ProjectExplorer({active: isActive = true, initialPath = '', onOp
   // Opening a page reveals its sidebar row; Back restores the previous page and focus.
   const go = useCallback(next => {
     const current = routeRef.current;
+    // The same page keeps its Discover query and open brief rows unless next names them, as the TopBar entry to an open Discover page.
+    if (samePage(current.page, next)) next = {...Object.fromEntries(KEPT.filter(k => k in current.page).map(k => [k, current.page[k]])), ...next};
     const same = samePage(current.page, next) && JSON.stringify(current.page) === JSON.stringify(next);
     if (!same && !samePage(current.page, next) && !leave()) return;
     const reveal = [];
@@ -85,17 +120,32 @@ export function ProjectExplorer({active: isActive = true, initialPath = '', onOp
     if (reveal.length) setExpanded(open => reveal.every(key => open.has(key)) ? open : new Set([...open, ...reveal]));
     setDrawerOpen(false);
     if (same) return;
-    returnFocus.current = [...returnFocus.current, document.activeElement].slice(-50);
-    const value = samePage(current.page, next) ? {...current, page: next} : {page: next, trail: [...current.trail, current.page].slice(-50)};
-    routeRef.current = value;setRoute(value);
-    if (!samePage(current.page, next)) requestAnimationFrame(() => mainRef.current?.scrollTo?.({top: 0}));
+    // A replacement in place keeps the trail, the focus list and the browser position.
+    if (samePage(current.page, next)) {replaceEntry();const value = {...current, page: next};routeRef.current = value;setRoute(value);return;}
+    returnFocus.current = [...returnFocus.current, focusTarget(document.activeElement)].slice(-50);
+    const value = {page: next, trail: [...current.trail, current.page].slice(-50)};
+    routeRef.current = value;setRoute(value);pushEntry();
+    requestAnimationFrame(() => mainRef.current?.scrollTo?.({top: 0}));
   }, []);
   const back = useCallback(() => {
-    const current = routeRef.current;if (!current.trail.length || !leave()) return;
+    const current = routeRef.current;if (!current.trail.length || !leave()) return false;
     const value = {page: current.trail.at(-1), trail: current.trail.slice(0, -1)};routeRef.current = value;setRoute(value);
     const target = returnFocus.current.pop();
-    requestAnimationFrame(() => requestAnimationFrame(() => {if (target?.isConnected && !target.closest('[hidden]')) target.focus();}));
+    if (target) requestAnimationFrame(() => requestAnimationFrame(() => restoreFocus(target)));
+    return true;
   }, []);
+  // Browser Back moves only the active project tab, and only while its trail is not empty.
+  // Forward and a move between fragments of one entry change no page; a refused leave() restores the position.
+  useEffect(() => {
+    if (!isActive) return;
+    const pop = () => {
+      const index = entryIndex(), forward = index !== null && shown.index !== null && index > shown.index, fragment = location.hash !== shown.hash;seen();
+      if (forward || fragment || !routeRef.current.trail.length) return;
+      if (!back()) pushEntry();
+    };
+    window.addEventListener('popstate', pop);window.addEventListener('hashchange', seen);
+    return () => {window.removeEventListener('popstate', pop);window.removeEventListener('hashchange', seen);};
+  }, [isActive, back]);
   const resetRoute = () => {const value = {page: HOME, trail: []};routeRef.current = value;setRoute(value);returnFocus.current = [];};
 
   // Repository reads: one queue per project, events from the observer, focus and online refresh.
@@ -234,6 +284,21 @@ export function ProjectExplorer({active: isActive = true, initialPath = '', onOp
     setOpStatus({text: `Created and switched to branch ${name}.`, operationId: null});
     await open(projectRoot, true);
   }
+  // Sidebar concepts load when the filter first has text, once for each worktree path and shell epoch.
+  // A cleared filter keeps a running load; a new worktree or epoch replaces it.
+  const [searching, setSearching] = useState(false), [concepts, setConcepts] = useState({key: null, worktree: null, list: []}), conceptLoad = useRef(null);
+  useEffect(() => {
+    const key = JSON.stringify([projectRoot, worktreePath, overviewEpoch]), worktree = worktreePath;
+    if (conceptLoad.current && conceptLoad.current.key !== key) {conceptLoad.current.controller.abort();conceptLoad.current = null;}
+    if (!isActive || !searching || !projectRoot || !worktree || conceptLoad.current || concepts.key === key) return;
+    const controller = new AbortController();conceptLoad.current = {key, controller};
+    const settle = list => {if (conceptLoad.current?.controller === controller) {conceptLoad.current = null;setConcepts({key, worktree, list});}};
+    postJSON('/api/flows/query', {path: projectRoot, worktree, knowledge: 'planning', operation: 'concepts'}, controller.signal)
+      .then(result => settle(result.data?.concepts || []), failure => {if (failure.name !== 'AbortError') settle([]);});
+  }, [isActive, searching, projectRoot, worktreePath, overviewEpoch]);
+  useEffect(() => () => conceptLoad.current?.controller.abort(), []);
+  // A refresh keeps the concepts of the worktree until its new read settles.
+  const sidebarConcepts = concepts.worktree === worktreePath ? concepts.list : NONE;
   const editable = Boolean(snapshot) && !protectedBranch(snapshot.repository.branch);
   const editing = {editable, run, git: runGit, setUnsaved, status: gitState, root: projectRoot, worktree: worktreePath, createBranch};
   const worktree = snapshot?.workflow?.worktrees.find(w => w.path === worktreePath);
@@ -241,7 +306,7 @@ export function ProjectExplorer({active: isActive = true, initialPath = '', onOp
     [snapshot, worktree, projectRoot, worktreePath, overviewEpoch, loadedSession, go, back, route.trail.length, editable, busy]);
   const uncommitted = gitState ? gitState.knowledge.length : knowledgeStatus(snapshot?.repository.status);
   const Page = PAGES[page.kind] || WorkPage;
-  const pageKey = JSON.stringify([worktreePath, page.kind, page.artifact, page.change, page.unit, page.source, page.flow, page.context, page.sourceId]);
+  const pageKey = JSON.stringify([worktreePath, page.kind, page.artifact, page.change, page.unit, page.source, page.flow, page.context, page.sourceId, page.model]);
   const showOpen = !snapshot || editingRepo;
   const sidebarMax = 400, resize = width => setSidebarWidth(Math.max(200, Math.min(sidebarMax, Math.round(width))));
   function dividerKeys(event) {const widths = {ArrowRight: sidebarWidth + 20, ArrowLeft: sidebarWidth - 20, Home: 200, End: sidebarMax};if (Object.hasOwn(widths, event.key)) {event.preventDefault();resize(widths[event.key]);}}
@@ -257,7 +322,7 @@ export function ProjectExplorer({active: isActive = true, initialPath = '', onOp
       <div className="workspace" ref={workspaceRef} style={{'--sidebar-width': sidebarWidth + 'px'}}>
         {snapshot && !showOpen && (!narrow || drawerOpen) && <>
           {narrow && <button className="drawer-backdrop unstyled" aria-label="Close navigation" onClick={() => setDrawerOpen(false)}/>}
-          <Sidebar id={drawerId} snapshot={snapshot} worktree={worktree} page={page} expanded={expanded} onToggle={toggle} onOpen={go} history={history} onHistory={setHistory}/>
+          <Sidebar id={drawerId} snapshot={snapshot} worktree={worktree} page={page} expanded={expanded} onToggle={toggle} onOpen={go} history={history} onHistory={setHistory} concepts={sidebarConcepts} conceptsReady={concepts.worktree === worktreePath} onSearch={setSearching}/>
           {!narrow && <div className="sidebar-divider" role="separator" aria-label="Resize navigation" aria-orientation="vertical" aria-valuemin={200} aria-valuemax={sidebarMax} aria-valuenow={sidebarWidth} aria-controls={drawerId} tabIndex={0}
             onKeyDown={dividerKeys} onPointerDown={event => {if (event.button !== 0) return;event.preventDefault();event.currentTarget.focus();event.currentTarget.setPointerCapture(event.pointerId);}}
             onPointerMove={event => {if (event.currentTarget.hasPointerCapture(event.pointerId)) resize(event.clientX - workspaceRef.current.getBoundingClientRect().left);}}
