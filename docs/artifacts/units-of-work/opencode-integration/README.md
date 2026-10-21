@@ -38,6 +38,14 @@ evidence:
     method: Run static registration and native profile checks, bundle and adoption Go suites, website build and knowledge validation.
     result: passed
     source: docs/artifacts/artifact-driven/changes/change-opencode-support/tasks/02-validation.md#automated-checks
+publication_reviews:
+  - artifact: artifact-driven
+    version: 3.3.0
+    source: docs/artifacts/units-of-work/opencode-integration/README.md#upstream-publication
+    required_changes:
+      - repository: https://github.com/hieutran21198/software-engineering
+        scope: ADD knowledge, retained delivery tasks, bundle guidance, native OpenCode profiles and regression tests.
+        pull_request: https://github.com/hieutran21198/software-engineering/pull/57
 ---
 
 # Integrate ADD with OpenCode V2
@@ -63,4 +71,10 @@ The Plane consumes established ADD knowledge. Implement and publish the ADD memb
 
 ## Combined checks
 
-The ADD member's implementation checks are recorded in its validation task. The Plane member has not started because the ADD supplier change is not established. The unit's lifecycle and combined-integration criteria are not yet satisfied. No live OpenCode activation is claimed.
+The ADD member's implementation checks are recorded in its validation task. Its required knowledge and code have landed. The Plane member is checking its target runtime contracts before releasing bridge implementation. The unit's lifecycle and combined-integration criteria are not yet satisfied. No live OpenCode activation is claimed.
+
+## Upstream publication
+
+Verified PR 57 is merged into `main` through GitHub and fetched protected Git. Compared the complete predecessor delivery tree with the fetched protected revision using `git diff --exit-code`; the trees matched. Fast-forwarded the clean local `main` checkout to that fetched revision. The protected branch contains ADD 3.3.0's identity and version records, originating task path set and bytes, canonical guidance, four profiles and registration tests. No companion implementation repository is required for this ADD member.
+
+The protected-branch CI runs were queued or running when inspected. Local implementation checks remain recorded in the delivered task. Publication is verified separately from those pending CI results and does not establish the undelivered Plane member. Rechecked the Plane plan's upstream specification reference against the established contract; no difference changes the approved scope.
