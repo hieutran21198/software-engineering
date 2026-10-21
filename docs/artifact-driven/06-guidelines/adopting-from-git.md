@@ -43,7 +43,7 @@ coordinator, PO, TL, and implementer skills, plus the required kiss
 and asd-ste-100 skills for every role. Apply both during existing
 self-checks. Use native team and skill capabilities; keep the
 canonical ADD bundle and its references intact. Add concise ADD
-guidance to the applicable existing AGENTS.md or CLAUDE.md, preserving
+guidance to the applicable existing AGENTS.md, CLAUDE.md, or GEMINI.md, preserving
 unrelated instructions. Report any capability or instruction conflicts.
 
 The coordinator must interview me and assign a change tier. For a

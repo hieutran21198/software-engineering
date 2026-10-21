@@ -2,8 +2,8 @@
 flow:
   id: agent-session-guidance
   title: Guide an agent session with the change state and the ADD limits
-  trigger: Claude Code or Codex runs the hook command of the executable, or an
-    agent calls an MCP tool of the Plane.
+  trigger: Claude Code, Codex or Antigravity runs the hook command of the
+    executable, or an agent calls an MCP tool of the Plane.
   outcome: The person sees the workbench address of the repository, the agent
     knows the state of its change, cannot run the three actions
     that ADD reserves for people through a recognized command, and fixes or
@@ -128,11 +128,12 @@ flow:
     - id: hook-tests
       kind: test
       path: apps/artifact-plane/test/agent-hook.test.js
-      requires: Send recorded Claude Code and Codex inputs and check the outputs,
-        the fail-open cases and the stored fields.
+      requires: Send recorded Claude Code, Codex and Antigravity inputs and
+        check the outputs, the fail-open cases and the stored fields.
       basis: observed
       evidence:
         - docs/artifacts/artifact-plane/changes/change-agent-integration/tasks/03-hook-command.md
+        - docs/artifacts/artifact-plane/changes/change-antigravity-support/tasks/01-antigravity-hook-adapter.md
     - id: mcp-tests
       kind: test
       path: apps/artifact-plane/test/agent-mcp.test.js

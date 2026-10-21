@@ -121,10 +121,11 @@ under verification and the fast unit suites; CI runs the full suites.
 
 ## Harness profiles
 
-The adoption guidance describes registration for Codex (`.agents/skills`,
-`.codex/agents`) and Claude Code (`.claude/skills` entries that point to the
-canonical role skill directories). This repository adds the Claude Code
-entries. The adoption tool still does not register skills.
+The adoption guidance describes registration for Antigravity (`.agents/skills`
+or `.agents/skills.json`), Codex (`.agents/skills`, `.codex/agents`) and Claude
+Code (`.claude/skills` entries that point to the canonical role skill
+directories). This repository includes the `.agents/skills`, `.codex/agents`
+and `.claude/skills` entries. The adoption tool still does not register skills.
 
 ## Retained evidence and consistency
 

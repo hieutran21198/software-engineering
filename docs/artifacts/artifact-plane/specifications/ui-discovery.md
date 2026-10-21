@@ -152,10 +152,12 @@ The unavailable line gives no address. A step that fails or passes its limit giv
 
 ## Hook output
 
-The SessionStart output adds two parts:
+The SessionStart output adds two parts for Claude Code and Codex:
 
 - `systemMessage` holds the line for the person when the source is `startup` or `resume`. Other sources show no line.
 - `additionalContext` is the session context text, then a new line, then `Workbench for people: <line>`. With no session context text, it is the workbench line alone.
+
+For Antigravity, the combined `additionalContext` string (the session context text and `Workbench for people: <line>`, or either one alone) is returned in `{"injectSteps":[{"systemMessage":{"systemMessage":"<context>"}}]}`.
 
 With no line and no session context text, the output stays `{}`. The other events and their outputs do not change. Outside an ADD repository the step starts nothing and gives no line.
 

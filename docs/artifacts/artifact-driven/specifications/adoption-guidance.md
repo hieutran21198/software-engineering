@@ -38,7 +38,7 @@ After Adoption is an ordered list. Each step links to its owning guide:
 
 1. Check the result. Run the same se-adopt command with `--dry-run`; a complete adoption reports `0 new files`. Confirm that the destination contains README.md and required-skills/kiss/SKILL.md and required-skills/asd-ste-100/SKILL.md.
 2. Configure the harness to load the coordinator, PO, TL and implementer skills and both required skills for every role, as working-with-ai.md#required-skills and #required-capabilities define.
-3. Add focused ADD instructions to the applicable existing AGENTS.md or CLAUDE.md, as working-with-ai.md#required-capabilities defines.
+3. Add focused ADD instructions to the applicable existing AGENTS.md, CLAUDE.md or GEMINI.md, as working-with-ai.md#required-capabilities defines.
 4. Put the adopted bundle and the setup on a dedicated branch, record the release tag in the PR description, and use the normal review and merge process. se-adopt does not commit, push or open PRs.
 5. Start the first change with getting-started.md, minimal-change.md for a one-artifact outcome, and the request in working-with-ai.md#start-a-change.
 

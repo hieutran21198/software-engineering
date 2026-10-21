@@ -123,7 +123,7 @@ The consumer workspace must already exist. Output paths must remain inside it. D
 
 The destination contains the ADD overview, foundation, methodology, execution guidance and role skills, reusable patterns, adoption guide, end-user guidelines and the `tools/` directory. Relative documentation links remain usable within the copied bundle.
 
-This destination holds ADD guidance. Project-specific artifacts can use the documented `docs/artifacts/` structure; adoption does not invent domain artifacts, tasks, or versions. Skills are supplied as files; the command does not register them in an agent tool or modify consumer `AGENTS.md` or `CLAUDE.md` files.
+This destination holds ADD guidance. Project-specific artifacts can use the documented `docs/artifacts/` structure; adoption does not invent domain artifacts, tasks, or versions. Skills are supplied as files; the command does not register them in an agent tool or modify consumer `AGENTS.md`, `CLAUDE.md`, or `GEMINI.md` files.
 
 ## Existing Files
 
@@ -161,7 +161,7 @@ Do these steps in order after a successful copy:
 
 1. Check the result. Run the same `se-adopt` command again with `--dry-run`. A complete adoption reports `0 new files`. Confirm that the destination contains `README.md`, `required-skills/kiss/SKILL.md`, `required-skills/asd-ste-100/SKILL.md` and `tools/README.md`. When `tools/add-validate.mjs` is present, run it once; exit status 0 means that the project knowledge has no error.
 2. Configure your harness to load the coordinator, PO, TL and implementer skills, and make both [required skills](../06-guidelines/working-with-ai.md#required-skills) available to every role. The [required capabilities](../06-guidelines/working-with-ai.md#required-capabilities) describe the role setup and the fallback when a capability is unavailable.
-3. Add focused ADD instructions to the applicable existing `AGENTS.md` or `CLAUDE.md`, as the [required capabilities](../06-guidelines/working-with-ai.md#required-capabilities) describe. Preserve unrelated instructions.
+3. Add focused ADD instructions to the applicable existing `AGENTS.md`, `CLAUDE.md`, or `GEMINI.md`, as the [required capabilities](../06-guidelines/working-with-ai.md#required-capabilities) describe. Preserve unrelated instructions.
 4. Put the adopted bundle and the setup changes on a dedicated branch. Record the release tag in the PR description, then use your normal review and merge process. `se-adopt` does not commit, push or open PRs.
 5. Start the first change. [Getting started](../06-guidelines/getting-started.md) explains the first artifact and its `change-initial`, the [minimal change scaffold](../06-guidelines/minimal-change.md) covers a one-artifact outcome, and [Start a change](../06-guidelines/working-with-ai.md#start-a-change) gives a request for your agent.
 

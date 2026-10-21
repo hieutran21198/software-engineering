@@ -1,6 +1,7 @@
 import {test} from 'node:test';
 import assert from 'node:assert/strict';
 import {RuntimeStore,inferredBinding,taskFilePaths,worktreeChanges} from '../server/runtime-store.js';
+import {normalizeHookInput} from '../server/agent-hook.js';
 import {run} from '../server/runtime-cli.js';
 import {fixtureRepository,identity,versionRecord,git} from './fixtures.js';
 import {runtimeFixture,bind} from './runtime-fixtures.js';
@@ -56,6 +57,8 @@ test('inferredBinding binds a subagent read and a linked worktree read',async()=
   assert.deepEqual(await inferredBinding(read(f.root,file,{agent_id:'child'}),s),{root:f.root,artifact:'demo',change:'change-live',task:'a.md',session:'session',agent:'child',unit:'live'});
   const linked=await inferredBinding(read(other,file,{tool_name:'Bash',tool_input:{command:'cat '+file}}),s);
   assert.deepEqual(linked,{root:other,artifact:'demo',change:'change-live',task:'a.md',session:'session',agent:'',unit:'live'});
+  const agy=normalizeHookInput({conversationId:'agy-session',workspacePaths:[other],toolCall:{name:'read_file',args:{Path:other+'/'+file}}}).input;
+  assert.deepEqual(await inferredBinding(agy,s),{root:other,artifact:'demo',change:'change-live',task:'a.md',session:'agy-session',agent:'',unit:'live'});
   // The returned arguments bind, and the open attempt then stops a second inference.
   await s.bind({...linked,binding:'inferred'});
   assert.equal(await inferredBinding(read(other,file),s),null);

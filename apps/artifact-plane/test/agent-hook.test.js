@@ -37,6 +37,8 @@ const UNAVAILABLE = 'Artifact Plane hook unavailable; execution continues.\n';
 const TASK = 'docs/artifacts/demo/changes/change-live/tasks/a.md';
 const deny = what => ({hookSpecificOutput: {hookEventName: 'PreToolUse', permissionDecision: 'deny',
   permissionDecisionReason: `ADD reserves ${what} for people (AGENTS.md). Work on a change branch and stop for team review.`}});
+const antigravityDeny = what => ({decision: 'deny',
+  reason: `ADD reserves ${what} for people (AGENTS.md). Work on a change branch and stop for team review.`});
 
 const put = async (root, path, text) => {await mkdir(dirname(join(root, path)), {recursive: true});await writeFile(join(root, path), text);};
 const commit = (root, message) => {git(root, 'add', '-A');git(root, '-c', 'user.name=Fixture', '-c', 'user.email=fixture@example.invalid', 'commit', '-qm', message);};
@@ -94,9 +96,28 @@ function codexInputs(cwd) {
     [{...base, hook_event_name: 'SessionEnd'}, {}],
   ];
 }
+function antigravityInputs(cwd) {
+  const base = {conversationId: 'agy-session', transcriptPath: `/home/user/.gemini/antigravity/brain/agy-session/.system_generated/logs/${MARKER}.jsonl`,
+    artifactDirectoryPath: `/home/user/.gemini/antigravity/brain/agy-session/${MARKER}`, workspacePaths: [cwd], modelName: 'MODEL_GOOGLE_GEMINI'};
+  return [
+    [{...base}, 'agy-context', undefined, 'SessionStart'],
+    [{...base, invocationNum: 1, prompt: `Do the task ${MARKER}`}, {}, undefined, 'PreInvocation'],
+    [{...base, stepIdx: 1, toolCall: {name: 'run_command', args: {CommandLine: `echo ${MARKER}`}}}, {decision: 'allow'}, undefined, 'PreToolUse'],
+    [{...base, stepIdx: 2, toolCall: {name: 'run_command', args: {CommandLine: `git commit -m ${MARKER}`}}}, antigravityDeny('commits to main'), undefined, 'PreToolUse'],
+    [{...base, stepIdx: 3, toolCall: {name: 'run_command', args: {CommandLine: `git push origin HEAD:main # ${MARKER}`}}}, antigravityDeny('pushes to main'), undefined, 'PreToolUse'],
+    [{...base, stepIdx: 4, toolCall: {name: 'run_command', args: {CommandLine: 'gh pr merge 44 --squash'}}}, antigravityDeny('the merge of a pull request'), undefined, 'PreToolUse'],
+    [{...base, stepIdx: 5, agentId: 'agy-child', toolCall: {name: 'read_file', args: {Path: join(cwd, TASK)}}}, {decision: 'allow'}, 'bind', 'PreToolUse'],
+    [{...base, stepIdx: 6, toolCall: {name: 'run_command', args: {CommandLine: `echo ${MARKER}`}}}, {}, undefined, 'PostToolUse'],
+    [{...base, stepIdx: 7, toolCall: {name: 'run_command', args: {CommandLine: `echo ${MARKER}`}}, error: MARKER}, {}],
+    [{...base, executionNum: 1, terminationReason: 'NO_TOOL_CALL', fullyIdle: false, responseText: MARKER}, 'agy-continue', undefined, 'Stop'],
+    [{...base, executionNum: 2, terminationReason: 'NO_TOOL_CALL', fullyIdle: false, responseText: MARKER}, {}, undefined, 'Stop'],
+    [{...base, executionNum: 1, terminationReason: 'MAX_ITERATIONS', fullyIdle: true, responseText: MARKER}, {}, undefined, 'Stop'],
+    [{...base, invocationNum: 1, executionCount: 1, responseText: MARKER}, {}, undefined, 'PostInvocation'],
+  ];
+}
 // `line` is the expected workbench line of a SessionStart output (specifications/ui-discovery.md: Hook output).
 function assertExpected(output, expected, input, line = null) {
-  const label = `${input.hook_event_name} ${JSON.stringify(input.tool_input ?? input.source ?? '')}`;
+  const label = `${input.hook_event_name || input.conversationId} ${JSON.stringify(input.tool_input ?? input.toolCall ?? input.source ?? '')}`;
   if (expected === 'context') {
     const shown = line && ['startup', 'resume'].includes(input.source);
     assert.deepEqual(Object.keys(output), shown ? ['hookSpecificOutput', 'systemMessage'] : ['hookSpecificOutput'], label);
@@ -107,6 +128,17 @@ function assertExpected(output, expected, input, line = null) {
     const workbench = output.hookSpecificOutput.additionalContext.split('\n').filter(l => l.startsWith('Workbench for people: '));
     assert.deepEqual(workbench, line ? [`Workbench for people: ${line}`] : [], label);
     if (line) assert.ok(output.hookSpecificOutput.additionalContext.endsWith(`\nWorkbench for people: ${line}`), label);
+  } else if (expected === 'agy-context') {
+    assert.deepEqual(Object.keys(output), ['injectSteps'], label);
+    assert.equal(output.injectSteps.length, 1, label);
+    const text = output.injectSteps[0]?.systemMessage?.systemMessage || '';
+    assert.match(text, /^Artifact Plane .*: ADD state of .* on branch main\.\n- demo\/change-live \(tier medium, unit live\): /, label);
+    const workbench = text.split('\n').filter(l => l.startsWith('Workbench for people: '));
+    assert.deepEqual(workbench, line ? [`Workbench for people: ${line}`] : [], label);
+  } else if (expected === 'agy-continue') {
+    assert.deepEqual(Object.keys(output), ['decision', 'reason'], label);
+    assert.equal(output.decision, 'continue');
+    assert.match(output.reason, /^demo\/change-live: invalid-unit .*\nFix the records, or say why they stay, before you stop\.$/ms, label);
   } else if (expected === 'block') {
     assert.deepEqual(Object.keys(output), ['decision', 'reason'], label);
     assert.equal(output.decision, 'block');
@@ -152,27 +184,28 @@ function hookProcess(input, {stateDir, env = {}, args = stateDir ? ['--state-dir
 }
 const runtime = (...args) => JSON.parse(execFileSync(program[0], [...program.slice(1), 'runtime', ...args], {encoding: 'utf8'}));
 
-test('AIA1: recorded Claude Code and Codex inputs get the output of the Hook command table from the dispatcher', async t => {
+test('AIA1: recorded Claude Code, Codex and Antigravity inputs get the output of the Hook command table from the dispatcher', async t => {
   const f = await fixture(t);
-  for (const [harness, inputs] of [['claude', claudeInputs(f.root)], ['codex', codexInputs(f.root)]]) {
-    for (const [input, expected, bind] of inputs) {
+  for (const [harness, inputs] of [['claude', claudeInputs(f.root)], ['codex', codexInputs(f.root)], ['antigravity', antigravityInputs(f.root)]]) {
+    for (const [input, expected, bind, event] of inputs) {
       const started = [];
-      const {output, unavailable} = await hookOutput(JSON.stringify(input), {stateDir: f.stateDir, steps: {start: (b, dir) => started.push([b, dir]), workbench: ready(f.root)}});
+      const {output, unavailable} = await hookOutput(JSON.stringify(input), {stateDir: f.stateDir, event, steps: {start: (b, dir) => started.push([b, dir]), workbench: ready(f.root)}});
       assertExpected(output, expected, input, READY(f.root));
-      assert.equal(unavailable, false, `${harness} ${input.hook_event_name}`);
-      assert.deepEqual(started, bind ? [[{root: f.root, artifact: 'demo', change: 'change-live', task: 'a.md', session: input.session_id, agent: input.agent_id, unit: 'live'}, f.stateDir]] : [], `${harness} ${input.hook_event_name}`);
+      assert.equal(unavailable, false, `${harness} ${event || input.hook_event_name}`);
+      assert.deepEqual(started, bind ? [[{root: f.root, artifact: 'demo', change: 'change-live', task: 'a.md', session: input.session_id || input.conversationId, agent: input.agent_id || input.agentId, unit: 'live'}, f.stateDir]] : [], `${harness} ${event || input.hook_event_name}`);
     }
   }
-  // The observer recorded the supported events of both harnesses and no payload text.
-  assert.equal(eventCount(f.stateDir), claudeInputs(f.root).length - 1 + codexInputs(f.root).length);
+  // The observer recorded the supported events of all three harnesses and no payload text.
+  assert.equal(eventCount(f.stateDir), claudeInputs(f.root).length - 1 + codexInputs(f.root).length + antigravityInputs(f.root).length - 1);
   await assertNoPayload(f.stateDir);
 });
 
-test(`AIA1: recorded inputs of both harnesses get the same output from the ${executable ? 'built executable' : 'source entry'}`, async t => {
+test(`AIA1: recorded inputs of all harnesses get the same output from the ${executable ? 'built executable' : 'source entry'}`, async t => {
   t.diagnostic(`program: ${program.join(' ')}`);
   const f = await fixture(t);
-  for (const [input, expected] of [...claudeInputs(f.root), ...codexInputs(f.root)].filter(([input]) => input.tool_input?.file_path === undefined)) {
-    const {output, stderr} = await hookProcess(input, {stateDir: f.stateDir});
+  for (const [input, expected, bind, event] of [...claudeInputs(f.root), ...codexInputs(f.root), ...antigravityInputs(f.root)].filter(([, , bind]) => !bind)) {
+    const args = ['--state-dir', f.stateDir, ...(event ? ['--event', event] : [])];
+    const {output, stderr} = await hookProcess(input, {stateDir: f.stateDir, args});
     assertExpected(output, expected, input, heldLine());
     assert.equal(stderr, '');
   }
@@ -194,7 +227,7 @@ test('AI1: the runtime command takes the commands of runtime-cli.js, and bind ac
 test('AI7: an argument problem, invalid input, empty input and a missing repository exit 0 with {}', async t => {
   const f = await fixture(t);
   const start = {session_id: 's', hook_event_name: 'SessionStart', source: 'startup', cwd: f.root};
-  for (const args of [['--unknown'], ['--state-dir'], ['--state-dir', 'relative/dir'], ['--state-dir', f.stateDir, 'extra']])
+  for (const args of [['--unknown'], ['--state-dir'], ['--state-dir', 'relative/dir'], ['--state-dir', f.stateDir, 'extra'], ['--event'], ['--event', '']])
     assert.deepEqual(await hookProcess(start, {stateDir: f.stateDir, args}).then(r => [r.output, r.stderr]), [{}, UNAVAILABLE], args.join(' '));
   for (const text of ['not json', '', '[1]', 'null', JSON.stringify({...start, x: 'y'.repeat(1024 * 1024)})])
     assert.deepEqual(await hookProcess(text, {stateDir: f.stateDir}).then(r => [r.output, r.stderr]), [{}, UNAVAILABLE], text.slice(0, 20));
@@ -327,6 +360,27 @@ test('AI6: a PreToolUse read in a linked worktree returns within 2 seconds, and 
   await hookProcess(input, {stateDir: f.stateDir});
   await new Promise(done => setTimeout(done, 1500));
   assert.equal(runtime('query', '--state-dir', f.stateDir, '--root', linked).attempts.length, 1);
+  await assertNoPayload(f.stateDir);
+});
+
+test('AIA8: Antigravity payload inference without --event and attempt state transitions across PreInvocation, PreToolUse, PostToolUse and Stop', async t => {
+  const f = await fixture(t);
+  const base = {conversationId: 'agy-turn', workspacePaths: [f.root], modelName: 'MODEL_GOOGLE_GEMINI'};
+  const bound = runtime('bind', '--state-dir', f.stateDir, '--root', f.root, '--artifact', 'demo', '--change', 'change-live', '--task', 'a.md', '--session', 'agy-turn');
+  // Without --event, the adapter infers SessionStart, UserPromptSubmit, PreToolUse, PostToolUse (when error is present) and Stop.
+  assertExpected((await hookOutput(JSON.stringify(base), {stateDir: f.stateDir, steps: {workbench: ready(f.root)}})).output, 'agy-context', base, READY(f.root));
+  assert.deepEqual((await hookOutput(JSON.stringify({...base, invocationNum: 1, prompt: MARKER}), {stateDir: f.stateDir})).output, {});
+  assert.equal(runtime('query', '--state-dir', f.stateDir, '--root', f.root).attempts.find(a => a.id === bound.attempt).state, 'processing');
+  assert.deepEqual((await hookOutput(JSON.stringify({...base, stepIdx: 1, toolCall: {name: 'run_command', args: {CommandLine: 'git status'}}}), {stateDir: f.stateDir})).output, {decision: 'allow'});
+  assert.deepEqual((await hookOutput(JSON.stringify({...base, stepIdx: 1, toolCall: {name: 'run_command', args: {CommandLine: 'git commit -m x'}}}), {stateDir: f.stateDir})).output, antigravityDeny('commits to main'));
+  // An Antigravity PreToolUse fail-open also returns decision allow.
+  assert.deepEqual(await hookOutput('not json', {stateDir: f.stateDir, event: 'PreToolUse'}), {output: {decision: 'allow'}, unavailable: true});
+  // With --event PostToolUse, a successful toolCall without error is recorded as PostToolUse and keeps processing.
+  assert.deepEqual((await hookOutput(JSON.stringify({...base, stepIdx: 2, toolCall: {name: 'run_command', args: {CommandLine: 'git status'}}}), {stateDir: f.stateDir, event: 'PostToolUse'})).output, {});
+  assert.equal(runtime('query', '--state-dir', f.stateDir, '--root', f.root).attempts.find(a => a.id === bound.attempt).state, 'processing');
+  // Stop transitions the attempt to validating because conversationId normalizes turn_id across events.
+  assertExpected((await hookOutput(JSON.stringify({...base, executionNum: 1, terminationReason: 'NO_TOOL_CALL'}), {stateDir: f.stateDir})).output, 'agy-continue', base);
+  assert.equal(runtime('query', '--state-dir', f.stateDir, '--root', f.root).attempts.find(a => a.id === bound.attempt).state, 'validating');
   await assertNoPayload(f.stateDir);
 });
 

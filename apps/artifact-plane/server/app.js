@@ -10,8 +10,9 @@ Commands:
   mcp             Run the stdio MCP server. Options: --repository /absolute/root
                   (repeatable; default: the Git top level of the working directory),
                   --state-dir /absolute/private/state, --allow-writes.
-  hook            Read one Claude Code or Codex hook input from standard input and
-                  write one JSON object. Option: --state-dir /absolute/private/state.
+  hook            Read one Claude Code, Codex or Antigravity hook input from
+                  standard input and write one JSON object. Options:
+                  --state-dir /absolute/private/state, --event <name>.
                   It always exits with status 0.
   runtime <register|bind|report|query> --name value ...
                   Record and read task execution (integration/README.md).
@@ -33,12 +34,19 @@ const runtimeCommands = ["register", "bind", "report", "query"];
 
 // The hook writes one JSON object and at most one line to standard error, and exits with status 0.
 async function hook() {
-  let result = { output: {}, unavailable: true };
+  const preToolAllow = args.some((a, i) => a === "--event" && args[i + 1] === "PreToolUse");
+  let result = { output: preToolAllow ? { decision: "allow" } : {}, unavailable: true };
   try {
-    if (!(args.length === 0 || (args.length === 2 && args[0] === "--state-dir" && isAbsolute(args[1])))) throw Error("Use hook [--state-dir /absolute/path]");
+    let stateDir, event;
+    for (let i = 0; i < args.length; i += 2) {
+      if (i + 1 >= args.length) throw Error("Use hook [--state-dir /absolute/path] [--event <name>]");
+      if (args[i] === "--state-dir" && !stateDir && isAbsolute(args[i + 1])) stateDir = args[i + 1];
+      else if (args[i] === "--event" && !event && args[i + 1]) event = args[i + 1];
+      else throw Error("Use hook [--state-dir /absolute/path] [--event <name>]");
+    }
     const { hookOutput, readInput } = await import("./agent-hook.js");
-    result = await hookOutput(await readInput(process.stdin), { stateDir: args[1] });
-  } catch {/* the output stays {} */}
+    result = await hookOutput(await readInput(process.stdin), { stateDir, event });
+  } catch {/* the fallback output stays */}
   if (result.unavailable) process.stderr.write("Artifact Plane hook unavailable; execution continues.\n");
   // A step that ran past its limit can still hold a handle; the exit does not wait for it.
   process.stdout.write(JSON.stringify(result.output) + "\n", () => setTimeout(() => process.exit(0), 0).unref());
