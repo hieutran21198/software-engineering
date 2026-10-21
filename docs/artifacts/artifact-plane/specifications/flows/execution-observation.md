@@ -19,11 +19,13 @@ flow:
         - agent-integration-contract
         - inferred-binding
         - binding-tests
+        - opencode-contract
     - id: observe
       title: Record allowlisted lifecycle observations
       supports:
         - store
         - hook-command
+        - opencode-contract
     - id: query
       title: Retrieve attempts and local SSE updates
       supports:
@@ -59,6 +61,13 @@ flow:
       to: retain
       condition: Observation ends, disconnects or becomes stale.
   support:
+    - id: opencode-contract
+      kind: element
+      artifact: artifact-plane
+      element: specifications/opencode-support.md
+      requires: Map verified V2 events to existing observations without
+        fabricating turns, child identities or idle completion.
+      basis: documented
     - id: agent-integration-contract
       kind: element
       artifact: artifact-plane
@@ -155,6 +164,8 @@ flow:
       requires: Check one title, one navigation, unique control names and no horizontal overflow on every page.
       basis: static
   gaps:
+    - OpenCode V2 event shapes and installed plugin activation need current
+      delivery evidence. Missing turn metadata stays unknown, not inferred.
     - Observed lifecycle activity and reported checks do not prove task DoD,
       plan approval or artifact establishment.
   exclusions:

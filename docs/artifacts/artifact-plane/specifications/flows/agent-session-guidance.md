@@ -3,11 +3,12 @@ flow:
   id: agent-session-guidance
   title: Guide an agent session with the change state and the ADD limits
   trigger: Claude Code, Codex or Antigravity runs the hook command of the
-    executable, or an agent calls an MCP tool of the Plane.
+    executable, the OpenCode V2 bridge invokes a supported hook operation,
+    or an agent calls an MCP tool of the Plane.
   outcome: The person sees the workbench address of the repository, the agent
     knows the state of its change, cannot run the three actions
     that ADD reserves for people through a recognized command, and fixes or
-    explains record errors before it stops.
+    explains record errors before it stops where the harness supports stop blocking.
   entry_steps:
     - start
   steps:
@@ -23,6 +24,7 @@ flow:
         - workbench-contract
         - workbench
         - workbench-tests
+        - opencode-contract
     - id: act
       title: Refuse a commit or push to main or master and a pull request merge
       supports:
@@ -31,6 +33,7 @@ flow:
         - dispatcher
         - guidance-tests
         - hook-tests
+        - opencode-contract
     - id: finish
       title: Ask once for a fix of record errors before the agent stops
       supports:
@@ -40,6 +43,7 @@ flow:
         - mcp
         - guidance-tests
         - hook-tests
+        - opencode-contract
   transitions:
     - from: start
       to: act
@@ -53,6 +57,13 @@ flow:
       to: act
       condition: The stop check fails and the agent continues.
   support:
+    - id: opencode-contract
+      kind: element
+      artifact: artifact-plane
+      element: specifications/opencode-support.md
+      requires: Define native V2 context and permission translation, verified
+        identity, fail-open boundaries and the absence of stop blocking.
+      basis: documented
     - id: contract
       kind: element
       artifact: artifact-plane
@@ -143,6 +154,9 @@ flow:
       evidence:
         - docs/artifacts/artifact-plane/changes/change-agent-integration/tasks/04-mcp-tools.md
   gaps:
+    - OpenCode V2 has no documented stop-blocking API. Its entry uses MCP
+      record checks rather than forcing continuation. Live activation and
+      complete shell resource mapping await the OpenCode delivery checks.
     - An alias, a script, a subshell or command substitution that runs git is
       not inspected; the skills and the team review remain the control.
     - The live behavior of each harness is checked on the versions recorded in
