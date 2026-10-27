@@ -24,7 +24,7 @@ Observed facts at revision b67824e (main, ADD 3.3.0, Artifact Plane 1.27.1):
 - The [system-flow guide](../../../artifact-driven/06-guidelines/system-flows.md) gives each flow, including a flow that crosses artifacts, one owning artifact and one logical identity.
 - The repository knowledge has 17 Mermaid blocks: 9 flowcharts, 5 sequence diagrams and 3 state diagrams. No block uses an icon, an architecture diagram, a C4 diagram, an ER diagram or a class diagram.
 - Artifact Plane, the documentation website and GitHub render Mermaid fences. The Plane and the website use Mermaid 11.17.2. Neither registers an icon pack. Mermaid draws an unknown-icon mark for an icon name that no registered pack supplies. Mermaid's built-in pack has five icons: cloud, database, disk, internet and server. The Mermaid version and the icon support of GitHub are not verified.
-- Iconify `logos` 1.2.18 has the CC0-1.0 license and 66 icon names that start with `aws`. The complete pack is 7.96 MB (2.9 MB compressed with gzip). Its AWS icons are 135 KB (47 KB compressed).
+- Iconify `logos` 1.2.18 has the CC0-1.0 license and 65 icon names that start with `aws`. The complete pack is 7.96 MB (2.9 MB compressed with gzip). Its AWS icons are 135 KB (47 KB compressed).
 - The record validator does not check Mermaid blocks, source lines or stale lines. These rules run inside the phase and task self-checks.
 
 ## Requirements
