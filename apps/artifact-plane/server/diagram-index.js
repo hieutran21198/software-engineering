@@ -18,9 +18,11 @@ export function diagramRecords(markdown){
   if(!diagram(token))return;
   const lines=token.text.split(/\r?\n/).map(line=>line.trim()),next=[];
   // A tight list item holds its paragraphs as block text tokens.
-  for(const t of after.get(token)||[]){if(t.type!=='paragraph'&&t.type!=='text'||next.length===2)break;next.push(clip(t.text,300));}
-  const title=lines.find(line=>/^accTitle\s*:/.test(line))?.replace(/^accTitle\s*:/,''),label=Object.keys(labels).find(l=>next[0]?.startsWith(l));
-  records.push({index:records.length,type:lines.find(line=>line&&!line.startsWith('%%'))?.split(/\s+/)[0]??null,title:title&&clip(title,120)||null,heading,source:label?{kind:labels[label],text:next[0]}:null,stale:next.find(text=>text.startsWith('Stale:'))??null});
+  for(const t of after.get(token)||[]){if(t.type!=='paragraph'&&t.type!=='text'||next.length===2)break;next.push(t.text);}
+  // A Stale: line written directly under the source line joins its paragraph; it still ends the source text.
+  const parts=next.map(text=>{const rows=text.split(/\r?\n/),at=rows.findIndex(row=>row.trim().startsWith('Stale:'));return at<0?[clip(text,300),null]:[at?clip(rows.slice(0,at).join(' '),300):null,clip(rows.slice(at).join(' '),300)];});
+  const first=parts[0]?.[0],title=lines.find(line=>/^accTitle\s*:/.test(line))?.replace(/^accTitle\s*:/,''),label=Object.keys(labels).find(l=>first?.startsWith(l));
+  records.push({index:records.length,type:lines.find(line=>line&&!line.startsWith('%%'))?.split(/\s+/)[0]??null,title:title&&clip(title,120)||null,heading,source:label?{kind:labels[label],text:first}:null,stale:parts.find(([,stale])=>stale)?.[1]??null});
  });
  return records;
 }

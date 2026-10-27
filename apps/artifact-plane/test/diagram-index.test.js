@@ -125,6 +125,11 @@ test('DP3: blocks without a heading, title or diagram line get null fields',()=>
  assert.deepEqual(diagramRecords(`# Only comments\n\n${fence}mermaid\n%% nothing else\n\n${fence}\n`).map(r=>[r.type,r.heading]),[[null,'Only comments']]);
  assert.deepEqual(diagramRecords('# No diagram\n\n```js\nmermaid\n```\n'),[]);
 });
+test('DP3: a Stale: line directly under the source line is found and ends the source text',()=>{
+ const [record]=diagramRecords(`${fence}mermaid\nflowchart\n  a --> b\n${fence}\n\nSource: a:specifications/x.md; current snapshot.\nStale: a:specifications/x.md changed; recheck pending.\n`);
+ assert.deepEqual(record.source,{kind:'source',text:'Source: a:specifications/x.md; current snapshot.'});
+ assert.equal(record.stale,'Stale: a:specifications/x.md changed; recheck pending.');
+});
 test('DP3: the index of each record equals the data-diagram-index of src/Markdown.jsx',async()=>{
  const source=await readFile(new URL('../src/Markdown.jsx',import.meta.url),'utf8');
  // These lines are the numbering that figures() reproduces; a change there must change this test.
