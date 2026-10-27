@@ -1,10 +1,10 @@
-import React, {useEffect, useRef, useState} from 'react';
+import React, {useEffect, useMemo, useRef, useState} from 'react';
 import {useShell} from '../page-data.js';
 import {PageHeader, Section, PhaseSteps, Notice, DiffBadge, StatusBadge, Icon} from '../ui.jsx';
 import {DependencyGraph} from '../GraphPanel.jsx';
 import {useEdit, OperationError} from '../editing.jsx';
 import {knowledgeEntries} from '../knowledge-api.js';
-import {artifactTitle, changeStatus, changeTitle, currentChanges, memberUnit, phaseLabel, phaseModel} from '../work-model.js';
+import {artifactTitle, changeStatus, changeTitle, currentChanges, memberUnit, phaseLabel, phaseModel, systemViews} from '../work-model.js';
 import {copyPrDescription, StatusText, statusMember, termOnce, VersionLabel} from './guidance.jsx';
 import {StartChangeCard, NewUnitCard} from './WorkPageForms.jsx';
 import './WorkPage.css';
@@ -139,6 +139,21 @@ function UncommittedSection({entries, changes, snapshot, worktree, focus, at}) {
   </section>;
 }
 
+// The system view documents, present only when the knowledge declares one.
+function SystemSection({snapshot, go}) {
+  const views = useMemo(() => systemViews(snapshot), [snapshot]);
+  if (!views.length) return null;
+  const diagrams = n => n ? plural(n, 'diagram') : 'No diagram';
+  return <Section title="System" summary={views.length}>
+    <p className="muted">Views of the whole system. Their tables link to the artifacts that own each part.</p>
+    <ul className="doc-list system-views">{views.map(v => <li key={v.file}>
+      <button className="unstyled" onClick={() => go({kind: 'document', artifact: v.artifact, source: v.file})}>
+        <span className="doc-title"><span className="system-view-title">{v.title || v.path}</span><span className="tiny">{v.artifactTitle} · {diagrams(v.diagrams?.length || 0)}</span></span>
+      </button>
+    </li>)}</ul>
+  </Section>;
+}
+
 // One sentence that names the working dependency edges: "B and C depend on A."
 function dependencySentence(snapshot) {
   const edges = snapshot.edges.filter(e => e.status !== 'proposed-remove'), title = id => artifactTitle(snapshot, id);
@@ -178,6 +193,7 @@ export default function WorkPage({page}) {
     </div> : changes.map((c, i) => <ChangeCard key={`${c.artifact}/${c.name}`} change={c} snapshot={snapshot} worktree={worktree} go={go} terms={terms}
       primary={i === changes.findIndex(x => changeStatus(x, worktree).action)}/>)}
     <UncommittedSection entries={entries} changes={changes} snapshot={snapshot} worktree={worktree} focus={page.focus} at={page.at}/>
+    <SystemSection snapshot={snapshot} go={go}/>
     <Section title="Dependencies" actions={<button className="quiet" aria-expanded={graph} onClick={() => setGraph(value => !value)}>{Icon.graph}{graph ? 'Hide graph' : 'Show graph'}</button>}>
       <p className="muted">{dependencySentence(snapshot)}</p>
       {graph && <DependencyGraph snapshot={snapshot} onOpen={go}/>}
