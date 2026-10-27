@@ -63,7 +63,7 @@ Round-trip preservation has no baseline because the Plane writes nothing today.
 - W8: Offer the same operations to agents. Expose preview and apply operations over HTTP and, behind an explicit opt-in flag, as MCP tools. The Plane contains no AI inference; AI assistance is optional and external.
 - W9: Preserve compatibility. Existing read endpoints, MCP read tools, packet schemas, legacy reading and the observation and runtime services stay unchanged. Legacy snapshot artifacts stay read-only and offer the migration operation.
 - W10: Show honest state. Replace `Ambiguous` with `None` when no change is open; explain unknown completion with the missing record and its recording action; keep every existing uncertainty label.
-- W11: Keep editing usable on every supported width and by keyboard. No horizontal page overflow at 390, 700, 851 and 1440 pixels. Unsaved edits survive repository refresh and the late reply of an earlier operation, and are protected on navigation with a confirmation.
+- W11: Keep editing usable on every supported width and by keyboard. No horizontal page overflow at 390, 700, 851 and 1440 pixels. Unsaved edits survive repository refresh and the late reply of an earlier operation, and are protected on navigation with a confirmation. The flow diagram places the steps along their transitions, not in rows by document order; transition lines and condition labels do not cover a step, and a transition from a step to itself is visible.
 - W12: Measure the result. Scenario tests record user actions, manual YAML lines, files written, validation results and round-trip preservation for the eight benchmark scenarios and compare them with the baseline above.
 
 ## Benchmark scenarios
@@ -92,7 +92,7 @@ Each scenario starts from a clean fixture on a non-protected branch. Baseline va
 - A7: The work, artifact, document, change, unit and flow pages exist as specified in the authoring workbench contract; existing reading, graph, delivery, review, flow discovery and runtime observation capabilities remain reachable.
 - A8: The HTTP operation route and the opt-in MCP tools apply the same operation with the same result; without the flag the MCP server registers no write tool.
 - A9: Legacy artifacts remain readable and read-only with a migration action; existing Node tests, fixtures and read endpoints pass unchanged.
-- A10: Screenshots and geometry at 390, 700, 851 and 1440 pixels show usable editing without horizontal overflow; keyboard-only completion of S1 is covered by a browser test; the label corrections of W10 are covered by tests.
+- A10: Screenshots and geometry at 390, 700, 851 and 1440 pixels show usable editing without horizontal overflow; keyboard-only completion of S1 is covered by a browser test; the label corrections of W10 are covered by tests; on a flow with a side branch, two transitions into one step and a loop on one step, a Node test shows the steps ordered along the main path, every label outside every step and the loop above its step.
 
 ## Facts, assumptions and exclusions
 
@@ -111,3 +111,5 @@ Artifact Plane is the only affected artifact; its `depends_on` stays `[artifact-
 The findings name root causes with evidence from source, records and rendered screens. Each requirement states what and why; acceptance criteria are observable and tied to scenario measurements with recorded baselines. The read-only constraint in requirements/explorer.md is amended to reading operations. KISS keeps one operation service over the existing readers, no new storage and no AI dependency. STE keeps obligations and exclusions explicit. No unresolved blocker prevents Specification.
 
 change-browser-suite-fixes amends W11 and keeps its ID. The added failure case is observable: a late reply of an earlier operation closed the form of another step and lost its input. No requirement ID is added.
+
+change-flow-diagram-layout amends W11 and A10 with the flow diagram layout and keeps their IDs. The owner reported on 27 October 2026 that the edges of a flow diagram overlap and the flow is hard to see; the screenshot of zitadel-event-intake shows the cause.

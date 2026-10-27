@@ -190,7 +190,12 @@ The rules are CSS only and use the existing `level-N` row classes and aria attri
   - "+ Add step" is the last item.
 - Gaps and exclusions: gaps in a warning tone and exclusions in plain text, each with Edit.
 - Models, participants and interactions: read only, behind a Model disclosure, with the advanced front matter editor.
-- Diagram shows the existing flow canvas.
+- Diagram shows the step diagram (W11):
+  - a left-to-right layered layout of the steps by their transitions, made with the existing dagre dependency; steps are 250 by 80 pixels;
+  - each condition label is part of the layout, 180 pixels wide and one 17-pixel line for each 26 characters, so it sits on its own line between the steps;
+  - each line follows the points of the layout and is rounded at each bend;
+  - a transition from a step to itself is an arc above the step with its label above the arc;
+  - the existing label placement keeps a label in place when it covers nothing; the step numbers stay in document order.
 
 ### More menu pages
 
@@ -287,5 +292,6 @@ The steps of knowledge-authoring, repository-exploration, source-retrieval, unit
 - The superseded requirement statements are amended in place.
 - change-browser-suite-fixes: the step form rule maps to W11 and to the browser test of a late reply in flow-page.spec.js.
 - change-human-guidance amends the Labels table and the empty state; specifications/human-guidance.md holds the statuses, the version labels and the visual grammar.
+- change-flow-diagram-layout: the step diagram rules map to W11 and A10 and to the tests in test/flow-canvas.test.js. KISS: the layout library and the label placement already exist; one edge path rule is added.
 - change-merged-change-status: the Changed knowledge text for a merged change maps to W10.
 - No blocker prevents Plan.
