@@ -49,7 +49,7 @@ A new server module, server/diagram-index.js, derives two fields for each elemen
 | `systemView` | `true` | The front matter has `system_view: true` (a YAML boolean), and the element path does not start with `specifications/flows/`. |
 | `diagrams` | List of diagram records, in document order | Present when the element has at least one diagram block. |
 
-The module finds diagram blocks with the marked lexer that src/Markdown.jsx uses, on the text without front matter. It walks the tokens in document order with `marked.walkTokens`. A diagram block is a code token whose info string has `mermaid` as its first word. Its position in this order is its index, and the index equals the `data-diagram-index` of the figure that src/Markdown.jsx renders.
+The overview scan keeps only metadata in each element's `markdown`, so the module reads the full bytes of the working knowledge that the scan already holds; `scanRepository` in server/reader.js returns them as `workingBytes`. The module finds diagram blocks with the marked lexer that src/Markdown.jsx uses, on the text without front matter. It walks the tokens in document order with `marked.walkTokens`. A diagram block is a code token whose info string has `mermaid` as its first word. Its position in this order is its index, and the index equals the `data-diagram-index` of the figure that src/Markdown.jsx renders.
 
 | Diagram record field | Rule |
 | --- | --- |
@@ -58,9 +58,9 @@ The module finds diagram blocks with the marked lexer that src/Markdown.jsx uses
 | `title` | The text after `accTitle:` in the block, trimmed to 120 characters, or null. |
 | `heading` | The text of the last heading before the block, or null. |
 | `source` | `{kind, text}` when the next paragraph after the block starts with `Source:` (kind `source`) or `Illustrative:` (kind `illustrative`); text is the paragraph, trimmed to 300 characters. Otherwise null. |
-| `stale` | The text of the first paragraph that starts with `Stale:` among the two paragraphs after the block, trimmed to 300 characters, or null. |
+| `stale` | The text from the first line that starts with `Stale:` in the two paragraphs after the block, trimmed to 300 characters, or null. A `Stale:` line written directly under the source line joins the source paragraph in Markdown; it still counts, and it ends the source text. |
 
-The index is navigation metadata. It creates no relationship, no diagnostic and no graph edge. Embedded diagrams stay presentation; front matter stays the only structural source. Flow records keep their diagrams in the index, so their diagrams appear in the artifact list. The HTTP response gains these optional fields; MCP tools, context packets and the bundled validator do not change.
+The paragraphs after a block are the paragraphs that follow it directly in the same container (the document, a block quote or a list item); any other block ends them. `title`, `source.text` and `stale` collapse white space to one space before they are trimmed and keep inline Markdown. `type` is null for a block with only empty and `%%` lines. The index is navigation metadata. It creates no relationship, no diagnostic and no graph edge. Embedded diagrams stay presentation; front matter stays the only structural source. Flow records keep their diagrams in the index, so their diagrams appear in the artifact list. The HTTP response gains these optional fields; MCP tools, context packets and the bundled validator do not change.
 
 ## Home page
 
@@ -143,6 +143,7 @@ The [mockup canvas](https://claude.ai/artifact/VNNNytcQLDKmyUncNMytAC) shows the
 These facts at revision b67824e decide the design:
 
 - src/main.jsx loads the overview section of POST /api/repository/query, and `stripBodies` in server/repository-query.js removes the `markdown`, `readme` and `body` keys. The browser therefore has no element Markdown before it opens a document.
+- The overview scan runs with metadata only: an element's `markdown` holds its front matter and headings, not its body. The scan keeps the full working bytes to compare them with the protected ref.
 - src/Markdown.jsx numbers diagram blocks in the order in which marked renders code tokens, and the document page already scrolls to heading anchors.
 - The Plane has no vite.config file and no third-party notice file.
 - The `@iconify-json/lucide` package has no LICENSE file; its info.json names the ISC license and its URL.
