@@ -84,8 +84,19 @@ After a repository opens, the **work page** shows the open changes with their ph
 - **Sidebar**: one search field filters by title and ID; Enter opens the first match. **Current work** lists the open changes by title with their phase. **Artifacts** expand to Requirements, Specifications, Decisions and Flows, and each kind to its documents by title, with New, Changed or Removed compared with `main`. **Show history** at the bottom adds delivered changes and finished units. Arrow keys, Home and End move through the rows. Drag the divider, or use the arrow keys on it, to resize the sidebar. At 800 pixels and below the sidebar is a drawer that **Navigation** opens.
 - **Pages**: work, artifact, document, change, unit, flow, source, Discover behavior and Recorded executions. A page shows its title once, and each action has one control on the page of the thing that it changes. Reading and editing happen on the same page.
 - **Graphs** open on request inside the page that owns them: dependencies on the work and artifact pages, the task plan on the change page, members on the unit page, and the steps on the flow page. Graphs show the working branch. Green dashed lines are proposed additions and red dashed lines proposed removals. Enter on a focused node or edge acts like a click.
-- **Diagrams**: a fenced `mermaid` block in knowledge renders as a diagram with bundled Mermaid 11.17.2, loaded only on pages that contain one. The SVG is sanitized and keeps the accessible title and description. A block that does not parse, that holds a configuration directive or front matter, or that is larger than 50,000 characters keeps its code panel with a note.
+- **Diagrams**: a fenced `mermaid` block in knowledge renders as a diagram with bundled Mermaid 11.17.2, loaded only on pages that contain one. The SVG is sanitized and keeps the accessible title and description. A block that does not parse, that holds a configuration directive or front matter, or that is larger than 50,000 characters keeps its code panel with a note. A diagram can name the bundled [diagram icons](#diagram-icons).
 - Repository edits update open pages automatically. Unsaved editor text survives a refresh; the document is then marked as changed on disk.
+
+### Diagram icons
+
+A diagram can name the icons of the ADD icon set, for example `api@{ icon: "logos:aws-api-gateway", form: "square", label: "Orders API", pos: "b" }`. The build bundles the 65 `logos` names that start with `aws` and the 24 `lucide` names of `src/diagram-icon-names.js` into one icon chunk, which loads only on a page whose diagram names an icon. A name outside the set shows Mermaid's unknown-icon mark and keeps its label. The build stops when a pinned pack lacks a listed name.
+
+| Pack | Version | Author | License | URL |
+| --- | --- | --- | --- | --- |
+| `@iconify-json/logos` (SVG Logos) | 1.2.18 | Gil Barbara | CC0-1.0. The logos are trademarks of their owners. | https://github.com/gilbarbara/logos |
+| `@iconify-json/lucide` (Lucide) | 1.2.147 | Lucide Contributors | ISC. The bundled icons `database`, `lock`, `monitor`, `server` and `smartphone` derive from Feather and are MIT (Cole Bemis). The icon chunk keeps the full license text of Lucide in the `notice` field of the `lucide` pack. | https://github.com/lucide-icons/lucide |
+
+Both packages are the Iconify JSON packaging of the icon sets (https://github.com/iconify/icon-sets). The chunk keeps the `info` record of each pack.
 
 ## Implementation task graphs
 Open a change. The **Plan** section lists the tasks with status, ID, title, the tasks they come after and Definition of Done progress. Select a task to check DoD items, record evidence, edit or remove it, or open its document. **Graph** shows the task graph, with arrows from prerequisite tasks to dependent tasks.

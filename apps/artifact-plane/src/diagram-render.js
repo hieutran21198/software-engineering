@@ -8,6 +8,8 @@ let initialized=false,counter=0;
 function initialize(){
  if(initialized)return;
  mermaid.initialize({startOnLoad:false,securityLevel:'strict',htmlLabels:false,flowchart:{htmlLabels:false},sequence:{wrap:true},theme:'neutral',fontFamily:font,maxTextSize});
+ // Mermaid calls a loader only for a diagram that names an icon of its pack, so other pages skip the icon chunk.
+ mermaid.registerIconPacks(['logos','lucide'].map(name=>({name,loader:()=>import('virtual:diagram-icons').then(icons=>icons[name])})));
  initialized=true;
 }
 // A separate DOMPurify instance keeps these hooks out of the Markdown sanitizing profile.
