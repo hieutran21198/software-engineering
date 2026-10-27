@@ -30,8 +30,10 @@ claims:
     kind: assumption
     statement: Mermaid 11.17.2 calls an icon pack loader only when a diagram
       names an icon of that pack, so a page without icons loads no icon chunk.
-    status: open
-    basis: documented
+    status: supported
+    basis: observed
+    evidence:
+      - docs/artifacts/artifact-plane/specifications/diagram-scopes.md#icon-chunk-check
     check: Record the network requests of a page with diagrams and no icon in the browser test.
     risk_if_wrong: DP7 fails; the icon chunk loads with every diagram page.
 ---
@@ -105,7 +107,7 @@ The document page state accepts an optional `diagram`, a nonnegative integer. Wh
 This section amends step 3 of the rendering rules in [diagram-rendering.md](diagram-rendering.md).
 
 1. `@iconify-json/logos` 1.2.18 and `@iconify-json/lucide` 1.2.147 are exact development dependencies.
-2. A new file, vite.config.js, adds a Vite plugin that resolves the module `virtual:diagram-icons` at build time. The module exports one Iconify JSON object for each pack: every `logos` name that starts with `aws`, and the `lucide` names that src/diagram-icon-names.js lists. Each object keeps the `info` record of its pack. The `lucide` object also carries the ISC license notice of Lucide in a `notice` field.
+2. A new file, vite.config.js, adds a Vite plugin that resolves the module `virtual:diagram-icons` at build time. The module exports one Iconify JSON object for each pack: every `logos` name that starts with `aws`, and the `lucide` names that src/diagram-icon-names.js lists. Each object keeps the `info` record of its pack. The `lucide` object also carries the Lucide license file in a `notice` field: the ISC notice, and the MIT notice for the icons that Lucide derives from Feather (five of the 24 names: `database`, `lock`, `monitor`, `server` and `smartphone`).
 3. The plugin stops the build when a listed `lucide` name is missing from the pinned pack, or when the `logos` subset does not have 65 names.
 4. src/diagram-render.js registers the two packs once with `mermaid.registerIconPacks`. Each loader imports `virtual:diagram-icons`, so Vite puts the icons into their own chunk.
 5. The SVG sanitizer does not change. The icon shapes are SVG paths and gradients with local references, which the existing profile keeps.
@@ -137,6 +139,10 @@ Add the element support `diagram-scopes-contract` for this document to the overv
 ## Mockups
 
 The [mockup canvas](https://claude.ai/artifact/VNNNytcQLDKmyUncNMytAC) shows the home page with the System section, the artifact page with the Diagrams section and the System view link, the system view document with icons and owner tables, a document opened at a diagram, the artifact page at 390 pixels, and the icon fallback of readers without the packs. Its diagrams are Mermaid 11.17.2 renders under the Plane configuration and sanitizer. It is an illustration for plan approval; this contract is the authority.
+
+## Icon chunk check
+
+On 27 October 2026 the browser test "the icon chunk loads only for a page whose diagrams name an icon" in test/browser/diagram-rendering.spec.js recorded the scripts of two pages of a built Plane. The diagram page without icons rendered five SVG diagrams and requested 33 scripts, none of them the icon chunk. The icon page, opened next, requested two new scripts: the `virtual:diagram-icons` chunk and the `erDiagram` chunk. With the registration removed, the test fails. In Mermaid 11.17.2, `getRegisteredIconData` calls a pack loader only when it resolves an icon name with that prefix. This is the implementer's own check.
 
 ## Design facts
 
