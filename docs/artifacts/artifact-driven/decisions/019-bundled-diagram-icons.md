@@ -20,4 +20,4 @@ Adopt option A with the names, versions and licenses that the diagram scopes con
 
 ## Consequences
 
-The Plane bundles the subset and keeps the ISC notice of `lucide`. GitHub and the website show the unknown-icon mark beside the label of a subset icon; the text and the owner table keep the facts readable. A new icon name needs an ADD change that amends the list.
+The Plane bundles the subset and keeps the whole Lucide license file: the ISC notice, and the MIT notice for the icons that Lucide derives from Feather. GitHub and the website show the unknown-icon mark beside the label of a subset icon; the text and the owner table keep the facts readable. A new icon name needs an ADD change that amends the list.
