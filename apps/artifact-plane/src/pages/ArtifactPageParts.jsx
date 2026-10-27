@@ -1,5 +1,5 @@
-import React from 'react';
-import {artifactTitle} from '../work-model.js';
+import React, {useMemo} from 'react';
+import {artifactTitle, systemViews} from '../work-model.js';
 import {Icon} from '../ui.jsx';
 
 const STATUS = {established: 'Established', 'proposed-add': 'Addition proposed on this branch', 'proposed-remove': 'Removal proposed on this branch'};
@@ -40,4 +40,13 @@ export function DependencyExplanation({snapshot, dependency, onOpen, onClose}) {
     })}
     <p className="tiny">Recorded references explain consumption; resolution does not prove runtime behavior.</p>
   </section>;
+}
+
+// The links after "Read the overview" to the system view documents of the repository; nothing when it has none.
+export function SystemViewLinks({snapshot, go}) {
+  const views = useMemo(() => systemViews(snapshot), [snapshot]);
+  if (!views.length) return null;
+  return <> · {views.length === 1 ? 'System view: ' : 'System views: '}{views.map((v, i) => <React.Fragment key={v.file}>{i > 0 && ', '}
+    <button className="link" onClick={() => go({kind: 'document', artifact: v.artifact, source: v.file})}>{v.title || v.path}</button>
+  </React.Fragment>)}</>;
 }

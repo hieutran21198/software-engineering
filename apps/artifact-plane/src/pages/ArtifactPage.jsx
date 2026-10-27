@@ -9,7 +9,7 @@ import {edit as previewEdit} from '../knowledge-api.js';
 import {artifactDocuments, artifactTitle, changeStatus, changeTitle, currentChanges, currentUnits, phaseLabel, isError} from '../work-model.js';
 import {knowledgeTargets} from '../knowledge-navigation.js';
 import {linkPage, purposeParts} from './DocumentPageParts.jsx';
-import {DependencyExplanation} from './ArtifactPageParts.jsx';
+import {DependencyExplanation, SystemViewLinks} from './ArtifactPageParts.jsx';
 import {conceptPage, firstSentence, useConcepts} from './ConceptLinks.jsx';
 import './ArtifactPage.css';
 
@@ -112,6 +112,7 @@ function ArtifactView({artifact, page, snapshot, worktree, go, edit}) {
           <p className="muted purpose-more">
             {purpose.headings.length > 0 && `${purpose.headings.join(' · ')}. `}
             <button className="link" onClick={() => go({kind: 'document', artifact: artifact.id, source: readme})}>Read the overview</button>
+            <SystemViewLinks snapshot={snapshot} go={go}/>
           </p>
         </>}
     </div>
