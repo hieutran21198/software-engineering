@@ -4,8 +4,17 @@ import {BaseEdge, Controls, ControlButton, EdgeLabelRenderer, getSmoothStepPath,
 import {placeLabels} from './label-placement.js';
 
 // Only label presentation uses the upper HTML layer; edge paths retain their order.
+// A routed edge follows the points of its layout, rounded at each bend.
+function routedPath(points) {
+ const mid = (a,b) => `${(a.x+b.x)/2} ${(a.y+b.y)/2}`;
+ return `M ${points[0].x} ${points[0].y}` + points.slice(1,-1).map((p,i) =>
+  ` Q ${p.x} ${p.y} ${mid(p, points[i+2])}`).join('') +
+  ` L ${points.at(-1).x} ${points.at(-1).y}`;
+}
 export function LabelledEdge(props) {
- const [path, x, y] = getSmoothStepPath(props);
+ const routed = props.data?.points?.length > 1;
+ const [path, x, y] = routed ? [routedPath(props.data.points), props.data.labelX, props.data.labelY]
+  : getSmoothStepPath(props);
  const text = String(props.label || '');
  return <>
   <BaseEdge id={props.id} path={path} style={props.style}
