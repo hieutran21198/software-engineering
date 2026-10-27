@@ -59,6 +59,6 @@ test("OpenCode guidance separates unsupported completion control and activation 
   assert.match(guide, /MCP `check_records`/);
   assert.match(guide, /never creates prompts, automatically continues work/);
   assert.match(guide, /MCP tools, including `check_records`, are unavailable/);
-  assert.match(guide, /Keep mock-host fixtures, native-runtime provider fixtures, actual model execution, reported validation and establishment evidence distinct/);
+  assert.match(guide, /Keep mock-host fixtures, native-runtime fixtures, actual model execution, reported validation and establishment evidence distinct/);
   assert.match(guide, /shell-create.*outside verified protection/);
 });
