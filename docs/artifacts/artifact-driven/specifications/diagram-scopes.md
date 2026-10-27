@@ -123,9 +123,11 @@ An icon shape in a `flowchart` has this form: `api@{ icon: "logos:aws-api-gatewa
 | Source | Prefix | Names | License | Packaging |
 | --- | --- | --- | --- | --- |
 | Iconify `logos` 1.2.18 | `logos` | The 65 names that start with `aws` | CC0-1.0. The logos are trademarks of their owners. | A reader bundles the subset. |
-| Iconify `lucide` 1.2.147 | `lucide` | `user`, `users`, `globe`, `cloud`, `smartphone`, `monitor`, `server`, `database`, `hard-drive`, `mail`, `lock`, `shield`, `key-round`, `inbox`, `network`, `container`, `box`, `git-branch`, `workflow`, `layers`, `credit-card`, `bell`, `file-text`, `cog` | ISC. A reader that bundles the icons keeps the license notice. | A reader bundles the subset. |
+| Iconify `lucide` 1.2.147 | `lucide` | `user`, `users`, `globe`, `cloud`, `smartphone`, `monitor`, `server`, `database`, `hard-drive`, `mail`, `lock`, `shield`, `key-round`, `inbox`, `network`, `container`, `box`, `git-branch`, `workflow`, `layers`, `credit-card`, `bell`, `file-text`, `cog` | ISC; `database`, `lock`, `monitor`, `server` and `smartphone` derive from Feather and are MIT. A reader that bundles the icons keeps the whole Lucide license file. | A reader bundles the subset. |
 
 The 65 `logos` names are: `aws`, `aws-amplify`, `aws-api-gateway`, `aws-app-mesh`, `aws-appflow`, `aws-appsync`, `aws-athena`, `aws-aurora`, `aws-backup`, `aws-batch`, `aws-certificate-manager`, `aws-cloudformation`, `aws-cloudfront`, `aws-cloudsearch`, `aws-cloudtrail`, `aws-cloudwatch`, `aws-codebuild`, `aws-codecommit`, `aws-codedeploy`, `aws-codepipeline`, `aws-codestar`, `aws-cognito`, `aws-config`, `aws-documentdb`, `aws-dynamodb`, `aws-ec2`, `aws-ecs`, `aws-eks`, `aws-elastic-beanstalk`, `aws-elastic-cache`, `aws-elasticache`, `aws-elb`, `aws-eventbridge`, `aws-fargate`, `aws-glacier`, `aws-glue`, `aws-iam`, `aws-keyspaces`, `aws-kinesis`, `aws-kms`, `aws-lake-formation`, `aws-lambda`, `aws-lightsail`, `aws-mobilehub`, `aws-mq`, `aws-msk`, `aws-neptune`, `aws-open-search`, `aws-opsworks`, `aws-quicksight`, `aws-rds`, `aws-redshift`, `aws-route53`, `aws-s3`, `aws-secrets-manager`, `aws-ses`, `aws-shield`, `aws-sns`, `aws-sqs`, `aws-step-functions`, `aws-systems-manager`, `aws-timestream`, `aws-vpc`, `aws-waf`, `aws-xray`.
+
+The Lucide license file holds the ISC notice and an MIT notice for the icons that Lucide derives from Feather. Five of the 24 names are on that list: `database`, `lock`, `monitor`, `server` and `smartphone`.
 
 Icon rules:
 

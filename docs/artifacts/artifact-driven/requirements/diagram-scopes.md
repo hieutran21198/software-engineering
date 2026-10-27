@@ -39,7 +39,7 @@ Observed facts at revision b67824e (main, ADD 3.3.0, Artifact Plane 1.27.1):
 - DS8: Navigation. A system view lets the reader go to the knowledge of each artifact that owns one of its elements. An artifact view lets the reader go back to the system views and to related artifacts. The navigation does not need click directives.
 - DS9: Edge meanings. Runtime interaction, artifact prerequisites, task prerequisites and element references stay in separate views at both scopes. Each view declares the meaning of its arrows.
 - DS10: One flow authority. A behavior that crosses artifacts has one authoritative flow record. A system view or an artifact view of that behavior links to the record and does not become a second authority.
-- DS11: Icons. The guidance names the supported icon sources, their licenses, their packaging and the supported icon names. It prefers bundled assets and allows no remote resource.
+- DS11: Icons. The guidance names the supported icon sources, every license that covers a supported icon, their packaging and the supported icon names. It prefers bundled assets and allows no remote resource.
 - DS12: Icon meaning. Every node with an icon also has a text label, and every view declares its arrow meaning. An icon never carries the only meaning.
 - DS13: Reader fallback. For each recommended notation and icon use, the guidance states what Artifact Plane, GitHub and the documentation website show. When a reader does not support an icon or a diagram type, the reader still shows a readable label, a plain node or the source text.
 - DS14: Readable layout. The guidance tells authors to split a large view into an overview and detail views at both scopes, and to keep long labels readable.
