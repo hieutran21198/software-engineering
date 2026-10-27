@@ -26,7 +26,7 @@ OpenCode V2 users can connect the Plane and receive supported lifecycle guidance
 - OPA1: Tests verify native project configuration and plugin registration without user-global settings.
 - OPA2: Adapter tests cover session location changes, distinct sessions sharing an agent profile, child isolation, ambiguous turns, context translation and reserved-action decisions.
 - OPA3: Failure and privacy tests cover missing binaries, deadlines, invalid or oversized responses and exclusion of prompt, command and result payloads from stored observations.
-- OPA4: Regression and knowledge checks pass; live evidence records the target V2 version and actual activated behavior, or names the missing capability as a delivery blocker.
+- OPA4: Regression and knowledge checks pass locally and on the CI runner; live evidence records the target V2 version and actual activated behavior, or names the missing capability as a delivery blocker.
 
 ## Impact
 
@@ -35,5 +35,7 @@ The `agent-session-guidance` and `execution-observation` flows gain OpenCode ent
 ## Requirement self-check
 
 Requirements preserve the selected full scope but do not promise an undocumented stop API. KISS reuses the existing hook command, policy and runtime store. STE separates observed facts from unverified runtime behavior. No blocker prevents specification; verification of target SDK shapes and live activation remains explicit implementation work. Validator results are recorded below when executed.
+
+change-opencode-ci-tests amends OPA4 and keeps its ID. After #58 merged, the artifact-plane CI job failed on main: two bridge tests created their temporary directories under `/tmp/opencode`, which exists only on the developer machine, and the guide test expected a phrase that the guide no longer contains.
 
 Ran the existing validator from `/home/cirius/Workspaces/personal/software-engineering/apps/artifact-plane/scripts/validate-knowledge.mjs` with `--repository /tmp/opencode/software-engineering-opencode --change artifact-plane/change-opencode-support`: `ok: true`. Coverage warnings are expected until Plan. The worktree-local validator lacks installed Node dependencies; the original checkout supplies the unchanged validator and its dependencies.
