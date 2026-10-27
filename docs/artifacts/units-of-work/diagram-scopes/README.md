@@ -1,0 +1,83 @@
+---
+unit_of_work: diagram-scopes
+changes:
+  - artifact: artifact-driven
+    change: change-diagram-scopes
+  - artifact: artifact-plane
+    change: change-diagram-scopes
+affected_flows:
+  - artifact: artifact-driven
+    flow: change-delivery
+    effect: modify
+  - artifact: artifact-plane
+    flow: repository-exploration
+    effect: modify
+  - artifact: artifact-plane
+    flow: source-retrieval
+    effect: modify
+flow_assessment: Requirement discovery inspected the visual representation
+  guide, the artifact model, the system-flow guide, the diagram rendering
+  contract, the Plane home, artifact and document pages, the diagram renderer,
+  its browser tests and the 18 flow records. change-delivery runs the
+  representation checks in its phase steps. repository-exploration shows the
+  home and artifact pages. source-retrieval reads documents through the same
+  renderer. Specification confirms the support records of each flow. No flow
+  gains or loses a step.
+acceptance:
+  - id: selection
+    criterion: The ADD guidance has one selection matrix for system and artifact
+      scope with the purpose, owner, suitability, conditional necessity and
+      omission condition of each view.
+  - id: system-navigation
+    criterion: A reader finds the system views of a repository and goes from
+      them to the owning artifacts and their detail views.
+  - id: artifact-navigation
+    criterion: A reader finds the diagrams of an artifact beside its governing
+      knowledge, follows their source links and returns to the system views.
+  - id: icons
+    criterion: Supported icons render in the intended Plane views. Missing icons
+      and unsupported diagram types keep a readable label or source fallback in
+      every reader.
+  - id: aws-example
+    criterion: A self-contained AWS example shows a system logical and deployment
+      view and an artifact sequence, state and data view, each tied to stated
+      facts.
+  - id: maintenance
+    criterion: A source change reaches each affected diagram through
+      regeneration, recheck or an explicit stale line under the existing rules.
+      Artifacts without diagrams stay usable, and no diagram quota, approval gate
+      or knowledge registry is added.
+  - id: integration
+    criterion: Representative examples render in Artifact Plane and GitHub
+      Markdown with icons, a missing icon, long labels and an overview and detail
+      split. The ADD validator and the renderer checks pass, and the owning
+      changes record the evidence.
+    integration: true
+evidence: []
+---
+
+# Diagrams at system and artifact scope
+
+## Purpose
+
+Let readers understand the whole system and then the knowledge of one artifact through diagrams with clear owners, sources and icons. The request is [issue 60](https://github.com/hieutran21198/software-engineering/issues/60).
+
+## Included scope
+
+- ADD guidance: two diagram scopes, one selection matrix, the system ownership and discovery rules, supported icons with reader fallback, and an invented AWS example.
+- Artifact Plane: a system entry on the home page, a diagram list on the artifact page and bundled icons in the diagram renderer.
+- A Plane fixture repository that mirrors the AWS example, and render checks in the Plane and on GitHub.
+
+## Excluded scope
+
+- A system overview for this repository and new diagrams for existing artifacts.
+- Icon registration on the documentation website and diagram checks in the record validator.
+- Architecture inferred from code, AWS infrastructure, a diagram editor, navigation from diagram nodes and remote icons.
+
+## Owner decisions
+
+On 27 October 2026 the owner selected an ordinary artifact as the owner of system views, the AWS example in the bundle with a Plane fixture, a curated bundled icon set, and the two Plane surfaces.
+
+## Delivery boundary
+
+The Plane consumes the ADD diagram scope contract. Implement and publish the ADD member first. Start the dependent Plane implementation only after the ADD change establishes on the protected branch. Membership does not replace this gate.
