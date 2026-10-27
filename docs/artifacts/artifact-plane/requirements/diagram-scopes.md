@@ -21,18 +21,18 @@ Observed facts at revision b67824e (main, Artifact Plane 1.27.1):
 
 ## Requirements
 
-- DP1 System entry. When the knowledge of the selected worktree declares system views under the ADD discovery rule, the home page shows an entry that opens them. When it declares none, the entry is absent.
-- DP2 System navigation. From a system view, the reader can open the owning artifact of the view and each artifact that the view links to.
-- DP3 Artifact diagram list. The artifact page lists the diagrams of the artifact's working knowledge. Each item shows the diagram type, the document and heading where the diagram is, and its source line or illustrative label. An item shows a stale mark when the knowledge marks the diagram stale.
-- DP4 Diagram location. An item of the diagram list opens the document at its diagram.
-- DP5 Back to the system. When the repository declares system views, the artifact page links to them.
-- DP6 Absent sections. An artifact without diagrams shows no diagram section. Other pages do not change.
-- DP7 Bundled icons. The renderer draws the icons of the curated set that ADD names, from assets that the Plane bundles, without a network request. A page without icons does not load the icon assets.
-- DP8 Missing icons. An icon name outside the set shows Mermaid's unknown-icon mark and keeps its label.
-- DP9 Safe icons. Sanitizing keeps the icon shapes and still removes scripts, links, foreign objects, images, event handlers and external references.
-- DP10 Diagram types. The renderer renders each notation that the ADD matrix recommends. A block that it cannot render keeps the existing code panel and note.
-- DP11 Readable layout. Long labels stay readable, and the page has no horizontal scroll at 390 pixels.
-- DP12 Preservation. Other code blocks, the Markdown sanitizing for other content, knowledge links, the HTTP and MCP interfaces, the packet schemas and the pages of artifacts without diagrams do not change, except where the Specification states a change.
+- DP1: System entry. When the knowledge of the selected worktree declares system views under the ADD discovery rule, the home page shows an entry that opens them. When it declares none, the entry is absent.
+- DP2: System navigation. From a system view, the reader can open the owning artifact of the view and each artifact that the view links to.
+- DP3: Artifact diagram list. The artifact page lists the diagrams of the artifact's working knowledge. Each item shows the diagram type, the document and heading where the diagram is, and its source line or illustrative label. An item shows a stale mark when the knowledge marks the diagram stale.
+- DP4: Diagram location. An item of the diagram list opens the document at its diagram.
+- DP5: Back to the system. When the repository declares system views, the artifact page links to them.
+- DP6: Absent sections. An artifact without diagrams shows no diagram section. Other pages do not change.
+- DP7: Bundled icons. The renderer draws the icons of the curated set that ADD names, from assets that the Plane bundles, without a network request. A page without icons does not load the icon assets.
+- DP8: Missing icons. An icon name outside the set shows Mermaid's unknown-icon mark and keeps its label.
+- DP9: Safe icons. Sanitizing keeps the icon shapes and still removes scripts, links, foreign objects, images, event handlers and external references.
+- DP10: Diagram types. The renderer renders each notation that the ADD matrix recommends. A block that it cannot render keeps the existing code panel and note.
+- DP11: Readable layout. Long labels stay readable, and the page has no horizontal scroll at 390 pixels.
+- DP12: Preservation. Other code blocks, the Markdown sanitizing for other content, knowledge links, the HTTP and MCP interfaces, the packet schemas and the pages of artifacts without diagrams do not change, except where the Specification states a change.
 
 ## Scope
 

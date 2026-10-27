@@ -29,24 +29,24 @@ Observed facts at revision b67824e (main, ADD 3.3.0, Artifact Plane 1.27.1):
 
 ## Requirements
 
-- DS1 Scopes. The guidance defines two diagram scopes. The system scope shows the whole system across artifacts. The artifact scope shows the contracts and the behavior of one artifact.
-- DS2 Selection matrix. One matrix covers both scopes. For each view, it gives the scope, the purpose, the knowledge owner, a suitability score from 1 to 5, a necessity score from 1 to 5 with its condition, the selection condition and the condition to omit the view.
-- DS3 System views. The matrix covers the system context, the logical architecture (C4 container level) and the deployment overview of one named environment. It also covers the optional network and trust boundary, critical end-to-end flow, resilience and disaster recovery, and delivery pipeline views.
-- DS4 Artifact views. The matrix covers the sequence, state, data model, flowchart or activity, component, deployment detail, and security or data flow views. The scores and the conditions of issue 60 are the starting values.
-- DS5 Few views. The guidance states that the scores guide selection and set no diagram count. It prefers the one or two views that solve the main comprehension problem, and it lets a simple artifact use prose or a table.
-- DS6 System owner. Each system view has one owning artifact. The project chooses an ordinary artifact for this. Other artifacts link to the system view and do not copy its source.
-- DS7 Discovery. A reader can find the system views of a repository without a registry, an index file or a second copy of knowledge.
-- DS8 Navigation. A system view lets the reader go to the knowledge of each artifact that owns one of its elements. An artifact view lets the reader go back to the system views and to related artifacts. The navigation does not need click directives.
-- DS9 Edge meanings. Runtime interaction, artifact prerequisites, task prerequisites and element references stay in separate views at both scopes. Each view declares the meaning of its arrows.
-- DS10 One flow authority. A behavior that crosses artifacts has one authoritative flow record. A system view or an artifact view of that behavior links to the record and does not become a second authority.
-- DS11 Icons. The guidance names the supported icon sources, their licenses, their packaging and the supported icon names. It prefers bundled assets and allows no remote resource.
-- DS12 Icon meaning. Every node with an icon also has a text label, and every view declares its arrow meaning. An icon never carries the only meaning.
-- DS13 Reader fallback. For each recommended notation and icon use, the guidance states what Artifact Plane, GitHub and the documentation website show. When a reader does not support an icon or a diagram type, the reader still shows a readable label, a plain node or the source text.
-- DS14 Readable layout. The guidance tells authors to split a large view into an overview and detail views at both scopes, and to keep long labels readable.
-- DS15 Sources and maintenance. Each view at both scopes comes from records or from stated contract facts. Its source line names its owning artifact and its source knowledge. The existing validation, stale-marking and maintenance rules apply in the phase and task self-checks. Proposed and established knowledge stay distinct.
-- DS16 AWS example. One invented, self-contained AWS example shows a system logical view, a deployment view of one named environment, and a sequence, a state and a data model view of one artifact. Each view has stated facts, an introduction, an accessible title and description, and a source line. The example includes icons, a missing icon, a long label and one view split into an overview and a detail.
-- DS17 Roles. The role skills and the guides that apply representations tell each role how to use the scopes and the matrix in its existing self-check.
-- DS18 Preservation. Artifacts without diagrams stay valid and usable. The change adds no diagram quota, no approval gate, no phase and no knowledge registry. Rules that the guide already has keep their meaning.
+- DS1: Scopes. The guidance defines two diagram scopes. The system scope shows the whole system across artifacts. The artifact scope shows the contracts and the behavior of one artifact.
+- DS2: Selection matrix. One matrix covers both scopes. For each view, it gives the scope, the purpose, the knowledge owner, a suitability score from 1 to 5, a necessity score from 1 to 5 with its condition, the selection condition and the condition to omit the view.
+- DS3: System views. The matrix covers the system context, the logical architecture (C4 container level) and the deployment overview of one named environment. It also covers the optional network and trust boundary, critical end-to-end flow, resilience and disaster recovery, and delivery pipeline views.
+- DS4: Artifact views. The matrix covers the sequence, state, data model, flowchart or activity, component, deployment detail, and security or data flow views. The scores and the conditions of issue 60 are the starting values.
+- DS5: Few views. The guidance states that the scores guide selection and set no diagram count. It prefers the one or two views that solve the main comprehension problem, and it lets a simple artifact use prose or a table.
+- DS6: System owner. Each system view has one owning artifact. The project chooses an ordinary artifact for this. Other artifacts link to the system view and do not copy its source.
+- DS7: Discovery. A reader can find the system views of a repository without a registry, an index file or a second copy of knowledge.
+- DS8: Navigation. A system view lets the reader go to the knowledge of each artifact that owns one of its elements. An artifact view lets the reader go back to the system views and to related artifacts. The navigation does not need click directives.
+- DS9: Edge meanings. Runtime interaction, artifact prerequisites, task prerequisites and element references stay in separate views at both scopes. Each view declares the meaning of its arrows.
+- DS10: One flow authority. A behavior that crosses artifacts has one authoritative flow record. A system view or an artifact view of that behavior links to the record and does not become a second authority.
+- DS11: Icons. The guidance names the supported icon sources, their licenses, their packaging and the supported icon names. It prefers bundled assets and allows no remote resource.
+- DS12: Icon meaning. Every node with an icon also has a text label, and every view declares its arrow meaning. An icon never carries the only meaning.
+- DS13: Reader fallback. For each recommended notation and icon use, the guidance states what Artifact Plane, GitHub and the documentation website show. When a reader does not support an icon or a diagram type, the reader still shows a readable label, a plain node or the source text.
+- DS14: Readable layout. The guidance tells authors to split a large view into an overview and detail views at both scopes, and to keep long labels readable.
+- DS15: Sources and maintenance. Each view at both scopes comes from records or from stated contract facts. Its source line names its owning artifact and its source knowledge. The existing validation, stale-marking and maintenance rules apply in the phase and task self-checks. Proposed and established knowledge stay distinct.
+- DS16: AWS example. One invented, self-contained AWS example shows a system logical view, a deployment view of one named environment, and a sequence, a state and a data model view of one artifact. Each view has stated facts, an introduction, an accessible title and description, and a source line. The example includes icons, a missing icon, a long label and one view split into an overview and a detail.
+- DS17: Roles. The role skills and the guides that apply representations tell each role how to use the scopes and the matrix in its existing self-check.
+- DS18: Preservation. Artifacts without diagrams stay valid and usable. The change adds no diagram quota, no approval gate, no phase and no knowledge registry. Rules that the guide already has keep their meaning.
 
 ## Scope
 
