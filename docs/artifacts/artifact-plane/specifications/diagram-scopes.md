@@ -38,7 +38,7 @@ claims:
 
 # Diagram scopes in the Plane
 
-Governs DP1 to DP12 in [requirements/diagram-scopes.md](../requirements/diagram-scopes.md). It consumes the ADD [diagram scopes contract](../../artifact-driven/specifications/diagram-scopes.md), which change-diagram-scopes of artifact-driven proposes on this branch. It amends the [diagram rendering contract](diagram-rendering.md) for icons. The [mockups](#mockups) show the changed pages.
+Governs DP1 to DP12 in [requirements/diagram-scopes.md](../requirements/diagram-scopes.md). It consumes the ADD [diagram scopes contract](../../artifact-driven/specifications/diagram-scopes.md), established in ADD 3.4.0 (#62). It amends the [diagram rendering contract](diagram-rendering.md) for icons. The [mockups](#mockups) show the changed pages.
 
 ## Diagram index
 

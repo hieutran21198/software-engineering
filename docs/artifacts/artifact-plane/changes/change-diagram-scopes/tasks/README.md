@@ -20,7 +20,7 @@ Implement the [diagram scopes contract](../../../specifications/diagram-scopes.m
 
 The specification's claim `lazy-icon-chunk` is open. Task `icons` checks it first; a refuted claim returns to Specification before other icon work. The claim `server-side-index` is supported by the design facts.
 
-The ADD member must establish on the protected branch before any task of this plan starts. Then recheck this specification's reference to the ADD contract against the protected branch. Membership does not bypass the gate.
+The ADD member must establish on the protected branch before any task of this plan starts. Then recheck this specification's reference to the ADD contract against the protected branch. Membership does not bypass the gate. ADD 3.4.0 established through #62 (46e7433) on 27 October 2026. The recheck found the `system_view` rule, the excluded flow records, the 65 `logos` and 24 `lucide` names, the notations and the reader support table equal to what this specification consumes; no task changes.
 
 ## Execution and publication
 

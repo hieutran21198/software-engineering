@@ -52,6 +52,14 @@ acceptance:
       changes record the evidence.
     integration: true
 evidence: []
+publication_reviews:
+  - artifact: artifact-driven
+    version: 3.4.0
+    source: docs/artifacts/units-of-work/diagram-scopes/README.md#upstream-publication
+    required_changes:
+      - repository: https://github.com/hieutran21198/software-engineering
+        scope: ADD knowledge, retained delivery tasks, the visual guide, the example page, the artifact model sentence and the four role skill references.
+        pull_request: https://github.com/hieutran21198/software-engineering/pull/62
 ---
 
 # Diagrams at system and artifact scope
@@ -79,3 +87,7 @@ On 27 October 2026 the owner selected an ordinary artifact as the owner of syste
 ## Delivery boundary
 
 The Plane consumes the ADD diagram scope contract. Implement and publish the ADD member first. Start the dependent Plane implementation only after the ADD change establishes on the protected branch. Membership does not replace this gate.
+
+## Upstream publication
+
+Verified through GitHub that PR 62 merged into `main` on 27 October 2026 as 46e7433. Compared the ADD paths of the fetched protected revision with the PR branch `claude/diagram-scopes-add` using `git diff`; the knowledge, the bundle and this brief matched. The protected branch contains the artifact-driven identity record at 3.4.0, version record 3.4.0, the originating tasks of change-diagram-scopes with their evidence, the guide and the example page. No companion repository is required. The Plane member then merged the protected revision into its branch and rechecked its specification against the established contract.
