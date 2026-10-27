@@ -29,6 +29,7 @@ flow:
         - evidence-usability-contract
         - explicit-evidence-guide
         - visual-contract
+        - diagram-scope-contract
         - claim-contract
     - id: plan
       title: Create fresh dependency-ordered tasks and DoD
@@ -62,6 +63,7 @@ flow:
         - evidence-usability-contract
         - explicit-evidence-guide
         - visual-contract
+        - diagram-scope-contract
         - claim-contract
         - runbooks-contract
     - id: publication
@@ -183,6 +185,12 @@ flow:
       artifact: artifact-driven
       element: specifications/visual-knowledge.md
       requires: Select, check and maintain representations of knowledge inside the existing phase self-checks.
+      basis: documented
+    - id: diagram-scope-contract
+      kind: element
+      artifact: artifact-driven
+      element: specifications/diagram-scopes.md
+      requires: Select system and artifact views, keep system views with their owner, and link instead of copying.
       basis: documented
     - id: tier-contract
       kind: element
