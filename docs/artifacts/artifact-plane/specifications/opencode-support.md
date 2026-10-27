@@ -87,7 +87,7 @@ For an observed completion, send normalized Stop with `stop_hook_active: true` s
 
 The affected journeys are `agent-session-guidance` and `execution-observation`. Existing MCP tools, command-hook output formats, runtime database schema, browser rendering and other harness registrations stay unchanged. The reusable bridge and repository registration share one implementation.
 
-Test a mock V2 host, actual hook subprocesses and the installed target package. Cover moves, concurrency, child identity, missing turns, late completions, fail-open behavior, privacy, existing asks and valid denial with unavailable storage. Run existing agent, runtime, MCP and bundle checks. Live activation is a separate delivery check and cannot be replaced by fixtures.
+Test a mock V2 host, actual hook subprocesses and the installed target package. Cover moves, concurrency, child identity, missing turns, late completions, fail-open behavior, privacy, existing asks and valid denial with unavailable storage. Run existing agent, runtime, MCP and bundle checks. Tests create temporary directories only under the system temporary directory, so they pass on a runner without `/tmp/opencode`. Live activation is a separate delivery check and cannot be replaced by fixtures.
 
 ## Specification self-check
 

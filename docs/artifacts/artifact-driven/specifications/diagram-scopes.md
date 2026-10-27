@@ -8,10 +8,11 @@ claims:
     statement: GitHub Markdown renders flowchart icon shapes, sequence, state
       and ER diagrams, and draws Mermaid's unknown-icon mark with the label for
       every icon of a registered pack.
-    status: supported
-    basis: static
+    status: verified
+    basis: observed
     evidence:
-      - docs/artifacts/artifact-driven/specifications/diagram-scopes.md#reader-probe
+      - docs/artifacts/artifact-driven/specifications/diagram-scopes.md#rendered-checks
+    verified_by: agent
     check: Push the branch and capture the rendered example page on github.com.
     risk_if_wrong: The GitHub column of the reader support table and ADS5 are wrong.
   - id: website-shows-unknown-icon
@@ -19,10 +20,11 @@ claims:
     statement: The documentation website renders the example with Mermaid 11.17.2
       and draws the unknown-icon mark with the label for every icon of a
       registered pack.
-    status: supported
-    basis: static
+    status: verified
+    basis: observed
     evidence:
-      - docs/artifacts/artifact-driven/specifications/diagram-scopes.md#reader-probe
+      - docs/artifacts/artifact-driven/specifications/diagram-scopes.md#rendered-checks
+    verified_by: agent
     check: Build the website and capture the rendered example page.
     risk_if_wrong: The website column of the reader support table is wrong.
 ---
@@ -227,6 +229,15 @@ On 27 October 2026 an agent rendered candidate notations with Mermaid 11.17.2 in
 - The `C4Container` diagram rendered at 932 by 1,033 pixels, with small technology labels and fixed colors.
 - GitHub's Mermaid viewer bundle, fetched from viewscreen.githubusercontent.com on the same day, reports Mermaid 12.2.0. It contains no call of `registerIconPacks`. This is static evidence; the claim `github-renders-notations` waits for a rendered page.
 - The website uses @docusaurus/theme-mermaid 3.10.2 with Mermaid 11.17.2 and registers no icon pack, so it draws as the second case above.
+
+## Rendered checks
+
+On 27 October 2026 an agent checked the example page 06-guidelines/diagram-scopes-example.md of branch claude/diagram-scopes-add in two readers.
+
+- Documentation website: `npm ci` and `npm run build` in website passed. `docusaurus serve` served the build, and headless Chromium opened the example page. All seven diagrams rendered as SVG with their accessible titles, without a syntax error, a page error or a request to another origin. Every icon of the subsets showed the unknown-icon mark beside its label.
+- GitHub Markdown: headless Chromium opened the blob view of the page on github.com. GitHub rendered seven viewscreen frames. Each frame held an SVG with the accessible title of its diagram and no error text. The frames of the system context, the logical architecture, the deployment overview and the fallback sample showed the unknown-icon mark beside each label; the sequence, state and data model diagrams have no icons. GitHub also draws its own pan and zoom controls over each diagram.
+
+These checks are agent checks, not independent verification.
 
 ## Specification self-check
 

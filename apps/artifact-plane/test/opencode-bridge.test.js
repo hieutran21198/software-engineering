@@ -1,7 +1,7 @@
 import {test} from 'node:test';
 import assert from 'node:assert/strict';
 import {realpath, mkdtemp, rm, writeFile, readFile, access} from 'node:fs/promises';
-import {homedir} from 'node:os';
+import {homedir, tmpdir} from 'node:os';
 import {resolve} from 'node:path';
 import {createPlugin} from '../integration/opencode/index.js';
 import {createRunner} from '../integration/opencode/transport.js';
@@ -370,7 +370,7 @@ test('two exact-location owners observe shared public stream once through moves 
 });
 
 test('non-Git locations fail open without observations', async () => {
-  const directory = await mkdtemp('/tmp/opencode/bridge-nongit-'), h = await host({directory});
+  const directory = await mkdtemp(resolve(tmpdir(), 'opencode-bridge-nongit-')), h = await host({directory});
   try {
     const e = {sessionID: 'a', system: []};await h.context(e);await h.before(tool());
     const p = permission();await h.permission(p);assert.equal(p.effect, 'ask');
@@ -415,7 +415,7 @@ test('a durable move discards correlations even after the session has already mo
 });
 
 test('Git identity lookup fails open on missing executable, excess output and timeout, and reaps on unload', async () => {
-  const directory = await mkdtemp('/tmp/opencode/bridge-git-'), git = resolve(directory, 'git'), marker = resolve(directory, 'pid');
+  const directory = await mkdtemp(resolve(tmpdir(), 'opencode-bridge-git-')), git = resolve(directory, 'git'), marker = resolve(directory, 'pid');
   const h = await host(), prior = process.env.PATH;
   const context = () => h.context({sessionID: 'a', system: []});
   const script = body => writeFile(git, `#!${process.execPath}\nrequire('node:fs').writeFileSync(${JSON.stringify(marker)},String(process.pid));\n${body}\n`, {mode: 0o700});
