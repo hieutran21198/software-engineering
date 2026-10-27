@@ -63,9 +63,9 @@ const FAMILY_ICONS = {
   alert: svg(<><circle cx="8" cy="8" r="6.2" fill="none" stroke="currentColor" strokeWidth="1.6"/><path d="M8 4.6v4.1" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round"/><circle cx="8" cy="11.2" r="1" fill="currentColor"/></>),
   info: svg(<><circle cx="8" cy="8" r="6.2" fill="none" stroke="currentColor" strokeWidth="1.6"/><path d="M8 7.2v4" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round"/><circle cx="8" cy="4.9" r="1" fill="currentColor"/></>),
 };
-export function StatusBadge({status, children, small}) {
+export function StatusBadge({status, children, small, title}) {
   const family = statusFamily(status);
-  return <span className={`status-badge ${family}${small ? ' small' : ''}`} data-status={status}>{FAMILY_ICONS[STATUS_FAMILIES[family].icon]}<span>{children ?? status}</span></span>;
+  return <span className={`status-badge ${family}${small ? ' small' : ''}`} data-status={status} title={title}>{FAMILY_ICONS[STATUS_FAMILIES[family].icon]}<span>{children ?? status}</span></span>;
 }
 // New, Changed or Removed against the protected branch.
 export function DiffBadge({name, small}) {

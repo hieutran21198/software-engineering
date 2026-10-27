@@ -10,6 +10,7 @@ import {knowledgeTargets} from '../knowledge-navigation.js';
 import {artifactTitle, changeTitle, isFlow, memberUnit} from '../work-model.js';
 import {impactPage} from '../impact-model.js';
 import {pendingSentence} from '../wording-note.js';
+import {diagramType} from '../diagram-labels.js';
 import {ConflictDialog, FrontMatterEditor, bodyWithoutTitle, linkPage, useMedia} from './DocumentPageParts.jsx';
 import {ConceptName, useConcepts} from './ConceptLinks.jsx';
 import './DocumentPage.css';
@@ -102,6 +103,12 @@ export default function DocumentPage({page}) {
   const values = useMemo(() => frontValue(loaded?.markdown ?? doc.markdown), [loaded, doc.markdown]);
   const body = useMemo(() => bodyWithoutTitle(doc.markdown), [doc.markdown]);
   const navigate = link => go(linkPage(link, info.scope.artifact));
+  // The page opened at a diagram of the Diagrams section: its index and label from the diagram index.
+  const focus = useMemo(() => {
+    if (!Number.isInteger(page.diagram) || page.diagram < 0) return null;
+    const d = (info.element?.diagrams || []).find(x => x.index === page.diagram) || {};
+    return {index: page.diagram, label: `Diagram ${page.diagram + 1}: ${d.title || diagramType(d.type)}`};
+  }, [page.diagram, info.element]);
   const properties = <DocumentProperties heading={!narrow} info={info} page={page} values={values} loaded={loaded} writable={writable} established={established}
     snapshot={snapshot} worktree={worktree} go={go} edit={edit} compare={compare} onCompare={() => setCompare(value => !value)}/>;
 
@@ -138,7 +145,7 @@ export default function DocumentPage({page}) {
           : !doc.ready ? <p className="muted" role="status">Reading the text…</p>
           : <>
             {doc.partial && <p className="muted" role="status">This is a partial excerpt of the source.</p>}
-            {body.trim() ? <Markdown text={body} source={page.source} targets={targets} onNavigate={navigate}/> : <p className="muted">This document has no text yet.</p>}
+            {body.trim() ? <Markdown text={body} source={page.source} targets={targets} onNavigate={navigate} focus={focus}/> : <p className="muted">This document has no text yet.</p>}
           </>}
       </div>}
     </article>

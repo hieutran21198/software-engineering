@@ -6,6 +6,8 @@
 .document-page.narrow > .column.document-columns { display: block; max-width: 720px; }
 .document-page .page-header { margin-bottom: 24px; }
 .document-reader .markdown > :first-child { margin-top: 0; }
+/* A page opened at a diagram focuses its figure after a pointer click, which :focus-visible does not mark. */
+.document-reader .diagram-block[tabindex]:focus { outline: 2px solid var(--accent); outline-offset: 4px; border-radius: 4px; }
 .document-page > .column > .document-main > .notice { display: block; }
 
 .properties-title { font-size: 12px; font-weight: 600; color: var(--muted); letter-spacing: .04em; text-transform: uppercase; margin-bottom: 12px; }
