@@ -6,10 +6,13 @@ import {openRepository, openDocument, documentPage} from './workbench.js';
 // under the unchanged Content-Security-Policy, with the code panel as fallback.
 const base = 'docs/artifacts/tenant/';
 const diagrams = readFileSync(new URL('./diagram-fixture.md', import.meta.url), 'utf8');
+// A separate fixture keeps the page of diagram-fixture.md free of icons.
+const iconDiagrams = readFileSync(new URL('./diagram-icons-fixture.md', import.meta.url), 'utf8');
 const shots = process.env.DIAGRAM_SCREENSHOT_DIR;
 const fixture = () => fixtureRepository(new Map([
   [base + 'README.md', identity('Tenant', '1.0.0')],
   [base + 'specifications/diagrams.md', diagrams],
+  [base + 'specifications/icons.md', iconDiagrams],
   [base + 'specifications/identity.md', '# Identity\n\nNo diagram here.\n\n```js\nconst plain = true;\n```\n'],
   [base + 'versions/1.0.0/README.md', versionRecord('change-initial')],
   [base + 'changes/change-initial/README.md', '# Initial\n'],
@@ -130,3 +133,80 @@ test('a renderer that does not load leaves the code panels with a note', async (
   expect(await documentPage(page).locator('figure.diagram-block svg').count()).toBe(0);
   expect(await figures.count()).toBe(await documentPage(page).locator('figure.diagram-block .code-panel').count());
 });
+
+// Claim lazy-icon-chunk: Mermaid calls an icon pack loader only for a diagram that names an icon of the pack.
+test('the icon chunk loads only for a page whose diagrams name an icon', async ({page}) => {
+  const seen = await watch(page), f = await fixture();
+  await openRepository(page, f.root);
+  await openDocument(page, 'Tenant', 'Specifications', 'Diagrams');
+  await expect(documentPage(page).locator('figure.diagram-block > svg')).toHaveCount(5);
+  const plain = scripts(seen.requests);
+  await openDocument(page, 'Tenant', 'Specifications', 'Icon diagrams');
+  await expect(documentPage(page).locator('figure.diagram-block > svg')).toHaveCount(4);
+  const icons = scripts(seen.requests).slice(plain.length);
+  const name = url => new URL(url).pathname.split('/').pop();
+  console.log(`scripts of the page without icons: ${plain.map(name).join(', ')}\nnew scripts of the page with icons: ${icons.map(name).join(', ')}`);
+  const iconChunk = url => /diagram-icons/.test(name(url));
+  expect(plain.filter(iconChunk)).toEqual([]);
+  expect(icons.filter(iconChunk)).toHaveLength(1);
+});
+
+// The diagram scopes contract: bundled icons of both packs, the unknown-icon mark, nested subgraphs and an entity diagram.
+const iconShape = (page, heading, id) => figure(page, heading).locator(`g.icon-shape[id*="-flowchart-${id}-"]`);
+const label = shape => shape.locator('g.label tspan.text-inner-tspan').evaluateAll(spans => spans.map(s => s.textContent.trim()).join(' '));
+for (const width of [1440, 390]) {
+  test(`icons, unknown icons, nested subgraphs and an entity diagram render at ${width} pixels`, async ({page, baseURL}) => {
+    await page.setViewportSize({width, height: 900});
+    const seen = await watch(page), f = await fixture();
+    await openRepository(page, f.root);
+    await openDocument(page, 'Tenant', 'Specifications', 'Icon diagrams');
+    await expect(documentPage(page).locator('figure.diagram-block > svg')).toHaveCount(4);
+    await expect(documentPage(page).locator('.diagram-note')).toHaveCount(0);
+    await expect(figure(page, 'Icons').locator('svg > title')).toHaveText('Order system');
+    // Icons of both packs draw SVG paths; none is the unknown-icon mark.
+    for (const [id, text] of [['customer', 'Customer'], ['api', 'Orders API'], ['fn', 'Order function that validates each order'], ['table', 'Orders table'], ['archive', 'Archive']]) {
+      const icon = iconShape(page, 'Icons', id).locator('svg');
+      await expect(icon).toHaveCount(1);
+      expect(await icon.locator('path').count()).toBeGreaterThan(0);
+      await expect(icon.locator('text')).toHaveCount(0);
+      expect(await label(iconShape(page, 'Icons', id))).toBe(text);
+    }
+    // The gradients of the logos keep their local references after sanitizing.
+    const gradients = await iconShape(page, 'Icons', 'api').locator('svg').evaluate(svg => [...svg.querySelectorAll('[fill^="url(#"]')].map(e => Boolean(svg.querySelector(`linearGradient[id="${e.getAttribute('fill').slice(5, -1)}"]`))));
+    expect(gradients.length > 0 && gradients.every(Boolean)).toBe(true);
+    // A name outside the set, in a pack or not, shows Mermaid's unknown-icon mark and keeps its label.
+    for (const [id, text] of [['rocket', 'Launch service'], ['search', 'Search provider']]) {
+      const icon = iconShape(page, 'Unknown icons', id).locator('svg');
+      await expect(icon.locator('rect[width="80"][height="80"]')).toHaveCount(1);
+      await expect(icon.locator('text')).toHaveText('?');
+      expect(await label(iconShape(page, 'Unknown icons', id))).toBe(text);
+    }
+    // flowchart TB draws each subgraph inside its parent.
+    const nested = figure(page, 'Nested subgraphs').locator('svg').first();
+    await expect(nested.locator('> title')).toHaveText('Deployment');
+    await expect(nested.locator('g.cluster')).toHaveCount(3);
+    const boxes = await nested.evaluate(svg => ['account', 'network', 'tier'].map(name => svg.querySelector(`g.cluster[id$="-${name}"] > rect`).getBoundingClientRect()));
+    const inside = (inner, outer) => inner.left > outer.left && inner.top > outer.top && inner.right < outer.right && inner.bottom < outer.bottom;
+    expect([inside(boxes[1], boxes[0]), inside(boxes[2], boxes[1])]).toEqual([true, true]);
+    for (const title of ['Cloud account', 'Private network', 'Application tier', 'Web server', 'Database']) await expect(nested).toContainText(title);
+    // erDiagram draws the three entities with their attributes.
+    const entities = figure(page, 'Entities').locator('svg').first();
+    await expect(entities.locator('> title')).toHaveText('Order entities');
+    await expect(entities.locator('g.node[id*="-entity-"]')).toHaveCount(3);
+    for (const text of ['CUSTOMER', 'LINE_ITEM', 'customer_id', 'places', 'contains']) await expect(entities).toContainText(text);
+    // Sanitizing keeps the icon shapes and removes every remote reference; no request leaves the origin.
+    const foreign = await documentPage(page).evaluate(root => ({
+      elements: root.querySelectorAll('img, script, a, foreignObject, image, iframe, use').length,
+      handlers: [...root.querySelectorAll('*')].flatMap(e => [...e.attributes].map(a => a.name)).filter(n => n.startsWith('on')),
+      links: [...root.querySelectorAll('[href], [*|href]')].length,
+      remote: [...root.querySelectorAll('svg *')].flatMap(e => [...e.attributes].map(a => a.value)).filter(v => /url\(\s*['"]?(?!#)/i.test(v)),
+    }));
+    expect(foreign).toEqual({elements: 0, handlers: [], links: 0, remote: []});
+    const origin = new URL(baseURL).origin;
+    expect(seen.requests.filter(url => !url.startsWith('data:') && new URL(url).origin !== origin)).toEqual([]);
+    expect(seen.errors).toEqual([]);
+    // The page does not scroll horizontally; a wider diagram scrolls inside its figure.
+    expect(await page.evaluate(() => document.documentElement.scrollWidth === document.documentElement.clientWidth)).toBe(true);
+    if (shots) {await page.setViewportSize({width, height: 2400});await page.screenshot({path: `${shots}/diagram-icons-${width}.png`});}
+  });
+}
