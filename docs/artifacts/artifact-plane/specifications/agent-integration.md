@@ -122,6 +122,8 @@ claims:
 
 AI1 to AI14 in requirements/agent-integration.md.
 
+OpenCode 2 uses the separate [native V2 integration contract](opencode-support.md), governed by OP1–OP8 and OPA1–OPA4. It translates verified plugin interfaces to this command protocol; it does not consume Claude Code, Codex or Antigravity hook configuration.
+
 ## Command line
 
 The executable adds two commands to `serve`, `mcp` and `model-install`:
@@ -268,6 +270,8 @@ This repository commits:
 - `.codex/hooks.json`: the Codex hook entries above;
 - `.agents/hooks.json`: the Antigravity hook entries above;
 - `.agents/plugins/artifact-plane/plugin.json` (`{"name":"artifact-plane"}`) and `.agents/plugins/artifact-plane/mcp_config.json`: the server `artifact-plane` with command `artifact-plane` and args `["mcp"]` so Antigravity discovers the workspace MCP server through its plugin loader.
+
+OpenCode 2 adds root `opencode.json` with native `mcp.servers` configuration and the automatically discovered `.opencode/plugins/artifact-plane/index.ts` entry. The reusable implementation, native permission translation, observation identity and unsupported stop blocking are owned by [opencode-support.md](opencode-support.md). Existing command-hook output shapes and registrations do not change.
 
 integration/hooks.example.json is replaced by integration/claude-settings.example.json, integration/codex-hooks.example.json and integration/antigravity-hooks.example.json with the same entries. integration/README.md and the Plane README describe for each harness: the MCP registration, the hook file, the trust or plugin steps (Claude Code: the workspace trust dialog and the approval of project MCP servers; Codex: a trusted project and the review of each hook in `/hooks`; Antigravity: `.agents/hooks.json` for workspace hooks and `.agents/plugins/artifact-plane/mcp_config.json` or `~/.gemini/config/mcp_config.json` for the MCP server), the bind commands of the executable, and the source path.
 

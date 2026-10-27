@@ -31,4 +31,4 @@ Ran npx playwright test test/browser/flow-page.spec.js test/browser/impact-page.
 
 Screenshots of the flow page Diagram of zitadel-event-intake in a disposable clone, served by this branch: at 1440 pixels the main path verify, validate, store, publish runs left to right, reject is beside it, each condition label sits on its own line, and the retry loop is an arc above publish. At 390 pixels the same layout fits the panel; neither width has horizontal page overflow.
 
-Version preparation: package.json and package-lock.json give 1.26.2, and nix/lib/npm-deps.nix has the new npm dependency hash; prefetch-npm-deps reproduces the previous hash from the previous lock file.
+Version preparation: package.json and package-lock.json give 1.27.1, and nix/lib/npm-deps.nix has the new npm dependency hash; prefetch-npm-deps reproduces the previous hash from the previous lock file.
