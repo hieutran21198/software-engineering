@@ -284,7 +284,7 @@ export async function scanRepository(path, options = {}) {
     { layouts, baselines, copied },
   );
   contentHash.update(JSON.stringify(Object.entries(baselines).map(([id, b]) => [id, b.oid ?? b.state])));
-  return { snapshot, files, unsafeTaskPaths, baselines, revision:contentHash.digest('hex') };
+  return { snapshot, files, unsafeTaskPaths, baselines, workingBytes, revision:contentHash.digest('hex') };
 }
 
 const inFlight = new Map();
