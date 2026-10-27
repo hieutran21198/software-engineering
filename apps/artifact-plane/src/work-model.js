@@ -112,6 +112,10 @@ export function artifactDocuments(artifact) {
   const flows = [...current, ...removed].filter(isFlow).map(e => ({...e, flow: `${artifact.id}:${flowId(e.path)}`})).sort(byTitle);
   return {source, groups, flows};
 }
+// System view documents of the working knowledge, by artifact title, then document path.
+export const systemViews = snapshot => (snapshot?.artifacts || [])
+  .flatMap(a => a.elements.filter(e => e.source === 'working' && e.systemView).map(e => ({...e, artifact: a.id, artifactTitle: a.title || a.id})))
+  .sort((a, b) => natural.compare(a.artifactTitle, b.artifactTitle) || (a.file < b.file ? -1 : a.file > b.file ? 1 : 0));
 
 // Sidebar rows: a flat list with levels. Filtering keeps matches and their parents.
 // Row: {key, level, label, detail, badge (a difference name), count, expandable, open, page, kind, matched}

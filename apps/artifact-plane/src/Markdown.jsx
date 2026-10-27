@@ -7,8 +7,9 @@ const forbidden=['img','svg','math','iframe','form','input','button','style'];
 const rawOptions={FORBID_TAGS:forbidden,FORBID_ATTR:['href','src','style','id','name','target'],ALLOW_DATA_ATTR:false};
 const escape=value=>String(value).replaceAll('&','&amp;').replaceAll('<','&lt;').replaceAll('>','&gt;').replaceAll('"','&quot;');
 const slug=text=>text.trim().toLowerCase().replace(/[^\p{L}\p{N}\s-]/gu,'').replace(/\s+/g,'-');
-export default function Markdown({text='',source,targets,onNavigate}){
- const ref=useRef(null);
+// focus: {index, label} of a diagram to bring into view and focus once, after it renders or fails.
+export default function Markdown({text='',source,targets,onNavigate,focus}){
+ const ref=useRef(null),pending=useRef(focus);
  const {html,links,diagrams}=useMemo(()=>{
   const content=text.replace(/^---\r?\n[\s\S]*?\r?\n---(?:\r?\n|$)/,''),links=[],diagrams=[],renderer=new Renderer();
   // A fenced block with the first info word "mermaid" is a diagram block: a figure that holds its code panel.
@@ -42,7 +43,14 @@ export default function Markdown({text='',source,targets,onNavigate}){
   if(!diagrams.length)return;
   let live=true;
   const unavailable=()=>{if(!live)return;for(const figure of ref.current?.querySelectorAll('figure.diagram-block')??[]){const note=document.createElement('p');note.className='diagram-note';note.setAttribute('role','note');note.textContent='Diagram not rendered: the diagram renderer did not load.';figure.append(note);}};
-  import('./diagram-render.js').then(module=>live&&module.renderDiagrams(ref.current,diagrams,()=>live),unavailable);
+  // The next frame runs after the scroll to the top of a newly opened page; a missing figure leaves the page there.
+  const reveal=()=>requestAnimationFrame(()=>{
+   const target=pending.current;if(!live||!target)return;pending.current=null;
+   const figure=ref.current?.querySelector(`figure.diagram-block[data-diagram-index="${target.index}"]`);if(!figure)return;
+   figure.tabIndex=-1;figure.setAttribute('aria-label',target.label);
+   figure.scrollIntoView({block:figure.getBoundingClientRect().height<innerHeight*.8?'center':'start'});figure.focus({preventScroll:true});
+  });
+  import('./diagram-render.js').then(module=>live&&module.renderDiagrams(ref.current,diagrams,()=>live),unavailable).finally(reveal);
   return ()=>{live=false;};
  },[html]);
  const activate=event=>{const marker=event.target.closest?.('button[data-knowledge-index]');if(!marker||!event.currentTarget.contains(marker))return;const link=links[Number(marker.dataset.knowledgeIndex)];if(link?.kind==='heading'){event.currentTarget.querySelector(`[id="knowledge-heading-${CSS.escape(link.fragment)}"]`)?.scrollIntoView({block:'start'});}else if(link?.kind==='source')onNavigate(link);};

@@ -6,6 +6,7 @@ import {gitReads} from './git-reads.js';
 import {parseWorktrees,evidenceFor,checklist} from './workflow.js';
 import {unitBriefs,versionClaims,readUnitsOfWork,safeKnowledgePath} from './units-of-work.js';
 import {buildUnitGraphs} from './unit-graphs.js';
+import {indexDiagrams} from './diagram-index.js';
 const sections=['overview','artifacts','workflow','implementation','markdown','history','completion'];
 const keys=['path','section','worktree','unit','artifact','change','source','dependencyMode','revision'];
 const safeID=value=>typeof value==='string'&&/^[a-z0-9][a-z0-9-]*$/.test(value);
@@ -73,7 +74,8 @@ async function readQuery(body){
   const context=Object.fromEntries(Object.entries(body).filter(([key])=>!['path','section'].includes(key)));
   let data,readState=overview,readFull=null,documentBytes=null;
   if(body.section==='overview'){
-   data=stripBodies(overview.snapshot);data.workflow={worktrees,diagnostics:[],historyLimit:200};data.unitsOfWork=entry.unitsOfWork;data.loadState='loaded';
+   // Overview elements hold metadata only, so the diagram index reads the working bytes of the scan.
+   data=stripBodies(indexDiagrams(overview.snapshot,overview.workingBytes));data.workflow={worktrees,diagnostics:[],historyLimit:200};data.unitsOfWork=entry.unitsOfWork;data.loadState='loaded';
   }else{
    const unit=body.unit?unitBriefs(overview.files).find(u=>u.id===body.unit):null;
    if(body.unit&&!unit)throw new ExploreError(404,'Unit of work no longer exists.');

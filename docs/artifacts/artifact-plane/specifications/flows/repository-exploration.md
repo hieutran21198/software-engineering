@@ -63,6 +63,11 @@ flow:
         - concept-links
         - concept-search-tests
         - concept-row-checks
+        - diagram-scopes-contract
+        - diagram-index
+        - diagram-index-tests
+        - system-views
+        - system-entry-browser
       interactions:
         - from: snapshot
           to: version
@@ -103,6 +108,13 @@ flow:
         - concept-page-browser
         - page-links-browser
         - history-browser
+        - diagram-scopes-contract
+        - system-views
+        - system-entry-browser
+        - diagram-list
+        - diagram-list-browser
+        - diagram-icons
+        - diagram-icons-tests
       interactions:
         - from: snapshot
           to: change
@@ -355,6 +367,64 @@ flow:
       requires: Render fenced Mermaid blocks of knowledge as sanitized SVG with
         bundled code, and keep the code panel when a block does not render.
       basis: documented
+    - id: diagram-scopes-contract
+      kind: element
+      artifact: artifact-plane
+      element: specifications/diagram-scopes.md
+      requires: Show the system view documents on the home page and the diagrams of an artifact on its page, and render the bundled icons.
+      basis: documented
+    - id: diagram-index
+      kind: implementation
+      path: apps/artifact-plane/server/diagram-index.js
+      symbol: indexDiagrams
+      requires: Derive the system view and diagram metadata of working elements for the overview.
+      basis: static
+    - id: diagram-index-tests
+      kind: test
+      path: apps/artifact-plane/test/diagram-index.test.js
+      requires: Check the diagram records, the system view rule and the unchanged element records.
+      basis: observed
+      evidence:
+        - docs/artifacts/artifact-plane/changes/change-diagram-scopes/tasks/01-diagram-index.md
+    - id: system-views
+      kind: implementation
+      path: apps/artifact-plane/src/work-model.js
+      symbol: systemViews
+      requires: Order the system view documents for the home page and the artifact page.
+      basis: static
+    - id: system-entry-browser
+      kind: test
+      path: apps/artifact-plane/test/browser/system-entry.spec.js
+      requires: Check the System section, its absence, the owner table links, the System view link and Back at 1440 and 390 pixels.
+      basis: observed
+      evidence:
+        - docs/artifacts/artifact-plane/changes/change-diagram-scopes/tasks/04-system-entry.md
+    - id: diagram-list
+      kind: implementation
+      path: apps/artifact-plane/src/pages/ArtifactPage.jsx
+      symbol: Diagrams
+      requires: List the diagrams of an artifact and open its document at a diagram.
+      basis: static
+    - id: diagram-list-browser
+      kind: test
+      path: apps/artifact-plane/test/browser/diagram-list.spec.js
+      requires: Check the Diagrams section, its absence, the document focus and Back at 1440 and 390 pixels.
+      basis: observed
+      evidence:
+        - docs/artifacts/artifact-plane/changes/change-diagram-scopes/tasks/05-diagram-list.md
+    - id: diagram-icons
+      kind: implementation
+      path: apps/artifact-plane/scripts/diagram-icons.mjs
+      symbol: iconPacks
+      requires: Build the curated icon subsets with their license records for the renderer.
+      basis: static
+    - id: diagram-icons-tests
+      kind: test
+      path: apps/artifact-plane/test/diagram-icons.test.js
+      requires: Check the icon subsets and the build failures for a missing name or a wrong count.
+      basis: observed
+      evidence:
+        - docs/artifacts/artifact-plane/changes/change-diagram-scopes/tasks/02-icons.md
     - id: concept-contract
       kind: element
       artifact: artifact-plane

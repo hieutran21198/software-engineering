@@ -47,3 +47,7 @@
   .work-change.status-card { padding: 18px 16px; }
   .work-change-actions { flex-direction: column; align-items: stretch; width: 100%; }
 }
+/* System view documents: the title over its artifact and diagram count. */
+.system-views { margin-top: 12px; }
+.system-views .doc-title { display: flex; flex-direction: column; gap: 2px; }
+.system-views .system-view-title { font-weight: 500; }

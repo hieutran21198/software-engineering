@@ -8,8 +8,9 @@ import {ActionForm, OperationError, useEdit} from '../editing.jsx';
 import {edit as previewEdit} from '../knowledge-api.js';
 import {artifactDocuments, artifactTitle, changeStatus, changeTitle, currentChanges, currentUnits, phaseLabel, isError} from '../work-model.js';
 import {knowledgeTargets} from '../knowledge-navigation.js';
+import {diagramName, diagramType} from '../diagram-labels.js';
 import {linkPage, purposeParts} from './DocumentPageParts.jsx';
-import {DependencyExplanation} from './ArtifactPageParts.jsx';
+import {DependencyExplanation, SystemViewLinks} from './ArtifactPageParts.jsx';
 import {conceptPage, firstSentence, useConcepts} from './ConceptLinks.jsx';
 import './ArtifactPage.css';
 
@@ -112,6 +113,7 @@ function ArtifactView({artifact, page, snapshot, worktree, go, edit}) {
           <p className="muted purpose-more">
             {purpose.headings.length > 0 && `${purpose.headings.join(' · ')}. `}
             <button className="link" onClick={() => go({kind: 'document', artifact: artifact.id, source: readme})}>Read the overview</button>
+            <SystemViewLinks snapshot={snapshot} go={go}/>
           </p>
         </>}
     </div>
@@ -138,9 +140,31 @@ function ArtifactView({artifact, page, snapshot, worktree, go, edit}) {
       </Section>;
     })}
 
+    <Diagrams artifact={artifact} docs={docs} expanded={expanded.has('diagrams')} onToggle={() => toggle('diagrams')} go={go}/>
     <Concepts artifact={artifact} expanded={expanded.has('concepts')} onToggle={() => toggle('concepts')} go={go}/>
     <Versions artifact={artifact} go={go}/>
   </div></section>;
+}
+
+// The diagrams of the working knowledge in the document order of the page, only
+// when the artifact has one. An item opens its document at the diagram.
+function Diagrams({artifact, docs, expanded, onToggle, go}) {
+  const items = [...docs.groups.flatMap(g => g.documents), ...docs.flows].flatMap(element => (element.diagrams || []).map(diagram => ({element, diagram})));
+  if (!items.length) return null;
+  const shown = expanded ? items : items.slice(0, 5);
+  return <Section id="artifact-section-diagrams" title="Diagrams" summary={items.length}>
+    <ul className="doc-list diagram-list">{shown.map(({element: e, diagram: d}) => <li key={`${e.file}#${d.index}`}>
+      <button className="unstyled" onClick={() => go({kind: 'document', artifact: artifact.id, source: e.file, diagram: d.index})}>
+        <span className="doc-title">
+          <span className="diagram-title">{diagramName(d)}{d.stale && <StatusBadge status="Unchecked items" small title={d.stale}>Stale</StatusBadge>}</span>
+          <span className="diagram-line">{diagramType(d.type)} · {e.title || e.path}{d.heading && ` › ${d.heading}`}</span>
+          {d.source?.kind === 'source' ? <span className="diagram-line diagram-source" title={d.source.text}>{d.source.text}</span>
+            : <span className={`diagram-line${d.source ? '' : ' no-source'}`}>{d.source ? 'Illustrative' : 'No source line'}</span>}
+        </span>
+      </button>
+    </li>)}</ul>
+    {items.length > 5 && <button className="link show-all" aria-expanded={expanded} aria-label={expanded ? 'Show first 5 diagrams' : `Show all ${items.length} diagrams`} onClick={onToggle}>{expanded ? 'Show first 5' : `Show all ${items.length}`}</button>}
+  </Section>;
 }
 
 // The concepts of the artifact, only when it declares one. A removed

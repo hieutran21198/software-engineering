@@ -51,7 +51,51 @@ acceptance:
       split. The ADD validator and the renderer checks pass, and the owning
       changes record the evidence.
     integration: true
-evidence: []
+evidence:
+  - criterion: selection
+    method: Read the scopes, the two matrix tables and the omission conditions of the established guide against the contract.
+    result: passed
+    source: docs/artifacts/artifact-driven/changes/change-diagram-scopes/tasks/01-guide.md#evidence
+  - criterion: system-navigation
+    method: Run system-entry.spec.js at 1440 and 390 pixels on the AWS fixture repository.
+    result: passed
+    source: docs/artifacts/artifact-plane/changes/change-diagram-scopes/tasks/04-system-entry.md#evidence
+  - criterion: artifact-navigation
+    method: Run diagram-list.spec.js at 1440 and 390 pixels on the AWS fixture repository.
+    result: passed
+    source: docs/artifacts/artifact-plane/changes/change-diagram-scopes/tasks/05-diagram-list.md#evidence
+  - criterion: icons
+    method: Run the icon browser tests and the icon chunk check of the Plane renderer.
+    result: passed
+    source: docs/artifacts/artifact-plane/changes/change-diagram-scopes/tasks/02-icons.md#evidence
+  - criterion: icons
+    method: Capture the example page on the built website and on GitHub without icon packs.
+    result: passed
+    source: docs/artifacts/artifact-driven/changes/change-diagram-scopes/tasks/03-validation.md#evidence
+  - criterion: aws-example
+    method: Count the nodes and edges of each example view against its fact list and render each view.
+    result: passed
+    source: docs/artifacts/artifact-driven/changes/change-diagram-scopes/tasks/02-example.md#evidence
+  - criterion: maintenance
+    method: Read the stale and cross-artifact maintenance rules of the guide and check that the guide adds no quota, gate or registry.
+    result: passed
+    source: docs/artifacts/artifact-driven/changes/change-diagram-scopes/tasks/01-guide.md#evidence
+  - criterion: maintenance
+    method: Run the diagram index tests for stale lines and for repositories without diagrams.
+    result: passed
+    source: docs/artifacts/artifact-plane/changes/change-diagram-scopes/tasks/01-diagram-index.md#evidence
+  - criterion: integration
+    method: Run the integrated unit and browser suites, the repository check, the validators and the renderer checks of both members.
+    result: passed
+    source: docs/artifacts/units-of-work/diagram-scopes/README.md#combined-checks
+publication_reviews:
+  - artifact: artifact-driven
+    version: 3.4.0
+    source: docs/artifacts/units-of-work/diagram-scopes/README.md#upstream-publication
+    required_changes:
+      - repository: https://github.com/hieutran21198/software-engineering
+        scope: ADD knowledge, retained delivery tasks, the visual guide, the example page, the artifact model sentence and the four role skill references.
+        pull_request: https://github.com/hieutran21198/software-engineering/pull/62
 ---
 
 # Diagrams at system and artifact scope
@@ -79,3 +123,12 @@ On 27 October 2026 the owner selected an ordinary artifact as the owner of syste
 ## Delivery boundary
 
 The Plane consumes the ADD diagram scope contract. Implement and publish the ADD member first. Start the dependent Plane implementation only after the ADD change establishes on the protected branch. Membership does not replace this gate.
+
+## Upstream publication
+
+Verified through GitHub that PR 62 merged into `main` on 27 October 2026 as 46e7433. Compared the ADD paths of the fetched protected revision with the PR branch `claude/diagram-scopes-add` using `git diff`; the knowledge, the bundle and this brief matched. The protected branch contains the artifact-driven identity record at 3.4.0, version record 3.4.0, the originating tasks of change-diagram-scopes with their evidence, the guide and the example page. No companion repository is required. The Plane member then merged the protected revision into its branch and rechecked its specification against the established contract.
+
+## Combined checks
+
+The ADD member's checks are in its validation task: Go tests, the website build, the rendered example page on the website and on GitHub, and the validator. The Plane member's integrated checks are in its validation task: 571 unit tests with 0 failures, 177 of 177 browser tests with the Nix Chromium and with the CI headless shell, the repository check, the validator and the Nix package build. Together they cover representative examples in Artifact Plane and GitHub Markdown: icons, a missing icon, long labels, and the system context split into an overview and the logical architecture detail. The owner accepted the Plane screens on 27 October 2026. Completion needs the Plane PR to merge.
+
