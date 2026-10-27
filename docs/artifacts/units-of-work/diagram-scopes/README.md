@@ -12,17 +12,15 @@ affected_flows:
   - artifact: artifact-plane
     flow: repository-exploration
     effect: modify
-  - artifact: artifact-plane
-    flow: source-retrieval
-    effect: modify
-flow_assessment: Requirement discovery inspected the visual representation
-  guide, the artifact model, the system-flow guide, the diagram rendering
-  contract, the Plane home, artifact and document pages, the diagram renderer,
-  its browser tests and the 18 flow records. change-delivery runs the
-  representation checks in its phase steps. repository-exploration shows the
-  home and artifact pages. source-retrieval reads documents through the same
-  renderer. Specification confirms the support records of each flow. No flow
-  gains or loses a step.
+flow_assessment: Discovery inspected the visual representation guide, the
+  artifact model, the system-flow guide, the diagram rendering contract, the
+  Plane home, artifact and document pages, the overview query, the diagram
+  renderer, its browser tests and the 18 flow records. change-delivery gains
+  the diagram scope support on its specification and implement steps.
+  repository-exploration gains the Plane contract support on its overview and
+  inspect steps. source-retrieval reads documents through the extended
+  renderer; its existing diagram-rendering-contract support covers the change,
+  so its record stays. No flow gains or loses a step.
 acceptance:
   - id: selection
     criterion: The ADD guidance has one selection matrix for system and artifact

@@ -63,6 +63,7 @@ flow:
         - concept-links
         - concept-search-tests
         - concept-row-checks
+        - diagram-scopes-contract
       interactions:
         - from: snapshot
           to: version
@@ -103,6 +104,7 @@ flow:
         - concept-page-browser
         - page-links-browser
         - history-browser
+        - diagram-scopes-contract
       interactions:
         - from: snapshot
           to: change
@@ -354,6 +356,12 @@ flow:
       element: specifications/diagram-rendering.md
       requires: Render fenced Mermaid blocks of knowledge as sanitized SVG with
         bundled code, and keep the code panel when a block does not render.
+      basis: documented
+    - id: diagram-scopes-contract
+      kind: element
+      artifact: artifact-plane
+      element: specifications/diagram-scopes.md
+      requires: Show the system view documents on the home page and the diagrams of an artifact on its page, and render the bundled icons.
       basis: documented
     - id: concept-contract
       kind: element
