@@ -44,7 +44,7 @@ Read the [system-flow format](../../../06-guidelines/system-flows.md) when the c
 
 ## Representations
 
-Read the [visual representation guide](../../../06-guidelines/visual-representations.md) when a contract, decision or plan has structure that prose spreads apart. During the existing Specification self-check, apply the agent procedure: write contract tables, sequence diagrams for interactions, state diagrams for lifecycles, containment diagrams for boundaries and alternatives tables in ADRs. Derive flow diagrams from flow records. During the existing Plan self-check, rely on the task graph that readers derive from the task list; do not draw task order by hand. Perform procedure step 9 for each changed representation and record its result in the self-check.
+Read the [visual representation guide](../../../06-guidelines/visual-representations.md) when a contract, decision or plan has structure that prose spreads apart. During the existing Specification self-check, apply the agent procedure: write contract tables, sequence diagrams for interactions, state diagrams for lifecycles, containment diagrams for boundaries and alternatives tables in ADRs. Derive flow diagrams from flow records. During the existing Plan self-check, rely on the task graph that readers derive from the task list; do not draw task order by hand. Perform procedure step 9 for each changed representation and record its result in the self-check. Choose the scope and then the view from the [selection matrix](../../../06-guidelines/visual-representations.md#selection-matrix). Keep a system view in a system view document of its system owner, follow it with its owner table, and link to it instead of copying it.
 
 ## Claims
 

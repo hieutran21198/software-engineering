@@ -62,7 +62,7 @@ Read the [system-flow format](../../../06-guidelines/system-flows.md) when the c
 
 ## Representations
 
-Read the [visual representation guide](../../../06-guidelines/visual-representations.md) when a change adds or changes a table, diagram or derived view. Own the views at unit level and across artifacts: dependency navigation, change impact, evidence traceability and feature evolution. Derive them from records and keep each graph meaning in its own picture. In existing integration checks, confirm that each phase self-check recorded the validation of its representations. During Version preparation, confirm that no stale line remains in the working knowledge. When an agent generated a diagram, record its count check against the source before you accept it. Do not add a review step, a diagram registry or a mandatory tool.
+Read the [visual representation guide](../../../06-guidelines/visual-representations.md) when a change adds or changes a table, diagram or derived view. Own the views at unit level and across artifacts: dependency navigation, change impact, evidence traceability and feature evolution. Derive them from records and keep each graph meaning in its own picture. In existing integration checks, confirm that each phase self-check recorded the validation of its representations. During Version preparation, confirm that no stale line remains in the working knowledge. When an agent generated a diagram, record its count check against the source before you accept it. Do not add a review step, a diagram registry or a mandatory tool. When a unit changes a fact that a system view shows, include a change of the system owner in the unit.
 
 ## Claims
 

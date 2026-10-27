@@ -14,6 +14,7 @@ Use these guides to adopt ADD and carry out the first artifact change. They supp
 | [Writing artifacts](writing-artifacts.md) | Write identity, change and version records, requirements with IDs, specifications, decisions, task plans, and check them with the validator. |
 | [Visual representations](visual-representations.md) | Select, write, check and maintain tables, diagrams and derived views of knowledge. |
 | [Visual examples](visual-examples.md) | Follow worked examples that turn real artifact text into better representations. |
+| [Diagram scopes example](diagram-scopes-example.md) | Follow an invented AWS system from its system views to the views of one artifact, with icons and reader fallback. |
 | [Adopting from a release](adopting-from-git.md) | Follow the adoption guide by hand, or give an AI agent the ready request to adopt a verified release and set up its harness. |
 | [Runbooks](runbooks.md) | Follow ordered steps after a merge, when the protected branch moves, after an amendment, when a change stops, to reverse a version, for a live check and for a failed check. |
 | [Working with AI](working-with-ai.md) | Required role capabilities, focused project instructions, plan approval, and team merge review. |

@@ -28,7 +28,7 @@ Read the [system-flow format](../../../06-guidelines/system-flows.md) when the c
 
 ## Representations
 
-Read the [visual representation guide](../../../06-guidelines/visual-representations.md) when a task changes behavior that a diagram of the governing specification shows. During the existing task self-check, record evidence as a table of DoD item, check, result and source. Recheck the behavior diagrams of the governing specification against the implemented behavior, and report a stale diagram to the coordinator. Do not edit a governing diagram to match the code; return the contract change to its owning phase.
+Read the [visual representation guide](../../../06-guidelines/visual-representations.md) when a task changes behavior that a diagram of the governing specification shows. During the existing task self-check, record evidence as a table of DoD item, check, result and source. Recheck the behavior diagrams of the governing specification against the implemented behavior, and report a stale diagram to the coordinator. Do not edit a governing diagram to match the code; return the contract change to its owning phase. Recheck the system views that name a changed element. Report a stale system view of another artifact to the coordinator.
 
 ## Claims
 
