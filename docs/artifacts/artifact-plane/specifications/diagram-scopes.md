@@ -30,10 +30,11 @@ claims:
     kind: assumption
     statement: Mermaid 11.17.2 calls an icon pack loader only when a diagram
       names an icon of that pack, so a page without icons loads no icon chunk.
-    status: supported
+    status: verified
     basis: observed
     evidence:
       - docs/artifacts/artifact-plane/specifications/diagram-scopes.md#icon-chunk-check
+    verified_by: agent
     check: Record the network requests of a page with diagrams and no icon in the browser test.
     risk_if_wrong: DP7 fails; the icon chunk loads with every diagram page.
 ---
@@ -142,7 +143,7 @@ The [mockup canvas](https://claude.ai/artifact/VNNNytcQLDKmyUncNMytAC) shows the
 
 ## Icon chunk check
 
-On 27 October 2026 the browser test "the icon chunk loads only for a page whose diagrams name an icon" in test/browser/diagram-rendering.spec.js recorded the scripts of two pages of a built Plane. The diagram page without icons rendered five SVG diagrams and requested 33 scripts, none of them the icon chunk. The icon page, opened next, requested two new scripts: the `virtual:diagram-icons` chunk and the `erDiagram` chunk. With the registration removed, the test fails. In Mermaid 11.17.2, `getRegisteredIconData` calls a pack loader only when it resolves an icon name with that prefix. This is the implementer's own check.
+On 27 October 2026 the browser test "the icon chunk loads only for a page whose diagrams name an icon" in test/browser/diagram-rendering.spec.js recorded the scripts of two pages of a built Plane. The diagram page without icons rendered five SVG diagrams and requested 33 scripts, none of them the icon chunk. The icon page, opened next, requested two new scripts: the `virtual:diagram-icons` chunk and the `erDiagram` chunk. With the registration removed, the test fails. In Mermaid 11.17.2, `getRegisteredIconData` calls a pack loader only when it resolves an icon name with that prefix. The coordinator ran the test again in the integrated browser suites on branch claude/diagram-scopes with the Nix Chromium and with the CI headless shell; it passed in both. These are agent checks, not independent verification.
 
 ## Design facts
 
