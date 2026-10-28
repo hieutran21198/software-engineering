@@ -10,7 +10,9 @@ self_check:
 - NP2: Users can install artifact-plane through the repository flake.
 - NP3: Both packages support x86_64 and aarch64 on Linux and macOS.
 - NP4: Installed commands run outside the source checkout and retain existing arguments and environment settings.
-- NP5: Package builds use pinned inputs and dependency hashes.
+- NP5: Package builds use pinned inputs and dependency hashes. A change to the
+  Plane package or lock file updates the fixed-output dependency hash before
+  the version pull request.
 
 ## Acceptance criteria
 
@@ -34,3 +36,5 @@ The scope reuses the existing flake and introduces no service or workflow regist
 The requirements distinguish platform verification from package declarations.
 
 change-se-adopt-version amends NP1 and keeps its ID. The defect is observable: the flake builds se-adopt-3.1.0 while ADD and the source it embeds are at 3.2.0. No requirement ID is added.
+
+change-plane-npm-deps-hash amends NP5 and keeps its ID. The defect is observable: the Nix packages check on revision 8727e0b reports the specified 1.28.0 dependency hash and the 1.29.0 value. No requirement ID is added.

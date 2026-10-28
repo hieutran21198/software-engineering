@@ -24,6 +24,10 @@ Set the package version to `current_version` of docs/artifacts/artifact-driven/R
 ## Artifact Plane
 
 Use the pinned nixpkgs Node.js runtime at version 24 or later and package-lock.json.
+`nix/lib/npm-deps.nix` holds the fixed-output hash of the Plane npm dependencies.
+Update it whenever `apps/artifact-plane/package.json` or `package-lock.json`
+changes, including a version-only bump. Reproduce the expected value from the
+fixed-output derivation error, then rebuild the package check.
 Build the browser assets with the existing Vite build. Install the server, package metadata, built dist directory and required production dependencies in the store.
 Wrap server/app.js as bin/artifact-plane, forwarding arguments without changing the caller's working directory.
 Include Git in the wrapper PATH. Preserve user-provided tools for optional Go analysis and agent integrations.
@@ -47,3 +51,5 @@ No artifact-level dependency is introduced. Existing application code supplies t
 Native dependency compatibility is unverified until implementation checks run.
 
 change-se-adopt-version: NP1 maps to the version rule of the se-adopt section. Reading the version of the ADD identity record adds no artifact dependency, because se-adopt already embeds the ADD bundle without one.
+
+change-plane-npm-deps-hash: NP5 maps to the dependency hash rule of the Artifact Plane section. The rule names no new interface or dependency.
