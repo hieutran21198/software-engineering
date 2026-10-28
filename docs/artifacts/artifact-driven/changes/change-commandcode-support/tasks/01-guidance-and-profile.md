@@ -21,23 +21,36 @@ MCP file in this task.
 
 ## Definition of Done
 
-- [ ] Guidance has a Command Code setup section with skill discovery,
+- [x] Guidance has a Command Code setup section with skill discovery,
       `AGENTS.md`, the implementer profile, project `.mcp.json`, project
       `.commandcode/settings.json` and the observed limits.
-- [ ] The adoption pages link to that section and state that `se-adopt` does
+- [x] The adoption pages link to that section and state that `se-adopt` does
       not configure Command Code.
-- [ ] Repository `AGENTS.md` names Command Code discovery and profile paths
+- [x] Repository `AGENTS.md` names Command Code discovery and profile paths
       without displacing the other harnesses.
-- [ ] The implementer profile has `name`, `description` and `tools: "*"`, has
+- [x] The implementer profile has `name`, `description` and `tools: "*"`, has
       no model or permission field, and keeps skill loading, KISS/STE checks,
       approval, upstream establishment, protected branches and team review.
-- [ ] The profile body states that the implementer cannot ask the person a
+- [x] The profile body states that the implementer cannot ask the person a
       question.
-- [ ] No `.commandcode/skills` directory exists.
-- [ ] The Go test checks the six skill targets, the profile fields and
+- [x] No `.commandcode/skills` directory exists.
+- [x] The Go test checks the six skill targets, the profile fields and
       boundaries, and the changed guidance links.
-- [ ] All changed links resolve and `go test ./docs/artifact-driven` passes.
+- [x] All changed links resolve and `go test ./docs/artifact-driven` passes.
 
 ## Evidence
 
-Filled during implementation.
+Added the setup section to `06-guidelines/working-with-ai.md`, a Command Code
+paragraph to the adoption guide and the from-Git guide, the harness paragraph in
+repository `AGENTS.md`, `.commandcode/agents/add-implementer.md` and
+`docs/artifact-driven/commandcode_test.go`.
+
+`go test ./docs/artifact-driven` passed. The new tests resolve the six
+`.agents/skills` symlinks to their canonical directories, reject a duplicate
+`.commandcode/skills` directory, inspect the profile front matter and body, and
+reject a pinned model, a permission override, a wrong name, a missing tools
+field and removed gate instructions. The link and anchor check passed for the
+three changed guidance pages and found no ancestor reference.
+
+These are static setup checks. The live discovery and the headless limits are
+recorded in [validation](02-validation.md#evidence).
