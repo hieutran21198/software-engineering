@@ -40,6 +40,7 @@ test('an explicit bind supersedes an open inferred attempt, and attempts without
 test('a task file path comes from file_path, path or command, and tasks/README.md is not a task',()=>{
  const task={artifact:'demo',change:'change-live',task:'a.md'};
  assert.deepEqual(taskFilePaths({file_path:'/abs/root/'+prefix+'tasks/a.md'}),[task]);
+ assert.deepEqual(taskFilePaths({absolute_path:'/abs/root/'+prefix+'tasks/a.md'}),[task]);
  assert.deepEqual(taskFilePaths({path:prefix+'tasks/a.md'}),[task]);
  assert.deepEqual(taskFilePaths({command:`sed -n 1,40p '${prefix}tasks/a.md'`}),[task]);
  assert.deepEqual(taskFilePaths({command:['cat',prefix+'tasks/a.md']}),[task]);
@@ -63,6 +64,18 @@ test('inferredBinding binds a subagent read and a linked worktree read',async()=
   await s.bind({...linked,binding:'inferred'});
   assert.equal(await inferredBinding(read(other,file),s),null);
   assert.equal(s.query(f.root).attempts[0].binding,'inferred');
+ }finally{s.close();git(f.root,'worktree','remove','--force',other);await f.cleanup();}
+});
+
+test('Command Code input keeps separate arguments and binds from absolute_path',async()=>{
+ const f=await runtimeFixture(),other=f.root+'-linked',s=new RuntimeStore({stateDir:f.stateDir});
+ git(f.root,'worktree','add','-qb','linked',other);
+ try{
+  const file=prefix+'tasks/a.md';
+  const shell=normalizeHookInput({session_id:'cc',hook_event_name:'PreToolUse',cwd:other,tool_name:'shell_command',tool_display_name:'SHELL',tool_input:{command:'git',args:['commit','-m',"it's"]}}).input;
+  assert.equal(shell.tool_input.command,"git 'commit' '-m' 'it'\\''s'");
+  const read=normalizeHookInput({session_id:'cc',hook_event_name:'PreToolUse',cwd:other,tool_name:'read_file',tool_display_name:'READ',tool_input:{absolute_path:other+'/'+file}}).input;
+  assert.deepEqual(await inferredBinding(read,s),{root:other,artifact:'demo',change:'change-live',task:'a.md',session:'cc',agent:'',unit:'live'});
  }finally{s.close();git(f.root,'worktree','remove','--force',other);await f.cleanup();}
 });
 

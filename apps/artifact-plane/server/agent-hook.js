@@ -52,10 +52,22 @@ async function within(ms, fn) {
   finally {clearTimeout(timer);}
 }
 
+// Command Code sends optional extra arguments beside command. Append them with
+// shell quoting so the existing policy and task-path parsers see one command.
+const quotedArg = arg => `'${arg.replaceAll("'", "'\\''")}'`;
+const withShellArgs = input => {
+  const toolInput = input?.tool_input, args = toolInput?.args;
+  if (typeof toolInput?.command !== 'string' || !Array.isArray(args) || !args.length || !args.every(arg => typeof arg === 'string')) return input;
+  return {...input, tool_input: {...toolInput, command: [toolInput.command, ...args.map(quotedArg)].join(' ')}};
+};
+
 // Normalizes a hook input object and returns {input, antigravity}.
 export function normalizeHookInput(raw, eventOption) {
   const antigravity = !raw.hook_event_name && (typeof raw.conversationId === 'string' || Array.isArray(raw.workspacePaths));
-  if (!antigravity) return {input: eventOption && !raw.hook_event_name ? {...raw, hook_event_name: eventOption} : raw, antigravity: false};
+  if (!antigravity) {
+    const input = eventOption && !raw.hook_event_name ? {...raw, hook_event_name: eventOption} : raw;
+    return {input: withShellArgs(input), antigravity: false};
+  }
   const toolCall = raw.toolCall && typeof raw.toolCall === 'object' && !Array.isArray(raw.toolCall) ? raw.toolCall : null;
   const args = toolCall?.args && typeof toolCall.args === 'object' && !Array.isArray(toolCall.args) ? toolCall.args : null;
   const hook_event_name = eventOption

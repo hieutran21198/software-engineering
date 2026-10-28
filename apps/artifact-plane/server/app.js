@@ -10,8 +10,8 @@ Commands:
   mcp             Run the stdio MCP server. Options: --repository /absolute/root
                   (repeatable; default: the Git top level of the working directory),
                   --state-dir /absolute/private/state, --allow-writes.
-  hook            Read one Claude Code, Codex or Antigravity hook input from
-                  standard input and write one JSON object. Options:
+  hook            Read one Claude Code, Codex, Antigravity or Command Code hook
+                  input from standard input and write one JSON object. Options:
                   --state-dir /absolute/private/state, --event <name>.
                   It always exits with status 0.
   runtime <register|bind|report|query> --name value ...

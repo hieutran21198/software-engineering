@@ -51,7 +51,7 @@ Commands of the file:
 | none, or `serve` | Starts the server, as `npm start` does. |
 | `mcp` | Runs the stdio MCP server, as `npm run mcp` does. Options: `--repository /absolute/root` (repeatable), `--state-dir /absolute/private/state`, `--allow-writes`. |
 | `model-install` | Downloads and verifies the pinned semantic discovery model, as `npm run flow:model-install` does. |
-| `hook` | Reads one normalized hook input from Claude Code, Codex, Antigravity or the OpenCode V2 bridge on standard input and writes the hook answer. Options: `--state-dir /absolute/private/state`, `--event <name>`. Always exits with status 0. See [agent setup](integration/README.md). |
+| `hook` | Reads one normalized hook input from Claude Code, Codex, Antigravity, Command Code or the OpenCode V2 bridge on standard input and writes the hook answer. Options: `--state-dir /absolute/private/state`, `--event <name>`. Always exits with status 0. See [agent setup](integration/README.md). |
 | `runtime <register\|bind\|report\|query>` | Runs the observer commands, as `node server/runtime-cli.js` does. |
 | `--version` | Prints the version. |
 | `--help` | Prints the commands and the environment variables. |
@@ -73,7 +73,7 @@ npm start
 
 Open `http://127.0.0.1:4310`. Enter the absolute path to a Git worktree root that contains `docs/artifacts`. The path refers to the computer running the server. To use a different port, set `PORT` before starting the app.
 
-With the agent hooks configured, a Claude Code, Codex or Antigravity session starts the server and shows its address. The OpenCode V2 plugin supplies the address in model-request context; see [Workbench](integration/README.md#workbench).
+With the agent hooks configured, a Claude Code, Codex, Antigravity or Command Code session starts the server and shows its address. The OpenCode V2 plugin supplies the address in model-request context; see [Workbench](integration/README.md#workbench).
 
 All browser assets are bundled locally. Knowledge exploration needs no account, AI service, or external runtime service. Repository observation runs in the local server.
 
@@ -303,7 +303,7 @@ A scoped publication-review paragraph in the brief can name an artifact and deli
 
 OpenCode V2 uses project `opencode.json` for the stdio MCP server and an automatically discovered native plugin entry under `.opencode/plugins/artifact-plane/`. Put `artifact-plane` on `PATH` before starting OpenCode. The 2.1.2 bridge adds worktree context, supported shell guardrails and allowlisted observations without changing model selection or existing permissions. It has no stop blocking and never prompts to continue automatically; use MCP `check_records` for record validation. Missing or ambiguous terminal turns do not imply success. Missing executables leave bridge requests fail-open, but MCP tools remain unavailable until the server connects. See [OpenCode V2 setup and limits](integration/README.md#opencode-v2) and [verification limits](integration/README.md#verification-limits). Configuration checks and the target-runtime API probe do not prove live Plane bridge activation or actual model execution.
 
-Claude Code, Codex and Antigravity connect to the executable through its MCP server and one hook command. At session start, the hook gives the agent the state of its change. Before a tool call, it refuses a commit or push to `main` or `master` and `gh pr merge`. Before the agent stops, it asks once for a fix of record errors. It also binds an agent to a task when the agent reads the task file, so implementation nodes show execution state, agents, elapsed time and concurrent activity. See [agent setup and semantics](integration/README.md). Recorded execution history persists outside worktrees; current knowledge remains read-only. The Plane does not launch agents, approve tasks, push, merge or establish versions.
+Claude Code, Codex, Antigravity and Command Code connect to the executable through its MCP server and one hook command. Command Code reuses the project `.mcp.json` and adds `.commandcode/settings.json`; it has no `UserPromptSubmit` or subagent events, sends no `agent_id`, and did not fire `SessionStart` in headless mode. See [Command Code setup and limits](integration/README.md#command-code). At session start, the hook gives the agent the state of its change. Before a tool call, it refuses a commit or push to `main` or `master` and `gh pr merge`. Before the agent stops, it asks once for a fix of record errors. It also binds an agent to a task when the agent reads the task file, so implementation nodes show execution state, agents, elapsed time and concurrent activity. See [agent setup and semantics](integration/README.md). Recorded execution history persists outside worktrees; current knowledge remains read-only. The Plane does not launch agents, approve tasks, push, merge or establish versions.
 
 ## Automatic updates and lazy loading
 

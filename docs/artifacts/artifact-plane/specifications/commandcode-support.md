@@ -16,7 +16,8 @@ claims:
     basis: observed
     verified_by: agent
     evidence:
-      - docs/artifacts/artifact-plane/changes/change-commandcode-support/README.md#reason-and-scope
+      - docs/artifacts/artifact-plane/changes/change-commandcode-support/tasks/01-hook-input.md#evidence
+      - docs/artifacts/artifact-plane/changes/change-commandcode-support/tasks/03-integration-validation.md#live-headless-check
     check: Run recorded payload tests with file_path, absolute_path, a full
       command and a command with separate args, and confirm each expected result.
     risk_if_wrong: A task read would not bind or a reserved command would pass.
@@ -28,7 +29,7 @@ claims:
     basis: observed
     verified_by: agent
     evidence:
-      - docs/artifacts/units-of-work/commandcode-integration/README.md#evidence-limits
+      - docs/artifacts/artifact-plane/changes/change-commandcode-support/tasks/03-integration-validation.md#live-headless-check
     check: Record the hook files and payloads of a headless startup and resume
       on the recorded version.
     risk_if_wrong: Fixture context would be reported as live activation.
@@ -40,7 +41,7 @@ claims:
     basis: observed
     verified_by: agent
     evidence:
-      - docs/artifacts/artifact-plane/changes/change-commandcode-support/README.md#reason-and-scope
+      - docs/artifacts/artifact-plane/changes/change-commandcode-support/tasks/03-integration-validation.md#live-headless-check
     check: Inspect the recorded PreToolUse payloads of a headless run for
       agent_id and subagent fields.
     risk_if_wrong: A parent session could receive a subagent binding, or an

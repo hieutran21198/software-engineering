@@ -18,19 +18,38 @@ Implementer. Owns `apps/artifact-plane/server/agent-hook.js`,
 
 ## Definition of Done
 
-- [ ] The existing `artifact-plane hook` command handles the four Command Code
+- [x] The existing `artifact-plane hook` command handles the four Command Code
       events and adds no new subcommand or wrapper.
-- [ ] A task read from `file_path` and from `absolute_path` infers a binding
+- [x] A task read from `file_path` and from `absolute_path` infers a binding
       under the existing identity rules.
-- [ ] A non-empty `tool_input.args` array is appended with shell quoting before
+- [x] A non-empty `tool_input.args` array is appended with shell quoting before
       reserved-action and task-path inspection.
-- [ ] `SessionStart`, `PreToolUse`, `PostToolUse` and `Stop` return the
+- [x] `SessionStart`, `PreToolUse`, `PostToolUse` and `Stop` return the
       documented shapes; an unsupported event returns `{}`.
-- [ ] `Stop` honors both `stop_hook_active` values.
-- [ ] Invalid input, a missing repository, a broken store and a deadline return
+- [x] `Stop` honors both `stop_hook_active` values.
+- [x] Invalid input, a missing repository, a broken store and a deadline return
       status 0 and store no payload text.
-- [ ] Existing Claude Code, Codex, Antigravity and OpenCode tests still pass.
+- [x] Existing Claude Code, Codex, Antigravity and OpenCode tests still pass.
 
 ## Evidence
 
-Filled during implementation.
+`server/agent-hook.js` appends a non-empty string `tool_input.args` array to
+`tool_input.command` with single-quote escaping before the policy and task-path
+parsers run. `server/runtime-store.js` reads a task path from `absolute_path`
+beside `file_path`, `path` and `command`.
+
+`node --test test/agent-hook.test.js` passed all 15 tests. The new CPA2 test
+sends recorded 1.85.1 payloads for `SessionStart` from three sources,
+`PreToolUse` for an ordinary command, a commit, separate `git` arguments, a push,
+a `gh pr merge`, quoted text, a task read, `PostToolUse` with an output, and
+`Stop` with both `stop_hook_active` values. It checks the dispatcher and the
+process entry and confirms that no payload marker reaches the store.
+
+`node --test test/runtime-binding.test.js` passed all 7 tests. Task paths resolve
+from `file_path`, `absolute_path`, `path`, a command string and a command array.
+A linked-worktree Command Code read with `absolute_path` returns an inferred
+binding. The separate-argument case normalizes `git` plus `commit`, `-m` and a
+quoted value, and a linked-worktree read from `absolute_path` binds session
+`cc` with an empty agent under unit `live`.
+
+Existing Claude Code, Codex and Antigravity cases pass in the same suites.

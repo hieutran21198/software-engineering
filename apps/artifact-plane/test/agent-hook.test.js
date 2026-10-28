@@ -115,6 +115,24 @@ function antigravityInputs(cwd) {
     [{...base, invocationNum: 1, executionCount: 1, responseText: MARKER}, {}, undefined, 'PostInvocation'],
   ];
 }
+function commandCodeInputs(cwd) {
+  const base = {session_id: 'commandcode-session', transcript_path: `/home/user/.commandcode/projects/p/${MARKER}.jsonl`, cwd, permission_mode: 'dont-ask'};
+  const shell = (id, input) => ({...base, hook_event_name: 'PreToolUse', tool_use_id: id, tool_name: 'shell_command', tool_display_name: 'SHELL', tool_input: input});
+  return [
+    ...['startup', 'resume', 'clear'].map(source => [{...base, hook_event_name: 'SessionStart', source}, 'context']),
+    [shell('call_1', {command: `echo ${MARKER}`}), {}],
+    [shell('call_2', {command: `git commit -m '${MARKER}'`}), deny('commits to main')],
+    [shell('call_3', {command: 'git', args: ['commit', '-m', MARKER]}), deny('commits to main')],
+    [shell('call_4', {command: 'git', args: ['push', 'origin', 'HEAD:main']}), deny('pushes to main')],
+    [shell('call_5', {command: 'gh', args: ['pr', 'merge', '44']}), deny('the merge of a pull request')],
+    [shell('call_6', {command: `echo "git commit ${MARKER}"`}), {}],
+    [{...base, hook_event_name: 'PreToolUse', tool_use_id: 'call_7', tool_name: 'read_file', tool_display_name: 'READ', tool_input: {file_path: join(cwd, TASK)}}, {}],
+    [{...base, hook_event_name: 'PostToolUse', tool_use_id: 'call_1', tool_name: 'shell_command', tool_display_name: 'SHELL', tool_input: {command: `echo ${MARKER}`}, tool_response: MARKER}, {}],
+    [{...base, hook_event_name: 'Stop', stop_hook_active: false}, 'block'],
+    [{...base, hook_event_name: 'Stop', stop_hook_active: true}, {}],
+  ];
+}
+
 // `line` is the expected workbench line of a SessionStart output (specifications/ui-discovery.md: Hook output).
 function assertExpected(output, expected, input, line = null) {
   const label = `${input.hook_event_name || input.conversationId} ${JSON.stringify(input.tool_input ?? input.toolCall ?? input.source ?? '')}`;
@@ -206,6 +224,21 @@ test(`AIA1: recorded inputs of all harnesses get the same output from the ${exec
   for (const [input, expected, bind, event] of [...claudeInputs(f.root), ...codexInputs(f.root), ...antigravityInputs(f.root)].filter(([, , bind]) => !bind)) {
     const args = ['--state-dir', f.stateDir, ...(event ? ['--event', event] : [])];
     const {output, stderr} = await hookProcess(input, {stateDir: f.stateDir, args});
+    assertExpected(output, expected, input, heldLine());
+    assert.equal(stderr, '');
+  }
+  await assertNoPayload(f.stateDir);
+});
+
+test('CPA2: recorded Command Code inputs get the output of the Hook command table', async t => {
+  const f = await fixture(t);
+  for (const [input, expected] of commandCodeInputs(f.root)) {
+    const {output, unavailable} = await hookOutput(JSON.stringify(input), {stateDir: f.stateDir, steps: {workbench: ready(f.root)}});
+    assertExpected(output, expected, input, READY(f.root));
+    assert.equal(unavailable, false, input.hook_event_name);
+  }
+  for (const [input, expected] of commandCodeInputs(f.root)) {
+    const {output, stderr} = await hookProcess(input, {stateDir: f.stateDir});
     assertExpected(output, expected, input, heldLine());
     assert.equal(stderr, '');
   }

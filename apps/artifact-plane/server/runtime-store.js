@@ -170,7 +170,7 @@ const TASK_FILE=/docs\/artifacts\/([^/\s'"`]+)\/changes\/([^/\s'"`]+)\/tasks\/([
 export function taskFilePaths(toolInput){
  const command=Array.isArray(toolInput?.command)?toolInput.command.join(' '):toolInput?.command;
  const found=new Map();
- for(const value of [toolInput?.file_path,toolInput?.path,command])if(typeof value==='string')for(const [,artifact,change,file] of value.matchAll(TASK_FILE))
+ for(const value of [toolInput?.file_path,toolInput?.absolute_path,toolInput?.path,command])if(typeof value==='string')for(const [,artifact,change,file] of value.matchAll(TASK_FILE))
   if(file!=='README.md')found.set(JSON.stringify([artifact,change,file]),{artifact,change,task:file});
  return [...found.values()];
 }
