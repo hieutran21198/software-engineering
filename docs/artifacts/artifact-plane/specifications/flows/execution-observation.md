@@ -22,6 +22,7 @@ flow:
         - opencode-contract
         - opencode-bridge
         - opencode-tests
+        - commandcode-contract
     - id: observe
       title: Record allowlisted lifecycle observations
       supports:
@@ -30,6 +31,7 @@ flow:
         - opencode-contract
         - opencode-bridge
         - opencode-tests
+        - commandcode-contract
     - id: query
       title: Retrieve attempts and local SSE updates
       supports:
@@ -86,6 +88,13 @@ flow:
       element: specifications/opencode-support.md
       requires: Map verified V2 events to existing observations without
         fabricating turns, child identities or idle completion.
+      basis: documented
+    - id: commandcode-contract
+      kind: element
+      artifact: artifact-plane
+      element: specifications/commandcode-support.md
+      requires: Accept the Command Code task path fields and state that a
+        subagent has no agent_id, so independent implementers use linked worktrees.
       basis: documented
     - id: agent-integration-contract
       kind: element
@@ -186,6 +195,9 @@ flow:
     - OpenCode V2 terminals contain no user-message or run ID. Late attachment,
       moves, missing stream events and several delivered inputs can prevent
       attribution. Missing turn metadata stays unknown, not inferred.
+    - Command Code hook inputs carry no agent_id and have no subagent events.
+      A subagent read in the primary checkout cannot bind; independent
+      implementers use linked worktrees. Missing turn metadata stays unknown.
     - Observed lifecycle activity and reported checks do not prove task DoD,
       plan approval or artifact establishment.
   exclusions:

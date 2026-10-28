@@ -123,11 +123,14 @@ under verification and the fast unit suites; CI runs the full suites.
 
 The adoption guidance describes registration for Antigravity (`.agents/skills`
 or `.agents/skills.json`), Codex (`.agents/skills`, `.codex/agents`), OpenCode V2
-(`.agents/skills`, `.opencode/agents`) and Claude Code (`.claude/skills` entries
-that point to the canonical role skill directories). This repository includes
-these entries. OpenCode V2 reuses the six existing skill registrations and reads
-`AGENTS.md`; its four native profiles use `mode: all` without model or permission
-overrides. The adoption tool still does not register skills or profiles.
+(`.agents/skills`, `.opencode/agents`), Command Code (`.agents/skills`,
+`.commandcode/agents`) and Claude Code (`.claude/skills` entries that point to
+the canonical role skill directories). This repository includes these entries.
+OpenCode V2 reuses the six existing skill registrations and reads `AGENTS.md`;
+its four native profiles use `mode: all` without model or permission overrides.
+Command Code reuses the six entries, reads `AGENTS.md` and supplies one
+implementer profile with all tools and no model or permission override. The
+adoption tool still does not register skills or profiles.
 
 ## Retained evidence and consistency
 

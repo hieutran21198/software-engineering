@@ -18,6 +18,8 @@ The binary embeds the knowledge and required skills for its release. Do not subs
 
 OpenCode V2 users follow [OpenCode V2 setup](working-with-ai.md#opencode-v2-setup) after adoption. Reuse existing `.agents/skills` registrations and configure native profiles and `AGENTS.md` separately. The binary does not install profiles, configure MCP or change user instructions.
 
+Command Code users follow [Command Code setup](working-with-ai.md#command-code-setup) after adoption. Reuse the same registrations and configure `AGENTS.md`, the implementer profile, `.mcp.json` and `.commandcode/settings.json` separately. The binary installs none of them.
+
 ## Ask an AI Agent to Adopt
 
 Provide your consumer workspace in this request. Replace the optional release instruction when a particular tag is required:

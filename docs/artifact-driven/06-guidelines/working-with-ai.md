@@ -18,7 +18,7 @@ Make `kiss` and `asd-ste-100` available to every ADD role. Their canonical instr
 - Implementers execute approved tasks and record DoD evidence. Independent implementation agents use separate Git worktrees.
 - The coordinator validates the integrated change and dependencies, prepares the proposed version, opens required PRs, and stops for team review and merge.
 
-Register the role skills where the harness finds them, and point each entry to the canonical skill directory in the bundle so that its `reference.md` and links resolve. Antigravity, Codex and OpenCode V2 read `.agents/skills` (and Antigravity also reads `.agents/skills.json`); Codex reads role profiles in `.codex/agents`; Claude Code reads `.claude/skills`. Roles can share a session; a role profile does not require a separate agent run. Do not start another session only to change roles. The consumer AI registers or adapts the bundled skills using native harness capabilities. If a required capability is unavailable, it reports the limitation and uses an explicit sequential fallback where possible.
+Register the role skills where the harness finds them, and point each entry to the canonical skill directory in the bundle so that its `reference.md` and links resolve. Antigravity, Codex, OpenCode V2 and Command Code read `.agents/skills` (and Antigravity also reads `.agents/skills.json`); Codex reads role profiles in `.codex/agents`, OpenCode V2 in `.opencode/agents` and Command Code in `.commandcode/agents`; Claude Code reads `.claude/skills`. Roles can share a session; a role profile does not require a separate agent run. Do not start another session only to change roles. The consumer AI registers or adapts the bundled skills using native harness capabilities. If a required capability is unavailable, it reports the limitation and uses an explicit sequential fallback where possible.
 
 Add concise ADD instructions to the applicable existing `AGENTS.md`, `CLAUDE.md`, or `GEMINI.md`. Preserve unrelated guidance and avoid duplicate instructions. Point to the canonical bundle, identify the knowledge and implementation workspaces, require the KISS and STE checklists, and state the change tiers and the plan-approval, dependency, worktree, and merge boundaries. Do not duplicate the full methodology or introduce a workflow state layer. Resolve conflicts with existing instructions through the user rather than overwriting them.
 
@@ -42,6 +42,18 @@ Keep the full bundle available. Resolve `reference.md` and skill-relative paths 
 Native role profiles live in `.opencode/agents/add-coordinator.md`, `add-product-owner.md`, `add-technical-lead.md` and `add-implementer.md`. Give each a description and `mode: all` so it can serve as a primary agent or a subagent. Its body must direct the role to load its canonical skill core and retain KISS/STE checks, plan approval, upstream establishment and team review. Omit model and permission fields: keep the selected model and existing access controls. Report capability limits rather than raising permissions. Roles can share the current session; use separate worktrees for independent approved implementation agents.
 
 `se-adopt` copies the bundle only. It does not register skills, install native profiles, configure MCP or change user instructions. The consumer configures its harness after adoption; this setup does not authorize a domain change or bypass ADD gates.
+
+## Command Code setup
+
+Command Code reads `AGENTS.md` as project memory and does not read `CLAUDE.md`. Preserve existing instructions and configuration.
+
+Command Code discovers the existing `.agents/skills/<id>/SKILL.md` entries and needs no duplicate registration. A `.commandcode/skills` entry would win a name conflict, so keep one entry for each skill. The six entries target the canonical directories in the table above.
+
+Load the coordinator, product owner and technical lead as skills in the current session. A Command Code subagent runs without follow-up questions, so it cannot interview the person, present a plan or obtain approval. Run those roles in the session. Add `.commandcode/agents/add-implementer.md` for an approved implementer task. Its front matter grants `tools: "*"` and omits the model and permission fields, so it inherits the session model and access controls. Its body points to the canonical implementer skill and keeps the ADD boundaries.
+
+Command Code reads the project MCP server from `.mcp.json`. The Artifact Plane lifecycle hooks live in `.commandcode/settings.json` with `SessionStart`, `PreToolUse`, `PostToolUse` and `Stop`. Configure those with the Plane integration guidance; `se-adopt` installs neither.
+
+Command Code 1.85.1 reported these limits: a headless run did not fire `SessionStart` on startup or resume, so session context needs an interactive session; hooks are skipped in plan mode; hook inputs carry no `agent_id` and there are no subagent hook events. Run independent implementers in linked worktrees so an inferred binding stays unambiguous.
 
 ## Reuse Context in One Session
 
