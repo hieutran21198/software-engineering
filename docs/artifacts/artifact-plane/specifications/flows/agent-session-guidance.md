@@ -2,9 +2,9 @@
 flow:
   id: agent-session-guidance
   title: Guide an agent session with the change state and the ADD limits
-  trigger: Claude Code, Codex or Antigravity runs the hook command of the
-    executable, the OpenCode V2 bridge invokes a supported hook operation,
-    or an agent calls an MCP tool of the Plane.
+  trigger: Claude Code, Codex, Command Code or Antigravity runs the hook
+    command of the executable, the OpenCode V2 bridge invokes a supported hook
+    operation, or an agent calls an MCP tool of the Plane.
   outcome: The person sees the workbench address of the repository, the agent
     knows the state of its change, cannot run the three actions
     that ADD reserves for people through a recognized command, and fixes or
@@ -28,6 +28,7 @@ flow:
         - opencode-bridge
         - opencode-transport
         - opencode-tests
+        - commandcode-contract
     - id: act
       title: Refuse a commit or push to main or master and a pull request merge
       supports:
@@ -40,6 +41,7 @@ flow:
         - opencode-bridge
         - opencode-transport
         - opencode-tests
+        - commandcode-contract
     - id: finish
       title: Check record errors through a supported stop check or MCP
       supports:
@@ -51,6 +53,7 @@ flow:
         - hook-tests
         - opencode-contract
         - opencode-tests
+        - commandcode-contract
   transitions:
     - from: start
       to: act
@@ -92,6 +95,13 @@ flow:
       element: specifications/opencode-support.md
       requires: Define native V2 context and permission translation, verified
         identity, fail-open boundaries and the absence of stop blocking.
+      basis: documented
+    - id: commandcode-contract
+      kind: element
+      artifact: artifact-plane
+      element: specifications/commandcode-support.md
+      requires: Accept the four Command Code hook inputs, reuse the existing
+        output shapes and state the headless, plan-mode and subagent limits.
       basis: documented
     - id: contract
       kind: element
@@ -187,6 +197,9 @@ flow:
       record checks rather than forcing continuation. Its native bridge maps
       verified built-in tool inputs, not arbitrary shell-create rewrites by
       other plugins. Native activation evidence is scoped to its recorded version.
+    - Command Code 1.85.1 did not fire SessionStart in headless mode and skips
+      hooks in plan mode. It sends no agent_id and has no subagent hook events;
+      live context evidence needs an interactive session.
     - An alias, a script, a subshell or command substitution that runs git is
       not inspected; the skills and the team review remain the control.
     - The live behavior of each harness is checked on the versions recorded in

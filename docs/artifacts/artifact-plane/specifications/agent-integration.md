@@ -122,7 +122,7 @@ claims:
 
 AI1 to AI14 in requirements/agent-integration.md.
 
-OpenCode 2 uses the separate [native V2 integration contract](opencode-support.md), governed by OP1–OP8 and OPA1–OPA4. It translates verified plugin interfaces to this command protocol; it does not consume Claude Code, Codex or Antigravity hook configuration.
+OpenCode 2 uses the separate [native V2 integration contract](opencode-support.md), governed by OP1–OP8 and OPA1–OPA4. It translates verified plugin interfaces to this command protocol; it does not consume Claude Code, Codex or Antigravity hook configuration. Command Code uses the separate [command-hook contract](commandcode-support.md), governed by CP1–CP9 and CPA1–CPA5. It consumes this hook command and the Claude Code output shapes, and it adds no adapter command.
 
 ## Command line
 
@@ -269,9 +269,12 @@ This repository commits:
 - `.codex/config.toml`: `[mcp_servers.artifact-plane]` with the same command and args, added to the existing `[agents]` table;
 - `.codex/hooks.json`: the Codex hook entries above;
 - `.agents/hooks.json`: the Antigravity hook entries above;
-- `.agents/plugins/artifact-plane/plugin.json` (`{"name":"artifact-plane"}`) and `.agents/plugins/artifact-plane/mcp_config.json`: the server `artifact-plane` with command `artifact-plane` and args `["mcp"]` so Antigravity discovers the workspace MCP server through its plugin loader.
+- `.agents/plugins/artifact-plane/plugin.json` (`{"name":"artifact-plane"}`) and `.agents/plugins/artifact-plane/mcp_config.json`: the server `artifact-plane` with command `artifact-plane` and args `["mcp"]` so Antigravity discovers the workspace MCP server through its plugin loader;
+- `.commandcode/settings.json`: the four Command Code hook entries of [commandcode-support.md](commandcode-support.md).
 
 OpenCode 2 adds root `opencode.json` with native `mcp.servers` configuration and the automatically discovered `.opencode/plugins/artifact-plane/index.ts` entry. The reusable implementation, native permission translation, observation identity and unsupported stop blocking are owned by [opencode-support.md](opencode-support.md). Existing command-hook output shapes and registrations do not change.
+
+Command Code adds `.commandcode/settings.json` with `SessionStart`, `PreToolUse`, `PostToolUse` and `Stop` entries that run `artifact-plane hook || true`. It reuses the project `.mcp.json` for the server and adds no global configuration. Its input fields, limits and files are owned by [commandcode-support.md](commandcode-support.md).
 
 integration/hooks.example.json is replaced by integration/claude-settings.example.json, integration/codex-hooks.example.json and integration/antigravity-hooks.example.json with the same entries. integration/README.md and the Plane README describe for each harness: the MCP registration, the hook file, the trust or plugin steps (Claude Code: the workspace trust dialog and the approval of project MCP servers; Codex: a trusted project and the review of each hook in `/hooks`; Antigravity: `.agents/hooks.json` for workspace hooks and `.agents/plugins/artifact-plane/mcp_config.json` or `~/.gemini/config/mcp_config.json` for the MCP server), the bind commands of the executable, and the source path.
 
@@ -281,7 +284,7 @@ execution-observation: the bind step adds the support of the inferred binding; t
 
 ## Validation
 
-- Node tests with recorded inputs of Claude Code, Codex and Antigravity for each supported event, run against the hook function and once against the built executable.
+- Node tests with recorded inputs of Claude Code, Codex, Antigravity and Command Code for each supported event, run against the hook function and once against the built executable.
 - A test table for reserved actions with at least: commit on main, commit on a change branch, `git -C <main worktree> commit`, push of `HEAD:main`, push without refspec on main, push of a change branch, `gh pr merge 44`, `echo "git commit"`, `git log --grep commit`, and a chained `git add . && git commit` on main.
 - Fail-open tests: missing repository, non-ADD repository, invalid JSON, a store directory that cannot be written, a step that exceeds its limit; each exits 0 and the store holds no forbidden field.
 - Inferred binding tests: a subagent read, a linked worktree read (including an Antigravity `read_file` tool call with `toolCall.args.Path`), a read in the main worktree without agent_id (no binding), an explicit bind after an inferred one.
