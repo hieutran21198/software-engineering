@@ -19,17 +19,31 @@ help text in `apps/artifact-plane/server/app.js`. Governing contract:
 
 ## Definition of Done
 
-- [ ] The committed hook file has `SessionStart`, `PreToolUse`, `PostToolUse`
+- [x] The committed hook file has `SessionStart`, `PreToolUse`, `PostToolUse`
       and `Stop`, no matcher and the specified timeouts.
-- [ ] Every handler runs `artifact-plane hook || true`.
-- [ ] The example equals the committed hook file.
-- [ ] `.mcp.json` stays the single project MCP registration and is checked.
-- [ ] Setup guidance names the MCP file, the hook file, the trust step, the
+- [x] Every handler runs `artifact-plane hook || true`.
+- [x] The example equals the committed hook file.
+- [x] `.mcp.json` stays the single project MCP registration and is checked.
+- [x] Setup guidance names the MCP file, the hook file, the trust step, the
       source path and the observed limits.
-- [ ] Help and documentation name Command Code without removing another
+- [x] Help and documentation name Command Code without removing another
       harness.
-- [ ] The configuration test passes.
+- [x] The configuration test passes.
 
 ## Evidence
 
-Filled during implementation.
+Merged the four hook entries into the existing `.commandcode/settings.json` and
+kept its `permissions` object (`allow` for `Shell(grep:*)` and `Shell(sed:*)`,
+empty `deny`, `defaultMode` `default`). The committed hooks equal
+`integration/commandcode-settings.example.json`: `SessionStart` 10 seconds,
+`PreToolUse` and `PostToolUse` 5 seconds, and `Stop` 30 seconds, with no matcher
+and the `artifact-plane hook || true` command.
+
+`.mcp.json` is unchanged and remains the only project MCP registration.
+`integration/README.md` has a Command Code section with the MCP file, hook file,
+trust step, limits and source. The Plane README, the `hook` help text and the
+verification limits name Command Code without removing another harness.
+
+`node --test test/agent-config.test.js` passed all 5 tests, including the new
+Command Code example, committed hooks and preserved permissions. The executable
+smoke check in the validation task covers the built `hook` command.

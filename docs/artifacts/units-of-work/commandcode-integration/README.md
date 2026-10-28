@@ -36,7 +36,27 @@ acceptance:
     criterion: Combined ADD, Plane and live headless checks pass, with
       SessionStart fixture evidence and the headless limit distinguished.
     integration: true
-evidence: []
+evidence:
+  - criterion: add-setup
+    method: Run the ADD Go, link and website checks and live skill and MCP discovery.
+    result: passed
+    source: docs/artifacts/artifact-driven/changes/change-commandcode-support/tasks/02-validation.md#evidence
+  - criterion: plane-setup
+    method: Run the Command Code configuration test and the executable smoke check.
+    result: passed
+    source: docs/artifacts/artifact-plane/changes/change-commandcode-support/tasks/02-project-setup.md#evidence
+  - criterion: lifecycle
+    method: Run recorded payload tests and a live headless refusal and binding check.
+    result: passed
+    source: docs/artifacts/artifact-plane/changes/change-commandcode-support/tasks/03-integration-validation.md#live-headless-check
+publication_reviews:
+  - artifact: artifact-driven
+    version: 3.5.0
+    source: docs/artifacts/units-of-work/commandcode-integration/README.md#add-publication
+    required_changes:
+      - repository: https://github.com/hieutran21198/software-engineering
+        scope: ADD knowledge, implementer profile, guidance and regression tests.
+        pull_request: https://github.com/hieutran21198/software-engineering/pull/65
 ---
 
 # Integrate ADD with Command Code
@@ -74,8 +94,22 @@ this gate.
 
 ## Combined checks
 
-Combined check results are recorded here during integration. Member checks stay
-in their originating tasks.
+The ADD member passed the Go suites, the website build, the knowledge validator
+and live skill and MCP discovery. Its 3.5.0 version is established on `main`.
+The Plane member passed the full Node suite, the production build, the built
+executable smoke check, the Go suites, the validator, and a live headless refusal
+and inferred binding. The local browser suite could not launch Chromium because
+`libnspr4.so` is absent; CI runs it. The integration criterion stays open until
+the Plane pull request merges.
+
+## Add publication
+
+Verified PR 65 is merged into `main` through GitHub and fetched protected Git.
+The protected branch contains ADD 3.5.0's identity and version records, the
+originating task path set and bytes, the canonical guidance, the implementer
+profile and its regression tests. No companion implementation repository is
+required for this member. The Plane plan was proposed knowledge in that pull
+request; its implementation started only after this merge.
 
 ## Evidence limits
 
