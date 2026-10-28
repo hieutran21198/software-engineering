@@ -1,6 +1,6 @@
 # Connect agents to the Plane
 
-The released executable `artifact-plane` connects to Claude Code, Codex and Antigravity through a stdio MCP server and one hook command. OpenCode V2 uses the same MCP server and a native plugin bridge to that command. Put the executable on `PATH` as `artifact-plane` in the environment that starts the harness. The hooks and the MCP server read knowledge and Git. They never approve work, push, merge or establish versions.
+The released executable `artifact-plane` connects to Claude Code, Codex, Antigravity and Command Code through a stdio MCP server and one hook command. OpenCode V2 uses the same MCP server and a native plugin bridge to that command. Put the executable on `PATH` as `artifact-plane` in the environment that starts the harness. The hooks and the MCP server read knowledge and Git. They never approve work, push, merge or establish versions.
 
 ## What the hooks do
 
@@ -51,6 +51,14 @@ The refusals and the stop request apply only in a repository with `docs/artifact
 3. Activation: Antigravity discovers workspace skills from `.agents/skills/`, workspace rules from `AGENTS.md`, workspace hooks from `.agents/hooks.json`, and workspace MCP servers from `.agents/plugins/<name>/mcp_config.json`.
 
 The examples use a POSIX shell. On Windows, use `artifact-plane hook` (or `artifact-plane hook --event <Event>`) without `|| true`, with an executable of the same version as the configuration.
+
+## Command Code
+
+1. MCP: the project `.mcp.json` in the project root is the project-scope registration. This repository already contains it. `cmd mcp add --scope project artifact-plane -- artifact-plane mcp` writes the same file, and `cmd mcp list` shows the server.
+2. Hooks: merge [commandcode-settings.example.json](commandcode-settings.example.json) into `.commandcode/settings.json` of the project. Keep unrelated entries such as permission rules. Command Code supports `SessionStart`, `PreToolUse`, `PostToolUse` and `Stop` only.
+3. Trust: accept the workspace trust prompt, or start with `--trust`. Hooks load at startup. `/mcp` shows the server. `cmd --debug` writes hook evaluation details to `~/.commandcode/logs/command.log`.
+
+Command Code 1.85.1 did not fire `SessionStart` in headless mode on startup or resume, so the change context needs an interactive session. It skips hooks in plan mode. Hook inputs carry no `agent_id` and there are no subagent hook events; an inferred binding therefore follows the linked-worktree rule.
 
 ## OpenCode V2
 
@@ -113,7 +121,7 @@ The server sends instructions that map ADD activities to its tools. `get_change_
 
 Implementation graphs show the execution state of bound tasks: No recorded execution, Processing, Validating, Done (reported), Blocked, Failed, Interrupted or Unknown.
 
-The hook binds an agent to a task when the agent reads a listed task file `docs/artifacts/<artifact>/changes/<change>/tasks/<file>.md` of a current change. A subagent is bound with its agent ID. A session without an agent ID is bound only in a linked worktree and only when it has started no subagent. The inspector shows "Inferred from a task file read" for such a binding. An explicit binding replaces it:
+The hook binds an agent to a task when the agent reads a listed task file `docs/artifacts/<artifact>/changes/<change>/tasks/<file>.md` of a current change. A subagent is bound with its agent ID. A session without an agent ID is bound only in a linked worktree and only when it has started no subagent. Command Code sends no agent ID, so its inferred binding always follows this rule. The inspector shows "Inferred from a task file read" for such a binding. An explicit binding replaces it:
 
 ```sh
 artifact-plane runtime bind --root /path/to/checkout --unit my-outcome --artifact my-artifact --change change-feature --task 21-task.md --session SESSION_ID
@@ -142,6 +150,6 @@ Multiple blue nodes represent observed concurrent execution. Implementation canv
 
 ## Verification limits
 
-Recorded-input fixture tests cover the command-hook-to-store-to-browser flow for Claude Code, Codex and Antigravity without model inference. OpenCode has separate mock-host bridge tests over real hook subprocesses. The native check `npm run test:opencode` starts the real OpenCode 2.1.2 runtime in a disposable clone with a private HOME, service port and Plane state directory, using a deterministic local provider. It observes plugin loading, the MCP connection and tool catalog, injected context and workbench line, an executed read-only command, and refusal of a reserved commit on a local protected branch before any process starts. The fixture provider chooses only which command to request; the runtime and the bridge make every safety decision. That check does not use a real model or a remote provider, so it does not prove model inference.
+Recorded-input fixture tests cover the command-hook-to-store-to-browser flow for Claude Code, Codex, Antigravity and Command Code without model inference. The Command Code tests use the observed 1.85.1 payloads, including `file_path`, `absolute_path` and separate shell arguments. A live headless Command Code run can prove a reserved-action refusal and an inferred binding in a linked worktree. It does not fire `SessionStart`, so it cannot prove context injection. OpenCode has separate mock-host bridge tests over real hook subprocesses. The native check `npm run test:opencode` starts the real OpenCode 2.1.2 runtime in a disposable clone with a private HOME, service port and Plane state directory, using a deterministic local provider. It observes plugin loading, the MCP connection and tool catalog, injected context and workbench line, an executed read-only command, and refusal of a reserved commit on a local protected branch before any process starts. The fixture provider chooses only which command to request; the runtime and the bridge make every safety decision. That check does not use a real model or a remote provider, so it does not prove model inference.
 
 OpenCode has no stop blocking: use `get_change_status` and `check_records` from MCP. Live activation still requires the reader's own project trust and plugin policy. Configuration parsing and plugin lists alone do not prove that a live model ran a task. Keep mock-host fixtures, native-runtime fixtures, actual model execution, reported validation and establishment evidence distinct.

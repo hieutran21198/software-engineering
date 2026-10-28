@@ -43,6 +43,15 @@ test("Antigravity example and repository hooks have the named hook entries", asy
   assert.deepEqual(await json("../../../.agents/hooks.json"), example);
 });
 
+test("Command Code example and repository settings have the hook entries", async () => {
+  const example = await json("../integration/commandcode-settings.example.json");
+  const expected = { SessionStart: 10, PreToolUse: 5, PostToolUse: 5, Stop: 30 };
+  assertHooks(example, expected);
+  const settings = await json("../../../.commandcode/settings.json");
+  assertHooks({ hooks: settings.hooks }, expected);
+  assert.deepEqual(settings.permissions, { allow: ["Shell(grep:*)", "Shell(sed:*)"], deny: [], defaultMode: "default" });
+});
+
 test("repository MCP registrations start the executable without a root", async () => {
   const mcp = { mcpServers: { "artifact-plane": { command: "artifact-plane", args: ["mcp"] } } };
   assert.deepEqual(await json("../../../.mcp.json"), mcp);
