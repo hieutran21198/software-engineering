@@ -78,6 +78,13 @@ claims:
     basis: documented
     check: With a Gemini sign-in, start `gemini --model <model>` with a short prompt in a disposable clone and record the model that the program reports.
     risk_if_wrong: A Gemini terminal profile starts with another model than the profile names.
+  - id: antigravity-terminal
+    kind: unknown
+    statement: It is not checked that `agy --model <model> --effort <level> -i <prompt>` in a herdr pane starts Antigravity CLI with that model and level, and whether herdr detects its waiting state.
+    status: open
+    basis: documented
+    check: In a disposable clone, start the catalog command in a herdr pane with a short prompt, record the model and level that agy reports and the herdr agent status while agy waits.
+    risk_if_wrong: An Antigravity terminal profile starts with another model or level, or its waiting state stays unknown.
   - id: commandcode-acp-hook-trust
     kind: risk
     statement: During `session/new`, `cmd acp` marks the hooks of the session folder as trusted without asking the person.
@@ -169,10 +176,11 @@ The settings file is `profiles.json` in `ARTIFACT_PLANE_CONFIG_DIR` when it is s
 | `opencode` | `opencode acp` | option | `opencode mini` | `--model` | `#<level>` after the model | `--prompt` | none |
 | `command-code` | `cmd acp` | option | `cmd` | `--model` | `--effort` | last argument | none |
 | `gemini-cli` | `gemini --acp` | flag | `gemini` | `--model` | none | last argument | none |
+| `antigravity` | none | — | `agy` | `--model` | `--effort` | `-i` | none |
 
 The profile command is the program of the profile connection, then the model flag and the model when the connection is `terminal` or the ACP model column says "flag", then the effort flag and the level for a terminal profile with a level, then `args`. For `opencode`, the level is part of the model value, for example `openai/gpt-6#high`. For `harness: other`, the profile command is `command`.
 
-The OpenCode program is the first of `opencode` and `opencode2` on `PATH` whose `--version` reports version 2 or later. The terminal programs of Codex and Gemini CLI ask whether to trust a new folder before the first prompt; the person answers in the terminal.
+Antigravity CLI has no ACP agent, so the `antigravity` provider offers only the terminal connection. On 2026-06-18, Google replaced Gemini CLI with Antigravity CLI for personal accounts; `gemini-cli` stays for accounts with an API key or an enterprise plan. The OpenCode program is the first of `opencode` and `opencode2` on `PATH` whose `--version` reports version 2 or later. The terminal programs of Codex and Gemini CLI ask whether to trust a new folder before the first prompt; the person answers in the terminal.
 
 ### Model and effort lists
 
@@ -183,6 +191,7 @@ The profile editor shows the model and the effort level only as lists (requireme
 | `claude-code` | The check of the ACP program, with an API key sign-in. | The documented list: the model aliases and the `--effort` levels of the Claude Code CLI reference. Plane does not check a plan sign-in. |
 | `codex`, `opencode`, `command-code` | The check of the ACP program. | The check of the ACP program of the same provider. |
 | `gemini-cli` | The check of the ACP program. It has no effort levels. | The check of the ACP program of the same provider. |
+| `antigravity` | — | The check of `agy models`: the listed model IDs, each with the `--effort` levels of the `agy` help text. |
 
 A save of a catalog profile needs a `model` from the list and a `reasoning` level from the levels of that model; a model without levels, or with levels "not checked", needs no `reasoning` and runs with its default level. Without a list, the save fails with "Check the provider first." When a later check no longer lists the model or the level, the profile shows the warning "Not in the last check" and can still start; the ACP adapter then records the model as declared.
 
@@ -194,7 +203,7 @@ An invalid profile or role default stays visible with its reason and cannot star
 
 - `harness: claude-code` with `signIn: plan` and `connection: acp` (requirement AO17).
 - A connection that the provider does not offer, a role default that names no valid profile, or a coordinator, product owner or technical lead default that names an ACP profile.
-- An argument from the permission-bypass list: `--dangerously-skip-permissions`, `--allow-dangerously-skip-permissions`, `--dangerously-bypass-approvals-and-sandbox`, `--yolo`, `-y`, `bypassPermissions`, `--approval-mode=yolo`, the pair `--approval-mode yolo`, the pairs `--permission-mode bypass`, `--permission-mode yolo` and `--permission-mode dont-ask`, and the pairs `--ask-for-approval never` and `-a never`. The list is a guardrail, not a complete control.
+- An argument from the permission-bypass list: `--dangerously-skip-permissions`, `--allow-dangerously-skip-permissions`, `--dangerously-bypass-approvals-and-sandbox`, `--yolo`, `-y`, `bypassPermissions`, `--approval-mode=yolo`, the pair `--approval-mode yolo`, the pairs `--permission-mode bypass`, `--permission-mode yolo`, `--permission-mode dont-ask` and `--mode auto`, and the pairs `--ask-for-approval never` and `-a never`. The list is a guardrail, not a complete control.
 - A profile variable named `ARTIFACT_PLANE_LAUNCH` or `ARTIFACT_PLANE_PROMPT`.
 - An unknown field or a wrong type.
 
@@ -211,7 +220,7 @@ The settings service finds each catalog program on `PATH` and runs it with `--ve
 3. Read the config option of category `model` and its values. For each value, up to 200 values and 120 seconds in total, send `session/set_config_option` with that value and read the option of category `thought_level` in the response, because the response holds the complete options after a change. When the model value in the response differs from the requested value, wait up to 2 seconds for a `config_option_update` with the requested value and read the levels from it. Record the values as the effort levels of that model, or none. A model without a matching response, or past the limits, has the levels "not checked". A model that the agent refuses is left out of the list. A version 1 agent without config options gives its legacy model list and no effort levels.
 4. Close the session when the agent offers `session/close`, then stop the program and remove the directory.
 
-A check that fails for another reason returns 502 and keeps the last result; a missing program returns 503. A check sends no prompt. The check directory holds no project hooks, but user-level hooks of the harness tool still run. The server writes each result to `providers.json` in the runtime state directory with mode 0600: program version, check time, and the models with their names and effort levels. A result holds no credential. A changed program version marks the result stale, and the workbench asks for a new check. A check can add a session record to the history of the harness tool; the claim `provider-check-history` records this effect.
+A check that fails for another reason returns 502 and keeps the last result; a missing program returns 503. For `antigravity`, the check runs `agy models` without a shell with a 30-second limit, reads one model from each line `<id><TAB><name>`, and gives each model the levels `low`, `medium`, `high`, `xhigh` and `max` of the `--effort` help text. A check sends no prompt. The check directory holds no project hooks, but user-level hooks of the harness tool still run. The server writes each result to `providers.json` in the runtime state directory with mode 0600: program version, check time, and the models with their names and effort levels. A result holds no credential. A changed program version marks the result stale, and the workbench asks for a new check. A check can add a session record to the history of the harness tool; the claim `provider-check-history` records this effect.
 
 ## Roles and initial prompts
 
@@ -442,6 +451,7 @@ These documented facts support the claim `acp-agent-interfaces`. They were read 
 - Gemini CLI 0.66.0 `gemini --acp`: version 1, `loadSession`, no config options; the model comes from the command (geminicli.com ACP mode documentation).
 - Claude Code: `claude --model <m> "<prompt>"`, `--resume <id>`, and hook processes inherit the environment of the session (code.claude.com CLI and hooks references).
 - herdr 0.9.5: `tab create` with `--cwd`, `--env` and `--label`, `pane run`, `pane list` status values, named sessions with `--session` and `session attach`, and `server stop` (herdr.dev CLI and socket references).
+- Antigravity CLI 1.4.9 (`agy`, observed help output on 2026-10-29): `--model`, `--effort` with `low|medium|high|xhigh|max`, `-i` (`--prompt-interactive`) for an initial prompt in an interactive session, `--conversation <id>` for resume, `--mode` with `accept-edits`, `auto` and `plan`, `--dangerously-skip-permissions`, and `agy models` with one `<id><TAB><name>` line for each model. `agy --acp` is refused, so it has no ACP agent. Gemini CLI migration guides record the replacement for personal accounts on 2026-06-18.
 - Live evidence of task `verify-interfaces` on 2026-10-29 (claude-agent-acp 0.99.0, codex-acp 2.3.0, OpenCode 2.2.0, Command Code 1.88.0, Gemini CLI 0.66.0, herdr 0.9.5, ttyd 1.7.7): the negotiated protocol versions and options, the `cmd acp` shape, the Claude plan refusal, stale OpenCode replies after a model change, the OpenCode, Codex and Command Code terminal commands, the herdr start with a detached server and `workspace create`, `server stop` of one named session, and the ttyd Origin check and input path. codex-acp runs its bundled Codex unless the profile sets `CODEX_PATH`. Version 2 names the option field `configId` and the sign-in method field `methodId`.
 - ttyd 1.7.7 (MIT, in nixpkgs): `--interface` takes a UNIX socket path, `--writable` allows input (read-only by default), `--check-origin` refuses a WebSocket from another origin, and `--base-path` serves under a path prefix (github.com/tsl0922/ttyd).
 
@@ -451,6 +461,7 @@ These documented facts support the claim `acp-agent-interfaces`. They were read 
 - KISS: one port with two adapters, one runner, the existing store and attempt model, one settings file, no new MCP tool and no chat; role sessions reuse the conversation of the harness tool in a terminal, and ttyd embeds that terminal without a native module. The profile editor edits only catalog providers, so the HTTP server cannot define an arbitrary program.
 - Impact: execution observation gains Plane-started attempts; the new flows `agent-session-launch` and `agent-session-recovery` record the journeys. The artifact-driven method needs no change; the only reference is the task DAG contract.
 - The open claims name live checks. They do not block the Plan; the Plan adds the live check.
+- The owner confirmed that Antigravity CLI replaces Gemini CLI for personal accounts. A fifth amendment adds the terminal-only provider `antigravity`, keeps `gemini-cli` for API key and enterprise accounts, treats `--mode auto` as a bypass option until the live check shows otherwise, and adds the claim `antigravity-terminal`.
 - The task `session-api` found gaps: the hook order for the waiting tool name, the open attempt, a request with a selected change, respawn of role sessions, the respawn reason, the task path, the stream limit, phases of a coordinator without a change, and the waiting count. A fourth amendment closes them.
 - The task `runner` found contradictions between the States table and its paragraph, and gaps for resume, runner loss and the runner socket path. A third amendment adds the relay methods and the relay state from task `terminal-relay`, makes herdr status set only the session state, adds the attempt state after a resume, makes a runner loss interrupt ACP sessions, applies the socket path limit to the runner socket, and drops the `session:ended` reasons that no signal produces.
 - The tasks `acp-client` and `terminal-adapter` found gaps: resume after the herdr server or its workspace stopped, an event for an idle terminal session, reserved profile variable names, the sign-in instruction and the failure statuses of a provider check, and the part of a long last message that the runner keeps. A second amendment closes them.

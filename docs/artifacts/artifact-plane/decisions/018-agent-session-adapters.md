@@ -2,7 +2,7 @@
 
 ## Context
 
-The owner wants Plane to start and coordinate agent sessions in Claude Code, Codex, OpenCode V2, Command Code and Gemini CLI. Vendors restrict their subscription models to their own harness tools. Plane must route no model traffic and must handle no credential. Anthropic Consumer Terms section 3(7) forbid automated access with a Claude plan sign-in, except through an API key or where Anthropic permits it explicitly. [ADR 006](006-codex-observer.md) kept agent execution outside Plane.
+The owner wants Plane to start and coordinate agent sessions in Claude Code, Codex, OpenCode V2, Command Code and Gemini CLI, which Antigravity CLI replaced for personal accounts on 2026-06-18. Antigravity CLI has no ACP agent, so it uses the terminal adapter. Vendors restrict their subscription models to their own harness tools. Plane must route no model traffic and must handle no credential. Anthropic Consumer Terms section 3(7) forbid automated access with a Claude plan sign-in, except through an API key or where Anthropic permits it explicitly. [ADR 006](006-codex-observer.md) kept agent execution outside Plane.
 
 ## Alternatives
 

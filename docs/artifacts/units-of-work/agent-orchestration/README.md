@@ -16,7 +16,7 @@ affected_flows:
 flow_assessment: Inspected the execution observation and agent session guidance flows, the runtime store, the hook command, the HTTP server and the change page task details. Sessions that a person starts bind to tasks like observed attempts, so execution observation changes. Session start and session recovery are new journeys; the Specification defines them. Agent session guidance keeps its behavior, because started sessions use the existing hooks and MCP server.
 acceptance:
   - id: orchestration
-    criterion: A person starts, follows, stops and recovers agent sessions of Claude Code, Codex, OpenCode V2, Command Code and Gemini CLI from the workbench, with a chosen model for each session.
+    criterion: A person starts, follows, stops and recovers agent sessions of Claude Code, Codex, OpenCode V2, Command Code and Antigravity CLI from the workbench, with a chosen model for each session.
   - id: boundaries
     criterion: Plane stores no message text or credential, skips no permission prompt, approves nothing and keeps the delivered observation unchanged.
   - id: integration

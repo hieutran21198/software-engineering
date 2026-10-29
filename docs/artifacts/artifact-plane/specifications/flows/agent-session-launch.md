@@ -111,7 +111,7 @@ flow:
       basis: documented
   gaps:
     - The session API, runner, adapters and workbench pages do not exist yet; the Plan adds them and their tests.
-    - The live check answered the ACP shape of Command Code and the Claude plan refusal; the Gemini terminal model flag stays an open claim of the contract.
+    - The live check answered the ACP shape of Command Code and the Claude plan refusal; the Gemini terminal model flag and the Antigravity terminal command stay open claims of the contract.
     - A terminal session reports coarse states only, from herdr status and hooks, and herdr does not detect every harness tool.
   exclusions:
     - Sessions that an agent starts, automatic dispatch, approvals recorded by Plane and credential handling.

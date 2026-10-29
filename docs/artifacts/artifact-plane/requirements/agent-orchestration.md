@@ -5,7 +5,7 @@ self_check:
 claims:
   - id: harness-session-interfaces
     kind: assumption
-    statement: Claude Code, Codex, OpenCode V2, Command Code and Gemini CLI each offer a session interface that a local program can start, prompt, cancel and resume, or run as a terminal program that a person drives.
+    statement: Claude Code, Codex, OpenCode V2, Command Code and Antigravity CLI each offer a session interface that a local program can start, prompt, cancel and resume, or run as a terminal program that a person drives.
     status: open
     basis: documented
     check: Read the current interface documentation of each harness tool, then start, prompt, cancel and resume one session of each in a disposable clone.
@@ -66,7 +66,7 @@ The owner wants to run ADD across several harness tools directly from Plane, and
 
 ## Acceptance criteria
 
-- AOA1: With one profile for each of Claude Code, Codex, OpenCode V2, Command Code and Gemini CLI, a person starts a session. The workbench shows its role, harness tool, model and state. The live evidence records each harness version, or names the missing capability.
+- AOA1: With one profile for each of Claude Code, Codex, OpenCode V2, Command Code and Antigravity CLI, a person starts a session. The workbench shows its role, harness tool, model and state. The live evidence records each harness version, or names the missing capability.
 - AOA2: An implementer session with structured events asks for a permission. The person answers in the workbench, and the agent continues.
 - AOA3: A terminal session that waits for the person shows as waiting. Open in terminal app shows that session. A test confirms that, after the start command, the only input that reaches it is the keys typed in the embedded terminal.
 - AOA4: After its agent process stops, an attempt shows as interrupted. Resume reattaches the same harness session. Respawn starts a new attempt with another profile on the same task branch.
@@ -100,3 +100,5 @@ The owner asked where ADD work starts and where the person chats. AO26 adds a st
 After plan approval, the live check showed that herdr does not detect every harness tool. AO7 now shows the waiting state only where the terminal host detects the agent; for other agents, the workbench says that it cannot see the waiting state.
 
 During implementation, the owner asked that the required programs be written down and that an adopting agent check them and tell the consumer person. AO29 and AOA14 add this; the Plan adds it to task `integration`.
+
+The owner then confirmed that Antigravity CLI replaced Gemini CLI for personal accounts. AOA1 now names Antigravity CLI; Gemini CLI stays available for accounts with an API key.

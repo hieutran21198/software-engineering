@@ -1,6 +1,6 @@
 ---
 id: integration
-depends_on: [sessions-ui]
+depends_on: [sessions-ui, antigravity-provider]
 covers:
   - element: requirements/agent-orchestration.md
     ids: [AO13, AO16, AO18, AO29, AOA7, AOA8, AOA14]
@@ -26,6 +26,6 @@ The coordinator joins the integrated branch and runs the combined checks. The co
 - [ ] The OpenCode plugin bridge still creates no prompt and continues no work, and its tests pass (OP8).
 - [ ] No route, runner method or prompt approves a plan, checks a DoD item, merges or writes a version record (AO16).
 - [ ] The application README and the integration README describe launch profiles, herdr, ttyd, the runner, the Claude plan sign-in rule and the hook trust of `cmd acp` (claim `commandcode-acp-hook-trust`).
-- [ ] The integration README lists each external program of agent sessions (herdr, ttyd, the ACP agent programs and the terminal programs of the five harness tools) with its use, the checked version and the sessions that it enables, and gives the adoption check: the adopting agent runs each `--version`, reports present and missing programs to the person, and installs nothing without consent. A run of the check on this computer lists the present and missing programs (AO29, AOA14).
+- [ ] The integration README lists each external program of agent sessions (herdr, ttyd, the ACP agent programs and the terminal programs of the harness tools, Antigravity CLI included) with its use, the checked version and the sessions that it enables, and gives the adoption check: the adopting agent runs each `--version`, reports present and missing programs to the person, and installs nothing without consent. A run of the check on this computer lists the present and missing programs (AO29, AOA14).
 - [ ] The three flow records match the implementation, and their Mermaid diagrams render in the workbench.
 - [ ] Screenshots at desktop width and at 390 pixels show each mockup screen. The owner looked at the screenshots or at the running interface, and the evidence records what the owner looked at (AOA8).

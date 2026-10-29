@@ -12,6 +12,7 @@ tasks:
   - 10-sessions-ui.md
   - 11-integration.md
   - 12-live-check.md
+  - 13-antigravity-provider.md
 compatibility: minor
 self_check:
   result: passed
@@ -34,6 +35,7 @@ Implement the [agent orchestration contract](../../../specifications/agent-orche
 10. [Session pages and dialogs](10-sessions-ui.md).
 11. [Integration and validation](11-integration.md).
 12. [Live harness check](12-live-check.md).
+13. [Antigravity provider](13-antigravity-provider.md).
 
 ## Claims and gates
 
@@ -53,8 +55,9 @@ The task declarations define the graph. The waves are:
 | 4 | `runner`, `settings-ui` |
 | 5 | `session-api`, `terminal-relay` |
 | 6 | `sessions-ui` |
-| 7 | `integration` |
-| 8 | `live-check` |
+| 7 | `antigravity-provider` |
+| 8 | `integration` |
+| 9 | `live-check` |
 
 Tasks of one wave run in separate implementer worktrees and branches. The coordinator integrates their commits on `claude/agent-orchestration`, owns all knowledge edits, claims, flows and shared evidence, and prepares the version and the PR. The live tasks follow the Live check runbook: a disposable clone, private state and configuration directories, and no relaxed permission without the owner's consent. Programs that are missing on this computer are installed only in that disposable environment, after the owner agrees.
 
@@ -62,6 +65,6 @@ Tasks of one wave run in separate implementer worktrees and branches. The coordi
 
 - KISS: the tasks follow the components of the contract. Each task adds one component with its tests, and no task adds a layer that the contract does not name. Fake ACP agents, a fake herdr and a fake ttyd keep the Node and browser checks offline; only the two live tasks start real harness tools.
 - Coverage: every AO, AOA and changed OP ID is in the `covers` of a task. Each DoD item names an observable result.
-- Graph: twelve unique task IDs, two roots, joins at `runner`, `session-api` and `sessions-ui`, a sequential end with `integration` and `live-check`, and no cycle.
+- Graph: thirteen unique task IDs, two roots, joins at `runner`, `session-api` and `sessions-ui`, a sequential end with `antigravity-provider`, `integration` and `live-check`, and no cycle. The fifth amendment added `antigravity-provider` after the owner confirmed that Antigravity CLI replaced Gemini CLI.
 - UI: the session and settings tasks match the approved mockup artboards, and `integration` holds the owner look at screenshots.
 - STE: one rule in each sentence or table row, in active voice.
