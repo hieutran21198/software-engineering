@@ -4,6 +4,7 @@ import {checkProvider, querySettings, saveSettings} from '../agent-settings-api.
 import {ROLES, ROLE_LABELS, ROLE_SESSIONS, canCheck, commandText, connectionText, duplicateDraft, harnessLabel, levelText, modelSummary, modelText, newDraft, profileDraft,
   profileName, profileState, profilesOf, providerList, providerPrograms, relativeTime, roleChoices, roleDefaultsOf, signInState, withRoleDefault, withoutProfile} from '../agent-settings-model.js';
 import ProfileEditor from './ProfileEditor.jsx';
+import {useSessions} from '../Sessions.jsx';
 import './SettingsPage.css';
 
 const CONFLICT = 'The settings file changed after Plane read it. The page shows the current settings. Apply your change again.';
@@ -16,7 +17,7 @@ const Cell = ({label, children, className, span}) => <td data-label={label} clas
 export default function SettingsPage() {
   const [view, setView] = useState({status: 'loading', data: null, error: null});
   const [checks, setChecks] = useState({}), [editor, setEditor] = useState(null), [notice, setNotice] = useState(null), [saving, setSaving] = useState(false);
-  const dataRef = useRef(null), opener = useRef(null);
+  const dataRef = useRef(null), opener = useRef(null), sessions = useSessions();
   dataRef.current = view.data;
 
   async function load(signal) {
@@ -37,6 +38,8 @@ export default function SettingsPage() {
     try {
       const result = await saveSettings(settings, digest);
       setView(current => ({...current, data: {...current.data, settings, digest: result.digest, validity: result.validity, error: null}}));
+      // The session controls appear with the first profile (requirement AO18).
+      sessions.refresh();
       return {ok: true};
     } catch (error) {
       if (error.status === 409) {await load();return error.body && 'settings' in error.body ? {conflict: true} : {error: error.message};}

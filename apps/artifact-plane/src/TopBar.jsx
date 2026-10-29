@@ -1,6 +1,8 @@
 import React, {useState} from 'react';
 import {Icon, Menu} from './ui.jsx';
 import {protectedBranch} from './knowledge-api.js';
+import {useSessions} from './Sessions.jsx';
+import {waitingText} from './session-model.js';
 
 // Creates a branch from the protected one; the shell refreshes afterwards.
 export function CreateBranchForm({onCreate, onDone, idPrefix = 'branch'}) {
@@ -25,6 +27,8 @@ export default function TopBar({snapshot, worktreePath, onWorktree, opening, bus
   const worktrees = snapshot.workflow?.worktrees || [];
   const label = branch === 'detached' || !branch ? 'Detached HEAD' : branch;
   const project = snapshot.repository.path.split('/').at(-1);
+  // Session control appears only with a launch profile (requirement AO18).
+  const sessions = useSessions(), waiting = sessions.control ? sessions.waiting.length : 0;
   return <>
     <button className="icon narrow-only" aria-label="Navigation" aria-expanded={drawer.open} aria-controls={drawer.id} onClick={drawer.toggle}>{Icon.menu}</button>
     <div className="topbar-spacer"/>
@@ -42,6 +46,7 @@ export default function TopBar({snapshot, worktreePath, onWorktree, opening, bus
         </>}
       </Menu>)}
     {uncommitted > 0 && <button className="uncommitted-button" onClick={onUncommitted} aria-label={`Uncommitted knowledge, ${uncommitted} ${uncommitted === 1 ? 'file' : 'files'}`}><span className="label">Uncommitted</span><span className="count">{uncommitted}</span></button>}
+    {waiting > 0 && <button className="waiting-button" aria-label={waitingText(waiting)} onClick={() => onOpen({kind: 'sessions'})}><span className="count">{waiting}</span><span className="label">{waitingText(waiting).replace(/^\d+ /, '')}</span></button>}
     {stale && !busy && <span className="freshness wide-only" role="status">Not up to date</span>}
     <button className={`icon wide-only ${busy ? 'refreshing' : ''}`} aria-label="Refresh" aria-busy={busy} onClick={onRefresh}>{Icon.refresh}</button>
     <Menu label="More" button={Icon.more}>
@@ -50,6 +55,7 @@ export default function TopBar({snapshot, worktreePath, onWorktree, opening, bus
         <button role="menuitem" onClick={() => {close();onOpen({kind: 'discover'});}}>Discover behavior<small>Find flows that describe a behavior</small></button>
         <button role="menuitem" onClick={() => {close();onOpen({kind: 'impact'});}}>Impact<small>What a file, document or commit affects</small></button>
         {recorded && <button role="menuitem" onClick={() => {close();onOpen({kind: 'recorded'});}}>Recorded executions<small>Codex attempts observed on this machine</small></button>}
+        {sessions.control && <button role="menuitem" onClick={() => {close();onOpen({kind: 'sessions'});}}>Sessions<small>Agent sessions of this repository, their progress and output</small></button>}
         <button role="menuitem" onClick={() => {close();onOpen({kind: 'settings'});}}>Agent settings<small>Harness tools, launch profiles and role defaults</small></button>
         <hr/>
         <button role="menuitem" onClick={() => {close();onChangeRepository();}}>Change repository</button>

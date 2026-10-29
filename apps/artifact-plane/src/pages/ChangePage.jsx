@@ -11,6 +11,7 @@ import PlanSection, {detailField, resultField} from './ChangePagePlan.jsx';
 import {ChangedKnowledge, DeliverySection, ReadySection, useReviewPacket} from './ChangePageReview.jsx';
 import {missingSelfChecks, planSelfCheckMissing, readiness} from './ChangePageModel.js';
 import ChangeBrief from './ChangePageBrief.jsx';
+import {useSessions} from '../Sessions.jsx';
 import PrDescription from './ChangePageDescription.jsx';
 import './ChangePage.css';
 
@@ -56,7 +57,7 @@ function ChangeStatusCard({change, status, onPlan, onPrepare, canPrepare}) {
 }
 
 export default function ChangePage({page}) {
-  const {snapshot, worktree, go} = useShell(), edit = useEdit();
+  const {snapshot, worktree, worktreePath, go} = useShell(), edit = useEdit(), sessions = useSessions();
   const [preparing, setPreparing] = useState(false);
   // The work page opens a section of the change: plan or ready.
   useEffect(() => {
@@ -96,7 +97,10 @@ export default function ChangePage({page}) {
     <PageHeader
       eyebrow={<><button className="link" onClick={() => go({kind: 'artifact', artifact: change.artifact})}>{artifact?.title || change.artifact}</button> · <span className="mono-id">{change.name}</span> · <UnitEyebrow change={change} writable={writable} adding={addingUnit} onAdd={() => setAddingUnit(true)}/></>}
       title={changeTitle(change)}
-      action={<button className="link" onClick={() => go({kind: 'document', artifact: change.artifact, source: readme, scope})}>Read reason and scope</button>}/>
+      action={sessions.control && !retained ? <div className="change-actions">
+        <button onClick={() => sessions.openLaunch({artifact: change.artifact, change: change.name, worktree: worktreePath})}>Start session</button>
+        <button className="link" onClick={() => go({kind: 'document', artifact: change.artifact, source: readme, scope})}>Read reason and scope</button>
+      </div> : <button className="link" onClick={() => go({kind: 'document', artifact: change.artifact, source: readme, scope})}>Read reason and scope</button>}/>
     {addingUnit && <ActionForm open className="unit-form" submitLabel="Add to unit" onClose={() => setAddingUnit(false)}
       fields={[{name: 'unit', label: 'Unit of work', type: 'select', options: unitsToJoin(worktree, change).map(u => ({value: u.id, label: u.title})), value: unitsToJoin(worktree, change)[0]?.id}]}
       onSubmit={v => edit.run('unit.member.add', {unit: v.unit, artifact: change.artifact, change: change.name})}/>}

@@ -8,6 +8,8 @@ export const SIGN_INS = ['plan', 'api-key', 'harness'];
 // The texts of Model and effort lists and the states of the Provider check.
 export const NOT_IN_CHECK = 'Not in the last check', CHECK_FIRST = 'Check the provider first.';
 export const SIGN_IN_REQUIRED = 'Sign-in required', API_KEY_SIGN_IN = 'Needs an API key sign-in';
+// The refusal of start rule 5 (Start rules; AOA12). The launch dialog shows the same text.
+export const ROLE_TERMINAL = 'Role sessions run in a terminal, where you chat with the harness tool.';
 // For each provider: the ACP program and whether its model is an ACP option or a flag,
 // the terminal program, the model and effort flags, the initial prompt form and the
 // terminal resume arguments (the terminal adapter adds the prompt and the resume).

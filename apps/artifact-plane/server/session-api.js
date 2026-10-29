@@ -12,6 +12,7 @@ import {existsSync} from 'node:fs';
 import {join} from 'node:path';
 import {ROLES, readProviders, readSettings, settingsPath, validateSettings} from './agent-settings.js';
 import {readPrograms} from './provider-catalog.js';
+import {ROLE_TERMINAL} from '../src/launch-catalog.js';
 import {git} from './reader.js';
 import {readableRoot} from './repository-events.js';
 import {RESTART_MESSAGE, RunnerError, errorStatus} from './runner-client.js';
@@ -21,8 +22,8 @@ import {newSessionId} from './session-runner.js';
 
 export const REQUEST_LIMIT = 8 * 1024;
 export const TEXT_LIMIT = 64 * 1024;
-// The refusal of start rule 5 (AOA12).
-export const ROLE_TERMINAL = 'Role sessions run in a terminal, where you chat with the harness tool.';
+// The refusal of start rule 5 (AOA12), shared with the launch dialog.
+export {ROLE_TERMINAL};
 export const STREAM_LIMIT = 16, HEARTBEAT_MS = 15000, OUTPUT_POLL_MS = 1000;
 // Session states in which the session continues its attempt.
 const ACTIVE = new Set(['starting', 'working', 'waiting', 'idle']);
