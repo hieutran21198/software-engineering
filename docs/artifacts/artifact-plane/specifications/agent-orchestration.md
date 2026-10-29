@@ -283,7 +283,7 @@ The runner writes lifecycle events to the existing `events` table with these kin
 | `session:waiting` / `session:working` / `session:idle` | — (terminal sessions, from herdr status) |
 | `session:interrupted` | `reason`: `process-exit`, `runner-lost`, `pane-missing`, `max-tokens`, `max-turn-requests` or `cancelled` |
 | `session:resumed` | `method`: `resume`, `load` or `terminal` |
-| `session:ended` | `reason`: `person`, `failed`, `refusal` or `error` |
+| `session:ended` | `reason`: `person` or `error` |
 
 The store adds a `sessions` table with `CREATE TABLE IF NOT EXISTS sessions(id TEXT PRIMARY KEY, repository TEXT, attempt TEXT, harnessSession TEXT, json TEXT)`. The schema version stays 1, because earlier readers ignore an unknown table. The JSON holds the session fields of the query result.
 
@@ -307,14 +307,17 @@ The runner sets the session state. For an implementer, it also sets the attempt 
 | --- | --- | --- |
 | Start accepted | `starting` | `unknown` until the first prompt |
 | Prompt sent, or agent works | `working` | `processing` |
-| Permission request, or herdr `blocked` | `waiting` | `blocked` |
+| Permission request | `waiting` | `blocked` |
+| herdr `blocked` | `waiting` | unchanged |
 | herdr `unknown` | unchanged | unchanged |
+| Resume accepted | `starting` | `unknown` |
 | Permission answered | `working` | `processing` |
-| Turn ended with `end_turn`, or herdr `done` or `idle` after work | `idle` | `validating` |
+| Turn ended with `end_turn` | `idle` | `validating` |
+| herdr `done` or `idle` after work | `idle` | unchanged |
 | Turn ended with `cancelled`, `max_tokens` or `max_turn_requests` | `idle` | `interrupted` |
 | Turn ended with `refusal` or `error` | `idle` | `failed` |
 | Agent process exits, runner lost, or pane missing | `interrupted` | `interrupted` |
-| Person ends the session | `ended` | unchanged when `validating`, otherwise `interrupted` |
+| Person ends the session, or the start fails | `ended` | unchanged when `validating`, Done (reported) or superseded, otherwise `interrupted` |
 
 For a terminal session, the existing hooks also update the attempt with the rules of specifications/codex-execution.md. herdr status sets only the session state. A report from `artifact-plane runtime report` still sets Done (reported).
 
@@ -362,11 +365,11 @@ Browser shortcuts such as Ctrl+W, Ctrl+T and Ctrl+N stay with the browser. Full 
 
 ## Runner
 
-The server finds the runner through the socket `runner.sock` in the runtime state directory. When no runner answers, the server starts `artifact-plane runner` as a detached process with the same state directory, and waits up to 3 seconds. The pattern is the one of the workbench start in specifications/ui-discovery.md. The socket file is private (0600) in the private state directory. A stale socket file without a listener is removed before a new runner listens.
+The server finds the runner through the socket `runner.sock` in the runtime state directory. When no runner answers, the server starts `artifact-plane runner` as a detached process with the same state directory, and waits up to 3 seconds. The pattern is the one of the workbench start in specifications/ui-discovery.md. The socket file is private (0600) in the private state directory. When its path has 104 bytes or more, the runner is unavailable with the reason "The state directory path is too long for a socket." A stale socket file without a listener is removed before a new runner listens.
 
 Messages are JSON objects, one on each line: requests `{id, method, params}`, responses `{id, result}` or `{id, error}`, and pushed `{event, session, seq, update}` objects. The methods are `hello`, `start`, `prompt`, `answer`, `cancel`, `resume`, `end`, `openTerminal`, `snapshot`, `subscribe` and `unsubscribe`. `snapshot` returns the live state of a session. `hello` returns the runner version; a different version makes the server refuse new starts and show "Restart the session runner".
 
-The runner exits 10 minutes after its last session ends while no server is connected. When the runner stops, its ACP sessions end with reason `runner-lost` at the next server check. Terminal sessions continue in herdr.
+The runner exits 10 minutes after its last session ends while no server is connected. When the runner stops, its ACP sessions become `interrupted` with reason `runner-lost` at the next server check, so the person can resume them. Terminal sessions continue in herdr.
 
 ## Output
 
@@ -391,7 +394,7 @@ The diff route accepts only a path of the current changed-file list. When the ba
 | Session `interrupted`, resume unavailable | Respawn, Respawn with another profile. |
 | Session `ended` | Respawn, Respawn with another profile. |
 
-Resume keeps the session and its attempt. Respawn starts a new session with `respawnOf`, and its explicit binding supersedes the earlier attempt. The respawn prompt points the agent at the task, the branch and the change brief. The agent reads the change brief through the Plane MCP server. Uncommitted files stay in the worktree; Plane changes no file.
+Resume keeps the session and its attempt. It uses the current settings of the profile ID of the session, because the store keeps only the profile summary. Respawn starts a new session with `respawnOf`, and its explicit binding supersedes the earlier attempt. The respawn prompt points the agent at the task, the branch and the change brief. The agent reads the change brief through the Plane MCP server. Uncommitted files stay in the worktree; Plane changes no file.
 
 ## Workbench
 
@@ -446,6 +449,7 @@ These documented facts support the claim `acp-agent-interfaces`. They were read 
 - KISS: one port with two adapters, one runner, the existing store and attempt model, one settings file, no new MCP tool and no chat; role sessions reuse the conversation of the harness tool in a terminal, and ttyd embeds that terminal without a native module. The profile editor edits only catalog providers, so the HTTP server cannot define an arbitrary program.
 - Impact: execution observation gains Plane-started attempts; the new flows `agent-session-launch` and `agent-session-recovery` record the journeys. The artifact-driven method needs no change; the only reference is the task DAG contract.
 - The open claims name live checks. They do not block the Plan; the Plan adds the live check.
+- The task `runner` found contradictions between the States table and its paragraph, and gaps for resume, runner loss and the runner socket path. A third amendment makes herdr status set only the session state, adds the attempt state after a resume, makes a runner loss interrupt ACP sessions, applies the socket path limit to the runner socket, and drops the `session:ended` reasons that no signal produces.
 - The tasks `acp-client` and `terminal-adapter` found gaps: resume after the herdr server or its workspace stopped, an event for an idle terminal session, reserved profile variable names, the sign-in instruction and the failure statuses of a provider check, and the part of a long last message that the runner keeps. A second amendment closes them.
 - After plan approval, the live check of task `verify-interfaces` refuted `herdr-named-sessions`, `terminal-model-flags` and `per-model-effort-discovery`. This amendment corrects the herdr start, the catalog, the provider check, the relay socket protection and the herdr `unknown` state, adds the output details of task `output-reader`, and adds the claims `gemini-terminal-model-flag` and `commandcode-acp-hook-trust`.
 - After the owner approved the mockups, the Workbench section records the canvas and the waiting notice of a terminal session. The notice reads the tool name from the existing hook observations, so the lifecycle events stay without tool names, and Plane still sends no key to the terminal.
