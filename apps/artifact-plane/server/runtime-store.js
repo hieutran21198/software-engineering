@@ -221,6 +221,38 @@ export class RuntimeStore {
   return lost;
  }
  attempt(id){const row=this.db?.prepare('SELECT json FROM attempts WHERE id=?').get(id);return row?JSON.parse(row.json):null;}
+ // The attempts of a repository; with artifact, change and path, the attempts of one task.
+ attempts({repository,artifact=null,change=null,path=null}){
+  if(!this.db)return [];
+  return this.db.prepare('SELECT json FROM attempts WHERE repository=?').all(repository).map(row=>JSON.parse(row.json))
+   .filter(a=>(artifact===null||a.artifact===artifact)&&(change===null||a.change===change)&&(path===null||a.path===path));
+ }
+ // Ends an attempt that no session ends (specifications/agent-orchestration.md: States,
+ // Recovery): `interrupted` after a refused start, `superseded` after a respawn. A reported
+ // result and a superseded attempt stay; `interrupted` keeps a validating attempt.
+ endAttempt(id,state){
+  if(!['interrupted','superseded'].includes(state))throw Error('Unsupported attempt end');
+  const a=this.attempt(id);
+  if(!a||['done','superseded'].includes(a.state)||state==='interrupted'&&a.state==='validating')return a;
+  const now=Date.now();Object.assign(a,{state,updatedAt:now,endedAt:a.endedAt??now});this.saveAttempt(a);
+  return a;
+ }
+ // The tool name of the newest PermissionRequest hook observation of the harness session after
+ // the newest `session:waiting` event of the Plane session, or null (Workbench).
+ waitingTool(session,harnessSession){
+  if(!this.db||!harnessSession)return null;
+  const waiting=this.db.prepare("SELECT max(seq) AS seq FROM events WHERE session=? AND kind='session:waiting'").get(session)?.seq;
+  if(waiting===null||waiting===undefined)return null;
+  const row=this.db.prepare("SELECT json FROM events WHERE seq>? AND session=? AND kind='PermissionRequest' ORDER BY seq DESC LIMIT 1").get(waiting,label(harnessSession));
+  return row?JSON.parse(row.json).tool||null:null;
+ }
+ // The sequence number of the newest PostToolUse hook observation of the harness session after
+ // the sequence number `after`, or null: a finished tool use of a terminal session (Output).
+ toolUseAfter(harnessSession,after=0){
+  if(!this.db||!harnessSession)return null;
+  const row=this.db.prepare("SELECT max(seq) AS seq FROM events WHERE seq>? AND session=? AND kind='PostToolUse'").get(after,label(harnessSession));
+  return row?.seq===null||row?.seq===undefined?null:Number(row.seq);
+ }
  // The `session:harness-id` records of the hook after the sequence number, in order.
  harnessIds(after=0){
   if(!this.db)return [];

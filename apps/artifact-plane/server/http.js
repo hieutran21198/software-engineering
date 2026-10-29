@@ -18,6 +18,7 @@ import {errorBody as editError} from './knowledge-writer.js';
 import {createSettingsService, SettingsError} from './agent-settings.js';
 import {createRunnerClient, errorStatus, RunnerError} from './runner-client.js';
 import {forwardRelayRequest, forwardRelayUpgrade, relayRoute, RELAY_SILENT} from './terminal-relay.js';
+import {createSessionService, SessionError} from './session-api.js';
 import pkg from "../package.json" with { type: "json" };
 // A bundled server.mjs has dist/ beside it; a source checkout has it beside server/.
 export const distDirectory = (directory) => existsSync(join(directory, "dist")) ? join(directory, "dist") : resolve(directory, "../dist");
@@ -42,6 +43,14 @@ const security = {
 // Responses of the terminal relay route: only a workbench page of this origin can frame them,
 // and the ttyd page keeps its own scripts (specifications/agent-orchestration.md: Embedded terminal).
 const relaySecurity = {...security, "Content-Security-Policy": "frame-ancestors 'self'"};
+// The session command routes and their service methods (specifications/agent-orchestration.md: Commands).
+const SESSION_ROUTES = {
+  "/api/sessions/query": "query", "/api/sessions/start": "start", "/api/sessions/prompt": "prompt",
+  "/api/sessions/permission": "permission", "/api/sessions/cancel": "cancel", "/api/sessions/resume": "resume",
+  "/api/sessions/end": "end", "/api/sessions/open-terminal": "openTerminal", "/api/sessions/output": "output", "/api/sessions/diff": "diff",
+};
+// The body limit of a JSON route: 64 KiB for the text of a prompt, 16 KiB otherwise.
+const bodyLimit = (pathname) => pathname === "/api/sessions/prompt" ? 65536 : 16384;
 // Serialize first: a reply that cannot be serialized fails before its headers are sent.
 function json(res, status, data, headers = security) {
   const body = JSON.stringify(data);
@@ -76,6 +85,9 @@ export function createAppServer(options = {}) {
   let runner=options.runnerClient;
   const getRunner=()=>runner??=createRunnerClient({stateDir:options.stateDir});
   const getSettings=()=>settings??=createSettingsService({stateDir:options.stateDir,configDir:options.configDir,roots:options.flowRoots||[],runner:()=>getRunner().availability()});
+  // The session service starts on the first session route, so other routes never open the runtime store for it.
+  let sessions=options.sessionService;
+  const getSessions=()=>sessions??=createSessionService({stateDir:options.stateDir,roots:options.flowRoots||[],settingsFile:()=>getSettings().path,runner:getRunner});
   const observation=options.repositoryObservation||{};
   // The open relay WebSockets of each session. The runner stops ttyd 10 minutes after the count
   // of every server reaches 0; it forgets the count of a server whose connection closes.
@@ -121,6 +133,14 @@ export function createAppServer(options = {}) {
         if([...url.searchParams.keys()].some(k=>k!=='path')||url.searchParams.getAll('path').length!==1)return json(res,400,{error:'Supply one repository path.'});
         await repositories.subscribe(req,res,security,url.searchParams.get('path'));return;
       }
+      // The server-sent events of one session (Commands).
+      if (url.pathname === "/api/sessions/stream") {
+        if (req.method !== "GET") return json(res, 405, {error: "Use GET for the session stream."});
+        if ([...url.searchParams.keys()].some(k => k !== "session") || url.searchParams.getAll("session").length !== 1) return json(res, 400, {error: "Supply one session ID."});
+        try {await getSessions().subscribe(req, res, security, url.searchParams.get("session"));}
+        catch (error) {if (error instanceof SessionError) return json(res, error.status, {...error.body, error: error.message});throw error;}
+        return;
+      }
       if (url.pathname === "/api/runtime/events") {
         if (req.method !== "GET") return json(res, 405, {error: "Use GET for events."});
         if (!runtime.subscribe(req, res, security)) return json(res, 429, {error: "Too many observation clients."});
@@ -136,7 +156,7 @@ export function createAppServer(options = {}) {
         try {return json(res, 200, url.pathname === "/api/knowledge/edit" ? await getKnowledge().apply(body) : await knowledgeGit(body));}
         catch (error) {const {status, body: payload} = editError(error);return json(res, status, payload);}
       }
-      if (["/api/explore", "/api/runtime/query", "/api/repository/query", "/api/flows/query", "/api/review/query", "/api/impact/query", "/api/settings/query", "/api/settings/save", "/api/settings/check"].includes(url.pathname)) {
+      if (["/api/explore", "/api/runtime/query", "/api/repository/query", "/api/flows/query", "/api/review/query", "/api/impact/query", "/api/settings/query", "/api/settings/save", "/api/settings/check"].includes(url.pathname) || Object.hasOwn(SESSION_ROUTES, url.pathname)) {
         if (req.method !== "POST")
           return json(res, 405, { error: "Use POST to explore a repository." });
         if (
@@ -148,7 +168,7 @@ export function createAppServer(options = {}) {
         let size = 0;
         for await (const chunk of req) {
           size += chunk.length;
-          if (size > 16384)
+          if (size > bodyLimit(url.pathname))
             return json(res, 413, { error: "Request is too large." });
           chunks.push(chunk);
         }
@@ -165,6 +185,10 @@ export function createAppServer(options = {}) {
         if(url.pathname.startsWith('/api/settings/')){
           try{const service=getSettings();return json(res,200,url.pathname==='/api/settings/query'?await service.query(body):url.pathname==='/api/settings/save'?service.save(body):await service.check(body));}
           catch(error){if(error instanceof SettingsError)return json(res,error.status,{...error.body,error:error.message});throw error;}
+        }
+        if(Object.hasOwn(SESSION_ROUTES,url.pathname)){
+          try{return json(res,200,await getSessions()[SESSION_ROUTES[url.pathname]](body));}
+          catch(error){if(error instanceof SessionError)return json(res,error.status,{...error.body,error:error.message});throw error;}
         }
         if(url.pathname==='/api/review/query')return json(res,200,await getReviews().query(body));
         if(url.pathname==='/api/impact/query')return json(res,200,await getImpact().query(body));
@@ -238,8 +262,9 @@ export function createAppServer(options = {}) {
     }
   });
   const close=server.close.bind(server);
-  server.close=(...args)=>{for(const socket of relaySockets)socket.destroy();runtime.close();repositories.close();flows?.close();if(!options.impactService)impact?.close();if(!options.runnerClient)runner?.close();return close(...args);};
+  server.close=(...args)=>{for(const socket of relaySockets)socket.destroy();if(!options.sessionService)sessions?.close();runtime.close();repositories.close();flows?.close();if(!options.impactService)impact?.close();if(!options.runnerClient)runner?.close();return close(...args);};
   server.runner=getRunner;
+  server.sessions=getSessions;
   server.runtime = runtime;
   server.repositories=repositories;
   return server;
