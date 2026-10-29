@@ -56,7 +56,7 @@ button.end-session { color: var(--danger-text); }
 .session-page .page-header .subtitle { font-size: 13px; overflow-wrap: anywhere; }
 .session-page .page-header .eyebrow button.link { font-weight: 400; font-size: 13px; }
 .session-page .notice { margin: 12px 0 0; }
-.session-phases { margin-top: 8px; }
+.session-phases, .session-starting { margin-top: 8px; }
 .session-phases .phase-steps { margin-bottom: 4px; }
 .session-layout { display: flex; flex-wrap: wrap; gap: 16px; align-items: flex-start; margin-top: 16px; }
 .session-side { flex: 1 1 280px; max-width: 360px; min-width: 0; display: flex; flex-direction: column; gap: 16px; }
@@ -148,6 +148,7 @@ button.end-session { color: var(--danger-text); }
 .launch-warnings { display: flex; flex-direction: column; gap: 4px; padding: 12px 14px; border-radius: var(--r-card); background: var(--warn-bg); color: var(--warn-text); }
 .launch-warnings strong { font-weight: 600; }
 .launch-dialog .editor-foot { justify-content: flex-end; }
+.launch-dialog .editor-foot button[aria-busy="true"] { cursor: progress; }
 
 /* Entry points on the change page and the Work page. */
 .change-actions { display: flex; flex-wrap: wrap; align-items: center; gap: 12px; }

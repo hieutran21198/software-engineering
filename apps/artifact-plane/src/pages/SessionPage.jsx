@@ -79,7 +79,7 @@ export default function SessionPage({page}) {
   const end = () => {if (window.confirm('End this session? The agent stops. Uncommitted files stay in the worktree.')) command.run('end', () => sessionCommand('end', {session: session.id}));};
   const openApp = () => command.run('open', () => sessionCommand('open-terminal', {session: session.id}));
   const actions = <div className="session-actions">
-    <StatusBadge status={state.status}>{state.text}</StatusBadge>
+    <StatusBadge status={state.status} busy={state.busy}>{state.text}</StatusBadge>
     {!terminal && active && <button disabled={Boolean(command.busy) || !['working', 'waiting'].includes(session.state)} onClick={() => command.run('cancel', () => sessionCommand('cancel', {session: session.id}))}>Stop turn</button>}
     {active && <button className="end-session" disabled={Boolean(command.busy)} onClick={end}>End session</button>}
   </div>;
@@ -92,6 +92,7 @@ export default function SessionPage({page}) {
     {command.error && <Notice tone="error" action={<button onClick={command.clear}>Dismiss</button>}>{command.error}</Notice>}
     {session.error && <Notice tone="error">{session.error}</Notice>}
     {sessions.observing && stream.closed && active && <Notice tone="warning" action={<button onClick={stream.reconnect}>Reconnect</button>}>Plane cannot follow this session now. The page shows the last known state.</Notice>}
+    {!terminal && session.state === 'starting' && <p className="muted small session-starting" role="status">Starting the agent. This can take a few seconds.</p>}
     {phases && <div className="session-phases">
       {phases.change ? <PhaseSteps change={phases.change}/> : <p className="muted small">Reading phases…</p>}
       {phases.inferred && <p className="tiny">Phases of {phases.target.artifact}/{phases.target.change}, the current change of this worktree.</p>}

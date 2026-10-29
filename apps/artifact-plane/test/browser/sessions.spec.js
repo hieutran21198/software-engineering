@@ -2,7 +2,7 @@ import {test, expect} from '@playwright/test';
 import {readFileSync, existsSync} from 'node:fs';
 import {join} from 'node:path';
 import {git} from '../fixtures.js';
-import {openRepository, region, noOverflow, showSidebar, tree} from './workbench.js';
+import {openRepository, openWork, region, noOverflow, showSidebar, tree} from './workbench.js';
 import {writeSettingsFile} from './settings-fixtures.js';
 import {PROFILES, SETTINGS, sessionServer} from './session-fixtures.js';
 // The session pages and dialogs (specifications/agent-orchestration.md: Workbench, Start rules,
@@ -413,6 +413,137 @@ test('the Work page has Start ADD work: the dialog takes the request, the worktr
     // The runtime store keeps no copy of the request.
     const bytes = ['runtime.sqlite', 'runtime.sqlite-wal'].map(name => join(f.state, name)).filter(existsSync).map(file => readFileSync(file).toString('latin1')).join('');
     expect(bytes.includes('MARK-91c2')).toBe(false);
+    expect(errors).toEqual([]);
+  } finally {await cleanup();}
+});
+
+test('while a start runs, the Start button shows a spinner and "Starting <harness tool>…", a live region announces the start, the controls are disabled, a second click sends no second start, and Cancel still closes the dialog', async ({browser}) => {
+  const {f, page, errors, cleanup} = await setup(browser);
+  try {
+    let requests = 0, release;
+    page.on('request', request => {if (request.url().endsWith('/api/sessions/start')) requests++;});
+    const hold = () => {f.runner.hold = new Promise(done => {release = done;});};
+    await openRepository(page, f.root);
+    // The launch dialog: the runner holds the start, and the dialog shows it as busy.
+    hold();
+    const details = await openTask(page, '03 ACP adapter');
+    await details.getByRole('button', {name: 'Start implementer for task 03'}).click();
+    await dialog(page).getByRole('button', {name: 'Start session'}).click();
+    const busy = dialog(page).getByRole('button', {name: 'Starting Codex…'});
+    await expect(busy).toHaveAttribute('aria-busy', 'true');
+    await expect(busy).toHaveText('Starting Codex…');
+    await expect(busy.locator('.spinner')).toHaveCount(1);
+    await expect(busy).toBeFocused();
+    await expect(dialog(page).getByRole('status')).toHaveText('Starting Codex. This can take a few seconds.');
+    await expect(dialog(page).getByLabel('Worktree')).toBeDisabled();
+    await expect(dialog(page).getByRole('radio')).toHaveCount(5);
+    for (const radio of await dialog(page).getByRole('radio').all()) await expect(radio).toBeDisabled();
+    await expect(dialog(page).getByRole('button', {name: 'Cancel'})).toBeEnabled();
+    // A second click and Enter on the busy button send no second start.
+    await busy.click({force: true});
+    await page.keyboard.press('Enter');
+    await page.waitForTimeout(300);
+    expect(requests).toBe(1);
+    await expect.poll(() => calls(f, 'start').length).toBe(1);
+    // After the reply, the session page opens.
+    release();
+    await expect(sessionPage(page).getByRole('heading', {level: 1})).toHaveText('Task 03 ACP adapter');
+    expect(requests).toBe(1);
+    // A failed start shows its reason after the wait, and the controls take input again.
+    const {RunnerError} = await import('../../server/runner-client.js');
+    hold();f.runner.fail = new RunnerError('missing-program', 'The program gemini is missing.', {program: 'gemini'});
+    await (await openTask(page, '02 Launch profiles')).getByRole('button', {name: 'Start implementer for task 02'}).click();
+    await dialog(page).getByRole('radio', {name: /^Gemini Flash/}).check();
+    await dialog(page).getByRole('button', {name: 'Start session'}).click();
+    await expect(dialog(page).getByRole('button', {name: 'Starting Gemini CLI…'})).toHaveAttribute('aria-busy', 'true');
+    release();
+    await expect(dialog(page).getByRole('alert')).toHaveText('Plane did not start the session. The program gemini is missing.');
+    await expect(dialog(page).getByRole('button', {name: 'Start session'})).toHaveAttribute('aria-busy', 'false');
+    await expect(dialog(page).getByLabel('Worktree')).toBeEnabled();
+    f.runner.fail = null;
+    await dialog(page).getByRole('button', {name: 'Cancel'}).click();
+    // Start ADD work: the same busy Start button. Cancel closes the dialog during the start, and
+    // the page stays when the start ends later.
+    await openWork(page);
+    hold();
+    await region(page, 'Work page').getByRole('button', {name: 'Start ADD work'}).click();
+    await dialog(page).getByLabel('What do you need?').fill('Export the progress of one unit of work.');
+    await dialog(page).getByRole('button', {name: 'Start', exact: true}).click();
+    const work = dialog(page).getByRole('button', {name: 'Starting Claude Code…'});
+    await expect(work).toHaveAttribute('aria-busy', 'true');
+    await expect(work.locator('.spinner')).toHaveCount(1);
+    await expect(dialog(page).getByRole('status')).toHaveText('Starting Claude Code. This can take a few seconds.');
+    for (const control of ['What do you need?', 'Worktree', 'Coordinator profile']) await expect(dialog(page).getByLabel(control)).toBeDisabled();
+    await work.click({force: true});
+    await page.waitForTimeout(300);
+    expect(requests).toBe(3);
+    await dialog(page).getByRole('button', {name: 'Cancel'}).click();
+    await expect(dialog(page)).toHaveCount(0);
+    const id = calls(f, 'start').at(-1)[1].session, reply = page.waitForResponse(response => response.url().endsWith('/api/sessions/start'));
+    release();
+    expect((await reply).status()).toBe(200);
+    expect(f.store.session(id)?.state).toBe('starting');
+    await page.waitForTimeout(300);
+    await expect(region(page, 'Work page')).toBeVisible();
+    await expect(sessionPage(page)).toHaveCount(0);
+    await openSessions(page);
+    const row = sessionsPage(page).getByRole('region', {name: 'Role sessions'}).locator('.session-row');
+    await expect(row).toContainText('Coordinator');
+    await expect(row.locator('.status-badge')).toHaveText('Starting');
+    expect(calls(f, 'start')).toHaveLength(3);
+    expect(errors).toEqual([]);
+  } finally {await cleanup();}
+});
+
+test('the state badge of a starting or working session shows a spinner, which stands still for reduced motion; an ACP session that starts says that the start can take a few seconds', async ({browser}) => {
+  const {f, page, errors, cleanup} = await setup(browser);
+  try {
+    // 01 starting (the fake runner leaves a new session in starting), 02 working, 03 waiting, 04 idle.
+    const starting = await implementer(f, '01-session-store.md');
+    const working = await implementer(f, '02-launch-profiles.md', 'gemini-flash');
+    f.runner.update(working.id, {record: {state: 'working'}, events: [{kind: 'session:prompted', source: 'initial'}], change: {state: 'processing'}});
+    const waiting = await implementer(f, '03-acp-adapter.md');
+    f.runner.update(waiting.id, {record: {state: 'waiting'}, events: [{kind: 'session:permission-requested', request: 'p1'}], change: {state: 'blocked'}, live: {pending: [PERMISSION]}});
+    const idle = await implementer(f, '04-terminal-adapter.md', 'gemini-flash');
+    f.runner.update(idle.id, {record: {state: 'idle'}, events: [{kind: 'session:turn-ended', stopReason: 'end_turn'}]});
+    const coordinator = await role(f, 'coordinator');
+    f.runner.update(coordinator.id, {record: {state: 'interrupted', reason: 'process-exit'}, events: [{kind: 'session:interrupted', reason: 'process-exit'}]});
+    const lead = await role(f, 'technical-lead');
+    f.runner.update(lead.id, {record: {state: 'ended', reason: 'person'}, events: [{kind: 'session:ended', reason: 'person'}]});
+    await openRepository(page, f.root);
+    await openSessions(page);
+    const badge = text => sessionsPage(page).locator('.session-row').filter({hasText: text}).locator('.status-badge');
+    for (const [text, state, spinners] of [['01 Session store', 'Starting', 1], ['02 Launch profiles', 'Working', 1], ['03 ACP adapter', 'Permission request', 0],
+      ['04 Terminal adapter', 'Idle', 0], ['Coordinator', 'Interrupted', 0], ['Technical lead', 'Ended by you', 0]]) {
+      await expect(badge(text)).toHaveText(state);
+      await expect(badge(text).locator('.spinner')).toHaveCount(spinners);
+    }
+    // The session page of the starting ACP session: the spinner and the line about the start.
+    await sessionsPage(page).getByRole('button', {name: 'Open 01 Session store'}).click();
+    const view = sessionPage(page), header = view.locator('.session-actions .status-badge'), line = view.getByText('Starting the agent. This can take a few seconds.');
+    await expect(header).toHaveText('Starting');
+    await expect(header.locator('.spinner')).toHaveCount(1);
+    await expect(line).toBeVisible();
+    // The spinner turns, and stands still for reduced motion; the text stays.
+    const animation = () => header.locator('.spinner').evaluate(node => getComputedStyle(node).animationName);
+    expect(await animation()).toBe('spin');
+    await page.emulateMedia({reducedMotion: 'reduce'});
+    expect(await animation()).toBe('none');
+    await expect(header).toHaveText('Starting');
+    await expect(line).toBeVisible();
+    await page.emulateMedia({reducedMotion: 'no-preference'});
+    // The line goes when the agent works; the spinner stays.
+    f.runner.update(starting.id, {record: {state: 'working'}, events: [{kind: 'session:prompted', source: 'initial'}], change: {state: 'processing'}});
+    await expect(header).toHaveText('Working');
+    await expect(header.locator('.spinner')).toHaveCount(1);
+    await expect(line).toHaveCount(0);
+    // A terminal session that starts shows its terminal and no such line.
+    await role(f, 'product-owner');
+    await openSessions(page);
+    await sessionsPage(page).getByRole('button', {name: 'Open Product owner session'}).click();
+    await expect(header).toHaveText('Starting');
+    await expect(view.getByRole('region', {name: 'Terminal'})).toBeVisible();
+    await expect(line).toHaveCount(0);
     expect(errors).toEqual([]);
   } finally {await cleanup();}
 });

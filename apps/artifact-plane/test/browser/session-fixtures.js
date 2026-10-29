@@ -90,10 +90,11 @@ Do you want to proceed?
 
 // A runner client that records the calls, writes the session records and lifecycle events to
 // the store as the runner does (States), keeps the live state of ACP sessions in memory and
-// pushes stream events. `update` changes a session as the runner would after a signal.
+// pushes stream events. `update` changes a session as the runner would after a signal. A start
+// waits for the promise `hold` when a test sets it, as a slow agent start does.
 export class FakeRunner {
   constructor(store, relaySocket) {
-    Object.assign(this, {store, relaySocket, version: pkg.version, connected: false, fail: null});
+    Object.assign(this, {store, relaySocket, version: pkg.version, connected: false, fail: null, hold: null});
     this.calls = [];this.listeners = new Map();this.seqs = new Map();this.extra = new Map();this.lives = new Map();
   }
   hello() {return {version: this.version, sessions: []};}
@@ -124,6 +125,7 @@ export class FakeRunner {
   }
   async start(params) {
     this.calls.push(['start', params]);
+    await this.hold;
     if (this.fail) throw this.fail;
     const {session: id, worktree, role, profile, artifact, change, task, branch, attempt, respawnOf} = params, now = Date.now();
     const record = {id, repository: this.store.repository(worktree, true).id, worktree, role, artifact, change, task, branch,

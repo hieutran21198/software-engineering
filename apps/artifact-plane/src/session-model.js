@@ -21,11 +21,12 @@ export const reasonText = session => session.state === 'interrupted' ? INTERRUPT
   : session.state === 'ended' ? (session.reason === 'error' ? 'ended with an error' : 'ended by you') : null;
 
 // The state of a session as a status name of the vocabulary (src/glossary.js) and texts:
-// `text` for the session page, `row` for a row of the Sessions page.
+// `text` for the session page, `row` for a row of the Sessions page. `busy` marks the states in
+// progress, whose badge shows a spinner.
 export function stateView(session) {
   switch (session.state) {
-    case 'starting': return {status: 'open', text: 'Starting', row: 'Starting'};
-    case 'working': return {status: 'open', text: 'Working', row: 'Working'};
+    case 'starting': return {status: 'open', text: 'Starting', row: 'Starting', busy: true};
+    case 'working': return {status: 'open', text: 'Working', row: 'Working', busy: true};
     case 'waiting':
       if (isTerminal(session)) return {status: 'Incomplete', text: session.waitingTool ? 'Waiting for you · permission' : 'Waiting for you', row: 'Waiting in the terminal'};
       return {status: 'Incomplete', text: 'Waiting for you', row: session.live?.pending?.length ? 'Permission request' : 'Waiting for you'};

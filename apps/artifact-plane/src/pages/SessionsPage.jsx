@@ -44,7 +44,7 @@ function SessionRow({session, snapshot, go}) {
     </div>
     <div className="session-output"><OutputText summary={output.status === 'error' ? null : outputSummary(output.data)}/>{output.status === 'error' && <span className="muted">Output unavailable</span>}</div>
     <div className="session-agent">{agentText(session)}</div>
-    <StatusBadge status={state.status}>{state.row}</StatusBadge>
+    <StatusBadge status={state.status} busy={state.busy}>{state.row}</StatusBadge>
     <button aria-label={`${action} ${role ? `${title} session` : title}`} onClick={() => go({kind: 'session', session: session.id})}>{action}</button>
   </div>;
 }
@@ -63,7 +63,7 @@ function PhoneCard({session, snapshot, go}) {
   }
   const progress = dodProgress(output.data);
   return <article className="session-card-phone" aria-label={sessionTitle(session, snapshot)}>
-    <div className="session-card-badges"><StatusBadge status={state.status}>{state.row}</StatusBadge><span className="connection-tag">{session.profile?.connection === 'acp' ? 'ACP' : 'Terminal'}</span></div>
+    <div className="session-card-badges"><StatusBadge status={state.status} busy={state.busy}>{state.row}</StatusBadge><span className="connection-tag">{session.profile?.connection === 'acp' ? 'ACP' : 'Terminal'}</span></div>
     <h3><button className="link" onClick={() => go({kind: 'session', session: session.id})}>{sessionTitle(session, snapshot)}</button></h3>
     <p className="muted small">{agentText(session)} · {duration(session.startedAt)}</p>
     <p className="small">{[progress && `${progress.checked} of ${progress.total} DoD`].filter(Boolean).join('')}{progress ? ' · ' : ''}<OutputText summary={summary}/></p>

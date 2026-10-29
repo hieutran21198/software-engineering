@@ -7,7 +7,9 @@ import {useShell} from '../page-data.js';
 import {repositoryQuery} from '../reload.js';
 import {querySettings} from '../agent-settings-api.js';
 import {startSession} from '../sessions-api.js';
+import {harnessLabel} from '../agent-settings-model.js';
 import {ROLE_LABELS, launchWarnings, profileChoices, worktreeChoices} from '../session-model.js';
+import {Spinner} from '../ui.jsx';
 import {changeTitle, currentChanges} from '../work-model.js';
 import './SettingsPage.css';
 
@@ -18,14 +20,15 @@ const ROLE_DEFAULT = {coordinator: 'default for coordinators', 'product-owner': 
 const taskName = task => `${task.path.split('/').at(-1).match(/^(\d+)-/)?.[1] || ''} ${task.title}`.trim();
 const relativeTask = path => path.split('/tasks/').at(-1);
 
-// A modal card over the dimmed page: Escape closes it and Tab stays inside.
-function Dialog({title, subtitle, className = '', onClose, busy, children}) {
-  const id = useId(), ref = useRef(null), state = useRef({busy, onClose});
-  state.current = {busy, onClose};
+// A modal card over the dimmed page: Escape closes it and Tab stays inside. Escape also closes
+// it while a start runs, as Cancel does.
+function Dialog({title, subtitle, className = '', onClose, children}) {
+  const id = useId(), ref = useRef(null), state = useRef({onClose});
+  state.current = {onClose};
   useEffect(() => {requestAnimationFrame(() => ref.current?.querySelector('[data-autofocus], ' + FOCUSABLE)?.focus());}, []);
   // Escape closes the dialog wherever the focus is, also after a disabled button lost it.
   useEffect(() => {
-    const close = event => {if (event.key === 'Escape' && !event.defaultPrevented && !state.current.busy) {event.preventDefault();state.current.onClose();}};
+    const close = event => {if (event.key === 'Escape' && !event.defaultPrevented) {event.preventDefault();state.current.onClose();}};
     document.addEventListener('keydown', close);return () => document.removeEventListener('keydown', close);
   }, []);
   const keys = event => {
@@ -73,13 +76,29 @@ function useTasks(root, worktree, artifact, change) {
 }
 // The reason of a refused or failed start, with its start rule when the server names one.
 const refusal = error => error.body?.rule ? `${error.message} (start rule ${error.body.rule})` : error.message;
+// True while the dialog shows. Cancel closes the dialog during a start, but the server does not
+// stop a start that it runs: the session then shows on the Sessions page, and the page stays.
+function useOpen() {
+  const open = useRef(true);
+  useEffect(() => {open.current = true;return () => {open.current = false;};}, []);
+  return open;
+}
+// The Start button. While the start runs it shows a spinner and "Starting <harness tool>…" and
+// keeps the focus; a second click sends no second start.
+function StartButton({busy, disabled, harness, children}) {
+  return <button className="primary" disabled={!busy && disabled} aria-disabled={busy || undefined} aria-busy={busy}>
+    {busy ? <><Spinner/>{`Starting ${harness}…`}</> : children}
+  </button>;
+}
+// The text of the live region of the dialog foot while the start runs.
+const StartingNote = ({harness}) => <><span className="sr-only">Starting {harness}. </span>This can take a few seconds.</>;
 
 // One radio card for each profile: name, default mark, chips and the reason why it cannot start.
-function ProfileCards({choices, value, onChange, role, name}) {
+function ProfileCards({choices, value, onChange, role, name, busy}) {
   return <fieldset className="editor-group launch-profiles">
     <legend>Launch profile</legend>
     {choices.map(c => <label key={c.id} className={`choice-card launch-profile ${value === c.id ? 'selected' : ''} ${c.reason ? 'disabled' : ''}`}>
-      <input type="radio" name={name} value={c.id} checked={value === c.id} disabled={Boolean(c.reason)} onChange={() => onChange(c.id)}/>
+      <input type="radio" name={name} value={c.id} checked={value === c.id} disabled={busy || Boolean(c.reason)} onChange={() => onChange(c.id)}/>
       <span className="launch-profile-text">
         <span className="launch-profile-name">{c.name}{c.isDefault && <span className="launch-default"> · {ROLE_DEFAULT[role]}</span>}</span>
         <span className="launch-chips">{c.chips.map(chip => <span key={chip} className="connection-tag">{chip}</span>)}</span>
@@ -115,7 +134,8 @@ export function LaunchDialog({title, role: fixedRole = null, artifact: fixedArti
   const {choices, selected} = useMemo(() => profileChoices(settings.data, role), [settings.data, role]);
   const [profile, setProfile] = useState(null);
   const chosenProfile = choices.some(c => c.id === profile && !c.reason) ? profile : selected;
-  const [busy, setBusy] = useState(false), [error, setError] = useState(null);
+  const [busy, setBusy] = useState(false), [error, setError] = useState(null), open = useOpen();
+  const harness = harnessLabel(choices.find(c => c.id === chosenProfile)?.profile.harness);
   useEffect(() => setError(null), [role, changeKey, chosenWorktree, taskPath, chosenProfile]);
   const warnings = launchWarnings({role, task: role === 'implementer' ? task : null, tasks: graph.tasks, artifact, snapshot});
   const listed = changes.find(c => c.artifact === artifact && c.name === change);
@@ -130,21 +150,23 @@ export function LaunchDialog({title, role: fixedRole = null, artifact: fixedArti
     const body = {path: chosenWorktree, role, profile: chosenProfile, artifact, change, ...(role === 'implementer' ? {task: relativeTask(task.path)} : {})};
     try {
       const result = await startSession(body);
-      onStarted?.();onClose();
+      onStarted?.();
+      if (!open.current) return;
+      onClose();
       go({kind: 'session', session: result.session.id, ...(result.existing ? {existing: true} : {})});
-    } catch (failure) {setError(refusal(failure));setBusy(false);}
+    } catch (failure) {if (open.current) {setError(refusal(failure));setBusy(false);}}
   }
   const roleOptions = fixedRole ? [fixedRole] : ROLES;
-  return <Dialog title={title || (fixedRole === 'implementer' ? 'Start implementer' : 'Start session')} subtitle={subtitle} onClose={onClose} busy={busy}>
+  return <Dialog title={title || (fixedRole === 'implementer' ? 'Start implementer' : 'Start session')} subtitle={subtitle} onClose={onClose}>
     <form onSubmit={start} noValidate>
       {(!fixedRole || !fixedChange) && <div className="editor-row">
         {!fixedRole && <div className="field">
           <label htmlFor={`${id}-role`}>Role</label>
-          <select id={`${id}-role`} value={role} onChange={event => setRole(event.target.value)}>{roleOptions.map(r => <option key={r} value={r}>{ROLE_LABELS[r]}</option>)}</select>
+          <select id={`${id}-role`} value={role} disabled={busy} onChange={event => setRole(event.target.value)}>{roleOptions.map(r => <option key={r} value={r}>{ROLE_LABELS[r]}</option>)}</select>
         </div>}
         {!fixedChange && <div className="field">
           <label htmlFor={`${id}-change`}>Change</label>
-          <select id={`${id}-change`} value={changeKey} onChange={event => {setChangeKey(event.target.value);setTaskPath(null);}}>
+          <select id={`${id}-change`} value={changeKey} disabled={busy} onChange={event => {setChangeKey(event.target.value);setTaskPath(null);}}>
             {!changes.length && <option value="">No current change</option>}
             {changes.map(c => <option key={`${c.artifact}/${c.name}`} value={`${c.artifact}/${c.name}`}>{`${changeTitle(c)} · ${c.artifact}/${c.name}`}</option>)}
           </select>
@@ -153,14 +175,14 @@ export function LaunchDialog({title, role: fixedRole = null, artifact: fixedArti
       </div>}
       {role === 'implementer' && !fixedTask && <div className="field">
         <label htmlFor={`${id}-task`}>Task</label>
-        <select id={`${id}-task`} value={task?.path || ''} disabled={!graph.tasks.length} onChange={event => setTaskPath(event.target.value)}>
+        <select id={`${id}-task`} value={task?.path || ''} disabled={busy || !graph.tasks.length} onChange={event => setTaskPath(event.target.value)}>
           {!graph.tasks.length && <option value="">{graph.status === 'loading' ? 'Reading the tasks…' : 'No listed task'}</option>}
           {graph.tasks.map(t => <option key={t.path} value={t.path}>{`${taskName(t)} · ${t.checked} of ${t.checked + t.unchecked} DoD`}</option>)}
         </select>
       </div>}
       <div className="field">
         <label htmlFor={`${id}-worktree`}>Worktree</label>
-        <select id={`${id}-worktree`} value={chosenWorktree || ''} disabled={!worktrees.length} onChange={event => setWorktree(event.target.value)}>
+        <select id={`${id}-worktree`} value={chosenWorktree || ''} disabled={busy || !worktrees.length} onChange={event => setWorktree(event.target.value)}>
           {!worktrees.length && <option value="">No readable worktree</option>}
           {worktrees.map(w => <option key={w.path} value={w.path}>{w.label}</option>)}
         </select>
@@ -168,7 +190,7 @@ export function LaunchDialog({title, role: fixedRole = null, artifact: fixedArti
       </div>
       {settings.status === 'loading' ? <p className="muted" role="status">Reading launch profiles…</p>
         : settings.status === 'error' ? <p className="operation-error" role="alert">{settings.error}</p>
-        : choices.length ? <ProfileCards choices={choices} value={chosenProfile} onChange={setProfile} role={role} name={`${id}-profile`}/>
+        : choices.length ? <ProfileCards choices={choices} value={chosenProfile} onChange={setProfile} role={role} name={`${id}-profile`} busy={busy}/>
         : <p className="muted">No launch profile yet. Create one on the Agent settings page.</p>}
       <div className="launch-warnings" role="note">
         <strong>Check before you start</strong>
@@ -176,9 +198,9 @@ export function LaunchDialog({title, role: fixedRole = null, artifact: fixedArti
       </div>
       {error && <p className="operation-error" role="alert">Plane did not start the session. {error}</p>}
       <div className="editor-foot">
-        <p className="small muted" role="status">{missing && settings.status === 'loaded' ? missing : ''}</p>
-        <button type="button" onClick={onClose} disabled={busy}>Cancel</button>
-        <button className="primary" disabled={busy || Boolean(missing)} aria-busy={busy}>{busy ? 'Starting…' : 'Start session'}</button>
+        <p className="small muted" role="status">{busy ? <StartingNote harness={harness}/> : missing && settings.status === 'loaded' ? missing : ''}</p>
+        <button type="button" onClick={onClose}>Cancel</button>
+        <StartButton busy={busy} disabled={Boolean(missing)} harness={harness}>Start session</StartButton>
       </div>
     </form>
   </Dialog>;
@@ -194,7 +216,8 @@ export function StartWorkDialog({onClose, onStarted}) {
   const usable = choices.filter(c => !c.reason);
   const [profile, setProfile] = useState(null);
   const chosen = usable.some(c => c.id === profile) ? profile : selected;
-  const [busy, setBusy] = useState(false), [error, setError] = useState(null);
+  const [busy, setBusy] = useState(false), [error, setError] = useState(null), open = useOpen();
+  const harness = harnessLabel(usable.find(c => c.id === chosen)?.profile.harness);
   const size = new TextEncoder().encode(request).length;
   async function start(event) {
     event.preventDefault();if (busy) return;
@@ -204,27 +227,29 @@ export function StartWorkDialog({onClose, onStarted}) {
     setBusy(true);setError(null);
     try {
       const result = await startSession({path: worktree, role: 'coordinator', profile: chosen, request});
-      onStarted?.();onClose();
+      onStarted?.();
+      if (!open.current) return;
+      onClose();
       go({kind: 'session', session: result.session.id});
-    } catch (failure) {setError(`Plane did not start the session. ${refusal(failure)}`);setBusy(false);}
+    } catch (failure) {if (open.current) {setError(`Plane did not start the session. ${refusal(failure)}`);setBusy(false);}}
   }
-  return <Dialog title="Start ADD work" className="start-work" busy={busy} onClose={onClose}
+  return <Dialog title="Start ADD work" className="start-work" onClose={onClose}
     subtitle="A coordinator session interviews you, creates the change and writes Requirement, Specification and Plan. You approve the plan in the conversation.">
     <form onSubmit={start} noValidate>
       <div className="field">
         <label htmlFor={`${id}-request`}>What do you need?</label>
-        <textarea id={`${id}-request`} data-autofocus rows={6} value={request} onChange={event => setRequest(event.target.value)} aria-describedby={`${id}-request-help`}/>
+        <textarea id={`${id}-request`} data-autofocus rows={6} value={request} disabled={busy} onChange={event => setRequest(event.target.value)} aria-describedby={`${id}-request-help`}/>
         <small id={`${id}-request-help`}>Write in any language. Plane sends this text to the agent and keeps no copy.{size > REQUEST_LIMIT ? ` The text has ${size} bytes; the limit is 8 KiB.` : ''}</small>
       </div>
       <div className="editor-row">
         <div className="field">
           <label htmlFor={`${id}-worktree`}>Worktree</label>
-          <select id={`${id}-worktree`} value={worktree} onChange={event => setWorktree(event.target.value)}>{worktrees.map(w => <option key={w.path} value={w.path}>{w.label}</option>)}</select>
+          <select id={`${id}-worktree`} value={worktree} disabled={busy} onChange={event => setWorktree(event.target.value)}>{worktrees.map(w => <option key={w.path} value={w.path}>{w.label}</option>)}</select>
           <small>The coordinator creates a dedicated branch before it writes knowledge.</small>
         </div>
         <div className="field">
           <label htmlFor={`${id}-profile`}>Coordinator profile</label>
-          <select id={`${id}-profile`} value={chosen || ''} disabled={!usable.length} onChange={event => setProfile(event.target.value)}>
+          <select id={`${id}-profile`} value={chosen || ''} disabled={busy || !usable.length} onChange={event => setProfile(event.target.value)}>
             {!usable.length && <option value="">{settings.status === 'loading' ? 'Reading launch profiles…' : 'No terminal profile'}</option>}
             {usable.map(c => <option key={c.id} value={c.id}>{[c.name, c.profile.model, c.isDefault ? 'default' : null].filter(Boolean).join(' · ')}</option>)}
           </select>
@@ -235,9 +260,9 @@ export function StartWorkDialog({onClose, onStarted}) {
       {settings.status === 'loaded' && !usable.length && <p className="muted">No terminal profile can start a coordinator. Create one on the Agent settings page.</p>}
       {error && <p className="operation-error" role="alert">{error}</p>}
       <div className="editor-foot">
-        <p/>
-        <button type="button" onClick={onClose} disabled={busy}>Cancel</button>
-        <button className="primary" disabled={busy || !usable.length} aria-busy={busy}>{busy ? 'Starting…' : 'Start'}</button>
+        <p className="small muted" role="status">{busy && <StartingNote harness={harness}/>}</p>
+        <button type="button" onClick={onClose}>Cancel</button>
+        <StartButton busy={busy} disabled={!usable.length} harness={harness}>Start</StartButton>
       </div>
     </form>
   </Dialog>;

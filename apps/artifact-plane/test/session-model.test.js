@@ -40,6 +40,9 @@ test('stateView names each state with a status of the vocabulary and the texts o
   assert.deepEqual(view({state: 'ended', reason: 'person'}), ['Unknown', 'Ended by you', 'Ended by you']);
   assert.deepEqual(view({state: 'ended', reason: 'error'}), ['Failed', 'Ended with an error', 'Ended with an error']);
   for (const reason of ['process-exit', 'runner-lost', 'pane-missing', 'max-tokens', 'max-turn-requests', 'cancelled']) assert.ok(reasonText(session({state: 'interrupted', reason})), reason);
+  // Only the states in progress show a spinner in their badge.
+  const busy = ['starting', 'working', 'waiting', 'idle', 'interrupted', 'ended'].filter(state => stateView(session({state, reason: 'person'})).busy);
+  assert.deepEqual(busy, ['starting', 'working']);
 });
 
 test('the waiting count counts the sessions in state waiting', () => {
