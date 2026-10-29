@@ -190,7 +190,7 @@ The live check refuted the first catalog for OpenCode (claim `terminal-model-fla
 
 ### Validity
 
-An invalid profile stays visible with its reason and cannot start a session. These rules make a profile invalid:
+An invalid profile or role default stays visible with its reason and cannot start a session. These rules make a profile or a role default invalid:
 
 - `harness: claude-code` with `signIn: plan` and `connection: acp` (requirement AO17).
 - A connection that the provider does not offer, a role default that names no valid profile, or a coordinator, product owner or technical lead default that names an ACP profile.
