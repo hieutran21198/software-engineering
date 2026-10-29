@@ -12,7 +12,13 @@ affected_flows:
   - artifact: artifact-plane
     flow: change-review
     effect: modify
-flow_assessment: Inspected role cores, guidance, review service, MCP adapters and review tests. The outcome changes how agents load governing context and how Plane transmits review sources. No dependency or approval semantics change. Flow identifiers will be checked against the validator.
+  - artifact: artifact-plane
+    flow: context-handoff
+    effect: modify
+  - artifact: artifact-plane
+    flow: source-retrieval
+    effect: modify
+flow_assessment: Inspected role cores, guidance, review service, MCP adapters and review tests. The outcome changes how agents load governing context and how Plane transmits review sources. No dependency or approval semantics change. Context handoff and source retrieval also change their bounded selection and continuation behavior.
 acceptance:
   - id: context-correctness
     criterion: Compact and incremental reads preserve source identity, uncertainty and governing evidence with compatible legacy behavior.
@@ -21,7 +27,19 @@ acceptance:
   - id: integration
     criterion: Retrieval, adapter, guidance, Go embedding and build checks pass together.
     integration: true
-evidence: []
+evidence:
+  - criterion: context-correctness
+    method: Run compact service and real HTTP and stdio MCP parity tests.
+    result: passed
+    source: docs/artifacts/artifact-plane/changes/change-context-efficiency/tasks/01-retrieval.md#evidence
+  - criterion: measured-savings
+    method: Attempt the live Codex prerequisite and exercise the benchmark harness separately.
+    result: incomplete
+    source: docs/artifacts/artifact-plane/changes/change-context-efficiency/tasks/02-measurement.md#live-measurement-blocker
+  - criterion: integration
+    method: Run Node, build, Go and validator checks; browser integration is still running.
+    result: incomplete
+    source: docs/artifacts/artifact-plane/changes/change-context-efficiency/tasks/02-measurement.md#evidence
 ---
 
 # Context efficiency

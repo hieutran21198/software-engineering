@@ -18,10 +18,10 @@ requirements/context-efficiency.md and specifications/context-efficiency.md. Exi
 
 ## Definition of Done
 
-- [ ] Implement the governed behavior and preserve legacy behavior.
-- [ ] Run relevant tests and record actual results, distinguishing incomplete live checks.
-- [ ] Check integrated validation and preserve source, evidence and approval uncertainty.
+- [x] Implement the governed behavior and preserve legacy behavior.
+- [x] Run relevant tests and record actual results, distinguishing incomplete live checks.
+- [x] Check integrated validation and preserve source, evidence and approval uncertainty.
 
 ## Evidence
 
-Pending implementation checks.
+`go test ./...` and `go vet ./...` passed. The embedding tests exercise the canonical bundle and its retained references. Inspection confirmed all four role cores use selective entry, profiles retain inherited permissions/model and conditional KISS/STE reads, and handoffs retain DoD/prerequisite/approval context. AGENTS.md plus the four Codex profiles decreased from 9,656 to 7,950 bytes (17.7%); this is an instruction-byte proxy, not a model-token result. The artifact-scoped validator reports ok true with no diagnostics. The user's approved combined plan supplies authorization; no gate is inferred from a packet.

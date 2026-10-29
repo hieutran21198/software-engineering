@@ -6,6 +6,14 @@ Give the agent the adopted bundle location, knowledge workspace, implementation 
 
 Ask the consumer AI to adopt the bundle and configure its own harness, such as Command Code, Codex, Claude Code, Antigravity, or OpenCode V2. Use the [adoption request](adopting-from-git.md#ask-an-ai-agent-to-adopt). It determines the supported skill and agent setup from the installed tool. Keep the canonical ADD bundle intact so skill and pattern references remain available.
 
+## Load context progressively
+
+Start or resume with `get_change_status`, then `get_change_brief` with `view: compact` when supported. Read freshness, completeness, diagnostics and continuation pointers before using the result. Compact entries marked `json-fragment` are incomplete JSON values: concatenate their text in offset order through totalCharacters, then parse. Never use an unfinished fragment as a complete assertion. Fetch registered governing sources with `read_change_context_source`; follow requirement, specification and task references before concluding that no consumer is affected. Read code by affected section or symbol. Request a compact context packet only when its source inventory is needed. Fetch detailed impact and a PR description separately when the decision requires them.
+
+Keep the compact capture token in session memory. After edits, use `get_change_context_delta` to identify added, modified and removed sources and refresh affected reads. Source IDs belong to a revision; refresh them from current pointers before source reads. Reuse unchanged source text only when it remains in context and the delta confirms its digest. Lost context, an expired capture, a server restart or a stale response requires a fresh brief and compact capture. A delta does not replace missing instructions or evidence.
+
+Older Plane versions can reject compact options. Retry without those options and use bounded source reads. If Plane is unavailable, use the task and governing files plus Git directly. Keep approval and upstream establishment checks separate from every derived view. No Plane capability is required to perform ADD.
+
 ## Required Skills
 
 Make `kiss` and `asd-ste-100` available to every ADD role. Their canonical instructions are at `required-skills/kiss/SKILL.md` and `required-skills/asd-ste-100/SKILL.md` in the adopted bundle. Each role skill core has a self-check with five KISS and STE items; apply it during existing phase and task self-checks, and read the full skills when the checklist does not settle a case. KISS guides solution complexity; ASD-STE100 principles guide document writing and rewriting.
@@ -88,7 +96,7 @@ After approval, the coordinator can create or reuse agents for independent imple
 
 ## Implementer context
 
-The coordinator gives each implementer a new agent context, not a copy of its own context. The dispatch message holds the task path, the governing paths and the DoD; the implementer reads those files itself.
+The coordinator gives each implementer a new agent context, not a copy of its own context. The dispatch message holds the task path, governing paths, DoD, prerequisite evidence, repository/worktree locations and available approval context; the implementer reads the governing files itself. Do not copy the coordinator conversation. State unresolved prerequisites explicitly.
 
 - Read code by section or symbol. Do not load whole files or repositories when a section answers the question.
 - Return a short summary: the commits, each check with its result, failures and open questions. Detailed evidence goes in the task file, not in the conversation.

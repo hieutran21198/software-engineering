@@ -12,6 +12,7 @@ flow:
     - id: context
       title: Select the repository, worktree and knowledge context
       supports:
+        - context-efficiency-contract
         - reading-controls-browser
         - reading-controls-contract
         - ux-simplification-contract
@@ -93,6 +94,12 @@ flow:
     - from: freshness
       to: return
   support:
+    - id: context-efficiency-contract
+      kind: element
+      artifact: artifact-plane
+      element: specifications/context-efficiency.md
+      requires: Compact pages and disposable deltas preserve source evidence and uncertainty
+      basis: documented
     - id: model-install
       kind: implementation
       path: apps/artifact-plane/server/flow-model-install.js

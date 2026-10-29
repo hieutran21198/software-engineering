@@ -12,6 +12,7 @@ flow:
     - id: request
       title: Select a permitted context and excerpt budget
       supports:
+        - context-efficiency-contract
         - compact-contract
         - ux-simplification-contract
         - ux-browser-checks
@@ -96,6 +97,12 @@ flow:
       to: request
       condition: The source selection changes or a stale/error reply requires a new read.
   support:
+    - id: context-efficiency-contract
+      kind: element
+      artifact: artifact-plane
+      element: specifications/context-efficiency.md
+      requires: Compact pages and disposable deltas preserve source evidence and uncertainty
+      basis: documented
     - id: impact-contract
       kind: element
       artifact: artifact-plane

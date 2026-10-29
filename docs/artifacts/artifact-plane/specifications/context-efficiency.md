@@ -2,6 +2,14 @@
 self_check:
   result: passed
   source: docs/artifacts/artifact-plane/specifications/context-efficiency.md#self-check
+claims:
+  - id: live-token-savings
+    kind: unknown
+    statement: Actual Codex input-token savings and MCP rendering remain unmeasured because the model endpoint returns a proxy HTTP 403 in this environment.
+    status: open
+    basis: inferred
+    check: Run three paired repetitions per scenario with provider usage and correctness checks after restoring model endpoint access.
+    risk_if_wrong: Payload byte reductions could be mistaken for accepted model-token savings.
 ---
 
 # Context efficiency contract
@@ -12,9 +20,9 @@ Review requests accept view: compact for packet, brief and source, and operation
 
 ## Compact envelope and pagination
 
-The schema is artifact-plane.change-context.compact.v1. The envelope retains repository identity, worktree, artifact/change, revision, freshness, completeness, approval uncertainty and evidence limits. data.entries holds named sections: brief, records, sources, diagnostics, omissions and evidence. Packet compact mode does not generate the PR description or detailed impact ledger. Brief sections retain the seven answers, claims, attention and counts. Sources are registered pointers without automatic text; selected source reads use budget.
+The schema is artifact-plane.change-context.compact.v1. The envelope retains repository identity, worktree, artifact/change, revision, freshness, completeness, approval uncertainty and evidence limits. data.entries holds named sections: brief, records, sources, diagnostics, omissions and evidence. Packet compact mode does not generate the PR description or detailed impact ledger. Workflow evidence contains status and uncertainty plus task-source pointers, not duplicated task graphs or commit histories. Brief sections retain the seven answers, claims, attention and counts. Sources are registered pointers without automatic text; selected source reads use budget.
 
-The UTF-8 serialized response, including metadata and cursors, is within maxResponseBytes, with 256 bytes reserved for the MCP wrapper and concise text. Page entries before source expansion. Oversized JSON values use explicitly labeled JSON fragments with character offsets and total length; continuations reconstruct the exact value, not an implicitly truncated assertion. Fragments with source paths retain those pointers in the reconstructed value. Omitted pages and source text mark completeness partial. If mandatory envelope metadata cannot fit, return a bounded 413 error. Cursors bind canonical selectors, operation, compact view, revision, limit, budget, byte cap and previous capture token. Cursors are opaque server-issued tokens, expire after 10 minutes and share the bounded cache lifetime. Stale or unavailable continuations return 422 with full-refresh guidance.
+The UTF-8 serialized response, including metadata and cursors, is within maxResponseBytes, with 512 bytes reserved for the MCP wrapper and concise text. Page entries before source expansion. Oversized JSON values use explicitly labeled JSON fragments with character offsets and total length; continuations reconstruct the exact value, not an implicitly truncated assertion. Fragments with source paths retain those pointers in the reconstructed value. Omitted pages and source text mark completeness partial. If mandatory envelope metadata cannot fit, return a bounded 413 error. Cursors bind canonical selectors, operation, compact view, revision, limit, budget, byte cap and previous capture token. Cursors are opaque server-issued tokens, expire after 10 minutes and share the bounded cache lifetime. Stale or unavailable continuations return 422 with full-refresh guidance.
 
 ## Disposable delta captures
 

@@ -19,6 +19,10 @@ Drive an ADD change or unit of work from the request to PRs ready for team revie
 
 Never commit to `main` or `master`, merge PRs or deploy. Send each blocker to its owner: requirement gaps to the PO, contract gaps to Specification, task gaps to Plan, code defects to Implementation.
 
+## Context entry
+
+Use status → brief → selected registered sources when Plane is available. Request `view: compact` and follow continuations. Refresh affected sources with a delta only while the prior context remains loaded; stale or lost context needs a full refresh. Read governing references and explicit limits. Use bounded files and Git when retrieval is unavailable. See the progressive-loading and handoff guidance in `../../../06-guidelines/working-with-ai.md` when needed.
+
 ## Self-check
 
 - KISS: the scope and plan are the smallest that meet the need.

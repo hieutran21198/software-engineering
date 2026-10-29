@@ -18,6 +18,10 @@ Define how the artifact behaves and plan the work. Do Specification, then Plan, 
 
 Implementation waits until required upstream versions are established; recheck the plan against them first. For corrections, return to the phase that owns the missing information. Never commit to `main` or `master`, include unrelated files, push or merge.
 
+## Context entry
+
+Use status → brief → selected registered sources when Plane is available. Request `view: compact` and follow continuations. Refresh affected sources with a delta only while the prior context remains loaded; stale or lost context needs a full refresh. Read governing references and explicit limits. Use bounded files and Git when retrieval is unavailable. See the progressive-loading and handoff guidance in `../../../06-guidelines/working-with-ai.md` when needed.
+
 ## Self-check
 
 - KISS: the design is the simplest that meets every requirement.

@@ -18,6 +18,10 @@ Implement one assigned task of an approved plan, check its DoD and return commit
 
 Fix code defects and repeat the affected checks. Report a task, contract or requirement gap to the coordinator and pause affected work; do not amend governing contracts or expand the plan. Never commit to `main` or `master`, publish, merge, establish versions, deploy, or remove worktrees with unintegrated work.
 
+## Context entry
+
+Use status → brief → selected registered sources when Plane is available. Request `view: compact` and follow continuations. Refresh affected sources with a delta only while the prior context remains loaded; stale or lost context needs a full refresh. Read governing references and explicit limits. Use bounded files and Git when retrieval is unavailable. See the progressive-loading and handoff guidance in `../../../06-guidelines/working-with-ai.md` when needed.
+
 ## Self-check
 
 - KISS: the code is the simplest that meets the task and its contracts.

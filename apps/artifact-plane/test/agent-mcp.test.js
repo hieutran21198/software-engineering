@@ -18,7 +18,8 @@ import {validateKnowledge} from '../scripts/validate-knowledge.mjs';
 
 const app = fileURLToPath(new URL('../server/app.js', import.meta.url));
 const INSTRUCTIONS = `Artifact Plane reads ADD knowledge and Git. It never approves, pushes, merges or establishes versions.
-Resume or start: get_change_status. Discover flows and specifications: search_flows, get_flow, read_flow_source.
+Resume or start: get_change_status, then get_change_brief with view compact. Fetch selected registered sources; inspect omissions before conclusions. Compact entries marked json-fragment need text concatenated in offset order through totalCharacters, then JSON.parse; unfinished fragments are not complete facts. Use get_change_context_delta for changes after a compact capture. Capture expiry needs a fresh compact packet.
+Discover flows and specifications: search_flows, get_flow, read_flow_source.
 Specification and Plan: get_impact_context, get_change_impact. Review and context: get_change_review, get_change_context, read_change_context_source.
 Before a self-check or the PR: check_records, get_change_brief, get_change_description.
 Concepts: get_concept; search_flows with kinds.`;
