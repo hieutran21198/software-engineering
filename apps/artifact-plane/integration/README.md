@@ -178,7 +178,9 @@ When the workbench says "Restart the session runner", end the sessions, then sto
 
 ### Limits
 
-- herdr does not detect every harness tool. For Command Code, and for other tools that herdr shows as unknown, the session page says that Plane cannot see when the agent waits.
+- herdr does not detect every harness tool. On 2026-10-29 it detected Claude Code, Codex and Antigravity CLI, and not OpenCode or Command Code in a terminal. For a tool that herdr shows as unknown, the session page says that Plane cannot see when the agent waits.
+- A harness tool can approve its own requests. For example, Codex with `approvals_reviewer = "auto_review"` in `~/.codex/config.toml` asks nothing, so no permission request reaches Plane. Each tool decides how often it asks; add allow rules in its own settings to ask less.
+- The `--effort` flag of `agy` is not checked live; the effort level in an Antigravity model ID, such as `gemini-4-argon-medium`, works.
 - Keys that you type in the first seconds after the terminal opens can be lost. Browser shortcuts such as Ctrl+W stay with the browser; use Full screen or the terminal app.
 - `cmd acp` marks the hooks of the session folder as trusted without asking you.
 - A provider check can leave an empty session in the history of OpenCode and Command Code.

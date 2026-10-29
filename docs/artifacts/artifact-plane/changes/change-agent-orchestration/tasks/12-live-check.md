@@ -26,6 +26,8 @@ The coordinator or one implementer runs the built application of the integrated 
 - [ ] After a restart of the Plane server, the running sessions continue and show their state again (AOA6).
 - [ ] A real provider check lists two models with different effort levels, and a profile created from the lists starts with its model (AOA10).
 - [ ] Start ADD work starts a coordinator session in a terminal. The agent receives the request, and neither the runtime store nor the shell history of the pane holds the request text (AOA11).
-- [ ] An Antigravity terminal profile starts `agy` with its model and level in a herdr pane, and the evidence records the herdr agent status while agy waits and whether `--mode auto` skips permission prompts (claim `antigravity-terminal`).
+- [ ] An Antigravity terminal profile starts `agy` with its model in a herdr pane, and the evidence records the herdr agent status while agy waits. The `--effort` flag and `--mode auto` stay unchecked; `--mode auto` stays in the bypass list (claim `antigravity-terminal`).
 - [ ] With a Gemini API key, a Gemini terminal profile starts with its model (claim `gemini-terminal-model-flag`), or the evidence names the missing sign-in.
+- [ ] Resume of an ACP session sets the profile model and level again, and End of a terminal session deletes the stopped named herdr session. Tests cover both.
+- [ ] The workbench shows progress while a start runs and an activity indicator for `starting` and `working` sessions (owner request during the live check).
 - [ ] After any fix, the checks of `integration` pass again on the final revision. The coordinator updates the status of each claim from the evidence. The clone and its state are deleted.
