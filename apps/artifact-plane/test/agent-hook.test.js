@@ -18,6 +18,10 @@ import {workbenchStep, workbenchLine, probe, startServe} from '../server/workben
 import {git} from './fixtures.js';
 import {runtimeFixture} from './runtime-fixtures.js';
 
+// A Plane terminal session sets ARTIFACT_PLANE_LAUNCH for its harness program and the
+// tests that it runs. The tests below set it only where they say so.
+delete process.env.ARTIFACT_PLANE_LAUNCH;
+
 // A program that is not a Plane holds this port. The hook processes probe it, give the
 // unavailable line and start no server; ARTIFACT_PLANE_AUTOSTART=0 also stops a start.
 const held = createServer((req, res) => {res.writeHead(404);res.end();});
@@ -414,6 +418,57 @@ test('AIA8: Antigravity payload inference without --event and attempt state tran
   // Stop transitions the attempt to validating because conversationId normalizes turn_id across events.
   assertExpected((await hookOutput(JSON.stringify({...base, executionNum: 1, terminationReason: 'NO_TOOL_CALL'}), {stateDir: f.stateDir})).output, 'agy-continue', base);
   assert.equal(runtime('query', '--state-dir', f.stateDir, '--root', f.root).attempts.find(a => a.id === bound.attempt).state, 'validating');
+  await assertNoPayload(f.stateDir);
+});
+
+// specifications/agent-orchestration.md: Terminal adapter, step 3.
+const LAUNCH = '0123456789ab';
+const harnessIdEvents = stateDir => {
+  const db = new DatabaseSync(join(stateDir, 'runtime.sqlite'), {readOnly: true});
+  try {return db.prepare("SELECT session, attempt, agent, json FROM events WHERE kind='session:harness-id' ORDER BY seq").all().map(r => ({...r, json: JSON.parse(r.json)}));}
+  finally {db.close();}
+};
+test('AO7: with ARTIFACT_PLANE_LAUNCH, the Claude Code SessionStart hook records session:harness-id with the hook session_id and model', async t => {
+  const f = await fixture(t), env = {ARTIFACT_PLANE_LAUNCH: LAUNCH};
+  const starts = claudeInputs(f.root).filter(([input]) => input.hook_event_name === 'SessionStart');
+  for (const [input, expected] of starts) {
+    const result = await hookOutput(JSON.stringify(input), {stateDir: f.stateDir, env, steps: {workbench: ready(f.root)}});
+    // The agent context stays the same as without the variable.
+    assertExpected(result.output, expected, input, READY(f.root));
+    assert.equal(result.unavailable, false, input.source);
+  }
+  const events = harnessIdEvents(f.stateDir);
+  assert.equal(events.length, starts.length);
+  for (const event of events) {
+    assert.deepEqual([event.session, event.attempt, event.agent], [LAUNCH, null, '']);
+    assert.deepEqual(Object.keys(event.json).sort(), ['agent', 'harnessSession', 'id', 'kind', 'model', 'observedAt', 'session']);
+    assert.deepEqual([event.json.kind, event.json.session, event.json.harnessSession, event.json.model], ['session:harness-id', LAUNCH, 'claude-session', 'claude-opus-5-5']);
+  }
+  // Other events with the variable record no harness ID.
+  for (const [input] of claudeInputs(f.root).filter(([input]) => input.hook_event_name !== 'SessionStart'))
+    await hookOutput(JSON.stringify(input), {stateDir: f.stateDir, env, steps: {start: () => {}, workbench: ready(f.root)}});
+  assert.equal(harnessIdEvents(f.stateDir).length, starts.length);
+  await assertNoPayload(f.stateDir);
+});
+
+test('AO7: an invalid ARTIFACT_PLANE_LAUNCH records nothing and keeps the context; a hook process with the variable exits 0 and records the event', async t => {
+  const f = await fixture(t);
+  const input = {session_id: 'claude-session', transcript_path: MARKER, cwd: f.root, hook_event_name: 'SessionStart', source: 'startup', model: 'claude-opus-5-5'};
+  for (const launch of ['plane-0123456789ab', '0123456789AB', '0123456789a', `${LAUNCH}0`]) {
+    const result = await hookOutput(JSON.stringify(input), {stateDir: f.stateDir, env: {ARTIFACT_PLANE_LAUNCH: launch}, steps: {workbench: ready(f.root)}});
+    assertExpected(result.output, 'context', input, READY(f.root));
+    assert.equal(result.unavailable, true, launch);
+  }
+  assert.deepEqual(harnessIdEvents(f.stateDir), []);
+  // A failed store write keeps the context.
+  const failed = await hookOutput(JSON.stringify(input), {stateDir: f.stateDir, env: {ARTIFACT_PLANE_LAUNCH: LAUNCH}, steps: {workbench: ready(f.root), harnessId: () => {throw Error('broken');}}});
+  assertExpected(failed.output, 'context', input, READY(f.root));
+  assert.equal(failed.unavailable, true);
+  const {output, stderr, ms} = await hookProcess(input, {stateDir: f.stateDir, env: {ARTIFACT_PLANE_LAUNCH: LAUNCH}});
+  assertExpected(output, 'context', input, heldLine());
+  assert.equal(stderr, '');
+  t.diagnostic(`SessionStart with ARTIFACT_PLANE_LAUNCH: ${ms} ms`);
+  assert.deepEqual(harnessIdEvents(f.stateDir).map(e => [e.session, e.json.harnessSession, e.json.model]), [[LAUNCH, 'claude-session', 'claude-opus-5-5']]);
   await assertNoPayload(f.stateDir);
 });
 

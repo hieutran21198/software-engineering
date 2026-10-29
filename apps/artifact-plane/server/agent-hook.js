@@ -45,6 +45,20 @@ export function startBind(binding, stateDir) {
   child.unref();
 }
 
+// The harness session of a Plane terminal session (specifications/agent-orchestration.md:
+// Terminal adapter, step 3). A SessionStart input in a process with ARTIFACT_PLANE_LAUNCH
+// records the lifecycle event `session:harness-id` for that Plane session with the hook
+// `session_id` and `model`. It returns the event, or null without a valid launch ID.
+const PLANE_SESSION = /^[0-9a-f]{12}$/;
+const hookText = value => typeof value === 'string' ? value.replace(/[\x00-\x1f\x7f]/g, '').trim().slice(0, 160) || null : null;
+export function recordHarnessId(input, store, launch) {
+  const harnessSession = hookText(input.session_id);
+  if (!PLANE_SESSION.test(launch ?? '') || !harnessSession || !store.db) return null;
+  const event = {id: randomUUID(), session: launch, agent: '', kind: 'session:harness-id', harnessSession, model: hookText(input.model), observedAt: Date.now()};
+  store.insertEvent(event);
+  return event;
+}
+
 // The result of fn, or TIMEOUT when it runs longer than ms.
 async function within(ms, fn) {
   let timer;
@@ -103,8 +117,8 @@ export function normalizeHookInput(raw, eventOption) {
 
 // The output of one hook input text: {output, unavailable}. `unavailable` is true
 // when a step failed, timed out or found no ADD repository. Tests replace steps.
-export async function hookOutput(text, {stateDir, event: eventOption, limits = LIMITS, steps = {}} = {}) {
-  const run = {observe, status: worktreeStatus, workbench: workbenchStep, reserved: reservedAction, infer: inferredBinding, start: startBind, stop: stopCheck, ...steps};
+export async function hookOutput(text, {stateDir, event: eventOption, limits = LIMITS, steps = {}, env = process.env} = {}) {
+  const run = {observe, harnessId: recordHarnessId, status: worktreeStatus, workbench: workbenchStep, reserved: reservedAction, infer: inferredBinding, start: startBind, stop: stopCheck, ...steps};
   let unavailable = false, raw;
   const step = async (ms, fn) => {
     try {const result = await within(ms, fn);if (result !== TIMEOUT) return result;}
@@ -123,6 +137,9 @@ export async function hookOutput(text, {stateDir, event: eventOption, limits = L
   let store = null;
   try {store = run.observe(input, stateDir);} catch {unavailable = true;}
   try {
+    if (event === 'SessionStart' && env.ARTIFACT_PLANE_LAUNCH) {
+      try {if (!store || !run.harnessId(input, store, env.ARTIFACT_PLANE_LAUNCH)) unavailable = true;} catch {unavailable = true;}
+    }
     if (event === 'SessionStart') {
       // The workbench step runs beside the session context step, with its own limit (specifications/ui-discovery.md: Hook output).
       const [status, workbench] = await Promise.all([step(limits.SessionStart, () => run.status(input.cwd)), step(limits.workbench, () => run.workbench(input.cwd))]);
