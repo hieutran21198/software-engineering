@@ -22,11 +22,13 @@ requirements/context-efficiency.md and specifications/context-efficiency.md. Exi
 - [x] Exercise all 18 isolated preparations with a synthetic runner as a runner test; do not report synthetic usage as measured savings.
 - [x] Run deterministic payload comparisons and label them as proxies.
 - [ ] Execute all 18 real model runs; meet 25% median paired input reduction with no scenario regression above 10% and every correctness oracle passing.
-- [ ] Complete and record the integrated browser check.
+- [x] Complete and record the integrated browser check.
 
 ## Evidence
 
 The benchmark unit tests passed all four cases, including all 18 isolated scenario preparations, exact prompt pairing, restored dirty resumed sources and early stop after missing live usage. Synthetic equal usage fails the savings threshold. Missing runs, incorrect facts, different models, partial usage and unaccounted delegation cannot pass acceptance.
+
+`npm run test:browser` passed all 177 tests with system Chromium (8.2 minutes), with no failures or skips. The integrated Node, browser, build, Go and scoped-validator checks pass. Live savings remain a separate incomplete acceptance criterion.
 
 ### Payload proxy
 

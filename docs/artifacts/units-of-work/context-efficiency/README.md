@@ -37,8 +37,8 @@ evidence:
     result: incomplete
     source: docs/artifacts/artifact-plane/changes/change-context-efficiency/tasks/02-measurement.md#live-measurement-blocker
   - criterion: integration
-    method: Run Node, build, Go and validator checks; browser integration is still running.
-    result: incomplete
+    method: Run Node and all 177 browser tests, build, Go and scoped record validators.
+    result: passed
     source: docs/artifacts/artifact-plane/changes/change-context-efficiency/tasks/02-measurement.md#evidence
 ---
 
