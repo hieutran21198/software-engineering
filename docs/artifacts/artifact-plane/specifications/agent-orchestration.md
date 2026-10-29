@@ -365,10 +365,11 @@ Resume keeps the session and its attempt. Respawn starts a new session with `res
 
 ## Workbench
 
-The final layout follows the approved UI/UX mockups. The workbench shows task progress and output, not the agent process.
+The owner approved the [mockup canvas](https://claude.ai/artifact/M8Gq8XJm9S1h2ZZnxHneDQ) on 2026-10-29. It shows the Sessions page, an implementer session with a permission request and its output, a role session with the embedded terminal, a role session that waits for a permission in the terminal, the launch dialog, recovery, Agent settings, the profile editor, Start ADD work and the phone width. It is an illustration for plan approval; this contract is the authority. The workbench shows task progress and output, not the agent process.
 
 - The Work page has Start ADD work. Its dialog takes the request, the worktree (default: the repository root checkout) and the coordinator profile (default: the role default). It lists only terminal profiles and says that the person chats in the harness tool.
 - A terminal session page shows the change phases of a role session, the state, the embedded terminal with Full screen and Open in terminal app, End session, and the output as a tree with diffs. It says that the person chats and approves the plan in the terminal, and that Plane records no approval. Plane builds no chat.
+- When a terminal session is `waiting`, its session page shows a notice above the terminal and marks the terminal border. The notice names the tool of the newest `PermissionRequest` hook observation of the harness session after the session became `waiting`; without one, it says that the agent waits for the person in the terminal. The notice has Focus terminal and no answer control: the person answers in the dialog of the harness tool.
 
 - The Sessions page lists the implementation tasks with a session, grouped by change. Each row shows the task, its DoD progress, an output summary (files, added and removed lines, commits), the harness tool and model, and the state. A second group lists the coordinator, product owner and technical lead sessions with their output summary.
 - A session page shows a header with the role, task, harness tool, model, connection, branch and start time, and the actions Stop turn and End session. Below it come a pending permission request, the DoD checklist, the commits, the last agent message, and the output: the changed files as a tree and the diff of the selected file. An ACP session also has a message field.
@@ -413,5 +414,6 @@ These documented facts support the claim `acp-agent-interfaces`. They were read 
 - The contract covers AO1 to AO28 with commands, events, states, adapters, the runner, output, recovery, the workbench and failures. After the UI/UX review, the runner keeps only the last message and pending permission requests, and the output reader shows the work from Git.
 - KISS: one port with two adapters, one runner, the existing store and attempt model, one settings file, no new MCP tool and no chat; role sessions reuse the conversation of the harness tool in a terminal, and ttyd embeds that terminal without a native module. The profile editor edits only catalog providers, so the HTTP server cannot define an arbitrary program.
 - Impact: execution observation gains Plane-started attempts; the new flows `agent-session-launch` and `agent-session-recovery` record the journeys. The artifact-driven method needs no change; the only reference is the task DAG contract.
-- The two open claims name live checks. They do not block the Plan; the Plan adds the live check.
+- The open claims name live checks. They do not block the Plan; the Plan adds the live check.
+- After the owner approved the mockups, the Workbench section records the canvas and the waiting notice of a terminal session. The notice reads the tool name from the existing hook observations, so the lifecycle events stay without tool names, and Plane still sends no key to the terminal.
 - STE: each rule is one sentence or one table row; terms are in the Terms table.
