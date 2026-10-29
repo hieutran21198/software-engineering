@@ -195,6 +195,7 @@ An invalid profile or role default stays visible with its reason and cannot star
 - `harness: claude-code` with `signIn: plan` and `connection: acp` (requirement AO17).
 - A connection that the provider does not offer, a role default that names no valid profile, or a coordinator, product owner or technical lead default that names an ACP profile.
 - An argument from the permission-bypass list: `--dangerously-skip-permissions`, `--allow-dangerously-skip-permissions`, `--dangerously-bypass-approvals-and-sandbox`, `--yolo`, `-y`, `bypassPermissions`, `--approval-mode=yolo`, the pair `--approval-mode yolo`, the pairs `--permission-mode bypass`, `--permission-mode yolo` and `--permission-mode dont-ask`, and the pairs `--ask-for-approval never` and `-a never`. The list is a guardrail, not a complete control.
+- A profile variable named `ARTIFACT_PLANE_LAUNCH` or `ARTIFACT_PLANE_PROMPT`.
 - An unknown field or a wrong type.
 
 ### Save
@@ -206,11 +207,11 @@ The workbench sends the whole settings object with the digest of the file that i
 The settings service finds each catalog program on `PATH` and runs it with `--version` (5-second limit, no shell). A check of an ACP program on request does these steps in a new private directory under the runtime state directory:
 
 1. Start the program and send `initialize`. Record the protocol version and the sign-in methods.
-2. Send `session/new` without MCP servers. An authentication error (for example code -32000 with a sign-in message) gives the state "Sign-in required" with the sign-in command of the harness tool. For the Claude ACP agent, the plan refusal gives the state "Needs an API key sign-in".
+2. Send `session/new` without MCP servers. An authentication error (for example code -32000 with a sign-in message) gives the state "Sign-in required" with the sign-in instruction that the agent reports. For the Claude ACP agent, the plan refusal gives the state "Needs an API key sign-in".
 3. Read the config option of category `model` and its values. For each value, up to 200 values and 120 seconds in total, send `session/set_config_option` with that value and read the option of category `thought_level` in the response, because the response holds the complete options after a change. When the model value in the response differs from the requested value, wait up to 2 seconds for a `config_option_update` with the requested value and read the levels from it. Record the values as the effort levels of that model, or none. A model without a matching response, or past the limits, has the levels "not checked". A model that the agent refuses is left out of the list. A version 1 agent without config options gives its legacy model list and no effort levels.
 4. Close the session when the agent offers `session/close`, then stop the program and remove the directory.
 
-A check sends no prompt. The check directory holds no project hooks, but user-level hooks of the harness tool still run. The server writes each result to `providers.json` in the runtime state directory with mode 0600: program version, check time, and the models with their names and effort levels. A result holds no credential. A changed program version marks the result stale, and the workbench asks for a new check. A check can add a session record to the history of the harness tool; the claim `provider-check-history` records this effect.
+A check that fails for another reason returns 502 and keeps the last result; a missing program returns 503. A check sends no prompt. The check directory holds no project hooks, but user-level hooks of the harness tool still run. The server writes each result to `providers.json` in the runtime state directory with mode 0600: program version, check time, and the models with their names and effort levels. A result holds no credential. A changed program version marks the result stale, and the workbench asks for a new check. A check can add a session record to the history of the harness tool; the claim `provider-check-history` records this effect.
 
 ## Roles and initial prompts
 
@@ -247,7 +248,7 @@ The server adds these routes to the existing local server. Every route keeps the
 | `GET /api/sessions/stream?session=` | — | Server-sent events with the live state, state changes and output notices of one session. |
 | `GET /api/sessions/terminal/<session>/…` | — | The embedded terminal of a terminal session: ttyd pages and its WebSocket, forwarded to the relay socket. |
 
-`path` is a worktree of an inspected repository. Errors use the existing JSON error shape. The status is 400 for invalid input, 404 for an unknown session, 409 for a refused start, a wrong session state or a base revision that is no longer in the repository, and 503 when the runner or herdr is unavailable.
+`path` is a worktree of an inspected repository. Errors use the existing JSON error shape. The status is 400 for invalid input, 404 for an unknown session, 409 for a refused start, a wrong session state or a base revision that is no longer in the repository, 502 when a provider check fails, and 503 when the runner, herdr or a program is unavailable.
 
 ## Start rules
 
@@ -279,7 +280,7 @@ The runner writes lifecycle events to the existing `events` table with these kin
 | `session:permission-answered` | `request`, `optionKind` |
 | `session:turn-ended` | `stopReason` |
 | `session:output-changed` | — (an ACP tool call of kind `edit`, `delete` or `move` completed) |
-| `session:waiting` / `session:working` | — (terminal sessions, from herdr status) |
+| `session:waiting` / `session:working` / `session:idle` | — (terminal sessions, from herdr status) |
 | `session:interrupted` | `reason`: `process-exit`, `runner-lost`, `pane-missing`, `max-tokens`, `max-turn-requests` or `cancelled` |
 | `session:resumed` | `method`: `resume`, `load` or `terminal` |
 | `session:ended` | `reason`: `person`, `failed`, `refusal` or `error` |
@@ -326,7 +327,7 @@ The runner starts the profile command with the worktree as the working directory
 3. **Session.** Send `session/new` with the worktree as `cwd` and one stdio MCP server: the Plane executable with the argument `mcp`.
 4. **Options.** When the response lists a config option with category `model`, set the profile `model` with `session/set_config_option`. Do the same for category `thought_level` and `reasoning`. Send the option ID as `configId`; in version 2, also send `type: "id"`. When an option does not exist or the agent refuses the value, keep the session and record the profile model as declared, not reported. Plane sets no other option, so it never selects a mode that skips permission prompts.
 5. **Prompt.** Send `session/prompt` with the initial prompt, then with each message of the person. Plane sends only one prompt at a time and refuses a prompt while a turn runs.
-6. **Updates.** Join the agent message chunks of the current turn. When the turn ends, keep the joined text (at most 64 KiB) as the last message. Use other updates only to set the state and to send output notices; discard their content. In version 1, the turn ends with the `session/prompt` response and its stop reason. In version 2, the turn ends with an idle `state_update`; a missing or unknown stop reason counts as `end_turn`.
+6. **Updates.** Join the agent message chunks of the current turn. When the turn ends, keep the newest 64 KiB of the joined text as the last message. Use other updates only to set the state and to send output notices; discard their content. In version 1, the turn ends with the `session/prompt` response and its stop reason. In version 2, the turn ends with an idle `state_update`; a missing or unknown stop reason counts as `end_turn`.
 7. **Permissions.** Keep each `session/request_permission` request pending until the person selects one of its options. Never answer it automatically. An unknown outcome is not approval.
 8. **Cancel.** Send `session/cancel` and answer each pending permission request with the `cancelled` outcome.
 9. **Resume.** Start a new agent process and initialize it. In version 2, send `session/resume` with `replayFrom: {type: "start"}` when the agent offers resume. In version 1, send `session/load` when `loadSession` is true. Otherwise resume is unavailable, and the person can respawn. The runner takes the last agent message from the replayed updates.
@@ -341,7 +342,7 @@ The terminal adapter uses the herdr CLI and never sends input to a running harne
 3. **Harness session ID.** The SessionStart hook of Claude Code inherits `ARTIFACT_PLANE_LAUNCH`. The hook command records `session:harness-id` for that session with the hook `session_id` and `model`.
 4. **Status.** Every 2 seconds, the runner reads `herdr --session plane-<session ID> pane list` and maps the `agent_status` values `working`, `blocked`, `done` and `idle` to the session states. `unknown` keeps the session state. herdr does not detect every harness tool; the live check saw `unknown` for Command Code and Gemini CLI. A missing pane interrupts the session.
 5. **Open in terminal app.** Run the `terminal.open` arguments plus `herdr session attach plane-<session ID>` as a detached process.
-6. **Resume.** Run `tab create` with the arguments of the start in the same named herdr session, and run the profile command plus `--resume <harness session ID>` for `claude-code`. Other harness tools in a terminal can only respawn.
+6. **Resume.** Run `tab create` with the arguments of the start, without `ARTIFACT_PLANE_PROMPT`, in the same named herdr session. When the server does not run or has no workspace, start them as in step 1, again without `ARTIFACT_PLANE_PROMPT`. Then run the profile command plus `--resume <harness session ID>` for `claude-code`. Other harness tools in a terminal can only respawn.
 7. **End.** Run `herdr --session plane-<session ID> server stop`, which stops that named session and its pane.
 
 Plane does not install the herdr Claude integration. When the person installs it, its user hooks run beside the project hooks of Plane. At start, a herdr server downloads its agent detection rules from herdr.dev; Plane does not change this.
@@ -445,6 +446,7 @@ These documented facts support the claim `acp-agent-interfaces`. They were read 
 - KISS: one port with two adapters, one runner, the existing store and attempt model, one settings file, no new MCP tool and no chat; role sessions reuse the conversation of the harness tool in a terminal, and ttyd embeds that terminal without a native module. The profile editor edits only catalog providers, so the HTTP server cannot define an arbitrary program.
 - Impact: execution observation gains Plane-started attempts; the new flows `agent-session-launch` and `agent-session-recovery` record the journeys. The artifact-driven method needs no change; the only reference is the task DAG contract.
 - The open claims name live checks. They do not block the Plan; the Plan adds the live check.
+- The tasks `acp-client` and `terminal-adapter` found gaps: resume after the herdr server or its workspace stopped, an event for an idle terminal session, reserved profile variable names, the sign-in instruction and the failure statuses of a provider check, and the part of a long last message that the runner keeps. A second amendment closes them.
 - After plan approval, the live check of task `verify-interfaces` refuted `herdr-named-sessions`, `terminal-model-flags` and `per-model-effort-discovery`. This amendment corrects the herdr start, the catalog, the provider check, the relay socket protection and the herdr `unknown` state, adds the output details of task `output-reader`, and adds the claims `gemini-terminal-model-flag` and `commandcode-acp-hook-trust`.
 - After the owner approved the mockups, the Workbench section records the canvas and the waiting notice of a terminal session. The notice reads the tool name from the existing hook observations, so the lifecycle events stay without tool names, and Plane still sends no key to the terminal.
 - STE: each rule is one sentence or one table row; terms are in the Terms table.
