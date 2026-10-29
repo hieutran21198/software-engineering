@@ -50,6 +50,7 @@ flow:
     - id: evidence
       title: Read governing sources and missing review proof
       supports:
+        - context-efficiency-contract
         - authoring-contract
         - contract
         - review-service
@@ -100,6 +101,12 @@ flow:
       to: select
       condition: The source selection changes or a stale/error reply requires a new read.
   support:
+    - id: context-efficiency-contract
+      kind: element
+      artifact: artifact-plane
+      element: specifications/context-efficiency.md
+      requires: Selective context retains governing evidence and approval uncertainty
+      basis: documented
     - id: human-guidance-contract
       kind: element
       artifact: artifact-plane
