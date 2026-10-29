@@ -39,7 +39,7 @@ The owner wants to run ADD across several harness tools directly from Plane, and
 - AO4: Launch profiles are personal settings outside every repository. A profile contains no credential value.
 - AO5: An implementer session works in the worktree of its task. Plane refuses an implementer session in a checkout of `main` or `master`.
 - AO6: For a session that reports structured events, the person reads the agent messages, sends messages and answers permission requests in the workbench.
-- AO7: For a session that a person drives in a terminal, the workbench shows when the agent waits for the person and opens that terminal on request. Plane sends no text and no keys into that terminal.
+- AO7: For a session that a person drives in a terminal, the workbench shows when the agent waits for the person and opens that terminal on request. After the harness program starts, Plane sends no text and no keys into that terminal.
 - AO8: The workbench shows the role, task, harness tool, model and state of each session. It shows the sessions that wait for the person.
 - AO9: The person can stop the current turn of a session and can end a session.
 - AO10: After an interruption, the person can continue the live session, resume the same harness session, or start a new attempt with the same or another profile. A new attempt starts from the task, its branch and its recorded evidence.
@@ -57,7 +57,7 @@ The owner wants to run ADD across several harness tools directly from Plane, and
 
 - AOA1: With one profile for each of Claude Code, Codex, OpenCode V2, Command Code and Gemini CLI, a person starts a session. The workbench shows its role, harness tool, model and state. The live evidence records each harness version, or names the missing capability.
 - AOA2: An implementer session with structured events asks for a permission. The person answers in the workbench, and the agent continues.
-- AOA3: A terminal session that waits for the person shows as waiting. Open terminal shows that session. A test confirms that Plane sends no input to it.
+- AOA3: A terminal session that waits for the person shows as waiting. Open terminal shows that session. A test confirms that Plane sends no input to it after the start command.
 - AOA4: After its agent process stops, an attempt shows as interrupted. Resume reattaches the same harness session. Respawn starts a new attempt with another profile on the same task branch.
 - AOA5: A second start request for a task with an active attempt returns the existing attempt.
 - AOA6: After a restart of the Plane server, running sessions continue and show their state again.
@@ -71,3 +71,5 @@ Artifact Plane owns this capability. The artifact-driven method keeps ownership 
 ## Self-check
 
 Each requirement states a need or an owner constraint, not an adapter technology. The scope excludes agent-started sessions, automatic dispatch, remote runners, team mode, a terminal inside the workbench, approvals recorded by Plane and credential handling. The two claims stay open until the Specification checks the vendor documentation. No blocker prevents Specification. KISS and STE checklists applied.
+
+The Technical Lead returned AO7: herdr starts a program by typing its command line into the shell of the new pane. AO7 now forbids input only after the harness program starts. The start command contains only the profile command and the fixed initial prompt.
