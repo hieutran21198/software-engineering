@@ -22,7 +22,19 @@ acceptance:
   - id: integration
     criterion: Node, browser and record checks and the live harness check pass together, and the workbench matches the approved UI/UX mockups.
     integration: true
-evidence: []
+evidence:
+  - criterion: orchestration
+    method: Live check with the owner driving sessions of Claude Code, Codex, OpenCode V2, Command Code and Antigravity CLI from the workbench, with a chosen model for each, including a stop, resume, respawn and server restart.
+    result: passed
+    source: docs/artifacts/artifact-plane/changes/change-agent-orchestration/tasks/12-live-check.md#evidence
+  - criterion: boundaries
+    method: Store and history scans after fixture and live sessions, Host and Origin refusals on every new route and the live relay, bypass-option validity tests and repository fingerprints after start, end and failure.
+    result: passed
+    source: docs/artifacts/artifact-plane/changes/change-agent-orchestration/tasks/11-integration.md#evidence
+  - criterion: integration
+    method: Run build, Node and browser suites, the executable smoke check and the record validator on the final revision, and the owner look at the workbench screenshots.
+    result: passed
+    source: docs/artifacts/artifact-plane/changes/change-agent-orchestration/tasks/12-live-check.md#evidence
 ---
 
 # Agent orchestration
