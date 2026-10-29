@@ -24,5 +24,6 @@ This artifact uses the in-place layout. Working knowledge is in requirements, sp
 - [In-place layout reading](specifications/knowledge-layout-reading.md)
 - [Change impact requirements](requirements/change-impact.md), [change impact service contract](specifications/change-impact.md) and [typed impact ledger decision](decisions/016-typed-impact-ledger.md)
 - [Local server decision](decisions/001-local-server.md) and [derived workflow decision](decisions/002-derived-workflow.md)
+- [Agent orchestration requirements](requirements/agent-orchestration.md), [agent orchestration contract](specifications/agent-orchestration.md) and [session adapter decision](decisions/018-agent-session-adapters.md)
 
 Version records are in versions. Records 1.5.0 to 1.13.0 were converted from complete legacy snapshots; each one gives the Git command that finds its knowledge. Change records and retained delivery plans are in changes.
