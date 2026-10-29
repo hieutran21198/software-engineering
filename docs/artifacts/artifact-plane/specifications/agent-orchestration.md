@@ -224,7 +224,7 @@ A session has one role. Plane sends one fixed initial prompt. For an ACP session
 | `technical-lead` | You are the ADD technical lead. Load the add-technical-lead skill and follow it for change `{artifact}/{change}`. |
 | `implementer` | You are an ADD implementer. Load the add-implementer skill and follow it. Your task is `{task}` of change `{artifact}/{change}` in this worktree on branch `{branch}`. Plane does not record plan approval; check the gates of the skill before you change code. |
 
-Without a selected change, the coordinator prompt says: "No change is selected. The person asks: `{request}`. Start with discovery, and create a dedicated branch before you write knowledge." The request is the text of the person, unchanged. A respawn adds: "An earlier attempt on this task stopped: `{reason}`. Read the task, the branch history, `git status` and the change brief before you continue." The reason is one value of the interruption reasons below.
+Without a selected change, the coordinator prompt says: "No change is selected. The person asks: `{request}`. Start with discovery, and create a dedicated branch before you write knowledge." The request is the text of the person, unchanged. A respawn adds: "An earlier attempt on this task stopped: `{reason}`. Read the task, the branch history, `git status` and the change brief before you continue." The reason is the stored reason of the earlier session.
 
 ## Commands
 
@@ -248,7 +248,7 @@ The server adds these routes to the existing local server. Every route keeps the
 | `GET /api/sessions/stream?session=` | — | Server-sent events with the live state, state changes and output notices of one session. |
 | `GET /api/sessions/terminal/<session>/…` | — | The embedded terminal of a terminal session: ttyd pages and its WebSocket, forwarded to the relay socket. |
 
-`path` is a worktree of an inspected repository. Errors use the existing JSON error shape. The status is 400 for invalid input, 404 for an unknown session, 409 for a refused start, a wrong session state or a base revision that is no longer in the repository, 502 when a provider check fails, and 503 when the runner, herdr or a program is unavailable.
+`path` is a worktree of an inspected repository. `task` is the task path relative to the `tasks/` directory of the change. Errors use the existing JSON error shape. The status is 400 for invalid input, 404 for an unknown session, 409 for a refused start, a wrong session state or a base revision that is no longer in the repository, 429 when a client opens too many streams, 502 when a provider check fails, and 503 when the runner, herdr or a program is unavailable.
 
 ## Start rules
 
@@ -259,9 +259,9 @@ The orchestrator checks these rules in order and refuses the start with the firs
 3. An `implementer` names `artifact`, `change` and `task`. The task is a listed task of a current change in that worktree (specifications/task-dag.md). The branch of the worktree is not `main`, `master` or a detached HEAD.
 4. A `product-owner` or `technical-lead` names `artifact` and `change` of a current change. A `coordinator` can name them.
 5. A role session needs a profile with `connection: terminal`. The refusal says "Role sessions run in a terminal, where you chat with the harness tool."
-6. Only a `coordinator` takes `request`: nonempty text of at most 8 KiB. A coordinator without a change needs a request. Plane passes the request to the agent and stores no copy.
-7. When the task has an open attempt, the server returns that attempt and its session with `existing: true` and starts nothing. The orchestrator serializes start requests for the same task.
-8. `respawnOf` names an ended or interrupted session of the same task.
+6. Only a `coordinator` takes `request`: nonempty text of at most 8 KiB. A coordinator without a change needs a request, and a coordinator with a change takes none. Plane passes the request to the agent and stores no copy.
+7. When the task has an open attempt, the server returns that attempt and its session with `existing: true` and starts nothing. An open attempt belongs to a session of the task in state `starting`, `working`, `waiting` or `idle`, or has no end and an observation in the last 10 minutes. The same task means the same repository, artifact, change and task path in any worktree. The orchestrator serializes start requests for the same task.
+8. `respawnOf` names an ended or interrupted implementer session of the same task.
 
 The launch dialog shows these facts as warnings that the person confirms; they are not gates of Plane: unchecked DoD items of prerequisite tasks, upstream artifacts without an established version, and the sentence "Plane does not record plan approval."
 
@@ -395,7 +395,7 @@ The diff route accepts only a path of the current changed-file list. When the ba
 | Session `interrupted`, resume unavailable | Respawn, Respawn with another profile. |
 | Session `ended` | Respawn, Respawn with another profile. |
 
-Resume keeps the session and its attempt. It uses the current settings of the profile ID of the session, because the store keeps only the profile summary. Respawn starts a new session with `respawnOf`, and its explicit binding supersedes the earlier attempt. The respawn prompt points the agent at the task, the branch and the change brief. The agent reads the change brief through the Plane MCP server. Uncommitted files stay in the worktree; Plane changes no file.
+For a role session, Respawn starts a new session with the same role and change, without `respawnOf`. Resume keeps the session and its attempt. It uses the current settings of the profile ID of the session, because the store keeps only the profile summary. Respawn starts a new session with `respawnOf`, and its explicit binding supersedes the earlier attempt. The respawn prompt points the agent at the task, the branch and the change brief. The agent reads the change brief through the Plane MCP server. Uncommitted files stay in the worktree; Plane changes no file.
 
 ## Workbench
 
@@ -403,12 +403,13 @@ The owner approved the [mockup canvas](https://claude.ai/artifact/M8Gq8XJm9S1h2Z
 
 - The Work page has Start ADD work. Its dialog takes the request, the worktree (default: the repository root checkout) and the coordinator profile (default: the role default). It lists only terminal profiles and says that the person chats in the harness tool.
 - A terminal session page shows the change phases of a role session, the state, the embedded terminal with Full screen and Open in terminal app, End session, and the output as a tree with diffs. It says that the person chats and approves the plan in the terminal, and that Plane records no approval. Plane builds no chat.
-- When a terminal session is `waiting`, its session page shows a notice above the terminal and marks the terminal border. The notice names the tool of the newest `PermissionRequest` hook observation of the harness session after the session became `waiting`; without one, it says that the agent waits for the person in the terminal. The notice has Focus terminal and no answer control: the person answers in the dialog of the harness tool. When herdr reports `unknown` for the agent of a terminal session, the page says that Plane cannot see when this agent waits.
+- When a terminal session is `waiting`, its session page shows a notice above the terminal and marks the terminal border. The notice names the tool of the newest `PermissionRequest` hook observation of the harness session after the previous state change of the session, because the hook runs before herdr reports `blocked`; without one, it says that the agent waits for the person in the terminal. The notice has Focus terminal and no answer control: the person answers in the dialog of the harness tool. When herdr reports `unknown` for the agent of a terminal session, the page says that Plane cannot see when this agent waits.
 
 - The Sessions page lists the implementation tasks with a session, grouped by change. Each row shows the task, its DoD progress, an output summary (files, added and removed lines, commits), the harness tool and model, and the state. A second group lists the coordinator, product owner and technical lead sessions with their output summary.
 - A session page shows a header with the role, task, harness tool, model, connection, branch and start time, and the actions Stop turn and End session. Below it come a pending permission request, the DoD checklist, the commits, the last agent message, and the output: the changed files as a tree and the diff of the selected file. An ACP session also has a message field.
 - The workbench shows no tool call log and no message stream.
-- The top bar shows the number of sessions that wait for the person.
+- The top bar shows the number of sessions of the selected repository that wait for the person.
+- A coordinator session without a change shows the phases of the current change of its worktree when exactly one exists.
 - A launch dialog opens from the task details of the change page (Start implementer), from the change page (Start session) and from the Sessions page (New session). It shows role, change, task, worktree, profile with the role default selected, the warnings of the start rules and Start.
 - Task runtime details also show the harness tool and the model of each attempt.
 - An Agent settings page shows three sections. Providers lists each catalog provider with its programs and versions, connections, sign-in state and models, and a Check action, plus herdr and ttyd. Role defaults has one profile selector for each role. Profiles lists the profiles with their state and the actions New profile, Edit, Duplicate and Delete.
@@ -427,7 +428,7 @@ When no profile exists, the workbench shows no session control except the Agent 
 | ttyd is missing or does not start | The session page shows Open in terminal app and the reason; the session continues in herdr. |
 | The runtime store is unavailable, for example on Windows | Session control is unavailable with the existing store reason. |
 
-No failure writes a repository file or Git metadata.
+When the runner refuses a start after the binding, the bound attempt becomes `interrupted`. No failure writes a repository file or Git metadata.
 
 ## Interface sources
 
@@ -450,6 +451,7 @@ These documented facts support the claim `acp-agent-interfaces`. They were read 
 - KISS: one port with two adapters, one runner, the existing store and attempt model, one settings file, no new MCP tool and no chat; role sessions reuse the conversation of the harness tool in a terminal, and ttyd embeds that terminal without a native module. The profile editor edits only catalog providers, so the HTTP server cannot define an arbitrary program.
 - Impact: execution observation gains Plane-started attempts; the new flows `agent-session-launch` and `agent-session-recovery` record the journeys. The artifact-driven method needs no change; the only reference is the task DAG contract.
 - The open claims name live checks. They do not block the Plan; the Plan adds the live check.
+- The task `session-api` found gaps: the hook order for the waiting tool name, the open attempt, a request with a selected change, respawn of role sessions, the respawn reason, the task path, the stream limit, phases of a coordinator without a change, and the waiting count. A fourth amendment closes them.
 - The task `runner` found contradictions between the States table and its paragraph, and gaps for resume, runner loss and the runner socket path. A third amendment adds the relay methods and the relay state from task `terminal-relay`, makes herdr status set only the session state, adds the attempt state after a resume, makes a runner loss interrupt ACP sessions, applies the socket path limit to the runner socket, and drops the `session:ended` reasons that no signal produces.
 - The tasks `acp-client` and `terminal-adapter` found gaps: resume after the herdr server or its workspace stopped, an event for an idle terminal session, reserved profile variable names, the sign-in instruction and the failure statuses of a provider check, and the part of a long last message that the runner keeps. A second amendment closes them.
 - After plan approval, the live check of task `verify-interfaces` refuted `herdr-named-sessions`, `terminal-model-flags` and `per-model-effort-discovery`. This amendment corrects the herdr start, the catalog, the provider check, the relay socket protection and the herdr `unknown` state, adds the output details of task `output-reader`, and adds the claims `gemini-terminal-model-flag` and `commandcode-acp-hook-trust`.
