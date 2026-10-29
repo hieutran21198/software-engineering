@@ -33,7 +33,7 @@ Run ADD sessions across several harness tools from Artifact Plane. Each vendor's
 
 ## Included scope
 
-Person-started sessions with launch profiles, a workbench inbox for agent messages and permission requests, waiting indicators and open-terminal actions for terminal sessions, and recovery after an interruption.
+Person-started sessions with launch profiles, agent settings (providers, profiles and a default profile for each role), task progress and output for each session, permission requests, waiting indicators and open-terminal actions for terminal sessions, and recovery after an interruption.
 
 ## Excluded scope
 

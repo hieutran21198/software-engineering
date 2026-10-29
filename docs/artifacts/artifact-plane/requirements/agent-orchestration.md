@@ -30,6 +30,7 @@ The owner wants to run ADD across several harness tools directly from Plane, and
 - Plane coordinates sessions as an event-driven system. Each harness tool connects through one adapter boundary.
 - Plane routes no model traffic. Plane reads, stores and forwards no credential. Each harness tool uses its own sign-in.
 - The delivered observation stays available.
+- Each harness tool keeps its own sign-in and its own model providers. Plane only reads what the harness tool reports.
 
 ## Requirements
 
@@ -53,6 +54,10 @@ The owner wants to run ADD across several harness tools directly from Plane, and
 - AO18: When the person configures no launch profile, the delivered observation, hooks, MCP tools and workbench behave as before.
 - AO19: A missing harness program, a failed sign-in or a stopped session shows a reason in the workbench. The failure changes no repository file.
 - AO20: For each session, the workbench shows its output since the session started: the commits, and the changed files as a tree with the diff of each file, uncommitted changes included.
+- AO21: The person creates, edits, duplicates and deletes launch profiles in the workbench. Plane writes them only to the personal settings file.
+- AO22: The workbench lists the supported harness tools on the computer with their programs, versions, connection kinds, sign-in state, models and reasoning levels. A check on request reads these facts without a prompt.
+- AO23: The person sets a default profile for each ADD role. The launch dialog selects it, and the person can choose another profile for each session.
+- AO24: A profile that the workbench saves runs only a program of a supported harness tool. Its extra arguments and environment variable names pass the permission-bypass and credential checks.
 
 ## Acceptance criteria
 
@@ -65,6 +70,7 @@ The owner wants to run ADD across several harness tools directly from Plane, and
 - AOA7: Tests confirm that the store contains no message text, prompt or credential, that foreign Host and Origin values are refused, and that no started command contains a permission-bypass option.
 - AOA8: Existing Node, browser and record checks pass. A screenshot review at desktop and narrow widths matches the approved UI/UX mockups.
 - AOA9: After a session changes files, its page shows the changed files as a tree, their line counts and the diff of a selected file since the session started. The page shows no tool activity log.
+- AOA10: In the workbench, the person checks a harness tool, creates a profile with a model from the check and sets it as the implementer default. The settings file outside every repository holds the profile, and the launch dialog selects it. A bypass option or a credential-like variable name is refused with a reason.
 
 ## Impact
 
@@ -77,3 +83,5 @@ Each requirement states a need or an owner constraint, not an adapter technology
 The Technical Lead returned AO7: herdr starts a program by typing its command line into the shell of the new pane. AO7 now forbids input only after the harness program starts. The start command contains only the profile command and the fixed initial prompt.
 
 After the UI/UX review, the owner asked for task progress and task output instead of the agent process. AO6 and AO8 now show the last message and the DoD progress, and AO20 and AOA9 add the output tree and diffs.
+
+The owner then asked for profile and provider configuration in the workbench. AO21 to AO24 and AOA10 add agent settings: providers, profiles and role defaults. Credential handling stays excluded.
