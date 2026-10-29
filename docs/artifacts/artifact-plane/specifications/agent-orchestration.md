@@ -30,9 +30,18 @@ claims:
     basis: documented
     check: With only a Claude plan sign-in on the machine, start the Claude ACP agent with `--hide-claude-auth` and record whether `session/new` returns an authentication error.
     risk_if_wrong: A Claude ACP profile can use a plan sign-in, against requirement AO17.
+  - id: per-model-effort-discovery
+    kind: assumption
+    statement: After a model change through session/set_config_option, each ACP agent returns the effort levels of the new model, so a check can list the levels of each model without a prompt.
+    status: supported
+    basis: documented
+    evidence:
+      - docs/artifacts/artifact-plane/specifications/agent-orchestration.md#interface-sources
+    check: Check Codex, OpenCode and the Claude ACP agent, then compare the recorded levels of two models with the levels that a session with each model offers.
+    risk_if_wrong: The effort list shows levels of another model, and a profile starts with a level that its model refuses.
   - id: terminal-model-flags
     kind: unknown
-    statement: The model flags of the terminal programs of Codex, OpenCode, Command Code and Gemini CLI in the provider catalog are not checked.
+    statement: The model and effort flags of the terminal programs of Codex, OpenCode, Command Code and Gemini CLI in the provider catalog are not checked.
     status: open
     basis: inferred
     check: Run each terminal program with its model flag and a short initial prompt in a disposable clone, and record the model that the program reports.
@@ -75,6 +84,7 @@ Plane routes no model traffic. Each harness tool signs in with its own stored si
 | Provider | A supported harness tool and its programs in the provider catalog. |
 | Launch profile | A personal setting that names a provider, a connection kind, a sign-in kind, a model and optional extra arguments. |
 | Role default | The profile that the launch dialog selects for an ADD role. |
+| Effort level | The reasoning level of a model, stored in the profile field `reasoning`. |
 | Connection kind | `acp` for an ACP agent, or `terminal` for a herdr pane that a person drives. |
 | Live state | The last agent message of the latest turn and the pending permission requests of a session. The runner keeps it in memory only. |
 | Base revision | The `HEAD` commit of the session worktree when the session started. A respawn keeps the base revision of the earlier session. |
@@ -117,15 +127,27 @@ The settings file is `profiles.json` in `ARTIFACT_PLANE_CONFIG_DIR` when it is s
 
 ### Provider catalog
 
-| Provider | ACP program | ACP model | Terminal program | Model flag | Terminal resume |
-| --- | --- | --- | --- | --- | --- |
-| `claude-code` | `claude-agent-acp --hide-claude-auth` | option | `claude` | `--model` | `--resume <harness session ID>` |
-| `codex` | `codex-acp` | option | `codex` | `--model` | none |
-| `opencode` | `opencode acp` | option | `opencode` | `--model` | none |
-| `command-code` | `cmd acp` | option | `cmd` | `--model` | none |
-| `gemini-cli` | `gemini --acp` | flag | `gemini` | `--model` | none |
+| Provider | ACP program | ACP model | Terminal program | Model flag | Effort flag | Terminal resume |
+| --- | --- | --- | --- | --- | --- | --- |
+| `claude-code` | `claude-agent-acp --hide-claude-auth` | option | `claude` | `--model` | `--effort` | `--resume <harness session ID>` |
+| `codex` | `codex-acp` | option | `codex` | `--model` | `-c model_reasoning_effort=<level>` | none |
+| `opencode` | `opencode acp` | option | `opencode` | `--model` | none | none |
+| `command-code` | `cmd acp` | option | `cmd` | `--model` | none | none |
+| `gemini-cli` | `gemini --acp` | flag | `gemini` | `--model` | none | none |
 
-The profile command is the program of the profile connection, then the model flag and the model when the connection is `terminal` or the ACP model column says "flag", then `args`. For `harness: other`, the profile command is `command`.
+The profile command is the program of the profile connection, then the model flag and the model when the connection is `terminal` or the ACP model column says "flag", then the effort flag and the level for a terminal profile with a level, then `args`. For `harness: other`, the profile command is `command`.
+
+### Model and effort lists
+
+The profile editor shows the model and the effort level only as lists (requirement AO25). The lists come from these sources:
+
+| Provider | ACP profile | Terminal profile |
+| --- | --- | --- |
+| `claude-code` | The check of the ACP program, with an API key sign-in. | The documented list: the model aliases and the `--effort` levels of the Claude Code CLI reference. Plane does not check a plan sign-in. |
+| `codex`, `opencode`, `command-code` | The check of the ACP program. | The check of the ACP program of the same provider. |
+| `gemini-cli` | The check of the ACP program. It has no effort levels. | The check of the ACP program of the same provider. |
+
+A save of a catalog profile needs a `model` from the list and a `reasoning` level from the levels of that model; a model without levels needs no `reasoning`. Without a list, the save fails with "Check the provider first." When a later check no longer lists the model or the level, the profile shows the warning "Not in the last check" and can still start; the ACP adapter then records the model as declared.
 
 The claim `terminal-model-flags` records that the model flags are not all checked. Plane runs every program without a shell. The Claude ACP agent gets `--hide-claude-auth`, so that it does not offer the plan sign-in; the claim `claude-acp-plan-sign-in` records that this effect is not yet checked.
 
@@ -148,10 +170,10 @@ The settings service finds each catalog program on `PATH` and runs it with `--ve
 
 1. Start the program and send `initialize`. Record the protocol version and the sign-in methods.
 2. Send `session/new` without MCP servers. An authentication error gives the state "Sign-in required" with the sign-in command of the harness tool.
-3. Read the config options of categories `model` and `thought_level`, or the legacy model list of a version 1 agent. Record the values and names.
+3. Read the config option of category `model` and its values. For each value, up to 50 values, send `session/set_config_option` with that value and read the option of category `thought_level` in the response, because the response holds the complete options after a change. Record the values of that option as the effort levels of that model, or none. A version 1 agent without config options gives its legacy model list and no effort levels.
 4. Close the session when the agent offers `session/close`, then stop the program and remove the directory.
 
-A check sends no prompt. The server keeps check results in memory for 30 minutes. A check can add a session record to the history of the harness tool; the claim `provider-check-history` records this effect.
+A check sends no prompt. The server writes each result to `providers.json` in the runtime state directory with mode 0600: program version, check time, and the models with their names and effort levels. A result holds no credential. A changed program version marks the result stale, and the workbench asks for a new check. A check can add a session record to the history of the harness tool; the claim `provider-check-history` records this effect.
 
 ## Roles and initial prompts
 
@@ -328,7 +350,7 @@ The final layout follows the approved UI/UX mockups. The workbench shows task pr
 - A launch dialog opens from the task details of the change page (Start implementer), from the change page (Start session) and from the Sessions page (New session). It shows role, change, task, worktree, profile with the role default selected, the warnings of the start rules and Start.
 - Task runtime details also show the harness tool and the model of each attempt.
 - An Agent settings page shows three sections. Providers lists each catalog provider with its programs and versions, connections, sign-in state and models, and a Check action. Role defaults has one profile selector for each role. Profiles lists the profiles with their state and the actions New profile, Edit, Duplicate and Delete.
-- A profile editor sets name, provider, connection, sign-in kind, model (from the last check, or another model ID), reasoning level, the roles that use the profile as default, and, under Advanced, extra arguments and environment variables. It shows the program that Plane will run and the validity errors, and offers Check profile and Save.
+- A profile editor sets name, provider, connection, sign-in kind, model and effort level from their lists, the roles that use the profile as default, and, under Advanced, extra arguments and environment variables. A change of provider changes the model list, and a change of model changes the effort list. The editor shows the source of the lists (checked or documented) with Check again, the program that Plane will run and the validity errors.
 
 When no profile exists, the workbench shows no session control except the Agent settings page (requirement AO18).
 
@@ -348,6 +370,7 @@ No failure writes a repository file or Git metadata.
 
 These documented facts support the claim `acp-agent-interfaces`. They were read on 2026-10-29 without running the programs.
 
+- ACP: `session/set_config_option` returns the complete config options after a change, because one change can affect other options (agentclientprotocol.com session config options page).
 - ACP: version negotiation, `session/load` and `session/resume` in version 1, `session/resume` with `replayFrom` in version 2, config option categories `model` and `thought_level`, stop reasons, permission requests and `session/cancel` (agentclientprotocol.com, protocol version 2 migration, initialization and prompt turn pages).
 - Claude ACP agent 0.99.0: versions 1 and 2, `loadSession`, options `model` and `effort`, project settings loaded, the option `--hide-claude-auth` (github.com/agentclientprotocol/claude-agent-acp).
 - Codex ACP agent 2.3.0: versions 1 and 2, `loadSession` in version 1 and `session/resume` in version 2, options `model` and `reasoning_effort`, ChatGPT and API key sign-in methods (github.com/agentclientprotocol/codex-acp).
@@ -358,7 +381,7 @@ These documented facts support the claim `acp-agent-interfaces`. They were read 
 
 ## Specification self-check
 
-- The contract covers AO1 to AO24 with commands, events, states, adapters, the runner, output, recovery, the workbench and failures. After the UI/UX review, the runner keeps only the last message and pending permission requests, and the output reader shows the work from Git.
+- The contract covers AO1 to AO25 with commands, events, states, adapters, the runner, output, recovery, the workbench and failures. After the UI/UX review, the runner keeps only the last message and pending permission requests, and the output reader shows the work from Git.
 - KISS: one port with two adapters, one runner, the existing store and attempt model, one settings file and no new MCP tool. The profile editor edits only catalog providers, so the HTTP server cannot define an arbitrary program.
 - Impact: execution observation gains Plane-started attempts; the new flows `agent-session-launch` and `agent-session-recovery` record the journeys. The artifact-driven method needs no change; the only reference is the task DAG contract.
 - The two open claims name live checks. They do not block the Plan; the Plan adds the live check.
