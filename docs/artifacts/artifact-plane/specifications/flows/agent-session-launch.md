@@ -29,6 +29,7 @@ flow:
       supports:
         - orchestration-contract
         - adapter-decision
+        - relay-decision
     - id: observe
       title: Record states and show the task progress and output from Git
       supports:
@@ -77,6 +78,12 @@ flow:
       artifact: artifact-plane
       element: decisions/018-agent-session-adapters.md
       requires: ACP for structured sessions and herdr panes for sessions that a person drives.
+      basis: documented
+    - id: relay-decision
+      kind: element
+      artifact: artifact-plane
+      element: decisions/021-embedded-terminal-relay.md
+      requires: The session page embeds a terminal session through ttyd behind the server checks.
       basis: documented
     - id: runner-decision
       kind: element

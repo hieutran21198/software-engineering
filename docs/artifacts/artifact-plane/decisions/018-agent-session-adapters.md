@@ -20,4 +20,4 @@ Adopt option A as defined in specifications/agent-orchestration.md. A launch pro
 
 ## Consequences
 
-Plane depends on the ACP agent programs and on herdr only when a person configures a profile that uses them. ACP changes between protocol versions 1 and 2, so the client negotiates the version and supports both resume methods. A terminal session gives coarse states only: herdr status and the existing hooks. This decision replaces the part of ADR 006 that kept agent execution outside Plane. The observer of ADR 006 stays unchanged.
+Plane depends on the ACP agent programs and on herdr only when a person configures a profile that uses them. ACP changes between protocol versions 1 and 2, so the client negotiates the version and supports both resume methods. A terminal session gives coarse states only: herdr status and the existing hooks. This decision replaces the part of ADR 006 that kept agent execution outside Plane. The observer of ADR 006 stays unchanged. [ADR 021](021-embedded-terminal-relay.md) later embeds terminal sessions through ttyd; a native pseudo-terminal in Plane (option D) stays rejected.

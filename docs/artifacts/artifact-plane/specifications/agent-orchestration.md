@@ -46,6 +46,13 @@ claims:
     basis: inferred
     check: Run each terminal program with its model flag and a short initial prompt in a disposable clone, and record the model that the program reports.
     risk_if_wrong: A terminal profile starts with another model than the profile names.
+  - id: herdr-named-sessions
+    kind: unknown
+    statement: It is not checked that `herdr --session <name> tab create` starts the named session when it does not run, and that `herdr --session <name> server stop` stops only that session.
+    status: open
+    basis: documented
+    check: In a disposable environment, create two named herdr sessions with tab create, stop one with server stop, and record which servers and panes remain.
+    risk_if_wrong: Terminal sessions share one herdr client, or ending one session stops another.
   - id: provider-check-history
     kind: risk
     statement: A provider check opens a session without a prompt, and some harness tools keep that empty session in their history.
@@ -59,7 +66,7 @@ claims:
 
 ## Components
 
-This contract implements requirements/agent-orchestration.md. The decisions are [ADR 018](../decisions/018-agent-session-adapters.md), [ADR 019](../decisions/019-session-runner-process.md) and [ADR 020](../decisions/020-profile-editing-catalog.md).
+This contract implements requirements/agent-orchestration.md. The decisions are [ADR 018](../decisions/018-agent-session-adapters.md), [ADR 019](../decisions/019-session-runner-process.md) , [ADR 020](../decisions/020-profile-editing-catalog.md) and [ADR 021](../decisions/021-embedded-terminal-relay.md).
 
 | Component | Process | Responsibility |
 | --- | --- | --- |
@@ -71,6 +78,7 @@ This contract implements requirements/agent-orchestration.md. The decisions are 
 | Runtime store | file | Keeps sessions, attempts and lifecycle events. It is the existing store of specifications/codex-execution.md. |
 | Output reader | `artifact-plane serve` | Reads the output of a session from Git in its worktree. |
 | Settings service | `artifact-plane serve` | Reads and writes the settings file and checks providers. |
+| Terminal relay | runner and `artifact-plane serve` | Runs one ttyd process for each viewed terminal session and forwards it to the workbench. |
 | Workbench | browser | Shows tasks, sessions, output, permission requests and launch controls. |
 
 Plane routes no model traffic. Each harness tool signs in with its own stored sign-in. Plane never reads, stores, forwards or asks for a credential.
@@ -98,7 +106,7 @@ The settings file is `profiles.json` in `ARTIFACT_PLANE_CONFIG_DIR` when it is s
 ```json
 {
   "version": 1,
-  "terminal": { "open": ["ghostty", "-e", "herdr"] },
+  "terminal": { "open": ["ghostty", "-e"] },
   "roleDefaults": { "coordinator": "claude-opus-terminal", "product-owner": "claude-opus-terminal",
     "technical-lead": "claude-opus-terminal", "implementer": "codex-fast" },
   "profiles": [
@@ -113,7 +121,7 @@ The settings file is `profiles.json` in `ARTIFACT_PLANE_CONFIG_DIR` when it is s
 | Field | Rule |
 | --- | --- |
 | `version` | Required. The value is `1`. |
-| `terminal.open` | Optional argument list that opens a terminal with a herdr client. Plane runs it without a shell. |
+| `terminal.open` | Optional argument list that runs a command in a new terminal app window, for example `["ghostty", "-e"]`. Plane appends the herdr attach command and runs it without a shell. |
 | `roleDefaults` | Optional object from role (`coordinator`, `product-owner`, `technical-lead`, `implementer`) to profile `id`. |
 | `id` | Required. Unique. Matches `[a-z0-9][a-z0-9-]*`. |
 | `label` | Optional display text. |
@@ -209,6 +217,7 @@ The server adds these routes to the existing local server. Every route keeps the
 | `POST /api/sessions/output` | `{session}` | Returns the output of the session: base revision, commits and changed files. |
 | `POST /api/sessions/diff` | `{session, path}` | Returns the diff of one changed file since the base revision. |
 | `GET /api/sessions/stream?session=` | — | Server-sent events with the live state, state changes and output notices of one session. |
+| `GET /api/sessions/terminal/<session>/…` | — | The embedded terminal of a terminal session: ttyd pages and its WebSocket, forwarded to the relay socket. |
 
 `path` is a worktree of an inspected repository. Errors use the existing JSON error shape. The status is 400 for invalid input, 404 for an unknown session, 409 for a refused start or a wrong session state, and 503 when the runner or herdr is unavailable.
 
@@ -298,15 +307,28 @@ The runner starts the profile command with the worktree as the working directory
 
 The terminal adapter uses the herdr CLI and never sends input to a running harness program.
 
-1. **Start.** Run `herdr tab create --cwd <worktree> --label <label> --env ARTIFACT_PLANE_LAUNCH=<session ID> --no-focus`, with one more `--env` for each profile variable. Read `.result.root_pane.pane_id` and the tab ID from the JSON output.
+1. **Start.** Each terminal session has its own named herdr session `plane-<session ID>`, so its client shows only that session. Run `herdr --session plane-<session ID> tab create --cwd <worktree> --label <label> --env ARTIFACT_PLANE_LAUNCH=<session ID> --no-focus`, with one more `--env` for each profile variable. Read `.result.root_pane.pane_id` and the tab ID from the JSON output.
 2. **Command.** The start also sets `ARTIFACT_PLANE_PROMPT` to the initial prompt with `--env`. Run `herdr pane run <pane> <command line>`. The command line is the profile command, each argument quoted for a POSIX shell, plus `"$ARTIFACT_PLANE_PROMPT"`. The command line holds no prompt text, so the shell history keeps no request. This text goes to the shell of the new pane before the harness program starts. After that, Plane sends no text and no keys to the pane.
 3. **Harness session ID.** The SessionStart hook of Claude Code inherits `ARTIFACT_PLANE_LAUNCH`. The hook command records `session:harness-id` for that session with the hook `session_id` and `model`.
-4. **Status.** Every 2 seconds, the runner reads `herdr pane list` for its panes and maps `working`, `blocked`, `done`, `idle` and `unknown` to the session states. A missing pane interrupts the session.
-5. **Open terminal.** Run `herdr tab focus <tab>`. When `herdr status client` reports no attached client, run the profile file `terminal.open` arguments as a detached process.
-6. **Resume.** Create a new tab like the start, and run the profile command plus `--resume <harness session ID>` for `claude-code`. Other harness tools in a terminal can only respawn.
-7. **End.** Run `herdr pane close <pane>`.
+4. **Status.** Every 2 seconds, the runner reads `herdr --session plane-<session ID> pane list` and maps `working`, `blocked`, `done`, `idle` and `unknown` to the session states. A missing pane interrupts the session.
+5. **Open in terminal app.** Run the `terminal.open` arguments plus `herdr session attach plane-<session ID>` as a detached process.
+6. **Resume.** Create a new tab in the same named herdr session like the start, and run the profile command plus `--resume <harness session ID>` for `claude-code`. Other harness tools in a terminal can only respawn.
+7. **End.** Run `herdr --session plane-<session ID> server stop`, which stops that named session and its pane.
 
 Plane does not install the herdr Claude integration. When the person installs it, its user hooks run beside the project hooks of Plane.
+
+## Embedded terminal
+
+The session page of a terminal session embeds its herdr client through ttyd when the `ttyd` program is on `PATH` ([ADR 021](../decisions/021-embedded-terminal-relay.md)).
+
+1. **Relay start.** On the first view, the runner starts `ttyd --writable --check-origin --base-path /api/sessions/terminal/<session ID> --interface <state>/relay/<session ID>.sock herdr session attach plane-<session ID>` without a shell. The `relay` directory has mode 0700, and the runner starts ttyd with umask 077, so only the user can open the socket.
+2. **Forwarding.** The server forwards `GET /api/sessions/terminal/<session ID>/…` and the WebSocket upgrade on that path to the socket. It applies the loopback, Host and Origin checks first. A WebSocket upgrade needs an `Origin` equal to the workbench origin. The server forwards the bytes unchanged and stores nothing.
+3. **Frame.** The workbench shows the relay page in an iframe of the same origin. The workbench Content-Security-Policy adds `frame-src 'self'`, and relay responses carry `Content-Security-Policy: frame-ancestors 'self'`.
+4. **Input.** Plane forwards only the bytes that the browser sends from the keys of the person. Plane writes nothing to the relay itself (requirement AO7).
+5. **Relay stop.** The runner stops ttyd when the session ends, or 10 minutes after the last viewer disconnects.
+6. **Without ttyd.** The session page shows Open in terminal app only. At a narrow width, the page shows "Open this session on a computer" instead of the terminal.
+
+Browser shortcuts such as Ctrl+W, Ctrl+T and Ctrl+N stay with the browser. Full screen and Open in terminal app give the person the complete key set. Several viewers of one session share one herdr client.
 
 ## Runner
 
@@ -346,16 +368,15 @@ Resume keeps the session and its attempt. Respawn starts a new session with `res
 The final layout follows the approved UI/UX mockups. The workbench shows task progress and output, not the agent process.
 
 - The Work page has Start ADD work. Its dialog takes the request, the worktree (default: the repository root checkout) and the coordinator profile (default: the role default). It lists only terminal profiles and says that the person chats in the harness tool.
-- A role session page shows the change phases, the state, Open terminal, End session and the output of knowledge files as a tree with diffs. It says that the person chats and approves the plan in the terminal, and that Plane records no approval. Plane builds no chat.
+- A terminal session page shows the change phases of a role session, the state, the embedded terminal with Full screen and Open in terminal app, End session, and the output as a tree with diffs. It says that the person chats and approves the plan in the terminal, and that Plane records no approval. Plane builds no chat.
 
 - The Sessions page lists the implementation tasks with a session, grouped by change. Each row shows the task, its DoD progress, an output summary (files, added and removed lines, commits), the harness tool and model, and the state. A second group lists the coordinator, product owner and technical lead sessions with their output summary.
 - A session page shows a header with the role, task, harness tool, model, connection, branch and start time, and the actions Stop turn and End session. Below it come a pending permission request, the DoD checklist, the commits, the last agent message, and the output: the changed files as a tree and the diff of the selected file. An ACP session also has a message field.
-- A terminal session page shows the same output, the state, Open terminal and End session, and the text "Type in the terminal."
 - The workbench shows no tool call log and no message stream.
 - The top bar shows the number of sessions that wait for the person.
 - A launch dialog opens from the task details of the change page (Start implementer), from the change page (Start session) and from the Sessions page (New session). It shows role, change, task, worktree, profile with the role default selected, the warnings of the start rules and Start.
 - Task runtime details also show the harness tool and the model of each attempt.
-- An Agent settings page shows three sections. Providers lists each catalog provider with its programs and versions, connections, sign-in state and models, and a Check action. Role defaults has one profile selector for each role. Profiles lists the profiles with their state and the actions New profile, Edit, Duplicate and Delete.
+- An Agent settings page shows three sections. Providers lists each catalog provider with its programs and versions, connections, sign-in state and models, and a Check action, plus herdr and ttyd. Role defaults has one profile selector for each role. Profiles lists the profiles with their state and the actions New profile, Edit, Duplicate and Delete.
 - A profile editor sets name, provider, connection, sign-in kind, model and effort level from their lists, the roles that use the profile as default, and, under Advanced, extra arguments and environment variables. A change of provider changes the model list, and a change of model changes the effort list. The editor shows the source of the lists (checked or documented) with Check again, the program that Plane will run and the validity errors.
 
 When no profile exists, the workbench shows no session control except the Agent settings page (requirement AO18).
@@ -368,6 +389,7 @@ When no profile exists, the workbench shows no session control except the Agent 
 | A command or herdr is missing | The start returns 503 with the missing program name. |
 | The agent sends malformed JSON or exits during start | The session ends with reason `error`. |
 | The runner does not start in 3 seconds | The start returns 503; nothing else changes. |
+| ttyd is missing or does not start | The session page shows Open in terminal app and the reason; the session continues in herdr. |
 | The runtime store is unavailable, for example on Windows | Session control is unavailable with the existing store reason. |
 
 No failure writes a repository file or Git metadata.
@@ -383,12 +405,13 @@ These documented facts support the claim `acp-agent-interfaces`. They were read 
 - OpenCode 2.2.0 `opencode acp`: version 1, `loadSession`, options `model` and `effort`, sign-in with the stored OpenCode credentials (opencode.ai ACP documentation).
 - Gemini CLI 0.66.0 `gemini --acp`: version 1, `loadSession`, no config options; the model comes from the command (geminicli.com ACP mode documentation).
 - Claude Code: `claude --model <m> "<prompt>"`, `--resume <id>`, and hook processes inherit the environment of the session (code.claude.com CLI and hooks references).
-- herdr 0.9.5: `tab create` with `--cwd`, `--env` and `--label`, `pane run`, `pane list` status values, `tab focus`, `pane close` and `status client` (herdr.dev CLI reference).
+- herdr 0.9.5: `tab create` with `--cwd`, `--env` and `--label`, `pane run`, `pane list` status values, named sessions with `--session` and `session attach`, and `server stop` (herdr.dev CLI and socket references).
+- ttyd 1.7.7 (MIT, in nixpkgs): `--interface` takes a UNIX socket path, `--writable` allows input (read-only by default), `--check-origin` refuses a WebSocket from another origin, and `--base-path` serves under a path prefix (github.com/tsl0922/ttyd).
 
 ## Specification self-check
 
-- The contract covers AO1 to AO27 with commands, events, states, adapters, the runner, output, recovery, the workbench and failures. After the UI/UX review, the runner keeps only the last message and pending permission requests, and the output reader shows the work from Git.
-- KISS: one port with two adapters, one runner, the existing store and attempt model, one settings file, no new MCP tool and no chat; role sessions reuse the conversation of the harness tool in a terminal. The profile editor edits only catalog providers, so the HTTP server cannot define an arbitrary program.
+- The contract covers AO1 to AO28 with commands, events, states, adapters, the runner, output, recovery, the workbench and failures. After the UI/UX review, the runner keeps only the last message and pending permission requests, and the output reader shows the work from Git.
+- KISS: one port with two adapters, one runner, the existing store and attempt model, one settings file, no new MCP tool and no chat; role sessions reuse the conversation of the harness tool in a terminal, and ttyd embeds that terminal without a native module. The profile editor edits only catalog providers, so the HTTP server cannot define an arbitrary program.
 - Impact: execution observation gains Plane-started attempts; the new flows `agent-session-launch` and `agent-session-recovery` record the journeys. The artifact-driven method needs no change; the only reference is the task DAG contract.
 - The two open claims name live checks. They do not block the Plan; the Plan adds the live check.
 - STE: each rule is one sentence or one table row; terms are in the Terms table.
