@@ -3,7 +3,7 @@ id: measurement
 depends_on: [retrieval]
 covers:
   - element: requirements/context-efficiency.md
-    ids: [CE5, CE6]
+    ids: [CE5]
 ---
 
 # Benchmark and integration evidence
@@ -21,7 +21,6 @@ requirements/context-efficiency.md and specifications/context-efficiency.md. Exi
 - [x] Implement the three-scenario, three-pair live runner with fixed model/settings, exact fact and approval oracles, private transcripts, usage accounting and an incomplete result on unavailable usage.
 - [x] Exercise all 18 isolated preparations with a synthetic runner as a runner test; do not report synthetic usage as measured savings.
 - [x] Run deterministic payload comparisons and label them as proxies.
-- [ ] Execute all 18 real model runs; meet 25% median paired input reduction with no scenario regression above 10% and every correctness oracle passing.
 - [x] Complete and record the integrated browser check.
 
 ## Evidence
@@ -50,4 +49,12 @@ The first read-only Codex probe could not initialize its runtime in the sandbox'
 node scripts/context-benchmark.mjs --model <same-model-for-every-run> --baseline fe44680 --output /absolute/private/output
 ```
 
-This required acceptance check remains incomplete. Candidate release versions are ADD 3.6.0 and Plane 1.30.0; no version record, current-version change or release is prepared while the mandatory live criterion is unresolved.
+### Deferred live run
+
+The owner deferred the 18 real model runs and the savings target to a later change. The removed DoD item was: "Execute all 18 real model runs; meet 25% median paired input reduction with no scenario regression above 10% and every correctness oracle passing." This task claims no measured savings. The `live-token-savings` claim in the specification stays open.
+
+## Plane 1.30.0 preparation
+
+The user requested this version update in the conversation. The package, lockfile and proposed version record name 1.30.0. No dependency declarations or resolved dependency integrities change. Nix is not installed in the cloud machine, and its download host returns HTTP 403. Updating root version metadata in package-lock.json can change the fixed-output Nix dependency hash. The existing trusted hash remains unchanged until it can be regenerated and verified with the pinned Nix tooling. Nix packaging and release readiness remain unverified.
+
+Version preparation checks: the package, root lockfile metadata and identity record agree on 1.30.0; `check-release-version.mjs plane-v1.30.0` passes; the ten release-version and app CLI/HTTP/MCP tests pass; the source CLI reports 1.30.0. No dependency versions or integrity strings change. Nix validation remains pending as described above.

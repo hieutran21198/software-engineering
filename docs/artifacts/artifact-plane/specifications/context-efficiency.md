@@ -30,10 +30,10 @@ Each service keeps at most 16 capture snapshots for 10 minutes. Tokens are rando
 
 ## Measurement
 
-Use three paired repetitions of contained, multi-artifact and resumed scenarios in disposable clones. Fix model/settings and scenario prompt across pairs. Record provider-reported input, cached input, output and child usage, and actual tool-visible payload bytes separately. Compare medians per scenario and median paired percentage savings. Require ≥25% overall median paired reduction, no scenario median regression >10%, and every scenario oracle passing. Missing actual usage or correctness evidence is incomplete, never a passing savings claim. Keep raw transcripts private outside the checkout and persist only non-secret metrics and check results.
+Use three paired repetitions of contained, multi-artifact and resumed scenarios in disposable clones. Fix model/settings and scenario prompt across pairs. Record provider-reported input, cached input, output and child usage, and actual tool-visible payload bytes separately. Compare medians per scenario and median paired percentage savings. The benchmark passes only with ≥25% overall median paired reduction, no scenario median regression >10%, and every scenario oracle passing. Missing actual usage or correctness evidence is incomplete, never a passing savings claim. Keep raw transcripts private outside the checkout and persist only non-secret metrics and check results.
 
 MCP legacy content stays unchanged. Compact content is one short instruction directing the client to structuredContent, not a duplicate serialized result. Measure client rendering before claiming either representation is omitted from model input.
 
 ## Self-check
 
-The contract is additive and minor. Existing artifact dependencies are unchanged; neither member consumes an unestablished upstream contract. All errors preserve uncertainty. KISS: one opt-in representation and one disposable cache. STE: terms and limits are explicit. The live savings criterion remains unverified until actual agent runs complete.
+The contract is additive and minor. Existing artifact dependencies are unchanged; neither member consumes an unestablished upstream contract. All errors preserve uncertainty. KISS: one opt-in representation and one disposable cache. STE: terms and limits are explicit. The owner deferred the live run to a later change. The live savings result remains unverified until actual agent runs complete.

@@ -11,7 +11,6 @@ self_check:
 - CE3: Incremental reads identify additions, modifications and removals by source digest and revalidate current inputs. Lost captures require full refresh.
 - CE4: HTTP and MCP share retrieval behavior. Compact MCP output avoids repeating full data in text.
 - CE5: A reproducible three-scenario benchmark records actual model-visible input, cached input, output and child usage separately from payload proxies.
-- CE6: Savings acceptance requires 25 percent median paired input reduction and no scenario median regression above 10 percent, with all correctness and gate checks satisfied.
 
 ## Acceptance
 
@@ -20,4 +19,4 @@ self_check:
 
 ## Self-check
 
-Each requirement states an observable capability. Existing artifact ownership and dependencies remain unchanged. No instruction permits omitting governing contracts, evidence or approval. KISS/STE checklists applied.
+Each requirement states an observable capability. Existing artifact ownership and dependencies remain unchanged. No instruction permits omitting governing contracts, evidence or approval. The owner deferred the live savings acceptance target to a later change, because the model endpoint returned HTTP 403. KISS/STE checklists applied.
