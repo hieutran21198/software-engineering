@@ -11,10 +11,9 @@ import {isDeepStrictEqual} from 'node:util';
 import {defaultStateDir, digest} from './runtime-store.js';
 import {CATALOG, CLAUDE_TERMINAL_MODELS, CONNECTIONS, HARNESSES, VERSION_LIMIT_MS, bypassArgument, profileCommand, readPrograms} from './provider-catalog.js';
 import {ProviderCheckError, checkProvider} from './provider-check.js';
+import {CHECK_FIRST, NOT_IN_CHECK, ROLES, SIGN_INS} from '../src/launch-catalog.js';
 
-export const ROLES = ['coordinator', 'product-owner', 'technical-lead', 'implementer'];
-export const SIGN_INS = ['plan', 'api-key', 'harness'];
-export const NOT_IN_CHECK = 'Not in the last check', CHECK_FIRST = 'Check the provider first.';
+export {CHECK_FIRST, NOT_IN_CHECK, ROLES, SIGN_INS};
 const ROLE_SESSIONS = new Set(['coordinator', 'product-owner', 'technical-lead']);
 const SETTINGS_FIELDS = new Set(['version', 'terminal', 'roleDefaults', 'profiles']);
 const PROFILE_FIELDS = new Set(['id', 'label', 'harness', 'connection', 'signIn', 'model', 'reasoning', 'args', 'env', 'command']);

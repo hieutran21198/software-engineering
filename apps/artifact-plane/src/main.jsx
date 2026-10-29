@@ -33,11 +33,12 @@ import RecordedPage from './pages/RecordedPage.jsx';
 import SourcePage from './pages/SourcePage.jsx';
 import ImpactPage from './pages/ImpactPage.jsx';
 import ConceptPage from './pages/ConceptPage.jsx';
+import SettingsPage from './pages/SettingsPage.jsx';
 
 const HOME = {kind: 'work'};
 const KEPT = ['query', 'brief'];
 const NONE = [];
-const PAGES = {work: WorkPage, artifact: ArtifactPage, document: DocumentPage, change: ChangePage, unit: UnitPage, flow: FlowPage, discover: DiscoverPage, recorded: RecordedPage, source: SourcePage, impact: ImpactPage, concept: ConceptPage};
+const PAGES = {work: WorkPage, artifact: ArtifactPage, document: DocumentPage, change: ChangePage, unit: UnitPage, flow: FlowPage, discover: DiscoverPage, recorded: RecordedPage, source: SourcePage, impact: ImpactPage, concept: ConceptPage, settings: SettingsPage};
 const VERBS = {'artifact.create': 'Created artifact', 'artifact.dependencies.set': 'Set dependencies in', 'change.start': 'Started change in', 'document.add': 'Added', 'document.save': 'Saved', 'document.delete': 'Deleted', 'document.properties.set': 'Saved front matter of', undo: 'Undid the change to'};
 const short = path => path.split('/').slice(-2).join('/');
 const describe = (operation, response) => {const files = response.files || [];return `${VERBS[operation] || 'Updated'} ${files.length === 1 ? short(files[0].path) : `${files.length} files`}.`;};

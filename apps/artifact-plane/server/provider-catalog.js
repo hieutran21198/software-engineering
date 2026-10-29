@@ -5,28 +5,12 @@
 import {execFile} from 'node:child_process';
 import {accessSync, constants, statSync} from 'node:fs';
 import {delimiter, isAbsolute, join} from 'node:path';
+import {CATALOG, CONNECTIONS, HARNESSES, profileCommand} from '../src/launch-catalog.js';
 
-export const CONNECTIONS = ['acp', 'terminal'];
+export {CATALOG, CONNECTIONS, HARNESSES, profileCommand};
+
 // The time limit of one `--version` run.
 export const VERSION_LIMIT_MS = 5000;
-// For each provider: the ACP program and whether its model is an ACP option or a flag,
-// the terminal program, the model and effort flags, the initial prompt form and the
-// terminal resume arguments (the terminal adapter adds the prompt and the resume).
-// `{level}` and `{session}` are placeholders; effort `suffix` puts `#<level>` after
-// the model value (OpenCode). The catalog is plain data.
-export const CATALOG = {
- 'claude-code': {label: 'Claude Code', acp: {program: 'claude-agent-acp', args: ['--hide-claude-auth'], model: 'option'},
-  terminal: {program: 'claude', args: [], modelFlag: '--model', effort: ['--effort', '{level}'], prompt: 'last', resume: ['--resume', '{session}']}},
- 'codex': {label: 'Codex', acp: {program: 'codex-acp', args: [], model: 'option'},
-  terminal: {program: 'codex', args: [], modelFlag: '--model', effort: ['-c', 'model_reasoning_effort={level}'], prompt: 'last', resume: null}},
- 'opencode': {label: 'OpenCode', acp: {program: 'opencode', args: ['acp'], model: 'option'},
-  terminal: {program: 'opencode', args: ['mini'], modelFlag: '--model', effort: 'suffix', prompt: '--prompt', resume: null}},
- 'command-code': {label: 'Command Code', acp: {program: 'cmd', args: ['acp'], model: 'option'},
-  terminal: {program: 'cmd', args: [], modelFlag: '--model', effort: ['--effort', '{level}'], prompt: 'last', resume: null}},
- 'gemini-cli': {label: 'Gemini CLI', acp: {program: 'gemini', args: ['--acp'], model: 'flag', modelFlag: '--model'},
-  terminal: {program: 'gemini', args: [], modelFlag: '--model', effort: null, prompt: 'last', resume: null}},
-};
-export const HARNESSES = Object.keys(CATALOG);
 // The programs whose version the settings query reads. OpenCode has two candidate names.
 export const PROGRAMS = ['claude', 'claude-agent-acp', 'codex', 'codex-acp', 'opencode', 'opencode2', 'cmd', 'gemini', 'herdr', 'ttyd'];
 
@@ -55,21 +39,6 @@ export function bypassArgument(args) {
   }
  }
  return null;
-}
-
-// The profile command as an argument list: the program of the connection, the model
-// flag and model for a terminal profile or an ACP model flag, the effort of a terminal
-// profile, then `args`. `programs` maps a catalog program name to the name found on
-// PATH (OpenCode: `opencode2`). `harness: other` runs its `command`.
-export function profileCommand(profile, {programs = {}} = {}) {
- if (profile.harness === 'other') return [...profile.command];
- const entry = CATALOG[profile.harness]?.[profile.connection];
- if (!entry) throw Error(`No catalog program for ${profile.harness} ${profile.connection}.`);
- const command = [programs[entry.program] || entry.program, ...entry.args];
- const terminal = profile.connection === 'terminal', level = terminal && profile.reasoning;
- if (terminal || entry.model === 'flag') command.push(entry.modelFlag, level && entry.effort === 'suffix' ? `${profile.model}#${level}` : profile.model);
- if (level && Array.isArray(entry.effort)) command.push(...entry.effort.map(part => part.replace('{level}', () => level)));
- return [...command, ...(profile.args || [])];
 }
 
 // The first executable file with this name in an absolute directory of PATH, or null.

@@ -50,6 +50,7 @@ export default function TopBar({snapshot, worktreePath, onWorktree, opening, bus
         <button role="menuitem" onClick={() => {close();onOpen({kind: 'discover'});}}>Discover behavior<small>Find flows that describe a behavior</small></button>
         <button role="menuitem" onClick={() => {close();onOpen({kind: 'impact'});}}>Impact<small>What a file, document or commit affects</small></button>
         {recorded && <button role="menuitem" onClick={() => {close();onOpen({kind: 'recorded'});}}>Recorded executions<small>Codex attempts observed on this machine</small></button>}
+        <button role="menuitem" onClick={() => {close();onOpen({kind: 'settings'});}}>Agent settings<small>Harness tools, launch profiles and role defaults</small></button>
         <hr/>
         <button role="menuitem" onClick={() => {close();onChangeRepository();}}>Change repository</button>
       </>}

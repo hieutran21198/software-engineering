@@ -6,6 +6,7 @@
 import {EventEmitter} from 'node:events';
 import {mkdirSync, mkdtempSync, rmSync} from 'node:fs';
 import {join} from 'node:path';
+import {API_KEY_SIGN_IN, SIGN_IN_REQUIRED} from '../src/launch-catalog.js';
 import {AUTH_REQUIRED, AcpConnection, END_GRACE_MS, METHOD_NOT_FOUND, RpcError, findOption, initializeParams, negotiate, optionValues, setOptionParams} from './acp-client.js';
 
 // The check reads the levels of at most CHECK_MODELS models within CHECK_LIMIT_MS.
@@ -13,7 +14,7 @@ export const CHECK_LIMIT_MS = 120000, CHECK_MODELS = 200;
 // After a reply that names another model, the check waits this long for a config_option_update.
 export const STALE_WAIT_MS = 2000;
 const CLOSE_WAIT_MS = 5000;
-export const SIGN_IN_REQUIRED = 'Sign-in required', API_KEY_SIGN_IN = 'Needs an API key sign-in';
+export {API_KEY_SIGN_IN, SIGN_IN_REQUIRED};
 const REFUSED = Symbol('refused');
 const text = v => typeof v === 'string' && v.length > 0;
 
