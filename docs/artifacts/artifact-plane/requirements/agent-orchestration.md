@@ -38,9 +38,9 @@ The owner wants to run ADD across several harness tools directly from Plane, and
 - AO3: A person chooses a launch profile for each session. A profile names the harness tool, the connection kind, the sign-in kind, the model and, where the harness tool offers it, the reasoning level.
 - AO4: Launch profiles are personal settings outside every repository. A profile contains no credential value.
 - AO5: An implementer session works in the worktree of its task. Plane refuses an implementer session in a checkout of `main` or `master`.
-- AO6: For a session that reports structured events, the person reads the agent messages, sends messages and answers permission requests in the workbench.
+- AO6: For a session that reports structured events, the person answers permission requests, reads the last agent message of each turn and sends messages in the workbench. The workbench shows no step-by-step agent activity.
 - AO7: For a session that a person drives in a terminal, the workbench shows when the agent waits for the person and opens that terminal on request. After the harness program starts, Plane sends no text and no keys into that terminal.
-- AO8: The workbench shows the role, task, harness tool, model and state of each session. It shows the sessions that wait for the person.
+- AO8: The workbench shows the role, task, harness tool, model and state of each session, and the DoD progress of its task. It shows the sessions that wait for the person.
 - AO9: The person can stop the current turn of a session and can end a session.
 - AO10: After an interruption, the person can continue the live session, resume the same harness session, or start a new attempt with the same or another profile. A new attempt starts from the task, its branch and its recorded evidence.
 - AO11: A task has at most one active attempt. A repeated start request for that task creates no second session.
@@ -52,6 +52,7 @@ The owner wants to run ADD across several harness tools directly from Plane, and
 - AO17: For Claude with a plan sign-in, a person types every prompt and every permission answer. Plane only starts the official Claude Code program on the request of the person and observes it.
 - AO18: When the person configures no launch profile, the delivered observation, hooks, MCP tools and workbench behave as before.
 - AO19: A missing harness program, a failed sign-in or a stopped session shows a reason in the workbench. The failure changes no repository file.
+- AO20: For each session, the workbench shows its output since the session started: the commits, and the changed files as a tree with the diff of each file, uncommitted changes included.
 
 ## Acceptance criteria
 
@@ -63,6 +64,7 @@ The owner wants to run ADD across several harness tools directly from Plane, and
 - AOA6: After a restart of the Plane server, running sessions continue and show their state again.
 - AOA7: Tests confirm that the store contains no message text, prompt or credential, that foreign Host and Origin values are refused, and that no started command contains a permission-bypass option.
 - AOA8: Existing Node, browser and record checks pass. A screenshot review at desktop and narrow widths matches the approved UI/UX mockups.
+- AOA9: After a session changes files, its page shows the changed files as a tree, their line counts and the diff of a selected file since the session started. The page shows no tool activity log.
 
 ## Impact
 
@@ -73,3 +75,5 @@ Artifact Plane owns this capability. The artifact-driven method keeps ownership 
 Each requirement states a need or an owner constraint, not an adapter technology. The scope excludes agent-started sessions, automatic dispatch, remote runners, team mode, a terminal inside the workbench, approvals recorded by Plane and credential handling. The two claims stay open until the Specification checks the vendor documentation. No blocker prevents Specification. KISS and STE checklists applied.
 
 The Technical Lead returned AO7: herdr starts a program by typing its command line into the shell of the new pane. AO7 now forbids input only after the harness program starts. The start command contains only the profile command and the fixed initial prompt.
+
+After the UI/UX review, the owner asked for task progress and task output instead of the agent process. AO6 and AO8 now show the last message and the DoD progress, and AO20 and AOA9 add the output tree and diffs.
