@@ -3,6 +3,11 @@ import assert from "node:assert/strict";
 import { request as httpRequest } from "node:http";
 import { createAppServer } from "../server/http.js";
 import { fixtureRepository } from "./fixtures.js";
+import { chmod, mkdir, mkdtemp, readdir, rm, stat, writeFile } from "node:fs/promises";
+import { tmpdir } from "node:os";
+import { join } from "node:path";
+import { fileURLToPath } from "node:url";
+import { createSettingsService, readProviders } from "../server/agent-settings.js";
 
 test("local API response contract and validation reject hostile or malformed requests", async (t) => {
   const fixture = await fixtureRepository();
@@ -184,4 +189,95 @@ test("a reply that cannot be serialized returns 500 and the server keeps answeri
   const next = await query();
   assert.equal(next.status, 200);
   assert.deepEqual(await next.json(), {ok: true});
+});
+
+// specifications/agent-orchestration.md: Commands, Save.
+test("the settings routes query and save under the loopback, Host, Origin, JSON and size checks", async (t) => {
+  const dir = await mkdtemp(join(tmpdir(), "settings-http-")), config = join(dir, "config");
+  t.after(() => rm(dir, {recursive: true, force: true}));
+  const settingsService = createSettingsService({configDir: config, stateDir: join(dir, "state"), env: {PATH: ""}});
+  const server = createAppServer({settingsService});
+  await new Promise((resolve) => server.listen(0, "127.0.0.1", resolve));
+  t.after(() => new Promise((resolve) => server.close(resolve)));
+  const base = `http://127.0.0.1:${server.address().port}`;
+  const post = async (path, body, headers = {}) => {
+    const response = await fetch(base + path, {method: "POST", headers: {"Content-Type": "application/json", ...headers}, body: typeof body === "string" ? body : JSON.stringify(body)});
+    return {status: response.status, body: await response.json()};
+  };
+  const profile = {id: "claude-opus-terminal", harness: "claude-code", connection: "terminal", signIn: "plan", model: "opus"};
+  const empty = await post("/api/settings/query", {});
+  assert.equal(empty.status, 200);
+  assert.deepEqual([empty.body.path, empty.body.settings, empty.body.digest, empty.body.validity, empty.body.runner], [join(config, "profiles.json"), null, null, null, null]);
+  assert.deepEqual(empty.body.providers.map((p) => p.harness), ["claude-code", "codex", "opencode", "command-code", "gemini-cli", "antigravity"]);
+  const saved = await post("/api/settings/save", {settings: {version: 1, profiles: [profile]}, digest: null});
+  assert.equal(saved.status, 200);
+  assert.match(saved.body.digest, /^[0-9a-f]{64}$/);
+  assert.equal((await post("/api/settings/query", {})).body.digest, saved.body.digest);
+  const conflict = await post("/api/settings/save", {settings: {version: 1, profiles: []}, digest: null});
+  assert.equal(conflict.status, 409);
+  assert.deepEqual([conflict.body.settings, conflict.body.digest], [{version: 1, profiles: [profile]}, saved.body.digest]);
+  assert.equal(typeof conflict.body.error, "string");
+  const invalid = await post("/api/settings/save", {settings: {version: 1, profiles: [{...profile, args: ["--dangerously-skip-permissions"]}]}, digest: saved.body.digest});
+  assert.equal(invalid.status, 400);
+  assert.match(invalid.body.error, /skips permission prompts/);
+  assert.equal(invalid.body.validity.profiles[0].valid, false);
+  assert.equal((await post("/api/settings/query", {path: "/x"})).status, 400);
+  assert.equal((await post("/api/settings/save", {settings: {}})).status, 400);
+  // The shared checks refuse a foreign Origin and Host, another content type, a large body, bad JSON and GET.
+  const raw = (path, headers) => new Promise((resolve, reject) => {
+    const req = httpRequest(base + path, {method: "POST", headers: {"Content-Type": "application/json", ...headers}}, (res) => {res.resume();resolve(res.statusCode);});
+    req.on("error", reject);req.end("{}");
+  });
+  for (const path of ["/api/settings/query", "/api/settings/save"]) {
+    assert.equal((await post(path, {}, {Origin: "https://foreign.example"})).status, 403, path);
+    assert.equal(await raw(path, {Host: "foreign.example"}), 403, path);
+    assert.equal(await raw(path, {Host: `localhost:${server.address().port}`}), 403, path);
+    assert.equal((await post(path, {}, {"Sec-Fetch-Site": "cross-site"})).status, 403, path);
+    assert.equal((await post(path, "{}", {"Content-Type": "text/plain"})).status, 415, path);
+    assert.equal((await post(path, JSON.stringify({settings: {version: 1, profiles: [{...profile, label: "x".repeat(17000)}]}, digest: saved.body.digest}))).status, 413, path);
+    assert.equal((await post(path, "{")).status, 400, path);
+    assert.equal((await fetch(base + path)).status, 405, path);
+  }
+  assert.equal((await post("/api/settings/query", {})).body.digest, saved.body.digest, "a refused request changes nothing");
+  assert.deepEqual(await readdir(config), ["profiles.json"]);
+});
+
+// specifications/agent-orchestration.md: Commands, Provider check.
+test("the settings check route runs a provider check under the loopback, Host, Origin, JSON and size checks", async (t) => {
+  const dir = await mkdtemp(join(tmpdir(), "settings-check-http-")), bin = join(dir, "bin"), state = join(dir, "state");
+  t.after(() => rm(dir, {recursive: true, force: true}));
+  await mkdir(bin);
+  const fake = fileURLToPath(new URL("./fixtures/fake-acp-agent.mjs", import.meta.url));
+  const config = JSON.stringify({version: 2, models: [{id: "gpt-6", levels: ["low", "high"]}]});
+  await writeFile(join(bin, "codex-acp"), `#!/bin/sh\nif [ "$1" = --version ]; then echo "codex-acp 2.3.0"; exit 0; fi\nexec '${process.execPath}' '${fake}' "$@"\n`);
+  await chmod(join(bin, "codex-acp"), 0o755);
+  const settingsService = createSettingsService({configDir: join(dir, "config"), stateDir: state, env: {PATH: bin, FAKE_ACP_CONFIG: config}});
+  const server = createAppServer({settingsService});
+  await new Promise((resolve) => server.listen(0, "127.0.0.1", resolve));
+  t.after(() => new Promise((resolve) => server.close(resolve)));
+  const base = `http://127.0.0.1:${server.address().port}`;
+  const post = async (body, headers = {}) => {
+    const response = await fetch(base + "/api/settings/check", {method: "POST", headers: {"Content-Type": "application/json", ...headers}, body: typeof body === "string" ? body : JSON.stringify(body)});
+    return {status: response.status, body: await response.json()};
+  };
+  const checked = await post({harness: "codex"});
+  assert.equal(checked.status, 200);
+  assert.deepEqual([checked.body.harness, checked.body.check.program, checked.body.check.programVersion, checked.body.check.models], ["codex", "codex-acp", "2.3.0", [{id: "gpt-6", name: "gpt-6", levels: ["low", "high"]}]]);
+  assert.deepEqual(readProviders(state).codex, checked.body.check);
+  assert.equal((await stat(join(state, "providers.json"))).mode & 0o777, 0o600);
+  assert.equal((await post({harness: "unknown"})).status, 400);
+  const missing = await post({harness: "gemini-cli"});
+  assert.deepEqual([missing.status, missing.body.error], [503, "gemini is not on PATH."]);
+  const raw = (headers) => new Promise((resolve, reject) => {
+    const req = httpRequest(base + "/api/settings/check", {method: "POST", headers: {"Content-Type": "application/json", ...headers}}, (res) => {res.resume();resolve(res.statusCode);});
+    req.on("error", reject);req.end(JSON.stringify({harness: "codex"}));
+  });
+  assert.equal((await post({harness: "codex"}, {Origin: "https://foreign.example"})).status, 403);
+  assert.equal(await raw({Host: "foreign.example"}), 403);
+  assert.equal((await post({harness: "codex"}, {"Sec-Fetch-Site": "cross-site"})).status, 403);
+  assert.equal((await post(JSON.stringify({harness: "codex"}), {"Content-Type": "text/plain"})).status, 415);
+  assert.equal((await post(JSON.stringify({harness: "x".repeat(17000)}))).status, 413);
+  assert.equal((await post("{")).status, 400);
+  assert.equal((await fetch(base + "/api/settings/check")).status, 405);
+  assert.deepEqual(await readdir(state), ["providers.json"], "the refused requests start no check");
 });

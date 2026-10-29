@@ -7,6 +7,7 @@ import {knowledgeEntries} from '../knowledge-api.js';
 import {artifactTitle, changeStatus, changeTitle, currentChanges, memberUnit, phaseLabel, phaseModel, systemViews} from '../work-model.js';
 import {copyPrDescription, StatusText, statusMember, termOnce, VersionLabel} from './guidance.jsx';
 import {StartChangeCard, NewUnitCard} from './WorkPageForms.jsx';
+import {useSessions} from '../Sessions.jsx';
 import './WorkPage.css';
 
 const plural = (n, one, many = one + 's') => `${n} ${n === 1 ? one : many}`;
@@ -164,7 +165,7 @@ function dependencySentence(snapshot) {
 }
 
 export default function WorkPage({page}) {
-  const {snapshot, worktree, root, go, editable, CreateBranchForm} = useShell(), edit = useEdit(), narrow = useNarrow();
+  const {snapshot, worktree, root, go, editable, CreateBranchForm} = useShell(), edit = useEdit(), narrow = useNarrow(), sessions = useSessions();
   const [form, setForm] = useState(null), [graph, setGraph] = useState(false);
   const openers = {start: useRef(null), unit: useRef(null)};
   const changes = currentChanges(worktree), branch = snapshot.repository.branch;
@@ -180,9 +181,13 @@ export default function WorkPage({page}) {
     : form === 'unit' ? <NewUnitCard snapshot={snapshot} worktree={worktree} onClose={closeForm} onOpen={go}/> : null;
   // Without an open change, Start a change opens its card in place of the empty state.
   const empty = !changes.length, inPlace = empty && form === 'start', terms = termOnce();
+  // Start ADD work (artboard 9) appears with a launch profile only (requirement AO18). It is the
+  // primary button when no change card and no empty state holds one.
+  const workPrimary = !changes.some(c => changeStatus(c, worktree).action) && !(empty && editable);
+  const startWork = cls => sessions.control ? <button className={cls} onClick={() => sessions.openStartWork({})}>Start ADD work</button> : null;
   return <section className="page work-page" aria-label="Work page"><div className="column">
     <PageHeader title="Current work" subtitle={`${repository} · ${plural(changes.length, 'change')} in progress`}
-      action={editable && !narrow ? <div className="work-actions">{!empty && startButton('')}{unitButton('quiet')}</div> : null}/>
+      action={(editable || sessions.control) && !narrow ? <div className="work-actions">{startWork(workPrimary ? 'primary' : '')}{editable && !empty && startButton('')}{editable && unitButton('quiet')}</div> : null}/>
     {!editable && <Notice action={<div className="work-branch"><CreateBranchForm onCreate={edit.createBranch} idPrefix="work-branch"/></div>}>
       {branch && branch !== 'detached' ? <>This branch is <span className="mono">{branch}</span>. Create a branch to edit knowledge.</> : 'This is a detached HEAD. Create a branch to edit knowledge.'}
     </Notice>}
@@ -198,10 +203,11 @@ export default function WorkPage({page}) {
       <p className="muted">{dependencySentence(snapshot)}</p>
       {graph && <DependencyGraph snapshot={snapshot} onOpen={go}/>}
     </Section>
-    {editable && narrow && <section className="section work-phone-actions" aria-label="Actions">
-      {card && !inPlace && <div className="work-form">{card}</div>}
-      {!empty && startButton('full')}
-      {unitButton('quiet full')}
+    {(editable || sessions.control) && narrow && <section className="section work-phone-actions" aria-label="Actions">
+      {editable && card && !inPlace && <div className="work-form">{card}</div>}
+      {startWork(workPrimary ? 'primary full' : 'full')}
+      {editable && !empty && startButton('full')}
+      {editable && unitButton('quiet full')}
     </section>}
   </div></section>;
 }

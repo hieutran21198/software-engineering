@@ -33,11 +33,15 @@ import RecordedPage from './pages/RecordedPage.jsx';
 import SourcePage from './pages/SourcePage.jsx';
 import ImpactPage from './pages/ImpactPage.jsx';
 import ConceptPage from './pages/ConceptPage.jsx';
+import SettingsPage from './pages/SettingsPage.jsx';
+import SessionsPage from './pages/SessionsPage.jsx';
+import SessionPage from './pages/SessionPage.jsx';
+import {SessionsProvider} from './Sessions.jsx';
 
 const HOME = {kind: 'work'};
 const KEPT = ['query', 'brief'];
 const NONE = [];
-const PAGES = {work: WorkPage, artifact: ArtifactPage, document: DocumentPage, change: ChangePage, unit: UnitPage, flow: FlowPage, discover: DiscoverPage, recorded: RecordedPage, source: SourcePage, impact: ImpactPage, concept: ConceptPage};
+const PAGES = {work: WorkPage, artifact: ArtifactPage, document: DocumentPage, change: ChangePage, unit: UnitPage, flow: FlowPage, discover: DiscoverPage, recorded: RecordedPage, source: SourcePage, impact: ImpactPage, concept: ConceptPage, settings: SettingsPage, sessions: SessionsPage, session: SessionPage};
 const VERBS = {'artifact.create': 'Created artifact', 'artifact.dependencies.set': 'Set dependencies in', 'change.start': 'Started change in', 'document.add': 'Added', 'document.save': 'Saved', 'document.delete': 'Deleted', 'document.properties.set': 'Saved front matter of', undo: 'Undid the change to'};
 const short = path => path.split('/').slice(-2).join('/');
 const describe = (operation, response) => {const files = response.files || [];return `${VERBS[operation] || 'Updated'} ${files.length === 1 ? short(files[0].path) : `${files.length} files`}.`;};
@@ -306,13 +310,13 @@ export function ProjectExplorer({active: isActive = true, initialPath = '', onOp
     [snapshot, worktree, projectRoot, worktreePath, overviewEpoch, loadedSession, go, back, route.trail.length, editable, busy]);
   const uncommitted = gitState ? gitState.knowledge.length : knowledgeStatus(snapshot?.repository.status);
   const Page = PAGES[page.kind] || WorkPage;
-  const pageKey = JSON.stringify([worktreePath, page.kind, page.artifact, page.change, page.unit, page.source, page.flow, page.context, page.sourceId, page.model]);
+  const pageKey = JSON.stringify([worktreePath, page.kind, page.artifact, page.change, page.unit, page.source, page.flow, page.context, page.sourceId, page.model, page.session]);
   const showOpen = !snapshot || editingRepo;
   const sidebarMax = 400, resize = width => setSidebarWidth(Math.max(200, Math.min(sidebarMax, Math.round(width))));
   function dividerKeys(event) {const widths = {ArrowRight: sidebarWidth + 20, ArrowLeft: sidebarWidth - 20, Home: 200, End: sidebarMax};if (Object.hasOwn(widths, event.key)) {event.preventDefault();resize(widths[event.key]);}}
   const drawerId = `navigation-${tabId}`;
 
-  return <EditContext.Provider value={editing}><ShellContext.Provider value={shell}><RuntimeProvider snapshot={snapshot} active={observing}>
+  return <EditContext.Provider value={editing}><ShellContext.Provider value={shell}><RuntimeProvider snapshot={snapshot} active={observing}><SessionsProvider root={projectRoot} active={observing}>
     {isActive && slot && snapshot && !editingRepo && createPortal(<RecordedAvailable>{recorded => <TopBar snapshot={snapshot} worktreePath={worktreePath} onWorktree={activateWorktree} opening={openingWorktree} busy={busy}
       stale={disconnected || Boolean(error)} uncommitted={uncommitted} onUncommitted={() => go({kind: 'work', focus: 'uncommitted', at: Date.now()})} onRefresh={() => open(projectRoot, true)}
       onCreateBranch={createBranch} drawer={{open: drawerOpen, id: drawerId, toggle: () => setDrawerOpen(value => !value)}} recorded={recorded} onOpen={go}
@@ -345,6 +349,6 @@ export function ProjectExplorer({active: isActive = true, initialPath = '', onOp
         </main>
       </div>
     </div>
-  </RuntimeProvider></ShellContext.Provider></EditContext.Provider>;
+  </SessionsProvider></RuntimeProvider></ShellContext.Provider></EditContext.Provider>;
 }
 createRoot(document.getElementById('root')).render(<Workspace Explorer={ProjectExplorer}/>);

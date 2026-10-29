@@ -1,5 +1,5 @@
 // Command line of the application: one entry for the server, the MCP server, the model
-// installer, the hook and the runtime commands. Each command imports its module only when it runs.
+// installer, the hook, the runtime commands and the session runner. Each command imports its module only when it runs.
 // A bundle inlines package.json through the JSON import, so the version needs no file at run time.
 import pkg from "../package.json" with { type: "json" };
 import { isAbsolute } from "node:path";
@@ -17,6 +17,12 @@ Commands:
   runtime <register|bind|report|query> --name value ...
                   Record and read task execution (integration/README.md).
                   bind accepts --binding inferred; the default is explicit.
+  runner          Run the session runner, which hosts the agent sessions that Plane
+                  starts. The server starts it when needed. Options:
+                  --state-dir /absolute/private/state. It listens on runner.sock
+                  in the state directory and exits 10 minutes after its last
+                  session ends while no server is connected. SIGTERM stops it;
+                  terminal sessions continue in herdr.
   model-install   Download and verify the pinned semantic discovery model.
   --version       Print the version.
   --help          Print this help.
@@ -57,13 +63,14 @@ const commands = {
   mcp: async () => (await import("./flow-mcp.js")).runFlowMcpStdio(args),
   hook,
   runtime: async () => console.log(JSON.stringify(await (await import("./runtime-cli.js")).run([...args], null))),
+  runner: async () => (await import("./session-runner.js")).runRunner(args),
   "model-install": async () => (await import("./flow-model-install.js")).installFlowModel(),
   "--version": () => console.log(pkg.version),
   "--help": () => process.stdout.write(help),
 };
-// mcp and runtime take options and hook reads its own; any other argument is a usage error.
+// mcp, runner and runtime take options and hook reads its own; any other argument is a usage error.
 const usage = !Object.hasOwn(commands, command)
-  || (command === "runtime" ? !runtimeCommands.includes(args[0]) : !["mcp", "hook"].includes(command) && args.length);
+  || (command === "runtime" ? !runtimeCommands.includes(args[0]) : !["mcp", "hook", "runner"].includes(command) && args.length);
 if (usage) {
   process.stderr.write(help);
   process.exitCode = 2;

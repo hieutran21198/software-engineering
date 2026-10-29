@@ -2,7 +2,7 @@
 
 ## Ownership and architecture
 
-R1–R10 are implemented by a local hook reporter, an observation store, read-only runtime HTTP endpoints, and an additive graph overlay. The established artifact-driven task/unit contracts remain unchanged. Plane remains an observer; no dispatch or scheduler is introduced.
+R1–R10 are implemented by a local hook reporter, an observation store, read-only runtime HTTP endpoints, and an additive graph overlay. The established artifact-driven task/unit contracts remain unchanged. The observer adds no dispatch or scheduler. specifications/agent-orchestration.md defines the sessions that a person starts; their implementer attempts use this observation contract.
 
 Use Node 24 built-in node:sqlite, already compatible with the app engine, and no external database service. Store runtime.sqlite under ARTIFACT_PLANE_STATE_DIR when explicitly set; otherwise use XDG_STATE_HOME/artifact-plane or ~/.local/state/artifact-plane. Reject a state directory within any registered/inspected repository or worktree, including symlink aliases. Create private directories/files (0700/0600 where supported), use WAL, transactions, a bounded busy timeout, and schema version checks. Unknown newer schemas fail diagnostically rather than being rewritten. Runtime writes are permitted only for observation data; the repository explorer still never writes inspected files or Git metadata.
 

@@ -1,15 +1,15 @@
 ---
-current_version: 1.30.0
+current_version: 1.31.0
 depends_on: [artifact-driven]
 ---
 
 # Artifact Plane
 
-Artifact Plane is the local workbench for exploring and authoring ADD repositories, with optional local agent execution observation.
+Artifact Plane is the local workbench for exploring and authoring ADD repositories, with optional local agent execution observation and person-started agent sessions.
 
 ## Scope
 
-Discover artifact knowledge and visualize artifact dependencies, knowledge references and maintained system flows. Create and maintain artifacts, changes, documents, dependencies, references, tasks, units, flows and versions through deterministic operations that write only inside docs/artifacts of a selected worktree on a non-protected branch. Retrieve source-backed context through local keyword, semantic and graph discovery, HTTP and stdio MCP. Inspect local worktrees and workflow evidence. Observe supported agent attempts with explicit or inferred task bindings and retain their graph context outside repositories. Implementation belongs in apps/artifact-plane.
+Discover artifact knowledge and visualize artifact dependencies, knowledge references and maintained system flows. Create and maintain artifacts, changes, documents, dependencies, references, tasks, units, flows and versions through deterministic operations that write only inside docs/artifacts of a selected worktree on a non-protected branch. Retrieve source-backed context through local keyword, semantic and graph discovery, HTTP and stdio MCP. Inspect local worktrees and workflow evidence. Observe supported agent attempts with explicit or inferred task bindings and retain their graph context outside repositories. Start, follow, stop and resume agent sessions in several harness tools on the request of a person, with a chosen harness tool and model for each session. Implementation belongs in apps/artifact-plane.
 
 ## Ownership
 
@@ -24,5 +24,6 @@ This artifact uses the in-place layout. Working knowledge is in requirements, sp
 - [In-place layout reading](specifications/knowledge-layout-reading.md)
 - [Change impact requirements](requirements/change-impact.md), [change impact service contract](specifications/change-impact.md) and [typed impact ledger decision](decisions/016-typed-impact-ledger.md)
 - [Local server decision](decisions/001-local-server.md) and [derived workflow decision](decisions/002-derived-workflow.md)
+- [Agent orchestration requirements](requirements/agent-orchestration.md), [agent orchestration contract](specifications/agent-orchestration.md) and [session adapter decision](decisions/018-agent-session-adapters.md)
 
 Version records are in versions. Records 1.5.0 to 1.13.0 were converted from complete legacy snapshots; each one gives the Git command that finds its knowledge. Change records and retained delivery plans are in changes.

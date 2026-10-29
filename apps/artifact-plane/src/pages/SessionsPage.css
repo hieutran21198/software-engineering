@@ -1,0 +1,165 @@
+/* Agent sessions: the waiting count of the top bar, the Sessions page, the session page and the
+   launch dialogs (mockup artboards 1 to 5, 7 and 9). The tokens and components are those of the
+   workbench (src/styles.css, SettingsPage.css). */
+.waiting-button { height: 32px; gap: 6px; padding: 0 12px; border-color: #ecd29f; background: var(--warn-bg); color: var(--warn-text); font: 500 13px var(--sans); }
+:where(button).waiting-button:hover:not(:disabled) { background: #fbe7c3; }
+.waiting-button .count { background: var(--warn); }
+.plus { color: var(--ok-text); }
+.minus { color: var(--danger-text); }
+.plus + .minus { margin-left: 4px; }
+button.dark { height: 32px; padding: 0 12px; border-color: #3a3e45; background: #2b2e33; color: #e8e8e3; font-size: 13px; }
+button.dark:hover:not(:disabled) { background: #363a40; }
+button.dark:disabled { background: #2b2e33; border-color: #3a3e45; color: #8a9099; }
+button.end-session { color: var(--danger-text); }
+
+/* Sessions page. */
+.sessions-page > .column, .session-page > .column { max-width: 1240px; }
+.sessions-actions, .session-actions { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; }
+.session-group { margin-top: var(--s5); border: 1px solid var(--border); border-radius: var(--r-card); overflow: hidden; background: var(--bg); }
+.session-group-title { padding: 10px 16px; font-size: 13px; font-weight: 600; background: var(--subtle); border-bottom: 1px solid var(--border); overflow-wrap: anywhere; }
+.session-group-title .muted { font-weight: 400; margin-left: 6px; }
+.session-row { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 210px) minmax(0, 180px) 160px 96px; align-items: center; gap: 10px 20px; padding: 12px 16px; border-top: 1px solid var(--divider); }
+.session-row .status-badge { justify-self: start; }
+.session-row > button { justify-self: end; }
+.session-group-title + .session-row { border-top: 0; }
+.session-row.needs-you { background: #fffcf6; }
+.session-task { min-width: 0; }
+.session-task-title { font-weight: 500; overflow-wrap: anywhere; }
+.session-task-detail { font-size: 13px; color: var(--muted); overflow-wrap: anywhere; }
+.session-output { font-size: 13px; }
+.session-agent { font-size: 13px; color: var(--muted); overflow-wrap: anywhere; }
+@media (max-width: 1180px) {
+  .session-row { grid-template-columns: minmax(0, 1fr) auto; }
+  .session-output, .session-agent { grid-column: 1; }
+  .session-row .status-badge { grid-column: 2; grid-row: 1; justify-self: end; }
+  .session-row > button { grid-column: 2; grid-row: 2 / span 2; }
+}
+.dod-meter { display: inline-flex; align-items: center; gap: 8px; white-space: nowrap; }
+.meter { flex: none; }
+.meter { display: inline-block; width: 72px; height: 6px; border-radius: 3px; background: var(--divider); overflow: hidden; }
+.meter span { display: block; height: 6px; background: var(--ok); }
+.sessions-note { margin-top: var(--s4); }
+.sessions-page .empty-state { margin-top: var(--s4); display: flex; flex-direction: column; align-items: flex-start; gap: 8px; }
+.phone-group { margin-top: var(--s4); display: flex; flex-direction: column; gap: 12px; }
+.phone-group-title { font-size: 13px; font-weight: 600; color: var(--muted); }
+.session-card-phone { display: flex; flex-direction: column; gap: 8px; padding: 14px; border: 1px solid var(--border); border-radius: var(--r-card); }
+.session-card-phone h3 { font-size: 15px; font-weight: 600; }
+.session-card-badges { display: flex; flex-wrap: wrap; gap: 6px; align-items: center; }
+.phone-permission { display: flex; flex-direction: column; gap: 8px; padding-top: 6px; }
+.phone-permission-title { font-weight: 500; }
+.phone-permission pre { margin: 0; padding: 8px 10px; border-radius: var(--r-control); background: var(--side); white-space: pre-wrap; overflow-wrap: anywhere; }
+.phone-permission-options { display: flex; flex-direction: column; gap: 8px; }
+.sessions-phone-actions { margin-top: var(--s5); }
+
+/* Session page. */
+.session-page .page-header { margin-bottom: 12px; }
+.session-page .page-header .subtitle { font-size: 13px; overflow-wrap: anywhere; }
+.session-page .page-header .eyebrow button.link { font-weight: 400; font-size: 13px; }
+.session-page .notice { margin: 12px 0 0; }
+.session-phases, .session-starting { margin-top: 8px; }
+.session-phases .phase-steps { margin-bottom: 4px; }
+.session-layout { display: flex; flex-wrap: wrap; gap: 16px; align-items: flex-start; margin-top: 16px; }
+.session-side { flex: 1 1 280px; max-width: 360px; min-width: 0; display: flex; flex-direction: column; gap: 16px; }
+.session-main { flex: 999 1 560px; min-width: 0; display: flex; flex-direction: column; gap: 16px; }
+.session-layout > .output-card { flex: 999 1 560px; }
+.terminal-layout > .output-card { flex: 1 1 340px; }
+.session-card { border: 1px solid var(--border); border-radius: var(--r-card); overflow: hidden; background: var(--bg); min-width: 0; }
+.session-card > h2 { padding: 10px 14px; font-size: 13px; font-weight: 600; background: var(--subtle); border-bottom: 1px solid var(--border); overflow-wrap: anywhere; }
+.session-card-empty { padding: 10px 14px; font-size: 13px; }
+.dod-items, .commit-list { list-style: none; margin: 0; padding: 0; }
+.dod-items li, .commit-list li { display: flex; gap: 10px; align-items: flex-start; padding: 8px 14px; border-top: 1px solid var(--divider); font-size: 13px; overflow-wrap: anywhere; }
+.dod-items li:first-child, .commit-list li:first-child { border-top: 0; }
+.dod-items input { margin-top: 2px; accent-color: var(--ok); }
+.commit-list .mono { color: var(--muted); flex: none; padding-top: 1px; }
+.last-message { padding: 10px 14px; font-size: 13px; white-space: pre-wrap; overflow-wrap: anywhere; max-height: 320px; overflow-y: auto; }
+
+/* Permission request of an ACP session. */
+.permission-card { display: flex; flex-wrap: wrap; align-items: center; gap: 10px 16px; margin-top: 16px; padding: 14px 16px; border: 1px solid var(--warn); border-radius: var(--r-card); background: #fffdf8; }
+.permission-text { flex: 1 1 360px; min-width: 0; display: flex; flex-direction: column; align-items: flex-start; gap: 4px; }
+.permission-text h2 { font-size: 15px; font-weight: 600; }
+.permission-command { padding: 2px 8px; border-radius: 4px; background: var(--side); white-space: pre-wrap; overflow-wrap: anywhere; max-width: 100%; }
+.permission-options { display: flex; flex-wrap: wrap; gap: 8px; }
+
+/* Output: the changed files as a tree and the diff of the selected file. */
+.output-body { display: flex; flex-wrap: wrap; }
+.output-tree { flex: 1 1 240px; max-width: 320px; min-width: 0; padding: 6px 0; border-right: 1px solid var(--divider); }
+.terminal-layout .output-tree { max-width: none; flex-basis: 100%; border-right: 0; border-bottom: 1px solid var(--divider); }
+.output-dir { padding: 6px 12px; color: var(--muted); overflow-wrap: anywhere; }
+.output-file { display: flex; align-items: center; gap: 8px; width: 100%; min-height: 34px; height: auto; padding: 4px 12px 4px 24px; border: 0; border-radius: 0; background: transparent; justify-content: flex-start; text-align: left; font: 400 12px var(--mono); color: var(--text); white-space: normal; }
+:where(button).output-file:hover:not(:disabled) { background: var(--subtle); }
+.output-file.on, :where(button).output-file.on:hover { background: var(--accent-soft); color: var(--accent-text); }
+.output-name { flex: 1 1 auto; min-width: 0; overflow-wrap: anywhere; }
+.output-counts { flex: none; display: inline-flex; gap: 4px; }
+.file-status { display: inline-flex; justify-content: center; flex: none; width: 18px; height: 18px; border-radius: 4px; font: 600 11px/18px var(--sans); background: var(--soft); color: var(--muted); }
+.file-status.A { background: var(--ok-bg); color: var(--ok-text); }
+.file-status.M, .file-status.R { background: var(--warn-bg); color: var(--warn-text); }
+.file-status.D { background: var(--danger-bg); color: var(--danger-text); }
+.output-diff { flex: 999 1 380px; min-width: 0; }
+.output-diff-head { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; padding: 8px 12px; border-bottom: 1px solid var(--divider); }
+.output-diff-head .mono { flex: 1 1 auto; min-width: 0; overflow-wrap: anywhere; }
+.session-diff { padding: 4px 0; max-height: 560px; overflow: auto; }
+.session-diff .diff-line { padding-right: 12px; }
+.session-diff .diff-line.hunk { background: var(--soft); color: var(--muted); }
+.session-diff .diff-line.note { color: var(--muted); font-style: italic; }
+.output-more { padding: 6px 12px; }
+
+/* Message field of an ACP session. */
+.message-form { display: flex; flex-wrap: wrap; align-items: flex-end; gap: 8px; margin-top: 16px; }
+.message-form .field { flex: 1 1 420px; min-width: 0; }
+.message-form textarea:disabled { background: var(--subtle); color: var(--muted); }
+
+/* Embedded terminal: the waiting notice, the dark panel and the frame. */
+.terminal-area { display: flex; flex-direction: column; gap: 10px; }
+.unseen-wait { padding: 8px 12px; border-radius: var(--r-control); background: var(--side); }
+.terminal-wait { display: flex; flex-wrap: wrap; align-items: center; gap: 8px 14px; padding: 10px 14px; border: 1px solid #e3b866; border-radius: var(--r-card); background: #fdf8ee; }
+.terminal-wait-text { flex: 1 1 320px; min-width: 0; display: flex; flex-direction: column; }
+.terminal-panel { border: 1px solid #2b2e33; border-radius: var(--r-card); overflow: hidden; background: #16181c; }
+.terminal-panel.waiting { border: 2px solid #e3b866; }
+.terminal-head { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; padding: 8px 10px; background: #202328; border-bottom: 1px solid #2b2e33; }
+.terminal-head h2 { flex: 1 1 auto; min-width: 0; font-size: 13px; font-weight: 500; color: #e8e8e3; overflow-wrap: anywhere; }
+.terminal-frame { display: block; width: 100%; height: 480px; border: 0; background: #16181c; }
+.terminal-frame:focus-visible { outline: 2px solid #8ab4ff; outline-offset: -2px; }
+.terminal-placeholder { display: flex; flex-direction: column; align-items: flex-start; gap: 8px; padding: 24px 16px; min-height: 160px; color: #d7dae0; font-size: 13px; }
+.terminal-placeholder b { color: #e8e8e3; font-size: 14px; }
+.terminal-foot { padding: 8px 12px; background: #202328; color: #a9aeb6; font-size: 12px; }
+
+/* Recovery choices. */
+.recovery { margin-top: 16px; }
+.recovery-facts { padding: 10px 14px 0; font-size: 13px; color: var(--muted); overflow-wrap: anywhere; }
+.recovery .operation-error { margin: 10px 14px 0; }
+.recovery-choice { display: flex; flex-wrap: wrap; align-items: center; gap: 10px 16px; padding: 12px 14px; border-top: 1px solid var(--divider); }
+.recovery-facts + .recovery-choice, .recovery .operation-error + .recovery-choice { margin-top: 10px; }
+.recovery-choice .grow { flex: 1 1 360px; min-width: 0; }
+.recovery-choice textarea { width: 100%; }
+.recovery-choice select { flex: 0 1 280px; min-width: 0; }
+
+/* Launch dialogs. */
+.launch-dialog { max-width: 680px; }
+.launch-dialog form { gap: 16px; }
+.launch-head { margin-bottom: 16px; }
+.launch-head .muted { margin-top: 4px; overflow-wrap: anywhere; }
+.launch-dialog .field select, .launch-dialog .field textarea { width: 100%; }
+.launch-profiles .choice-card { flex-basis: 100%; }
+.launch-profile-text { display: flex; flex-direction: column; gap: 4px; min-width: 0; }
+.launch-profile-name { font-weight: 500; overflow-wrap: anywhere; }
+.launch-default { font-weight: 400; color: var(--accent-text); font-size: 12px; }
+.launch-chips { display: flex; flex-wrap: wrap; gap: 6px; }
+.launch-reason { color: var(--danger-text) !important; }
+.launch-warnings { display: flex; flex-direction: column; gap: 4px; padding: 12px 14px; border-radius: var(--r-card); background: var(--warn-bg); color: var(--warn-text); }
+.launch-warnings strong { font-weight: 600; }
+.launch-dialog .editor-foot { justify-content: flex-end; }
+.launch-dialog .editor-foot button[aria-busy="true"] { cursor: progress; }
+
+/* Entry points on the change page and the Work page. */
+.change-actions { display: flex; flex-wrap: wrap; align-items: center; gap: 12px; }
+
+@media (max-width: 800px) {
+  .waiting-button .label { display: none; }
+  .session-side { max-width: none; }
+  .output-tree { max-width: none; flex-basis: 100%; border-right: 0; border-bottom: 1px solid var(--divider); }
+  .session-actions { width: 100%; }
+  .permission-options, .permission-options button { flex: 1 1 100%; }
+  .message-form button { flex: 1 1 100%; }
+  .recovery-choice select, .recovery-choice button { flex: 1 1 100%; }
+  .launch-dialog .editor-foot button { flex: 1 1 120px; }
+}

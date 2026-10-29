@@ -14,7 +14,7 @@ App Server is suitable when the application manages sessions, but would expand t
 
 ## Consequences
 
-Users must enable and trust hooks in Codex and explicitly bind agent sessions. Hook events provide observations, not continuous liveness or task success; stale activity becomes Unknown. SQLite transactions support concurrent hook writers without a separate service. Existing artifact evidence remains authoritative for delivery. No launch/control or automatic approval/merge is added.
+Users must enable and trust hooks in Codex and explicitly bind agent sessions. Hook events provide observations, not continuous liveness or task success; stale activity becomes Unknown. SQLite transactions support concurrent hook writers without a separate service. Existing artifact evidence remains authoritative for delivery. No launch/control or automatic approval/merge is added. [ADR 018](018-agent-session-adapters.md) later adds person-started sessions; the observer of this decision stays unchanged.
 
 ## Source
 

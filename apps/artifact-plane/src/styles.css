@@ -151,6 +151,9 @@ fieldset.checks legend { font-size: 13px; font-weight: 500; margin-bottom: 6px; 
 .freshness { font-size: 13px; color: var(--warn-text); white-space: nowrap; }
 .refreshing svg { animation: spin 1s linear infinite; }
 @keyframes spin { to { transform: rotate(360deg); } }
+/* Work in progress: a faint ring with one arc in the text color that turns, or stands still for reduced motion. */
+.spinner { flex: none; display: inline-block; width: 1em; height: 1em; border: 2px solid color-mix(in srgb, currentColor 25%, transparent); border-top-color: currentColor; border-radius: 50%; animation: spin 1s linear infinite; }
+@media (prefers-reduced-motion: reduce) { .spinner { animation: none; } }
 .menu { position: absolute; right: 0; top: calc(100% + 6px); z-index: 50; min-width: 240px; max-height: min(70vh, 520px); overflow-y: auto; max-width: min(420px, calc(100vw - 32px)); padding: 6px; border: 1px solid var(--border); border-radius: var(--r-card); background: var(--bg); box-shadow: 0 8px 24px rgba(20, 20, 19, .12); display: flex; flex-direction: column; }
 .menu [role^="menuitem"], .menu .menu-item { display: flex; flex-direction: column; align-items: flex-start; gap: 2px; width: 100%; height: auto; padding: 8px 10px; border: 0; background: none; border-radius: var(--r-control); text-align: left; font: 400 14px var(--sans); white-space: normal; }
 .menu [role^="menuitem"]:hover, .menu [role^="menuitem"]:focus { background: var(--soft); }
@@ -207,7 +210,9 @@ fieldset.checks legend { font-size: 13px; font-weight: 500; margin-bottom: 6px; 
 .switch[aria-checked="true"]::after { transform: translateX(14px); }
 .drawer-backdrop { display: none; }
 
-.page-area { flex: 1; min-width: 0; overflow-y: auto; }
+/* The page area is the containing block of its absolute descendants, so that it
+   clips them: visually hidden text below the fold cannot make the document scroll. */
+.page-area { flex: 1; min-width: 0; overflow-y: auto; position: relative; }
 .page { padding: 40px 56px 64px; }
 .page > .column { max-width: 880px; }
 .page.wide > .column { max-width: 960px; }
