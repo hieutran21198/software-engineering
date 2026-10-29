@@ -15,6 +15,7 @@ import { runtimeService } from "./runtime-api.js";
 import {createKnowledgeService} from './knowledge-operations.js';
 import {knowledgeGit} from './knowledge-git.js';
 import {errorBody as editError} from './knowledge-writer.js';
+import {createSettingsService, SettingsError} from './agent-settings.js';
 import pkg from "../package.json" with { type: "json" };
 // A bundled server.mjs has dist/ beside it; a source checkout has it beside server/.
 export const distDirectory = (directory) => existsSync(join(directory, "dist")) ? join(directory, "dist") : resolve(directory, "../dist");
@@ -57,6 +58,9 @@ export function createAppServer(options = {}) {
   const getReviews=()=>reviews??=createReviewService({roots:options.reviewRoots||options.flowRoots||[],impactService:getImpact()});
   let knowledge=options.knowledgeService;
   const getKnowledge=()=>knowledge??=createKnowledgeService({channel:'person'});
+  // The settings service starts on the first settings route, so other routes never read the settings file.
+  let settings=options.settingsService;
+  const getSettings=()=>settings??=createSettingsService({stateDir:options.stateDir,configDir:options.configDir,roots:options.flowRoots||[]});
   const observation=options.repositoryObservation||{};
   const repositories=repositoryService({...observation,sample:async(root,settings)=>{const base=observation.sample?await observation.sample(root,settings):await settings.base(settings);return registeredSourceFingerprint(root,base,[...(flows?.observedSources(root)||[]),...(reviews?.observedSources(root)||[])],settings);}});
   const server = createServer(async (req, res) => {
@@ -94,7 +98,7 @@ export function createAppServer(options = {}) {
         try {return json(res, 200, url.pathname === "/api/knowledge/edit" ? await getKnowledge().apply(body) : await knowledgeGit(body));}
         catch (error) {const {status, body: payload} = editError(error);return json(res, status, payload);}
       }
-      if (["/api/explore", "/api/runtime/query", "/api/repository/query", "/api/flows/query", "/api/review/query", "/api/impact/query"].includes(url.pathname)) {
+      if (["/api/explore", "/api/runtime/query", "/api/repository/query", "/api/flows/query", "/api/review/query", "/api/impact/query", "/api/settings/query", "/api/settings/save"].includes(url.pathname)) {
         if (req.method !== "POST")
           return json(res, 405, { error: "Use POST to explore a repository." });
         if (
@@ -119,6 +123,10 @@ export function createAppServer(options = {}) {
         if (url.pathname === "/api/runtime/query") {
           if (typeof body?.path !== "string" || !body.path || body.context !== undefined && typeof body.context !== "string") return json(res, 400, {error: "Supply a repository path and optional context ID."});
           return json(res, 200, runtime.query(body.path, body.context));
+        }
+        if(url.pathname==='/api/settings/query'||url.pathname==='/api/settings/save'){
+          try{return json(res,200,url.pathname==='/api/settings/query'?await getSettings().query(body):getSettings().save(body));}
+          catch(error){if(error instanceof SettingsError)return json(res,error.status,{...error.body,error:error.message});throw error;}
         }
         if(url.pathname==='/api/review/query')return json(res,200,await getReviews().query(body));
         if(url.pathname==='/api/impact/query')return json(res,200,await getImpact().query(body));
