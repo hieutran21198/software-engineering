@@ -33,6 +33,14 @@ export function usageFromEvents(events){
 }
 export function checkAnswer(answer,expected){return !!answer&&JSON.stringify(answer.rules)===JSON.stringify(expected.rules)&&JSON.stringify(answer.checks)===JSON.stringify(expected.checks)&&answer.canImplement===expected.canImplement&&typeof answer.blockingReason==='string'&&(expected.canImplement||/approval/i.test(answer.blockingReason));}
 const git=(cwd,...args)=>execFileSync('git',['-C',cwd,...args],{encoding:'utf8',stdio:['pipe','pipe','pipe']}).trim();
+const hasCommit=(cwd,ref)=>{
+ try{
+  execFileSync('git',['-C',cwd,'rev-parse','--verify','--quiet',`${ref}^{commit}`],{stdio:'ignore'});
+  return true;
+ }catch{
+  return false;
+ }
+};
 export async function scenarioFixture(scenario,parent){
  const root=await mkdtemp(join(parent,'fixture-')),base='docs/artifacts/demo/',change=base+'changes/change-context/';
  const expected={rules:[{id:'R1',text:'Preserve signed evidence.'}],checks:['Verify evidence signature.'],canImplement:scenario!=='resumed',blockingReason:scenario==='resumed'?'Approval is missing.':''};
@@ -69,6 +77,7 @@ async function codexRun(root,prompt,model,output){
 export async function runBenchmark({payloadOnly=false,model,baseline='fe44680',output,run=codexRun}={}){
  if(!payloadOnly&&!model)throw Error('--model is required for comparable live runs.');
  output=output?resolve(output):await mkdtemp(join(tmpdir(),'plane-context-benchmark-'));await mkdir(output,{recursive:true,mode:0o700});
+ const baselineRef=hasCommit(repository,baseline)?baseline:'HEAD';
  const runs=[],payload=[];
  for(const scenario of ['contained','multi-artifact','resumed']){
   const template=await scenarioFixture(scenario,output);
@@ -82,7 +91,7 @@ export async function runBenchmark({payloadOnly=false,model,baseline='fe44680',o
     await cp(join(template.root,'docs'),join(target,'docs'),{recursive:true});
     const bundle=join(target,'docs/artifact-driven');
     if(mode==='baseline'){
-     const archive=execFileSync('git',['-C',repository,'archive',baseline,'docs/artifact-driven','AGENTS.md','.codex/agents']);execFileSync('tar',['-x','-C',target],{input:archive});
+     const archive=execFileSync('git',['-C',repository,'archive',baselineRef,'docs/artifact-driven','AGENTS.md','.codex/agents']);execFileSync('tar',['-x','-C',target],{input:archive});
     }else{
      await cp(join(repository,'docs/artifact-driven'),bundle,{recursive:true,filter:source=>!source.endsWith('/tools/add-validate.mjs')});await cp(join(repository,'AGENTS.md'),join(target,'AGENTS.md'));await cp(join(repository,'.codex/agents'),join(target,'.codex/agents'),{recursive:true});
     }
