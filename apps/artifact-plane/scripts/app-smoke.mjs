@@ -1,8 +1,9 @@
 // Start check of a built executable with a new private state directory and a free port.
 // Usage: node scripts/app-smoke.mjs release/artifact-plane-<os>-<arch>[.exe]
 import { execFile, spawn } from "node:child_process";
+import { existsSync, statSync } from "node:fs";
 import { mkdtemp, rm } from "node:fs/promises";
-import { createServer } from "node:net";
+import { connect, createServer } from "node:net";
 import { tmpdir } from "node:os";
 import { join, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
@@ -22,6 +23,7 @@ async function check(name, run) {
 }
 const assert = (value, message) => {if (!value) throw Error(message);};
 const timeout = (ms, message) => new Promise((_, reject) => setTimeout(() => reject(Error(message)), ms).unref());
+const delay = (ms) => new Promise((done) => setTimeout(done, ms));
 
 await check("--version prints the package version", async () => {
   const stdout = await new Promise((done, reject) => execFile(file, ["--version"], { env }, (error, out) => error ? reject(error) : done(out)));
@@ -96,6 +98,43 @@ await check("runtime query prints the JSON of the store", async () => {
   if (result.windows) {console.log(`     runtime store unavailable on Windows: ${result.windows}`);return;}
   assert(Number.isInteger(result.sequence) && Array.isArray(result.attempts), `result ${JSON.stringify(result).slice(0, 200)}`);
   console.log(`     ${result.sequence} events`);
+});
+
+// The session runner (agent-orchestration specification, Runner) listens on runner.sock in a
+// private state directory, answers hello with the package version and stops on SIGTERM.
+await check("runner answers hello on runner.sock and stops on SIGTERM", async () => {
+  const runnerState = await mkdtemp(join(tmpdir(), "plane-runner-")), socket = join(runnerState, "runner.sock");
+  const child = spawn(file, ["runner", "--state-dir", runnerState], { env, stdio: ["ignore", "ignore", "pipe"] });
+  let stderr = "";
+  child.stderr.setEncoding("utf8").on("data", (chunk) => {stderr += chunk;});
+  const exited = new Promise((done) => child.on("exit", (code, signal) => done({ code, signal })));
+  try {
+    const listening = await Promise.race([
+      (async () => {while (!existsSync(socket)) {if (child.exitCode !== null) return false;await delay(100);}return true;})(),
+      exited.then(() => existsSync(socket)),
+      timeout(60000, "no runner.sock within 60 seconds"),
+    ]);
+    if (!listening) {
+      const { code } = await exited;
+      // The runtime store refuses its directory on Windows (see the runtime query check), so the runner cannot start there.
+      if (process.platform === "win32" && code === 1 && /private runtime|outside repositories/.test(stderr)) {console.log(`     session runner unavailable on Windows: ${stderr.trim()}`);return;}
+      throw Error(`runner exited with ${code}: ${stderr.trim()}`);
+    }
+    const hello = await Promise.race([new Promise((done, reject) => {
+      const client = connect(socket);
+      client.setEncoding("utf8").once("data", (line) => {client.end();done(JSON.parse(line));}).once("error", reject);
+      client.write(JSON.stringify({ id: 1, method: "hello" }) + "\n");
+    }), timeout(10000, "no hello answer within 10 seconds")]);
+    assert(hello.result?.version === pkg.version, `hello ${JSON.stringify(hello)}`);
+    assert((statSync(socket).mode & 0o777) === 0o600, "runner.sock is not private (0600)");
+    console.log(`     runner ${hello.result.version}, pid ${hello.result.pid}`);
+    child.kill("SIGTERM");
+    await Promise.race([exited, timeout(5000, "still running after 5 seconds")]);
+    assert(!existsSync(socket), "runner.sock remains after the stop");
+  } finally {
+    child.kill("SIGKILL");
+    await rm(runnerState, { recursive: true, force: true });
+  }
 });
 
 await rm(state, { recursive: true, force: true });

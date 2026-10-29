@@ -68,7 +68,9 @@ export class RuntimeStore {
     CREATE TABLE IF NOT EXISTS attempts(id TEXT PRIMARY KEY, repository TEXT, context TEXT, task TEXT, session TEXT, agent TEXT, json TEXT);
     CREATE TABLE IF NOT EXISTS events(seq INTEGER PRIMARY KEY AUTOINCREMENT, id TEXT UNIQUE, attempt TEXT, session TEXT, agent TEXT, kind TEXT, json TEXT);
     PRAGMA user_version=1; COMMIT;`);
-   
+   // The sessions of specifications/agent-orchestration.md (Lifecycle events). The schema
+   // version stays 1, because earlier readers ignore an unknown table.
+   this.db.exec('CREATE TABLE IF NOT EXISTS sessions(id TEXT PRIMARY KEY, repository TEXT, attempt TEXT, harnessSession TEXT, json TEXT)');
   }
   for(const row of this.db.prepare('SELECT root,common FROM repositories').all())guardDirectory(this.dir,[row.root,row.common]);
  }
@@ -154,6 +156,76 @@ export class RuntimeStore {
   }
   const now=Date.now();a.state={validated:'done',failed:'failed',blocked:'blocked','execution-returned':'validating'}[state];a.updatedAt=now;a.activity=label(reason)||'Explicit '+state+' report';if(state!=='blocked')a.endedAt=now;
   this.db.exec('BEGIN IMMEDIATE');try{this.saveAttempt(a);this.insertEvent({id:randomUUID(),attempt:a.id,session:a.session,agent:a.agent,kind:'report:'+state,observedAt:now});this.db.exec('COMMIT');}catch(e){this.db.exec('ROLLBACK');throw e;}return a;
+ }
+ // Sessions (specifications/agent-orchestration.md: Lifecycle events, States). A read-only
+ // store of an older writer can lack the table; it then has no sessions. A session record
+ // holds the session fields in its JSON and the attempt ID in its own column.
+ hasSessions(){return Boolean(this.db?.prepare("SELECT 1 FROM sqlite_master WHERE type='table' AND name='sessions'").get());}
+ session(id){
+  if(!this.hasSessions())return null;
+  const row=this.db.prepare('SELECT attempt,json FROM sessions WHERE id=?').get(id);
+  return row?{...JSON.parse(row.json),attempt:row.attempt}:null;
+ }
+ // The sessions of a repository, or with `active` of one connection the sessions in state
+ // starting, working, waiting or idle. Newest first.
+ sessions({repository=null,connection=null,active=false}={}){
+  if(!this.hasSessions())return [];
+  const where=[],args=[];
+  if(repository){where.push('repository=?');args.push(repository);}
+  if(connection){where.push("json_extract(json,'$.profile.connection')=?");args.push(connection);}
+  if(active)where.push("json_extract(json,'$.state') IN ('starting','working','waiting','idle')");
+  return this.db.prepare(`SELECT attempt,json FROM sessions${where.length?' WHERE '+where.join(' AND '):''} ORDER BY json_extract(json,'$.startedAt') DESC`).all(...args).map(row=>({...JSON.parse(row.json),attempt:row.attempt}));
+ }
+ // Writes the session, its lifecycle events and the change of its attempt in one
+ // transaction. `change` holds `state` (the attempt state of the States table), `end`
+ // (the person or an error ended the session), `session` (the harness session ID that
+ // replaces the binding session) and `model`.
+ recordSession(session,{events=[],change=null}={}){
+  this.db.exec('BEGIN IMMEDIATE');
+  try{this.#putSession(session,events,change,Date.now());this.db.exec('COMMIT');}
+  catch(e){this.db.exec('ROLLBACK');throw e;}
+ }
+ #putSession({attempt=null,...session},events,change,now){
+  this.db.prepare('INSERT INTO sessions VALUES(?,?,?,?,?) ON CONFLICT(id) DO UPDATE SET repository=excluded.repository,attempt=excluded.attempt,harnessSession=excluded.harnessSession,json=excluded.json')
+   .run(session.id,session.repository??null,attempt,session.harnessSession??null,JSON.stringify(session));
+  const row=attempt&&change&&this.db.prepare('SELECT json FROM attempts WHERE id=?').get(attempt);
+  if(row){
+   const a=JSON.parse(row.json),kind=events.at(-1)?.kind;
+   if(change.session&&change.session!==a.session){a.session=label(change.session);this.db.prepare('UPDATE attempts SET session=? WHERE id=?').run(a.session,a.id);}
+   if(change.model)a.model=label(change.model);
+   // A reported result and a superseded attempt stay; an end keeps a validating attempt.
+   const state=change.end?(a.state==='validating'?null:'interrupted'):change.state;
+   if(state&&!['done','superseded'].includes(a.state)){
+    a.state=state;a.updatedAt=now;a.endedAt=['validating','interrupted','failed'].includes(state)?now:null;
+    if(kind)a.activity=kind;
+   }
+   this.saveAttempt(a);
+  }
+  for(const {kind,...fields} of events)this.insertEvent({id:randomUUID(),attempt,session:session.id,agent:'',kind,...fields,observedAt:now});
+ }
+ // Marks each ACP session in state starting, working, waiting or idle that the runner does
+ // not host as interrupted with reason runner-lost (Runner). A session that changed after
+ // `before` (the time of the runner answer) has a live runner. It returns their IDs.
+ markRunnerLost(hosted=[],before=Infinity){
+  if(!this.hasSessions())return [];
+  const keep=new Set(hosted),now=Date.now(),lost=[];
+  this.db.exec('BEGIN IMMEDIATE');
+  try{
+   for(const session of this.sessions({connection:'acp',active:true})){
+    if(keep.has(session.id)||session.updatedAt>before)continue;
+    this.#putSession({...session,state:'interrupted',reason:'runner-lost',updatedAt:now},[{kind:'session:interrupted',reason:'runner-lost'}],{state:'interrupted'},now);
+    lost.push(session.id);
+   }
+   this.db.exec('COMMIT');
+  }catch(e){this.db.exec('ROLLBACK');throw e;}
+  return lost;
+ }
+ attempt(id){const row=this.db?.prepare('SELECT json FROM attempts WHERE id=?').get(id);return row?JSON.parse(row.json):null;}
+ // The `session:harness-id` records of the hook after the sequence number, in order.
+ harnessIds(after=0){
+  if(!this.db)return [];
+  return this.db.prepare("SELECT seq,session,json FROM events WHERE seq>? AND kind='session:harness-id' AND attempt IS NULL ORDER BY seq").all(after)
+   .map(row=>{const e=JSON.parse(row.json);return {seq:Number(row.seq),session:row.session,harnessSession:e.harnessSession,model:e.model||null};});
  }
  query(root,{now=Date.now()}={}){
   const repo=this.repository(root);if(!repo)return {repository:null,contexts:[],attempts:[],events:[],sequence:this.sequence()};

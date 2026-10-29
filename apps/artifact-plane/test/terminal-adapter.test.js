@@ -239,11 +239,49 @@ test('resume runs tab create in the same named session and the resume command fo
  const {pane, tab} = await session.resume('session-1');
  assert.deepEqual([pane, tab, session.pane, session.tab], ['w1:p2', 'w1:t2', 'w1:p2', 'w1:t2']);
  assert.deepEqual((await f.readState()).sessions[NAME].panes.map(p => [p.pane_id, p.runs.length]), [['w1:p1', 1], ['w1:p2', 1]]);
- // Without a running server or workspace, tab create fails with the herdr error.
- const stopped = f.session({id: 'ffffffffffff', pane: 'w1:p1', state: 'interrupted'});
- await assert.rejects(stopped.resume('session-1'), refusal('herdr', {herdrCode: 'server_not_running', command: 'tab create'}));
- await f.setState(value => {value.sessions[NAME].workspaces = [];});
- await assert.rejects(session.resume('session-1'), refusal('herdr', {herdrCode: 'workspace_not_found', command: 'tab create'}));
+});
+
+test('resume starts a stopped named server or a missing workspace again without the initial prompt, then runs the resume command', {skip}, async t => {
+ const f = await fixture(t), OTHER_ID = 'ffffffffffff', OTHER_NAME = `plane-${OTHER_ID}`, line = terminalCommandLine(CLAUDE, {resume: 'session-1'});
+ const since = async mark => (await f.herdrCalls()).slice(mark);
+ const workspaceArguments = id => ['workspace', 'create', '--cwd', f.worktree, '--label', 'implementer terminal-adapter', '--env', `ARTIFACT_PLANE_LAUNCH=${id}`, '--env', 'PLANE_TEST_FLAG=on', '--no-focus'];
+ // 1. The named server does not run: tab create fails with server_not_running, so the
+ // resume starts a detached server, waits for it, creates a workspace and runs the command.
+ const stopped = f.session({id: OTHER_ID, pane: 'w1:p1', state: 'interrupted'});
+ let mark = (await f.herdrCalls()).length;
+ assert.deepEqual(await stopped.resume('session-1'), {pane: 'w1:p1', tab: 'w1:t1', commandLine: line});
+ let calls = await since(mark);
+ assert.deepEqual(calls.map(command).filter(c => c !== 'pane list'), ['tab create', 'server', 'workspace create', 'pane run']);
+ for (const call of calls) assert.deepEqual(call.argv.slice(0, 2), ['--session', OTHER_NAME]);
+ const server = calls.find(c => command(c) === 'server');
+ if (server.sid !== null) assert.equal(server.sid, server.pid, 'the server runs detached');
+ assert.deepEqual(calls.find(c => command(c) === 'workspace create').argv.slice(2), workspaceArguments(OTHER_ID), 'no ARTIFACT_PLANE_PROMPT');
+ assert.deepEqual(calls.at(-1).argv.slice(2), ['pane', 'run', 'w1:p1', line]);
+ assert.deepEqual([stopped.pane, stopped.tab, stopped.state], ['w1:p1', 'w1:t1', 'starting']);
+ let pane = (await f.readState()).sessions[OTHER_NAME].panes[0];
+ assert.deepEqual([pane.env, pane.runs], [{ARTIFACT_PLANE_LAUNCH: OTHER_ID, PLANE_TEST_FLAG: 'on'}, [line]]);
+ // 2. The named server runs without a workspace: tab create fails with workspace_not_found,
+ // so the resume creates a workspace in that server and runs the command.
+ const session = f.session();
+ await session.start(PROMPT);
+ await f.setState(value => {value.sessions[NAME].workspaces = [];value.sessions[NAME].panes = [];});
+ mark = (await f.herdrCalls()).length;
+ const resumed = await session.resume('session-1');
+ calls = await since(mark);
+ assert.deepEqual(calls.map(command), ['tab create', 'workspace create', 'pane run']);
+ assert.deepEqual(calls[1].argv.slice(2), workspaceArguments(ID), 'no ARTIFACT_PLANE_PROMPT');
+ assert.deepEqual(calls[2].argv.slice(2), ['pane', 'run', resumed.pane, line]);
+ pane = (await f.readState()).sessions[NAME].panes.find(p => p.pane_id === resumed.pane);
+ assert.deepEqual([pane.env, pane.runs], [{ARTIFACT_PLANE_LAUNCH: ID, PLANE_TEST_FLAG: 'on'}, [line]]);
+ // No call of a resume carries the initial prompt.
+ assert.ok(!JSON.stringify((await f.calls()).filter(c => command(c) !== 'workspace create' || !c.argv.includes(`ARTIFACT_PLANE_PROMPT=${PROMPT}`)).map(c => c.argv)).includes('PROMPT-TEXT-91c2'));
+ // A failed workspace create after the resume started the server stops that server again.
+ const failing = f.session({id: 'eeeeeeeeeeee', pane: 'w1:p1', state: 'interrupted', env: {...f.env, FAKE_HERDR_FAULT: 'workspace create:error'}});
+ await assert.rejects(failing.resume('session-1'), refusal('herdr', {herdrCode: 'internal', command: 'workspace create'}));
+ assert.equal((await f.readState()).sessions['plane-eeeeeeeeeeee'].running, false);
+ // Another herdr error of tab create stays an error.
+ const refused = f.session({env: {...f.env, FAKE_HERDR_FAULT: 'tab create:error'}});
+ await assert.rejects(refused.resume('session-1'), refusal('herdr', {herdrCode: 'internal', command: 'tab create'}));
 });
 
 test('end runs server stop of the named session only', {skip}, async t => {

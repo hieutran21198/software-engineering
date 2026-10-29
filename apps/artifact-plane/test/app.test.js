@@ -1,7 +1,7 @@
 import test from "node:test";
 import assert from "node:assert/strict";
 import { execFile, spawn } from "node:child_process";
-import { createServer } from "node:net";
+import { connect, createServer } from "node:net";
 import { mkdtemp, mkdir, rm } from "node:fs/promises";
 import { existsSync } from "node:fs";
 import { join } from "node:path";
@@ -24,7 +24,7 @@ test("--version prints the package version", async () => {
 test("--help prints the commands and environment variables", async () => {
   const { code, stdout, stderr } = await run("--help");
   assert.equal(code, 0);assert.equal(stderr, "");
-  for (const word of ["serve", "mcp", "hook", "runtime <register|bind|report|query>", "--binding inferred", "default: the Git top level", "model-install", "--version", "--help", "PORT", "ARTIFACT_PLANE_STATE_DIR"]) assert.ok(stdout.includes(word), word);
+  for (const word of ["serve", "mcp", "hook", "runtime <register|bind|report|query>", "--binding inferred", "default: the Git top level", "runner", "runner.sock", "model-install", "--version", "--help", "PORT", "ARTIFACT_PLANE_STATE_DIR"]) assert.ok(stdout.includes(word), word);
 });
 
 test("an unknown argument prints the help to standard error with exit status 2", async () => {
@@ -60,4 +60,22 @@ test("mcp runs the stdio MCP server and lists its tools", async (t) => {
   await client.connect(transport);
   const names = (await client.listTools()).tools.map((tool) => tool.name);
   assert.equal(names.length, 14);assert.ok(names.includes("search_flows") && names.includes("get_concept"));
+});
+
+test("runner listens on runner.sock in the private state directory, answers hello and stops on SIGTERM", { skip: process.platform === "win32" }, async (t) => {
+  const state = await temp(t), socket = join(state, "runner.sock");
+  const child = spawn(process.execPath, [app, "runner", "--state-dir", state], { stdio: "ignore" });
+  const exited = new Promise((resolve) => child.on("exit", (code, signal) => resolve({ code, signal })));
+  t.after(() => child.kill("SIGKILL"));
+  for (const end = Date.now() + 10000; !existsSync(socket); await new Promise((resolve) => setTimeout(resolve, 50))) if (Date.now() > end) throw Error("no runner.sock");
+  const hello = await new Promise((resolve, reject) => {
+    const s = connect(socket);
+    s.setEncoding("utf8").on("data", (line) => {s.end();resolve(JSON.parse(line));}).on("error", reject);
+    s.write(JSON.stringify({ id: 1, method: "hello" }) + "\n");
+  });
+  assert.deepEqual([hello.id, hello.result.version, hello.result.pid, hello.result.sessions], [1, pkg.version, child.pid, []]);
+  child.kill("SIGTERM");
+  assert.deepEqual(await exited, { code: 0, signal: null });
+  assert.equal(existsSync(socket), false);
+  assert.deepEqual(await run("runner", "--state-dir", "relative"), { code: 1, stdout: "", stderr: "Use runner [--state-dir /absolute/private/state].\n" });
 });

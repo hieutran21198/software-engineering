@@ -148,17 +148,25 @@ export class TerminalSession {
    await delay(Math.min(WAIT_STEP_MS, Math.max(0, deadline - Date.now())));
   }
  }
+ // Starts the named server as a detached process and waits for it (Start, step 1).
+ async startServer() {
+  detached(requireProgram('herdr', this.env), ['--session', this.name, 'server'], this.env);
+  await this.waitForServer();
+ }
+ // Runs `workspace create` with the pane arguments; `prompt` null leaves out ARTIFACT_PLANE_PROMPT.
+ async createWorkspace(prompt) {
+  return TerminalSession.created(await this.herdr(['workspace', 'create', ...this.paneArguments(prompt)], {result: true}), 'workspace create');
+ }
  // Start: a detached `server`, `workspace create` and `pane run` with the command line.
  // A failure before the command runs stops the named session again.
  async start(prompt) {
   if (typeof prompt !== 'string' || !prompt || prompt.includes('\0')) throw new TerminalError('invalid', 'The initial prompt is empty or not valid.');
   const commandLine = terminalCommandLine(this.profile, {programs: this.programs});
-  const herdr = requireProgram('herdr', this.env);
+  requireProgram('herdr', this.env);
   requireProgram(profileCommand(this.profile, {programs: this.programs})[0], this.env, this.worktree);
-  detached(herdr, ['--session', this.name, 'server'], this.env);
   try {
-   await this.waitForServer();
-   const created = TerminalSession.created(await this.herdr(['workspace', 'create', ...this.paneArguments(prompt)], {result: true}), 'workspace create');
+   await this.startServer();
+   const created = await this.createWorkspace(prompt);
    await this.herdr(['pane', 'run', created.pane, commandLine]);
    Object.assign(this, created, {state: 'starting', worked: false});
    return {...created, commandLine};
@@ -217,12 +225,25 @@ export class TerminalSession {
   return {pid: child.pid ?? null};
  }
  // Resume of a claude-code session: `tab create` in the same named session, then the
- // profile command plus the resume arguments with the harness session ID.
+ // profile command plus the resume arguments with the harness session ID. When the named
+ // server does not run or has no workspace, the resume starts them as the start does,
+ // without ARTIFACT_PLANE_PROMPT (Resume, step 6). A failure stops a server that it started.
  async resume(harnessSession) {
   const commandLine = terminalCommandLine(this.profile, {programs: this.programs, resume: harnessSession ?? ''});
   requireProgram(profileCommand(this.profile, {programs: this.programs})[0], this.env, this.worktree);
-  const created = TerminalSession.created(await this.herdr(['tab', 'create', ...this.paneArguments()], {result: true}), 'tab create');
-  await this.herdr(['pane', 'run', created.pane, commandLine]);
+  let created, started = false;
+  try {
+   try {created = TerminalSession.created(await this.herdr(['tab', 'create', ...this.paneArguments()], {result: true}), 'tab create');}
+   catch (error) {
+    if (error.code !== 'herdr' || !['server_not_running', 'workspace_not_found'].includes(error.herdrCode)) throw error;
+    if (error.herdrCode === 'server_not_running') {started = true;await this.startServer();}
+    created = await this.createWorkspace(null);
+   }
+   await this.herdr(['pane', 'run', created.pane, commandLine]);
+  } catch (error) {
+   if (started) await this.herdr(['server', 'stop']).catch(() => {});
+   throw error;
+  }
   // The resumed harness session did work before, so `idle` maps to idle.
   Object.assign(this, created, {state: 'starting', agentStatus: null, worked: true});
   return {...created, commandLine};

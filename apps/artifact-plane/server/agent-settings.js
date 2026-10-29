@@ -18,6 +18,8 @@ const ROLE_SESSIONS = new Set(['coordinator', 'product-owner', 'technical-lead']
 const SETTINGS_FIELDS = new Set(['version', 'terminal', 'roleDefaults', 'profiles']);
 const PROFILE_FIELDS = new Set(['id', 'label', 'harness', 'connection', 'signIn', 'model', 'reasoning', 'args', 'env', 'command']);
 const ID = /^[a-z0-9][a-z0-9-]*$/, ENV_NAME = /^[A-Za-z_][A-Za-z0-9_]*$/, CREDENTIAL = /KEY|TOKEN|SECRET|PASSWORD|CREDENTIAL/i;
+// Plane sets these variables for a session (ACP adapter, Terminal adapter).
+export const RESERVED_VARIABLES = ['ARTIFACT_PLANE_LAUNCH', 'ARTIFACT_PLANE_PROMPT'];
 // No link is followed, and a FIFO does not block the server.
 const READ = constants.O_RDONLY | constants.O_NOFOLLOW | constants.O_NONBLOCK;
 const plain = v => v !== null && typeof v === 'object' && !Array.isArray(v);
@@ -137,6 +139,7 @@ function checkProfile(profile, seen, {providers, programs, current, save, catalo
   else for (const name of Object.keys(env)) {
    if (!ENV_NAME.test(name)) reasons.push(`${name} is not a variable name.`);
    else if (CREDENTIAL.test(name)) reasons.push(`The variable ${name} looks like a credential. Plane never passes a credential.`);
+   else if (RESERVED_VARIABLES.includes(name)) reasons.push(`The variable ${name} is reserved for Plane.`);
   }
  }
  if (other && !(textList(command) && command.length)) reasons.push('A profile with harness other needs command.');

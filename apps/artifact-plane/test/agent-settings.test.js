@@ -10,7 +10,7 @@ import {tmpdir} from 'node:os';
 import {join} from 'node:path';
 import {git} from './fixtures.js';
 import {CATALOG, BYPASS_ARGUMENTS, BYPASS_PAIRS, CLAUDE_TERMINAL_MODELS, HARNESSES, VERSION_LIMIT_MS, bypassArgument, profileCommand} from '../server/provider-catalog.js';
-import {CHECK_FIRST, NOT_IN_CHECK, SettingsError, createSettingsService, modelList, providerRecord, providersPath, readProviders, settingsPath, validateSettings} from '../server/agent-settings.js';
+import {CHECK_FIRST, NOT_IN_CHECK, RESERVED_VARIABLES, SettingsError, createSettingsService, modelList, providerRecord, providersPath, readProviders, settingsPath, validateSettings} from '../server/agent-settings.js';
 
 Object.assign(process.env, {GIT_AUTHOR_NAME: 'Author', GIT_AUTHOR_EMAIL: 'author@example.invalid', GIT_COMMITTER_NAME: 'Author', GIT_COMMITTER_EMAIL: 'author@example.invalid'});
 const sha = bytes => createHash('sha256').update(bytes).digest('hex');
@@ -100,6 +100,11 @@ test('each validity rule makes a profile invalid with its reason, and the invali
  for (const name of ['OPENAI_API_KEY', 'GITHUB_TOKEN', 'CLIENT_SECRET', 'DB_PASSWORD', 'GOOGLE_APPLICATION_CREDENTIALS', 'api_key'])
   assert.match(reasons({...CODEX, env: {[name]: 'x'}}), new RegExp(`${name} looks like a credential`));
  assert.equal(profileOf({...CODEX, env: {CODEX_PATH: '/opt/codex', NO_COLOR: '1'}}).valid, true);
+ // A variable that Plane sets for a session, for an ACP and a terminal profile.
+ assert.deepEqual(RESERVED_VARIABLES, ['ARTIFACT_PLANE_LAUNCH', 'ARTIFACT_PLANE_PROMPT']);
+ for (const name of RESERVED_VARIABLES) for (const profile of [CODEX, CLAUDE])
+  assert.match(reasons({...profile, env: {NO_COLOR: '1', [name]: 'x'}}), new RegExp(`The variable ${name} is reserved for Plane`), `${profile.id} ${name}`);
+ assert.equal(profileOf({...CODEX, env: {ARTIFACT_PLANE_LAUNCHER: 'x', artifact_plane_prompt: 'x'}}).valid, true, 'only the exact names are reserved');
  // An unknown field and wrong types.
  assert.match(reasons({...CODEX, apiKey: 'x'}), /Unknown field apiKey/);
  for (const [field, value, reason] of [['model', 5, /model must be text/], ['model', '', /model must be text/], ['args', '--x', /args must be a list/], ['args', [1], /args must be a list/],

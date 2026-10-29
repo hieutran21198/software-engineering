@@ -16,6 +16,7 @@ import {createKnowledgeService} from './knowledge-operations.js';
 import {knowledgeGit} from './knowledge-git.js';
 import {errorBody as editError} from './knowledge-writer.js';
 import {createSettingsService, SettingsError} from './agent-settings.js';
+import {createRunnerClient} from './runner-client.js';
 import pkg from "../package.json" with { type: "json" };
 // A bundled server.mjs has dist/ beside it; a source checkout has it beside server/.
 export const distDirectory = (directory) => existsSync(join(directory, "dist")) ? join(directory, "dist") : resolve(directory, "../dist");
@@ -60,7 +61,10 @@ export function createAppServer(options = {}) {
   const getKnowledge=()=>knowledge??=createKnowledgeService({channel:'person'});
   // The settings service starts on the first settings route, so other routes never read the settings file.
   let settings=options.settingsService;
-  const getSettings=()=>settings??=createSettingsService({stateDir:options.stateDir,configDir:options.configDir,roots:options.flowRoots||[]});
+  // The runner client connects on its first use; the settings query reads the runner availability without a start.
+  let runner=options.runnerClient;
+  const getRunner=()=>runner??=createRunnerClient({stateDir:options.stateDir});
+  const getSettings=()=>settings??=createSettingsService({stateDir:options.stateDir,configDir:options.configDir,roots:options.flowRoots||[],runner:()=>getRunner().availability()});
   const observation=options.repositoryObservation||{};
   const repositories=repositoryService({...observation,sample:async(root,settings)=>{const base=observation.sample?await observation.sample(root,settings):await settings.base(settings);return registeredSourceFingerprint(root,base,[...(flows?.observedSources(root)||[]),...(reviews?.observedSources(root)||[])],settings);}});
   const server = createServer(async (req, res) => {
@@ -179,7 +183,8 @@ export function createAppServer(options = {}) {
     }
   });
   const close=server.close.bind(server);
-  server.close=(...args)=>{runtime.close();repositories.close();flows?.close();if(!options.impactService)impact?.close();return close(...args);};
+  server.close=(...args)=>{runtime.close();repositories.close();flows?.close();if(!options.impactService)impact?.close();if(!options.runnerClient)runner?.close();return close(...args);};
+  server.runner=getRunner;
   server.runtime = runtime;
   server.repositories=repositories;
   return server;
