@@ -11,55 +11,81 @@ claims:
     kind: assumption
     statement: The ACP agents of Claude Code, Codex, OpenCode V2 and Gemini CLI offer the session methods, resume methods and options that the interface sources section lists.
     status: supported
-    basis: documented
+    basis: observed
     evidence:
       - docs/artifacts/artifact-plane/specifications/agent-orchestration.md#interface-sources
+      - docs/artifacts/artifact-plane/changes/change-agent-orchestration/tasks/01-verify-interfaces.md#evidence
     check: Start, prompt, cancel and resume one session of each agent in a disposable clone, and record the negotiated protocol version and the offered options.
     risk_if_wrong: A profile cannot select its model, or recovery falls back to a new attempt.
   - id: commandcode-acp-shape
     kind: unknown
     statement: The ACP protocol version, the resume method and the option IDs of `cmd acp` are not documented.
-    status: open
-    basis: documented
+    status: supported
+    basis: observed
+    evidence:
+      - docs/artifacts/artifact-plane/changes/change-agent-orchestration/tasks/01-verify-interfaces.md#evidence
     check: Start `cmd acp` in a disposable clone and record its initialize response and its session options.
     risk_if_wrong: Command Code sessions cannot select a model or cannot resume.
   - id: claude-acp-plan-sign-in
     kind: unknown
     statement: It is not known whether the `--hide-claude-auth` option of the Claude ACP agent stops the use of an existing Claude plan credential.
-    status: open
-    basis: documented
+    status: supported
+    basis: observed
+    evidence:
+      - docs/artifacts/artifact-plane/changes/change-agent-orchestration/tasks/01-verify-interfaces.md#evidence
     check: With only a Claude plan sign-in on the machine, start the Claude ACP agent with `--hide-claude-auth` and record whether `session/new` returns an authentication error.
     risk_if_wrong: A Claude ACP profile can use a plan sign-in, against requirement AO17.
   - id: per-model-effort-discovery
     kind: assumption
     statement: After a model change through session/set_config_option, each ACP agent returns the effort levels of the new model, so a check can list the levels of each model without a prompt.
-    status: supported
-    basis: documented
+    status: refuted
+    basis: observed
     evidence:
-      - docs/artifacts/artifact-plane/specifications/agent-orchestration.md#interface-sources
+      - docs/artifacts/artifact-plane/changes/change-agent-orchestration/tasks/01-verify-interfaces.md#evidence
     check: Check Codex, OpenCode and the Claude ACP agent, then compare the recorded levels of two models with the levels that a session with each model offers.
     risk_if_wrong: The effort list shows levels of another model, and a profile starts with a level that its model refuses.
   - id: terminal-model-flags
     kind: unknown
     statement: The model and effort flags of the terminal programs of Codex, OpenCode, Command Code and Gemini CLI in the provider catalog are not checked.
-    status: open
-    basis: inferred
+    status: refuted
+    basis: observed
+    evidence:
+      - docs/artifacts/artifact-plane/changes/change-agent-orchestration/tasks/01-verify-interfaces.md#evidence
     check: Run each terminal program with its model flag and a short initial prompt in a disposable clone, and record the model that the program reports.
     risk_if_wrong: A terminal profile starts with another model than the profile names.
   - id: herdr-named-sessions
     kind: unknown
     statement: It is not checked that `herdr --session <name> tab create` starts the named session when it does not run, and that `herdr --session <name> server stop` stops only that session.
-    status: open
-    basis: documented
+    status: refuted
+    basis: observed
+    evidence:
+      - docs/artifacts/artifact-plane/changes/change-agent-orchestration/tasks/01-verify-interfaces.md#evidence
     check: In a disposable environment, create two named herdr sessions with tab create, stop one with server stop, and record which servers and panes remain.
     risk_if_wrong: Terminal sessions share one herdr client, or ending one session stops another.
   - id: provider-check-history
     kind: risk
     statement: A provider check opens a session without a prompt, and some harness tools keep that empty session in their history.
-    status: open
-    basis: inferred
+    status: supported
+    basis: observed
+    evidence:
+      - docs/artifacts/artifact-plane/changes/change-agent-orchestration/tasks/01-verify-interfaces.md#evidence
     check: Check each provider once, then list the sessions of each harness tool and record whether an empty session appears.
     risk_if_wrong: The history of a harness tool shows empty sessions from Plane checks.
+  - id: gemini-terminal-model-flag
+    kind: unknown
+    statement: It is not checked that `gemini --model <model>` starts the Gemini CLI terminal program with that model, because the check had no Gemini sign-in.
+    status: open
+    basis: documented
+    check: With a Gemini sign-in, start `gemini --model <model>` with a short prompt in a disposable clone and record the model that the program reports.
+    risk_if_wrong: A Gemini terminal profile starts with another model than the profile names.
+  - id: commandcode-acp-hook-trust
+    kind: risk
+    statement: During `session/new`, `cmd acp` marks the hooks of the session folder as trusted without asking the person.
+    status: supported
+    basis: observed
+    evidence:
+      - docs/artifacts/artifact-plane/changes/change-agent-orchestration/tasks/01-verify-interfaces.md#evidence
+    risk_if_wrong: A Command Code ACP session in a repository runs its hooks without a trust prompt.
 ---
 
 # Agent orchestration contract
@@ -87,7 +113,7 @@ Plane routes no model traffic. Each harness tool signs in with its own stored si
 
 | Term | Meaning |
 | --- | --- |
-| Session | One agent conversation that Plane started for one role. It has a Plane session ID and, after start, a harness session ID. |
+| Session | One agent conversation that Plane started for one role. It has a Plane session ID of 12 random lowercase hexadecimal characters, which keeps socket paths short, and, after start, a harness session ID. |
 | Attempt | The existing runtime attempt that binds an implementer session to one task. Other roles have sessions without attempts. |
 | Provider | A supported harness tool and its programs in the provider catalog. |
 | Launch profile | A personal setting that names a provider, a connection kind, a sign-in kind, a model and optional extra arguments. |
@@ -136,15 +162,17 @@ The settings file is `profiles.json` in `ARTIFACT_PLANE_CONFIG_DIR` when it is s
 
 ### Provider catalog
 
-| Provider | ACP program | ACP model | Terminal program | Model flag | Effort flag | Terminal resume |
-| --- | --- | --- | --- | --- | --- | --- |
-| `claude-code` | `claude-agent-acp --hide-claude-auth` | option | `claude` | `--model` | `--effort` | `--resume <harness session ID>` |
-| `codex` | `codex-acp` | option | `codex` | `--model` | `-c model_reasoning_effort=<level>` | none |
-| `opencode` | `opencode acp` | option | `opencode` | `--model` | none | none |
-| `command-code` | `cmd acp` | option | `cmd` | `--model` | none | none |
-| `gemini-cli` | `gemini --acp` | flag | `gemini` | `--model` | none | none |
+| Provider | ACP program | ACP model | Terminal program | Model flag | Effort flag | Initial prompt | Terminal resume |
+| --- | --- | --- | --- | --- | --- | --- | --- |
+| `claude-code` | `claude-agent-acp --hide-claude-auth` | option | `claude` | `--model` | `--effort` | last argument | `--resume <harness session ID>` |
+| `codex` | `codex-acp` | option | `codex` | `--model` | `-c model_reasoning_effort=<level>` | last argument | none |
+| `opencode` | `opencode acp` | option | `opencode mini` | `--model` | `#<level>` after the model | `--prompt` | none |
+| `command-code` | `cmd acp` | option | `cmd` | `--model` | `--effort` | last argument | none |
+| `gemini-cli` | `gemini --acp` | flag | `gemini` | `--model` | none | last argument | none |
 
-The profile command is the program of the profile connection, then the model flag and the model when the connection is `terminal` or the ACP model column says "flag", then the effort flag and the level for a terminal profile with a level, then `args`. For `harness: other`, the profile command is `command`.
+The profile command is the program of the profile connection, then the model flag and the model when the connection is `terminal` or the ACP model column says "flag", then the effort flag and the level for a terminal profile with a level, then `args`. For `opencode`, the level is part of the model value, for example `openai/gpt-6#high`. For `harness: other`, the profile command is `command`.
+
+The OpenCode program is the first of `opencode` and `opencode2` on `PATH` whose `--version` reports version 2 or later. The terminal programs of Codex and Gemini CLI ask whether to trust a new folder before the first prompt; the person answers in the terminal.
 
 ### Model and effort lists
 
@@ -156,9 +184,9 @@ The profile editor shows the model and the effort level only as lists (requireme
 | `codex`, `opencode`, `command-code` | The check of the ACP program. | The check of the ACP program of the same provider. |
 | `gemini-cli` | The check of the ACP program. It has no effort levels. | The check of the ACP program of the same provider. |
 
-A save of a catalog profile needs a `model` from the list and a `reasoning` level from the levels of that model; a model without levels needs no `reasoning`. Without a list, the save fails with "Check the provider first." When a later check no longer lists the model or the level, the profile shows the warning "Not in the last check" and can still start; the ACP adapter then records the model as declared.
+A save of a catalog profile needs a `model` from the list and a `reasoning` level from the levels of that model; a model without levels, or with levels "not checked", needs no `reasoning` and runs with its default level. Without a list, the save fails with "Check the provider first." When a later check no longer lists the model or the level, the profile shows the warning "Not in the last check" and can still start; the ACP adapter then records the model as declared.
 
-The claim `terminal-model-flags` records that the model flags are not all checked. Plane runs every program without a shell. The Claude ACP agent gets `--hide-claude-auth`, so that it does not offer the plan sign-in; the claim `claude-acp-plan-sign-in` records that this effect is not yet checked.
+The live check refuted the first catalog for OpenCode (claim `terminal-model-flags`); the claim `gemini-terminal-model-flag` records that the Gemini flag is not checked. Plane runs every program without a shell. The Claude ACP agent gets `--hide-claude-auth`, so that it does not offer the plan sign-in. With only a plan sign-in, the agent refuses `session/new` with "This integration does not support using claude.ai subscriptions" (claim `claude-acp-plan-sign-in`).
 
 ### Validity
 
@@ -166,7 +194,7 @@ An invalid profile stays visible with its reason and cannot start a session. The
 
 - `harness: claude-code` with `signIn: plan` and `connection: acp` (requirement AO17).
 - A connection that the provider does not offer, a role default that names no valid profile, or a coordinator, product owner or technical lead default that names an ACP profile.
-- An argument from the permission-bypass list: `--dangerously-skip-permissions`, `--allow-dangerously-skip-permissions`, `--dangerously-bypass-approvals-and-sandbox`, `--yolo`, `-y`, `bypassPermissions`, `--approval-mode=yolo`, the pair `--approval-mode yolo`, the pair `--permission-mode bypass`, and the pairs `--ask-for-approval never` and `-a never`. The list is a guardrail, not a complete control.
+- An argument from the permission-bypass list: `--dangerously-skip-permissions`, `--allow-dangerously-skip-permissions`, `--dangerously-bypass-approvals-and-sandbox`, `--yolo`, `-y`, `bypassPermissions`, `--approval-mode=yolo`, the pair `--approval-mode yolo`, the pairs `--permission-mode bypass`, `--permission-mode yolo` and `--permission-mode dont-ask`, and the pairs `--ask-for-approval never` and `-a never`. The list is a guardrail, not a complete control.
 - An unknown field or a wrong type.
 
 ### Save
@@ -178,11 +206,11 @@ The workbench sends the whole settings object with the digest of the file that i
 The settings service finds each catalog program on `PATH` and runs it with `--version` (5-second limit, no shell). A check of an ACP program on request does these steps in a new private directory under the runtime state directory:
 
 1. Start the program and send `initialize`. Record the protocol version and the sign-in methods.
-2. Send `session/new` without MCP servers. An authentication error gives the state "Sign-in required" with the sign-in command of the harness tool.
-3. Read the config option of category `model` and its values. For each value, up to 50 values, send `session/set_config_option` with that value and read the option of category `thought_level` in the response, because the response holds the complete options after a change. Record the values of that option as the effort levels of that model, or none. A version 1 agent without config options gives its legacy model list and no effort levels.
+2. Send `session/new` without MCP servers. An authentication error (for example code -32000 with a sign-in message) gives the state "Sign-in required" with the sign-in command of the harness tool. For the Claude ACP agent, the plan refusal gives the state "Needs an API key sign-in".
+3. Read the config option of category `model` and its values. For each value, up to 200 values and 120 seconds in total, send `session/set_config_option` with that value and read the option of category `thought_level` in the response, because the response holds the complete options after a change. When the model value in the response differs from the requested value, wait up to 2 seconds for a `config_option_update` with the requested value and read the levels from it. Record the values as the effort levels of that model, or none. A model without a matching response, or past the limits, has the levels "not checked". A model that the agent refuses is left out of the list. A version 1 agent without config options gives its legacy model list and no effort levels.
 4. Close the session when the agent offers `session/close`, then stop the program and remove the directory.
 
-A check sends no prompt. The server writes each result to `providers.json` in the runtime state directory with mode 0600: program version, check time, and the models with their names and effort levels. A result holds no credential. A changed program version marks the result stale, and the workbench asks for a new check. A check can add a session record to the history of the harness tool; the claim `provider-check-history` records this effect.
+A check sends no prompt. The check directory holds no project hooks, but user-level hooks of the harness tool still run. The server writes each result to `providers.json` in the runtime state directory with mode 0600: program version, check time, and the models with their names and effort levels. A result holds no credential. A changed program version marks the result stale, and the workbench asks for a new check. A check can add a session record to the history of the harness tool; the claim `provider-check-history` records this effect.
 
 ## Roles and initial prompts
 
@@ -219,7 +247,7 @@ The server adds these routes to the existing local server. Every route keeps the
 | `GET /api/sessions/stream?session=` | — | Server-sent events with the live state, state changes and output notices of one session. |
 | `GET /api/sessions/terminal/<session>/…` | — | The embedded terminal of a terminal session: ttyd pages and its WebSocket, forwarded to the relay socket. |
 
-`path` is a worktree of an inspected repository. Errors use the existing JSON error shape. The status is 400 for invalid input, 404 for an unknown session, 409 for a refused start or a wrong session state, and 503 when the runner or herdr is unavailable.
+`path` is a worktree of an inspected repository. Errors use the existing JSON error shape. The status is 400 for invalid input, 404 for an unknown session, 409 for a refused start, a wrong session state or a base revision that is no longer in the repository, and 503 when the runner or herdr is unavailable.
 
 ## Start rules
 
@@ -279,6 +307,7 @@ The runner sets the session state. For an implementer, it also sets the attempt 
 | Start accepted | `starting` | `unknown` until the first prompt |
 | Prompt sent, or agent works | `working` | `processing` |
 | Permission request, or herdr `blocked` | `waiting` | `blocked` |
+| herdr `unknown` | unchanged | unchanged |
 | Permission answered | `working` | `processing` |
 | Turn ended with `end_turn`, or herdr `done` or `idle` after work | `idle` | `validating` |
 | Turn ended with `cancelled`, `max_tokens` or `max_turn_requests` | `idle` | `interrupted` |
@@ -295,7 +324,7 @@ The runner starts the profile command with the worktree as the working directory
 1. **Initialize.** Send `initialize` with `protocolVersion: 2` and client information. Accept a response with version 1 or 2. Declare no file system and no terminal client capability, so the agent uses its own tools. Answer a client method call from the agent with a method-not-found error.
 2. **Sign-in.** Plane never calls the authentication method. When `session/new` returns an authentication error, the session ends with reason `error` and the message "Sign in with the harness tool in a terminal, then start again."
 3. **Session.** Send `session/new` with the worktree as `cwd` and one stdio MCP server: the Plane executable with the argument `mcp`.
-4. **Options.** When the response lists a config option with category `model`, set the profile `model` with `session/set_config_option`. Do the same for category `thought_level` and `reasoning`. In version 2, send `type: "id"`. When an option does not exist or the agent refuses the value, keep the session and record the profile model as declared, not reported. Plane sets no other option, so it never selects a mode that skips permission prompts.
+4. **Options.** When the response lists a config option with category `model`, set the profile `model` with `session/set_config_option`. Do the same for category `thought_level` and `reasoning`. Send the option ID as `configId`; in version 2, also send `type: "id"`. When an option does not exist or the agent refuses the value, keep the session and record the profile model as declared, not reported. Plane sets no other option, so it never selects a mode that skips permission prompts.
 5. **Prompt.** Send `session/prompt` with the initial prompt, then with each message of the person. Plane sends only one prompt at a time and refuses a prompt while a turn runs.
 6. **Updates.** Join the agent message chunks of the current turn. When the turn ends, keep the joined text (at most 64 KiB) as the last message. Use other updates only to set the state and to send output notices; discard their content. In version 1, the turn ends with the `session/prompt` response and its stop reason. In version 2, the turn ends with an idle `state_update`; a missing or unknown stop reason counts as `end_turn`.
 7. **Permissions.** Keep each `session/request_permission` request pending until the person selects one of its options. Never answer it automatically. An unknown outcome is not approval.
@@ -307,28 +336,28 @@ The runner starts the profile command with the worktree as the working directory
 
 The terminal adapter uses the herdr CLI and never sends input to a running harness program.
 
-1. **Start.** Each terminal session has its own named herdr session `plane-<session ID>`, so its client shows only that session. Run `herdr --session plane-<session ID> tab create --cwd <worktree> --label <label> --env ARTIFACT_PLANE_LAUNCH=<session ID> --no-focus`, with one more `--env` for each profile variable. Read `.result.root_pane.pane_id` and the tab ID from the JSON output.
-2. **Command.** The start also sets `ARTIFACT_PLANE_PROMPT` to the initial prompt with `--env`. Run `herdr pane run <pane> <command line>`. The command line is the profile command, each argument quoted for a POSIX shell, plus `"$ARTIFACT_PLANE_PROMPT"`. The command line holds no prompt text, so the shell history keeps no request. This text goes to the shell of the new pane before the harness program starts. After that, Plane sends no text and no keys to the pane.
+1. **Start.** Each terminal session has its own named herdr session `plane-<session ID>`, so its client shows only that session. Every herdr call names `--session plane-<session ID>`, because pane IDs repeat across named sessions. Start `herdr --session plane-<session ID> server` as a detached process, and wait up to 5 seconds until `pane list` no longer returns `server_not_running`. Then run `herdr --session plane-<session ID> workspace create --cwd <worktree> --label <label> --env ARTIFACT_PLANE_LAUNCH=<session ID> --no-focus`, with one more `--env` for each profile variable. Read `.result.root_pane.pane_id` and `.result.tab.tab_id` from the JSON output.
+2. **Command.** The start also sets `ARTIFACT_PLANE_PROMPT` to the initial prompt with `--env`. Run `herdr --session plane-<session ID> pane run <pane> <command line>`. The command line is the profile command, each argument quoted for a POSIX shell, plus `"$ARTIFACT_PLANE_PROMPT"` in the form of the Initial prompt column. The command line holds no prompt text, so the shell history keeps only this literal line and no request. This text goes to the shell of the new pane before the harness program starts. After that, Plane sends no text and no keys to the pane.
 3. **Harness session ID.** The SessionStart hook of Claude Code inherits `ARTIFACT_PLANE_LAUNCH`. The hook command records `session:harness-id` for that session with the hook `session_id` and `model`.
-4. **Status.** Every 2 seconds, the runner reads `herdr --session plane-<session ID> pane list` and maps `working`, `blocked`, `done`, `idle` and `unknown` to the session states. A missing pane interrupts the session.
+4. **Status.** Every 2 seconds, the runner reads `herdr --session plane-<session ID> pane list` and maps the `agent_status` values `working`, `blocked`, `done` and `idle` to the session states. `unknown` keeps the session state. herdr does not detect every harness tool; the live check saw `unknown` for Command Code and Gemini CLI. A missing pane interrupts the session.
 5. **Open in terminal app.** Run the `terminal.open` arguments plus `herdr session attach plane-<session ID>` as a detached process.
-6. **Resume.** Create a new tab in the same named herdr session like the start, and run the profile command plus `--resume <harness session ID>` for `claude-code`. Other harness tools in a terminal can only respawn.
+6. **Resume.** Run `tab create` with the arguments of the start in the same named herdr session, and run the profile command plus `--resume <harness session ID>` for `claude-code`. Other harness tools in a terminal can only respawn.
 7. **End.** Run `herdr --session plane-<session ID> server stop`, which stops that named session and its pane.
 
-Plane does not install the herdr Claude integration. When the person installs it, its user hooks run beside the project hooks of Plane.
+Plane does not install the herdr Claude integration. When the person installs it, its user hooks run beside the project hooks of Plane. At start, a herdr server downloads its agent detection rules from herdr.dev; Plane does not change this.
 
 ## Embedded terminal
 
 The session page of a terminal session embeds its herdr client through ttyd when the `ttyd` program is on `PATH` ([ADR 021](../decisions/021-embedded-terminal-relay.md)).
 
-1. **Relay start.** On the first view, the runner starts `ttyd --writable --check-origin --base-path /api/sessions/terminal/<session ID> --interface <state>/relay/<session ID>.sock herdr session attach plane-<session ID>` without a shell. The `relay` directory has mode 0700, and the runner starts ttyd with umask 077, so only the user can open the socket.
-2. **Forwarding.** The server forwards `GET /api/sessions/terminal/<session ID>/…` and the WebSocket upgrade on that path to the socket. It applies the loopback, Host and Origin checks first. A WebSocket upgrade needs an `Origin` equal to the workbench origin. The server forwards the bytes unchanged and stores nothing.
+1. **Relay start.** On the first view, the runner starts `ttyd --writable --check-origin --base-path /api/sessions/terminal/<session ID> --interface <state>/relay/<session ID>.sock herdr session attach plane-<session ID>` without a shell. ttyd creates the socket with mode 0660, so the `relay` directory has mode 0700, and only the user can reach the socket. When the socket path has 104 bytes or more, the relay is unavailable with the reason "The state directory path is too long for a socket."
+2. **Forwarding.** The server forwards `GET /api/sessions/terminal/<session ID>/…` and the WebSocket upgrade on that path to the socket. It applies the loopback, Host and Origin checks first. A WebSocket upgrade needs an `Origin` equal to the workbench origin. The server forwards the `Host` and `Origin` headers and the bytes unchanged and stores nothing. ttyd closes a WebSocket without an `Origin`, or with an `Origin` whose host and port differ from `Host`.
 3. **Frame.** The workbench shows the relay page in an iframe of the same origin. The workbench Content-Security-Policy adds `frame-src 'self'`, and relay responses carry `Content-Security-Policy: frame-ancestors 'self'`.
 4. **Input.** Plane forwards only the bytes that the browser sends from the keys of the person. Plane writes nothing to the relay itself (requirement AO7).
 5. **Relay stop.** The runner stops ttyd when the session ends, or 10 minutes after the last viewer disconnects.
 6. **Without ttyd.** The session page shows Open in terminal app only. At a narrow width, the page shows "Open this session on a computer" instead of the terminal.
 
-Browser shortcuts such as Ctrl+W, Ctrl+T and Ctrl+N stay with the browser. Full screen and Open in terminal app give the person the complete key set. Several viewers of one session share one herdr client.
+Browser shortcuts such as Ctrl+W, Ctrl+T and Ctrl+N stay with the browser. Full screen and Open in terminal app give the person the complete key set. ttyd starts one herdr client for each viewer, and all clients show the same named session. Keys that the person types before the herdr client draws its first screen are lost; the live check measured up to about 3 seconds.
 
 ## Runner
 
@@ -346,11 +375,11 @@ The output reader runs Git read-only in the session worktree through the existin
 | --- | --- | --- |
 | Base revision | `git rev-parse HEAD` when the session starts. | — |
 | Commits | `git log` from the base revision to `HEAD`: short ID and subject. | 100 newest |
-| Changed files | `git diff --numstat -z` against the base revision, plus untracked files that Git does not ignore. Each file has its path, status (`A`, `M`, `D` or `R`), added and removed lines, a binary flag and a committed flag. | 500 files |
+| Changed files | `git diff --numstat -z` against the base revision, plus untracked files that Git does not ignore. Each file has its path, status (`A`, `M`, `D` or `R`; Git `T`, `U` and `C` show as `M`), added and removed lines, a binary flag and a committed flag. The committed flag is true when the file has no uncommitted change against `HEAD`; an untracked file is not committed. | 500 files |
 | Diff | `git diff` against the base revision for one listed path. An untracked text file shows as all added lines. | 256 KiB, then a truncation notice |
 | DoD progress | The checklist of the task file in the session worktree, with the existing checklist reader. | — |
 
-The diff route accepts only a path of the current changed-file list. A binary file shows its status and no diff. The workbench reads the output again when the session state changes, on `session:output-changed`, after a hook reports a finished tool use of a terminal session, and every 15 seconds while the session works.
+The diff route accepts only a path of the current changed-file list. When the base revision is no longer in the repository, the output and diff routes return 409 "The base revision is not in the repository." A binary file shows its status and no diff. The workbench reads the output again when the session state changes, on `session:output-changed`, after a hook reports a finished tool use of a terminal session, and every 15 seconds while the session works.
 
 ## Recovery
 
@@ -369,7 +398,7 @@ The owner approved the [mockup canvas](https://claude.ai/artifact/M8Gq8XJm9S1h2Z
 
 - The Work page has Start ADD work. Its dialog takes the request, the worktree (default: the repository root checkout) and the coordinator profile (default: the role default). It lists only terminal profiles and says that the person chats in the harness tool.
 - A terminal session page shows the change phases of a role session, the state, the embedded terminal with Full screen and Open in terminal app, End session, and the output as a tree with diffs. It says that the person chats and approves the plan in the terminal, and that Plane records no approval. Plane builds no chat.
-- When a terminal session is `waiting`, its session page shows a notice above the terminal and marks the terminal border. The notice names the tool of the newest `PermissionRequest` hook observation of the harness session after the session became `waiting`; without one, it says that the agent waits for the person in the terminal. The notice has Focus terminal and no answer control: the person answers in the dialog of the harness tool.
+- When a terminal session is `waiting`, its session page shows a notice above the terminal and marks the terminal border. The notice names the tool of the newest `PermissionRequest` hook observation of the harness session after the session became `waiting`; without one, it says that the agent waits for the person in the terminal. The notice has Focus terminal and no answer control: the person answers in the dialog of the harness tool. When herdr reports `unknown` for the agent of a terminal session, the page says that Plane cannot see when this agent waits.
 
 - The Sessions page lists the implementation tasks with a session, grouped by change. Each row shows the task, its DoD progress, an output summary (files, added and removed lines, commits), the harness tool and model, and the state. A second group lists the coordinator, product owner and technical lead sessions with their output summary.
 - A session page shows a header with the role, task, harness tool, model, connection, branch and start time, and the actions Stop turn and End session. Below it come a pending permission request, the DoD checklist, the commits, the last agent message, and the output: the changed files as a tree and the diff of the selected file. An ACP session also has a message field.
@@ -407,6 +436,7 @@ These documented facts support the claim `acp-agent-interfaces`. They were read 
 - Gemini CLI 0.66.0 `gemini --acp`: version 1, `loadSession`, no config options; the model comes from the command (geminicli.com ACP mode documentation).
 - Claude Code: `claude --model <m> "<prompt>"`, `--resume <id>`, and hook processes inherit the environment of the session (code.claude.com CLI and hooks references).
 - herdr 0.9.5: `tab create` with `--cwd`, `--env` and `--label`, `pane run`, `pane list` status values, named sessions with `--session` and `session attach`, and `server stop` (herdr.dev CLI and socket references).
+- Live evidence of task `verify-interfaces` on 2026-10-29 (claude-agent-acp 0.99.0, codex-acp 2.3.0, OpenCode 2.2.0, Command Code 1.88.0, Gemini CLI 0.66.0, herdr 0.9.5, ttyd 1.7.7): the negotiated protocol versions and options, the `cmd acp` shape, the Claude plan refusal, stale OpenCode replies after a model change, the OpenCode, Codex and Command Code terminal commands, the herdr start with a detached server and `workspace create`, `server stop` of one named session, and the ttyd Origin check and input path. codex-acp runs its bundled Codex unless the profile sets `CODEX_PATH`. Version 2 names the option field `configId` and the sign-in method field `methodId`.
 - ttyd 1.7.7 (MIT, in nixpkgs): `--interface` takes a UNIX socket path, `--writable` allows input (read-only by default), `--check-origin` refuses a WebSocket from another origin, and `--base-path` serves under a path prefix (github.com/tsl0922/ttyd).
 
 ## Specification self-check
@@ -415,5 +445,6 @@ These documented facts support the claim `acp-agent-interfaces`. They were read 
 - KISS: one port with two adapters, one runner, the existing store and attempt model, one settings file, no new MCP tool and no chat; role sessions reuse the conversation of the harness tool in a terminal, and ttyd embeds that terminal without a native module. The profile editor edits only catalog providers, so the HTTP server cannot define an arbitrary program.
 - Impact: execution observation gains Plane-started attempts; the new flows `agent-session-launch` and `agent-session-recovery` record the journeys. The artifact-driven method needs no change; the only reference is the task DAG contract.
 - The open claims name live checks. They do not block the Plan; the Plan adds the live check.
+- After plan approval, the live check of task `verify-interfaces` refuted `herdr-named-sessions`, `terminal-model-flags` and `per-model-effort-discovery`. This amendment corrects the herdr start, the catalog, the provider check, the relay socket protection and the herdr `unknown` state, adds the output details of task `output-reader`, and adds the claims `gemini-terminal-model-flag` and `commandcode-acp-hook-trust`.
 - After the owner approved the mockups, the Workbench section records the canvas and the waiting notice of a terminal session. The notice reads the tool name from the existing hook observations, so the lifecycle events stay without tool names, and Plane still sends no key to the terminal.
 - STE: each rule is one sentence or one table row; terms are in the Terms table.

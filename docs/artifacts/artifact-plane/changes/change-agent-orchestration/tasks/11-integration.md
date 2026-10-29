@@ -25,6 +25,6 @@ The coordinator joins the integrated branch and runs the combined checks. The co
 - [ ] Without a settings file, the hooks, MCP tools, routes and workbench pages behave as before, and the existing suites pass unchanged (AO18).
 - [ ] The OpenCode plugin bridge still creates no prompt and continues no work, and its tests pass (OP8).
 - [ ] No route, runner method or prompt approves a plan, checks a DoD item, merges or writes a version record (AO16).
-- [ ] The application README and the integration README describe launch profiles, herdr, ttyd, the runner and the Claude plan sign-in rule.
+- [ ] The application README and the integration README describe launch profiles, herdr, ttyd, the runner, the Claude plan sign-in rule and the hook trust of `cmd acp` (claim `commandcode-acp-hook-trust`).
 - [ ] The three flow records match the implementation, and their Mermaid diagrams render in the workbench.
 - [ ] Screenshots at desktop width and at 390 pixels show each mockup screen. The owner looked at the screenshots or at the running interface, and the evidence records what the owner looked at (AOA8).

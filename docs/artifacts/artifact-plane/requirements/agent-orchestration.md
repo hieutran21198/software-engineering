@@ -40,7 +40,7 @@ The owner wants to run ADD across several harness tools directly from Plane, and
 - AO4: Launch profiles are personal settings outside every repository. A profile contains no credential value.
 - AO5: An implementer session works in the worktree of its task. Plane refuses an implementer session in a checkout of `main` or `master`.
 - AO6: For an implementer session that reports structured events, the person answers permission requests, reads the last agent message of each turn and sends messages in the workbench. The workbench shows no step-by-step agent activity.
-- AO7: For a session that a person drives in a terminal, the workbench shows when the agent waits for the person, shows that terminal in the session page and opens it in a terminal app on request. After the harness program starts, Plane forwards only the keys that the person types in the workbench, and generates no text and no keys.
+- AO7: For a session that a person drives in a terminal, the workbench shows when the agent waits for the person, where the terminal host detects that agent, shows that terminal in the session page and opens it in a terminal app on request. After the harness program starts, Plane forwards only the keys that the person types in the workbench, and generates no text and no keys.
 - AO8: The workbench shows the role, task, harness tool, model and state of each session, and the DoD progress of its task. It shows the sessions that wait for the person.
 - AO9: The person can stop the current turn of a session and can end a session.
 - AO10: After an interruption, the person can continue the live session, resume the same harness session, or start a new attempt with the same or another profile. A new attempt starts from the task, its branch and its recorded evidence.
@@ -94,3 +94,5 @@ After the UI/UX review, the owner asked for task progress and task output instea
 The owner then asked for profile and provider configuration in the workbench. AO21 to AO24 and AOA10 add agent settings: providers, profiles and role defaults. Credential handling stays excluded. The owner prefers lists to typed values; AO25 makes model and effort lists that depend on the harness tool and the model.
 
 The owner asked where ADD work starts and where the person chats. AO26 adds a start of ADD work with a written request. The owner then chose not to build a chat: AO27 runs role sessions in a terminal, where the harness tool gives the conversation. Implementer sessions keep the output view of AO20. The owner then asked to embed the terminal now: AO28 and AOA13 add it, and AO7 allows only the keys that the person types.
+
+After plan approval, the live check showed that herdr does not detect every harness tool. AO7 now shows the waiting state only where the terminal host detects the agent; for other agents, the workbench says that it cannot see the waiting state.

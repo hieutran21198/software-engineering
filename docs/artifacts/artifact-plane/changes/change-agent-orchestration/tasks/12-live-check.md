@@ -10,7 +10,7 @@ covers:
 
 ## Scope and ownership
 
-The coordinator or one implementer runs the built application of the integrated revision with the Live check runbook: a disposable clone, private state and configuration directories, and the existing sign-ins of the owner. Prompts are short and change only the clone. Programs that are missing on this computer are installed only in the disposable environment, after the owner agrees.
+The coordinator or one implementer runs the built application of the integrated revision with the Live check runbook: a disposable clone, private state and configuration directories, and the existing sign-ins of the owner. Prompts are short and change only the clone. The hooks of the clone write to the runtime store of `ARTIFACT_PLANE_STATE_DIR`, so every started process gets the private directory; the OpenCode background service runs its plugin with its own environment, so the evidence names its writes. Programs that are missing on this computer are installed only in the disposable environment, after the owner agrees.
 
 ## Governing knowledge
 
@@ -26,4 +26,5 @@ The coordinator or one implementer runs the built application of the integrated 
 - [ ] After a restart of the Plane server, the running sessions continue and show their state again (AOA6).
 - [ ] A real provider check lists two models with different effort levels, and a profile created from the lists starts with its model (AOA10).
 - [ ] Start ADD work starts a coordinator session in a terminal. The agent receives the request, and neither the runtime store nor the shell history of the pane holds the request text (AOA11).
+- [ ] With a Gemini sign-in, a Gemini terminal profile starts with its model (claim `gemini-terminal-model-flag`), or the evidence names the missing sign-in.
 - [ ] After any fix, the checks of `integration` pass again on the final revision. The coordinator updates the status of each claim from the evidence. The clone and its state are deleted.

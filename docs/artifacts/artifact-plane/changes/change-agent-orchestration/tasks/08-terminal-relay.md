@@ -18,7 +18,7 @@ One implementer adds the relay start and stop to the runner, and the HTTP and We
 
 ## Definition of Done
 
-- [ ] On the first view of a terminal session, the runner starts ttyd with the arguments of the contract and without a shell. The `relay` directory has mode 0700, and ttyd starts with umask 077.
+- [ ] On the first view of a terminal session, the runner starts ttyd with the arguments of the contract and without a shell. The `relay` directory has mode 0700. A socket path of 104 bytes or more makes the relay unavailable with the reason of the contract.
 - [ ] The server forwards `GET /api/sessions/terminal/<session ID>/…` and the WebSocket upgrade on that path to the relay socket. An unknown session or an ACP session gets 404.
 - [ ] The server applies the loopback, Host and Origin checks before it forwards. A WebSocket upgrade needs an `Origin` equal to the workbench origin. Tests confirm a refusal for a foreign Host and a foreign Origin.
 - [ ] The server forwards the bytes unchanged and stores nothing. A test confirms that the relay receives only the bytes that the client sent, and that Plane writes nothing to the relay by itself.
