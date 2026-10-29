@@ -1,16 +1,19 @@
 // specifications/agent-orchestration.md: Provider check, Model and effort lists. Every test
 // uses temporary state and configuration directories and the scripted fake agent of
-// test/fixtures/fake-acp-agent.mjs behind catalog program names on an injected PATH.
+// test/fixtures/fake-acp-agent.mjs, or the fake Antigravity CLI of
+// test/fixtures/fake-agy.mjs, behind catalog program names on an injected PATH.
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import {chmod, mkdir, mkdtemp, readFile, readdir, rm, stat, writeFile} from 'node:fs/promises';
 import {tmpdir} from 'node:os';
 import {join} from 'node:path';
 import {fileURLToPath} from 'node:url';
-import {API_KEY_SIGN_IN, CHECK_LIMIT_MS, CHECK_MODELS, ProviderCheckError, SIGN_IN_REQUIRED, STALE_WAIT_MS, checkProvider} from '../server/provider-check.js';
+import {API_KEY_SIGN_IN, CHECK_LIMIT_MS, CHECK_MODELS, LIST_LIMIT_MS, ProviderCheckError, SIGN_IN_REQUIRED, STALE_WAIT_MS, checkProvider} from '../server/provider-check.js';
 import {SettingsError, createSettingsService, providersPath, readProviders} from '../server/agent-settings.js';
+import {CATALOG} from '../server/provider-catalog.js';
 
 const FAKE = fileURLToPath(new URL('./fixtures/fake-acp-agent.mjs', import.meta.url));
+const FAKE_AGY = fileURLToPath(new URL('./fixtures/fake-agy.mjs', import.meta.url));
 const SECRET = 'sk-test-secret-value';
 const levelsFor = i => i % 2 ? ['low', 'medium', 'high'] : ['low', 'high', `only-m${i}`];
 
@@ -157,4 +160,74 @@ test('the settings check refuses an unknown harness, returns 503 for a missing p
  await f.program('codex-acp', '2.3.0', {version: 2, malformedOn: 'initialize'});
  await assert.rejects(service.check({harness: 'codex'}), refusal(502, /malformed JSON/));
  assert.deepEqual(await readdir(f.state), [], 'a failed check writes nothing');
+});
+
+// The help output of agy 1.4.9 (2026-10-29): the four example models, the progress line on
+// standard output too, and lines that are not `<id><TAB><name>`.
+const AGY_LEVELS = ['low', 'medium', 'high', 'xhigh', 'max'];
+const AGY_LINES = ['Fetching available models...', 'gemini-4-argon-medium\tGemini 4 Argon (Medium)', 'gemini-3.8-flash-high\tGemini 3.8 Flash (High)\r',
+ 'claude-opus-5-5-high\tClaude Opus 5.5 (High)', 'gpt-oss-120b-medium\tGPT-OSS 120B (Medium)', '', 'no-tab-line', '\tName without ID', 'id-without-name\t',
+ 'blank-name\t   ', 'two\ttabs\there', 'id with space\tName', 'gemini-4-argon-medium\tRepeated ID'];
+const AGY_MODELS = [['gemini-4-argon-medium', 'Gemini 4 Argon (Medium)'], ['gemini-3.8-flash-high', 'Gemini 3.8 Flash (High)'], ['claude-opus-5-5-high', 'Claude Opus 5.5 (High)'],
+ ['gpt-oss-120b-medium', 'GPT-OSS 120B (Medium)']].map(([id, name]) => ({id, name, levels: AGY_LEVELS}));
+// A fake agy in a PATH directory whose name holds a space and a quote, so a shell would split it.
+async function fakeAgy(f, version = '1.4.9') {
+ const bin = join(f.dir, "agy bin's"), config = join(f.dir, 'agy.json'), log = join(f.dir, 'agy.log');
+ await mkdir(bin, {recursive: true});
+ const set = script => writeFile(config, JSON.stringify({log, lines: AGY_LINES, ...script}));
+ await set({});
+ await writeFile(join(bin, 'agy'), `#!/bin/sh\nif [ "$1" = --version ]; then echo "${version}"; exit 0; fi\nFAKE_AGY_CONFIG_FILE='${config}' exec '${process.execPath}' '${FAKE_AGY}' "$@"\n`);
+ await chmod(join(bin, 'agy'), 0o755);
+ const runs = async () => (await readFile(log, 'utf8').catch(() => '')).split('\n').filter(Boolean).map(line => JSON.parse(line));
+ return {env: {PATH: bin, OPENAI_API_KEY: SECRET}, set, runs};
+}
+
+test('the Antigravity check runs agy models without a shell, reads <id><TAB><name> lines with the five --effort levels, sends no prompt and writes providers.json', async t => {
+ const f = await setup(t), agy = await fakeAgy(f), config = join(f.dir, 'config');
+ assert.deepEqual(CATALOG.antigravity.models, {args: ['models'], levels: AGY_LEVELS});assert.equal(LIST_LIMIT_MS, 30000);
+ const service = createSettingsService({configDir: config, stateDir: f.state, env: agy.env});
+ const before = Date.now(), checked = await service.check({harness: 'antigravity'});
+ assert.deepEqual(checked, {harness: 'antigravity', stale: false, check: {program: 'agy', programVersion: '1.4.9', checkedAt: checked.check.checkedAt, models: AGY_MODELS}},
+  'malformed lines and a repeated ID are left out');
+ assert.ok(Date.parse(checked.check.checkedAt) >= before - 1000);
+ // One run of `agy models` in a new private directory, with standard input closed and no prompt.
+ const runs = await agy.runs();
+ assert.deepEqual(runs.map(r => [r.argv, r.stdin]), [[['models'], '']]);
+ assert.ok(runs[0].cwd.startsWith(join(f.state, 'provider-check-')), runs[0].cwd);assert.equal(runs[0].cwdMode, 0o700);
+ const file = providersPath(f.state), bytes = await readFile(file, 'utf8');
+ assert.equal((await stat(file)).mode & 0o777, 0o600);
+ assert.deepEqual(JSON.parse(bytes), {version: 1, providers: {antigravity: checked.check}});
+ assert.ok(!bytes.includes(SECRET), 'the result holds no credential');
+ assert.deepEqual(await readdir(f.state), ['providers.json'], 'no check directory remains');
+ // The query gives the terminal list from the check; a new agy version marks it stale.
+ const antigravity = async () => (await service.query()).providers.find(p => p.harness === 'antigravity');
+ let provider = await antigravity();
+ assert.deepEqual([provider.connections, provider.programs.acp, provider.stale, provider.lists.acp, provider.lists.terminal.models], [['terminal'], null, false, null, AGY_MODELS]);
+ // A profile from the lists saves; a level outside the list does not.
+ const profile = {id: 'agy-argon', harness: 'antigravity', connection: 'terminal', signIn: 'harness', model: 'gemini-4-argon-medium', reasoning: 'max'};
+ const saved = service.save({settings: {version: 1, profiles: [profile]}, digest: null});
+ assert.deepEqual(saved.validity.profiles[0].command, ['agy', '--model', 'gemini-4-argon-medium', '--effort', 'max']);
+ assert.throws(() => service.save({settings: {version: 1, profiles: [{...profile, reasoning: 'ultra'}]}, digest: saved.digest}),
+  error => error instanceof SettingsError && error.status === 400 && error.message === 'Select an effort level that the model offers.');
+ await fakeAgy(f, '1.5.0');
+ provider = await antigravity();
+ assert.equal(provider.stale, true, 'a changed program version marks the result stale');
+});
+
+test('a failed or slow agy models run returns 502 and keeps the last result; a missing agy returns 503', async t => {
+ const f = await setup(t), config = join(f.dir, 'config');
+ const refusal = (status, message) => error => error instanceof SettingsError && error.status === status && message.test(error.message);
+ await assert.rejects(createSettingsService({configDir: config, stateDir: f.state, env: f.env}).check({harness: 'antigravity'}), refusal(503, /^agy is not on PATH\.$/));
+ assert.deepEqual(await readdir(f.state), [], 'a missing program writes nothing');
+ const agy = await fakeAgy(f), service = createSettingsService({configDir: config, stateDir: f.state, env: agy.env, checkLimits: {limitMs: 300}});
+ const last = (await service.check({harness: 'antigravity'})).check;
+ await agy.set({exit: 1, stderr: 'Fetching available models...\nError: not signed in. Run agy to sign in.\n', lines: []});
+ await assert.rejects(service.check({harness: 'antigravity'}), refusal(502, /^agy models failed with exit status 1\. Error: not signed in\. Run agy to sign in\.$/));
+ assert.deepEqual(readProviders(f.state).antigravity, last, 'a failed run keeps the last result');
+ await agy.set({delayMs: 5000});
+ const started = Date.now();
+ await assert.rejects(service.check({harness: 'antigravity'}), refusal(502, /^agy models did not finish within 0\.3 seconds\.$/));
+ assert.ok(Date.now() - started < 3000, 'the time limit stops the run');
+ assert.deepEqual(readProviders(f.state).antigravity, last, 'a run past the limit keeps the last result');
+ assert.deepEqual(await readdir(f.state), ['providers.json'], 'no check directory remains');
 });

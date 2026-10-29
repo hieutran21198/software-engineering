@@ -1,6 +1,6 @@
 import React, {useEffect, useId, useRef, useState} from 'react';
 import {StatusBadge} from '../ui.jsx';
-import {CATALOG, CONNECTIONS} from '../launch-catalog.js';
+import {CATALOG, CONNECTIONS, checkedConnection} from '../launch-catalog.js';
 import {CHECK_FIRST, NOT_IN_CHECK, ROLES, ROLE_LABELS, ROLE_SESSIONS, SIGN_IN_CHOICES, canCheck, changeDraft, commandPreview, draftProfile, levelChoices, listOf, listSource,
   modelChoices, parseEnv, profileName, profilesOf, roleDefaultsOf, saveErrors, withProfile} from '../agent-settings-model.js';
 
@@ -50,12 +50,12 @@ export default function ProfileEditor({mode, original, initial, base, providers,
   const missingModel = models.find(m => m.value === draft.model)?.missing;
   const defaults = roleDefaultsOf(base.settings), others = profilesOf(base.settings);
   const profile = draftProfile(draft), preview = commandPreview(profile, provider);
-  const claudePlan = draft.harness === 'claude-code' && draft.signIn === 'plan';
+  const claudePlan = draft.harness === 'claude-code' && draft.signIn === 'plan', noAcp = !CATALOG[draft.harness]?.acp;
   const levelHelp = {levels: `Levels that ${draft.model} offers.`, none: 'This model has no effort levels.', 'not-checked': 'The check did not read the levels of this model. It runs with its default level.',
     unknown: list ? 'The last check does not list this model.' : CHECK_FIRST}[levels.state];
   const connectionHelp = connection => {
     const program = provider?.programs[connection];
-    const text = connection === 'acp' ? (claudePlan ? 'Needs an API key sign-in for Claude.' : 'Plane shows output, permission requests and the last message.') : 'You work with the agent in a herdr pane.';
+    const text = connection === 'acp' ? (noAcp ? `${provider?.label || 'This harness tool'} has no ACP agent.` : claudePlan ? 'Needs an API key sign-in for Claude.' : 'Plane shows output, permission requests and the last message.') : 'You work with the agent in a herdr pane.';
     return program && !program.path ? `${text} ${program.name} is not on PATH.` : text;
   };
 
@@ -82,7 +82,7 @@ export default function ProfileEditor({mode, original, initial, base, providers,
           <StatusBadge status={source.status}>{source.badge}</StatusBadge>
           <p>{source.text}</p>
           {canCheck(provider) ? <button type="button" disabled={check?.busy} aria-busy={Boolean(check?.busy)} onClick={() => onCheck(draft.harness)}>{check?.busy ? 'Checking…' : provider.check ? 'Check again' : 'Check'}</button>
-            : <small className="muted">{CATALOG[draft.harness].acp.program} is not on PATH.</small>}
+            : <small className="muted">{CATALOG[draft.harness][checkedConnection(draft.harness)].program} is not on PATH.</small>}
           {check?.error && <p className="list-source-error" role="alert">{check.error}</p>}
         </div>
 
@@ -100,7 +100,7 @@ export default function ProfileEditor({mode, original, initial, base, providers,
           <legend>Connection</legend>
           <div className="choice-cards">
             {CONNECTIONS.map(connection => {
-              const off = connection === 'acp' && claudePlan, on = draft.connection === connection;
+              const off = connection === 'acp' && (claudePlan || noAcp), on = draft.connection === connection;
               return <label key={connection} className={`choice-card${on ? ' selected' : ''}${off ? ' disabled' : ''}`}>
                 <input type="radio" name={`${id}-connection`} value={connection} checked={on} disabled={off} onChange={() => change('connection', connection)}/>
                 <span><b>{connection === 'acp' ? 'ACP' : 'Terminal'}</b><small>{connectionHelp(connection)}</small></span>

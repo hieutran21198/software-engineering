@@ -3,7 +3,7 @@ import {chmod, readFile, stat} from 'node:fs/promises';
 import {existsSync} from 'node:fs';
 import {fixtureRepository} from '../fixtures.js';
 import {openRepository, openWork, region, noOverflow} from './workbench.js';
-import {COMPUTER, CODEX_MODELS, settingsServer, writeSettingsFile} from './settings-fixtures.js';
+import {ANTIGRAVITY, ANTIGRAVITY_MODELS, COMPUTER, CODEX_MODELS, settingsServer, writeSettingsFile} from './settings-fixtures.js';
 // The Agent settings page and the profile editor (specifications/agent-orchestration.md:
 // Workbench, Settings and launch profiles, Model and effort lists, Validity, Save).
 // Each test runs a server of this process with a temporary configuration directory,
@@ -56,7 +56,7 @@ test('AO18: without a settings file the workbench shows no session control excep
       await expect(settings.getByLabel(role, {exact: true})).toBeDisabled();
       await expect(settings.getByLabel(role, {exact: true})).toHaveValue('');
     }
-    for (const name of ['Claude Code', 'Codex', 'OpenCode', 'Command Code', 'Gemini CLI', 'herdr', 'ttyd']) await expect(providerRow(f.page, name)).toContainText('Not found');
+    for (const name of ['Claude Code', 'Codex', 'OpenCode', 'Command Code', 'Gemini CLI', 'Antigravity CLI', 'herdr', 'ttyd']) await expect(providerRow(f.page, name)).toContainText('Not found');
     await expect(providerRow(f.page, 'Session runner')).toContainText('Not available');
     await expect(settings.getByRole('button', {name: 'Check all'})).toBeDisabled();
     await f.page.setViewportSize({width: 390, height: 844});
@@ -144,6 +144,54 @@ test('AOA10: check a provider, create a profile from the lists, set it as the im
     await settings.getByLabel('Implementer', {exact: true}).selectOption('codex-fast-copy');
     await expect(settings.getByRole('status').filter({hasText: 'Implementer sessions now start with Codex fast (copy).'})).toBeVisible();
     expect((await readSettings(f.server.file)).roleDefaults).toEqual({implementer: 'codex-fast-copy'});
+    expect(f.errors).toEqual([]);
+  } finally {await f.cleanup();}
+});
+
+test('Antigravity CLI: check agy models, then create a terminal profile from its models and levels', async ({browser}) => {
+  const f = await setup(browser, {programs: {agy: ANTIGRAVITY, herdr: COMPUTER.herdr}});
+  try {
+    const settings = await openSettings(f.page, f.repository.root), row = providerRow(f.page, 'Antigravity CLI');
+    await expect(row.getByRole('cell')).toHaveText(['agy 1.4.9', 'Terminal', 'Plane does not check the agy sign-in.', 'Check to read them', 'Check']);
+    await row.getByRole('button', {name: 'Check Antigravity CLI'}).click();
+    await expect(row).toContainText('Checked just now');
+    await expect(row).toContainText('gemini-4-argon-medium + 3 more');
+    await row.getByText('gemini-4-argon-medium + 3 more').click();
+    await expect(row.getByRole('listitem')).toHaveText(ANTIGRAVITY_MODELS.map(m => `${m.id} low, medium, high, xhigh, max`));
+    await expect(settings.getByText('For Antigravity CLI, Check runs agy models and reads the models.')).toBeVisible();
+
+    await settings.getByRole('button', {name: 'New profile'}).click();
+    await field(f.page, 'Harness tool').selectOption('antigravity');
+    const source = dialog(f.page).getByRole('status', {name: 'Source of the lists'});
+    await expect(source).toContainText('Checked');
+    await expect(source).toContainText('From the check of agy 1.4.9, just now.');
+    await expect(source).not.toContainText('The terminal program uses the same list.');
+    await expect(source.getByRole('button', {name: 'Check again'})).toBeEnabled();
+    await expect(dialog(f.page).getByRole('radio', {name: /^Terminal/})).toBeChecked();
+    await expect(dialog(f.page).getByRole('radio', {name: /^ACP/})).toBeDisabled();
+    await expect(dialog(f.page).getByText('Antigravity CLI has no ACP agent.')).toBeVisible();
+    await expect(options(field(f.page, 'Model'))).toHaveText(ANTIGRAVITY_MODELS.map(m => `${m.name} (${m.id})`));
+    await expect(field(f.page, 'Model')).toHaveValue('gemini-4-argon-medium');
+    await field(f.page, 'Model').selectOption('claude-opus-5-5-high');
+    await expect(options(field(f.page, 'Effort'))).toHaveText(['Model default', 'low', 'medium', 'high', 'xhigh', 'max']);
+    await field(f.page, 'Effort').selectOption('xhigh');
+    await field(f.page, 'Name').fill('Antigravity Opus');
+    await dialog(f.page).getByRole('checkbox', {name: /^Coordinator/}).check();
+    await expect(dialog(f.page).locator('.command-preview')).toHaveText('agy --model claude-opus-5-5-high --effort xhigh -i "<initial prompt>"\nin a herdr pane');
+    await f.page.setViewportSize({width: 390, height: 844});
+    expect(await noOverflow(f.page)).toBe(true);
+    await f.page.setViewportSize({width: 1440, height: 1000});
+    await dialog(f.page).getByRole('button', {name: 'Save'}).click();
+    await expect(dialog(f.page)).toHaveCount(0);
+    await expect(profileRow(f.page, 'Antigravity Opus').getByRole('cell')).toHaveText(['Antigravity CLI', 'Terminal · own sign-in', 'claude-opus-5-5-high · xhigh', 'Ready', 'EditDuplicateDelete']);
+    await expect(settings.getByLabel('Coordinator', {exact: true})).toHaveValue('antigravity-opus');
+    expect(await readSettings(f.server.file)).toEqual({version: 1, profiles: [{id: 'antigravity-opus', label: 'Antigravity Opus', harness: 'antigravity', connection: 'terminal', signIn: 'harness',
+      model: 'claude-opus-5-5-high', reasoning: 'xhigh'}], roleDefaults: {coordinator: 'antigravity-opus'}});
+    expect((await stat(f.server.file)).mode & 0o777).toBe(0o600);
+    const checks = JSON.parse(await readFile(`${f.server.state}/providers.json`, 'utf8'));
+    expect(checks.providers.antigravity.models.map(m => m.id)).toEqual(ANTIGRAVITY_MODELS.map(m => m.id));
+    await f.page.setViewportSize({width: 390, height: 844});
+    expect(await noOverflow(f.page)).toBe(true);
     expect(f.errors).toEqual([]);
   } finally {await f.cleanup();}
 });

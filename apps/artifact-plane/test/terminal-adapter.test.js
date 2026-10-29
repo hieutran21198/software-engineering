@@ -10,7 +10,7 @@ import {chmod, mkdir, mkdtemp, readFile, realpath, rename, rm, writeFile} from '
 import {tmpdir} from 'node:os';
 import {join} from 'node:path';
 import {fileURLToPath} from 'node:url';
-import {profileCommand} from '../server/provider-catalog.js';
+import {CATALOG, profileCommand} from '../server/provider-catalog.js';
 import {HERDR_LIMIT_MS, SERVER_WAIT_MS, STATUS_INTERVAL_MS, TerminalError, TerminalSession, herdrSession, runHerdr, shellQuote, terminalCommandLine, terminalState} from '../server/terminal-adapter.js';
 
 const FAKE = fileURLToPath(new URL('./fixtures/fake-herdr.mjs', import.meta.url));
@@ -20,11 +20,12 @@ const CLAUDE = {id: 'claude-opus-terminal', harness: 'claude-code', connection: 
 const CODEX = {id: 'codex-terminal', harness: 'codex', connection: 'terminal', signIn: 'harness', model: 'gpt-5-codex', reasoning: 'low'};
 const OPENCODE = {id: 'opencode-terminal', harness: 'opencode', connection: 'terminal', signIn: 'harness', model: 'openai/gpt-6', reasoning: 'high'};
 const OTHER = {id: 'other', harness: 'other', connection: 'terminal', signIn: 'harness', model: 'm', command: ['tool', '--flag', "it's"]};
+const AGY = {id: 'agy-argon', harness: 'antigravity', connection: 'terminal', signIn: 'harness', model: 'gemini-4-argon-medium', reasoning: 'xhigh'};
 const skip = process.platform === 'win32';
 
 // A private directory with the fake programs on PATH. A harness program prints its
 // arguments, separated by NUL, so that the shell check can compare them.
-async function fixture(t, {programs = ['herdr', 'term', 'claude', 'codex', 'opencode2', 'tool'], env = {}} = {}) {
+async function fixture(t, {programs = ['herdr', 'term', 'claude', 'codex', 'opencode2', 'agy', 'tool'], env = {}} = {}) {
  const dir = await realpath(await mkdtemp(join(tmpdir(), 'plane-terminal-'))), bin = join(dir, 'bin'), state = join(dir, 'herdr'), worktree = join(dir, 'worktree');
  t.after(() => rm(dir, {recursive: true, force: true}));
  await Promise.all([mkdir(bin), mkdir(state), mkdir(worktree)]);
@@ -59,6 +60,7 @@ test('the command line quotes each profile argument, adds "$ARTIFACT_PLANE_PROMP
   [CODEX, {}, `'codex' '--model' 'gpt-5-codex' '-c' 'model_reasoning_effort=low' "$ARTIFACT_PLANE_PROMPT"`],
   [OPENCODE, {opencode: 'opencode2'}, `'opencode2' 'mini' '--model' 'openai/gpt-6#high' '--prompt' "$ARTIFACT_PLANE_PROMPT"`],
   [OTHER, {}, `'tool' '--flag' 'it'\\''s' "$ARTIFACT_PLANE_PROMPT"`],
+  [AGY, {}, `'agy' '--model' 'gemini-4-argon-medium' '--effort' 'xhigh' '-i' "$ARTIFACT_PLANE_PROMPT"`],
   [{...CLAUDE, ...extra}, {}, `'claude' '--model' 'opus' '--effort' 'high' 'it'\\''s' '$(touch pwned)' '; rm -rf x' '' "$ARTIFACT_PLANE_PROMPT"`],
  ];
  for (const [profile, programs, expected] of cases) {
@@ -66,7 +68,7 @@ test('the command line quotes each profile argument, adds "$ARTIFACT_PLANE_PROMP
   assert.equal(line, expected);
   assert.ok(!line.includes('PROMPT-TEXT') && !line.includes(PROMPT), 'no prompt text');
   // The shell gives the program the profile command arguments and the prompt, unchanged.
-  const prompt = profile.harness === 'opencode' ? ['--prompt', PROMPT] : [PROMPT];
+  const flag = CATALOG[profile.harness]?.terminal.prompt, prompt = flag && flag !== 'last' ? [flag, PROMPT] : [PROMPT];
   assert.deepEqual(shellArguments(line, f), [...profileCommand(profile, {programs}).slice(1), ...prompt], profile.id);
  }
  assert.equal(existsSync(join(f.worktree, 'pwned')), false);
@@ -74,10 +76,25 @@ test('the command line quotes each profile argument, adds "$ARTIFACT_PLANE_PROMP
  const resume = terminalCommandLine(CLAUDE, {resume: '5f0c2a1e-7b7d-4c55-9a51-0d6c1f0e6a77'});
  assert.equal(resume, `'claude' '--model' 'opus' '--effort' 'high' '--resume' '5f0c2a1e-7b7d-4c55-9a51-0d6c1f0e6a77'`);
  assert.deepEqual(shellArguments(resume, f), ['--model', 'opus', '--effort', 'high', '--resume', '5f0c2a1e-7b7d-4c55-9a51-0d6c1f0e6a77']);
- for (const profile of [CODEX, OPENCODE, OTHER, {...CLAUDE, harness: 'command-code'}, {...CLAUDE, harness: 'gemini-cli', reasoning: undefined}])
+ for (const profile of [CODEX, OPENCODE, OTHER, AGY, {...CLAUDE, harness: 'command-code'}, {...CLAUDE, harness: 'gemini-cli', reasoning: undefined}])
   assert.throws(() => terminalCommandLine(profile, {resume: 'abc'}), refusal('resume-unavailable'), profile.harness);
  for (const id of ['', '--dangerously-skip-permissions', 'a b', 'x'.repeat(129), 7])
   assert.throws(() => terminalCommandLine(CLAUDE, {resume: id}), refusal('invalid'), String(id));
+});
+
+test('the Antigravity terminal command is the catalog row: agy, --model, --effort and -i "$ARTIFACT_PLANE_PROMPT"', {skip}, async t => {
+ const f = await fixture(t), row = CATALOG.antigravity.terminal;
+ assert.deepEqual([CATALOG.antigravity.label, CATALOG.antigravity.acp, row], ['Antigravity CLI', null, {program: 'agy', args: [], modelFlag: '--model', effort: ['--effort', '{level}'], prompt: '-i', resume: null}]);
+ for (const profile of [AGY, {...AGY, reasoning: undefined}, {...AGY, args: ['--mode', 'plan']}]) {
+  const args = [row.program, ...row.args, row.modelFlag, profile.model, ...(profile.reasoning ? row.effort.map(part => part.replace('{level}', profile.reasoning)) : []), ...(profile.args || [])];
+  assert.deepEqual(profileCommand(profile), args, 'the argument list follows the catalog row');
+  const line = terminalCommandLine(profile);
+  assert.equal(line, [...args.map(shellQuote), shellQuote(row.prompt), '"$ARTIFACT_PLANE_PROMPT"'].join(' '), 'the command line adds -i and the prompt reference');
+  assert.ok(!line.includes('PROMPT-TEXT'));
+  assert.deepEqual(shellArguments(line, f), [...args.slice(1), '-i', PROMPT], 'agy receives the arguments and the prompt unchanged');
+ }
+ assert.equal(terminalCommandLine({...AGY, reasoning: undefined}), `'agy' '--model' 'gemini-4-argon-medium' '-i' "$ARTIFACT_PLANE_PROMPT"`);
+ assert.throws(() => terminalCommandLine(AGY, {resume: 'conversation-1'}), refusal('resume-unavailable'), 'Antigravity CLI in a terminal only respawns');
 });
 
 test('the herdr agent_status values map to the session states; unknown keeps the state, and done or idle give idle only after work', () => {

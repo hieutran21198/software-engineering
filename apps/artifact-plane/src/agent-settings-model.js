@@ -1,7 +1,7 @@
 // The model of the Agent settings page and the profile editor of artifact-plane
 // specifications/agent-orchestration.md (Workbench; Settings and launch profiles;
 // Model and effort lists). Plain functions over the reply of /api/settings/query.
-import {API_KEY_SIGN_IN, CATALOG, CHECK_FIRST, NOT_IN_CHECK, ROLES, SIGN_IN_REQUIRED, profileCommand} from './launch-catalog.js';
+import {API_KEY_SIGN_IN, CATALOG, CHECK_FIRST, NOT_IN_CHECK, ROLES, SIGN_IN_REQUIRED, checkedConnection, profileCommand} from './launch-catalog.js';
 
 export {CHECK_FIRST, NOT_IN_CHECK, ROLES};
 export const ROLE_LABELS = {coordinator: 'Coordinator', 'product-owner': 'Product owner', 'technical-lead': 'Technical lead', implementer: 'Implementer'};
@@ -40,11 +40,14 @@ export function providerPrograms(provider) {
   for (const connection of ['terminal', 'acp']) {const p = provider.programs?.[connection];if (p && !programs.has(p.name)) programs.set(p.name, p);}
   return [...programs.values()];
 }
-export const canCheck = provider => Boolean(provider.programs?.acp?.path);
+// The check runs the ACP program, or the terminal program of a provider without one.
+export const canCheck = provider => Boolean(provider?.programs?.[checkedConnection(provider.harness)]?.path);
 
-// The sign-in cell of a provider: {status, text, detail} for a StatusBadge, or null.
+// The sign-in cell of a provider: {status, text, detail} for a StatusBadge, or null. The
+// check of a provider without an ACP program reads no sign-in state.
 export function signInState(provider) {
   const check = provider.check;
+  if (!CATALOG[provider.harness]?.acp) return null;
   if (!check) return canCheck(provider) ? {status: 'Unknown', text: 'Not checked', detail: null} : null;
   if (check.state === SIGN_IN_REQUIRED) return {status: 'Incomplete', text: SIGN_IN_REQUIRED, detail: check.message || null};
   if (check.state === API_KEY_SIGN_IN) return {status: 'Passed', text: 'Plan · terminal only', detail: 'ACP needs an API key sign-in'};
@@ -104,7 +107,7 @@ export function listSource(provider, connection) {
   if (list?.source === 'documented') return {status: 'open', badge: 'Documented', text: 'Plane does not check a plan sign-in. The list comes from the Claude Code documentation for --model and --effort.'};
   if (list) {
     const program = check?.program ? `${check.program}${check.programVersion ? ' ' + check.programVersion : ''}` : 'the ACP program';
-    const shared = connection === 'terminal' ? ' The terminal program uses the same list.' : '';
+    const shared = connection === 'terminal' && CATALOG[provider.harness]?.acp ? ' The terminal program uses the same list.' : '';
     return {status: 'Passed', badge: 'Checked', text: `From the check of ${program}, ${relativeTime(list.checkedAt)}.${shared}${provider.stale ? ' The program changed since then. Check again.' : ''}`};
   }
   if (check?.state === SIGN_IN_REQUIRED) return {status: 'Incomplete', badge: SIGN_IN_REQUIRED, text: `${check.message ? check.message + ' ' : ''}Sign in, then check again.`};
@@ -151,14 +154,15 @@ export function parseEnv(text) {
 }
 
 // The sign-in and connection that the editor selects for a provider: Claude Code
-// without a checked ACP list runs in a terminal with the plan sign-in.
+// without a checked ACP list runs in a terminal with the plan sign-in, and a provider
+// without an ACP program runs in a terminal.
 function providerDefaults(provider) {
   const claude = provider?.harness === 'claude-code' && !listOf(provider, 'acp');
-  return {signIn: claude ? 'plan' : 'harness', connection: claude ? 'terminal' : 'acp'};
+  return {signIn: claude ? 'plan' : 'harness', connection: claude || !CATALOG[provider?.harness]?.acp ? 'terminal' : 'acp'};
 }
 // The draft of the editor for a new, edited or duplicated profile.
 export function newDraft(providers, ids) {
-  const provider = providers.find(p => listOf(p, 'acp')?.models.length) || providers.find(p => p.harness === 'claude-code') || providers[0];
+  const provider = providers.find(p => listOf(p, checkedConnection(p.harness))?.models.length) || providers.find(p => p.harness === 'claude-code') || providers[0];
   const defaults = providerDefaults(provider), list = listOf(provider, defaults.connection);
   return {id: null, name: '', harness: provider?.harness || 'claude-code', ...defaults, model: list?.models[0]?.id || '', reasoning: '', roles: [], args: '', env: '', ids};
 }
@@ -171,11 +175,13 @@ export const duplicateDraft = (profile, settings, ids) => ({...profileDraft(prof
 
 // The dependent fields of the editor. A change of provider selects its sign-in,
 // connection and first model, a change of model keeps a level that the new model
-// offers, and a Claude plan sign-in runs only in a terminal (Validity).
+// offers, and a Claude plan sign-in and a provider without an ACP program run only in a
+// terminal (Validity).
 export function changeDraft(draft, field, value, providers) {
   const next = {...draft, [field]: value};
   if (field === 'harness') Object.assign(next, providerDefaults(providers.find(p => p.harness === value)));
   if (next.harness === 'claude-code' && next.signIn === 'plan' && next.connection === 'acp') next.connection = 'terminal';
+  if (next.connection === 'acp' && CATALOG[next.harness] && !CATALOG[next.harness].acp) next.connection = 'terminal';
   if (next.connection === 'acp') next.roles = next.roles.filter(role => !ROLE_SESSIONS.includes(role));
   const list = listOf(providers.find(p => p.harness === next.harness), next.connection);
   if (field === 'harness' || (field !== 'model' && list && !list.models.some(m => m.id === next.model))) next.model = list?.models[0]?.id || '';

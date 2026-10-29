@@ -2,7 +2,8 @@
 // Settings and launch profiles, Provider check). Each fixture starts a server in the
 // test process with a temporary configuration directory, a private state directory and
 // fake harness programs: the only PATH entry is a directory of shell scripts. A fake
-// ACP program runs test/fixtures/fake-acp-agent.mjs, which runs no model.
+// ACP program runs test/fixtures/fake-acp-agent.mjs, and a fake agy runs
+// test/fixtures/fake-agy.mjs; neither runs a model.
 import {chmod, mkdir, mkdtemp, rm, writeFile} from 'node:fs/promises';
 import {tmpdir} from 'node:os';
 import {join} from 'node:path';
@@ -11,6 +12,7 @@ import {createAppServer} from '../../server/http.js';
 import {createSettingsService} from '../../server/agent-settings.js';
 
 const AGENT = fileURLToPath(new URL('../fixtures/fake-acp-agent.mjs', import.meta.url));
+const AGY = fileURLToPath(new URL('../fixtures/fake-agy.mjs', import.meta.url));
 const quote = text => `'${String(text).replace(/'/g, `'\\''`)}'`;
 
 export const CODEX_MODELS = [
@@ -33,16 +35,22 @@ export const COMPUTER = {
   'ttyd': {version: 'ttyd version 1.7.7', stderr: true},
 };
 
-// programs: {name: {version, stderr?, agent?}}; `agent` is the script of the fake ACP agent.
+// The models of the agy 1.4.9 help output (2026-10-29). `agy models` prints them as `<id><TAB><name>` lines.
+export const ANTIGRAVITY_MODELS = [['gemini-4-argon-medium', 'Gemini 4 Argon (Medium)'], ['gemini-3.8-flash-high', 'Gemini 3.8 Flash (High)'],
+  ['claude-opus-5-5-high', 'Claude Opus 5.5 (High)'], ['gpt-oss-120b-medium', 'GPT-OSS 120B (Medium)']].map(([id, name]) => ({id, name}));
+export const ANTIGRAVITY = {version: '1.4.9', agy: {lines: ANTIGRAVITY_MODELS.map(m => `${m.id}\t${m.name}`)}};
+
+// programs: {name: {version, stderr?, agent?, agy?}}; `agent` is the script of the fake ACP
+// agent, and `agy` the script of the fake Antigravity CLI.
 // settings: the settings file (an object, or text); checks: the providers of providers.json.
 export async function settingsServer({programs = {}, settings, checks} = {}) {
   const dir = await mkdtemp(join(tmpdir(), 'plane-settings-')), bin = join(dir, 'bin'), config = join(dir, 'config'), state = join(dir, 'state');
   await mkdir(bin);await mkdir(state, {mode: 0o700});
-  for (const [name, {version, stderr, agent}] of Object.entries(programs)) {
+  for (const [name, {version, stderr, agent, agy}] of Object.entries(programs)) {
     let script = `#!/bin/sh\nif [ "$1" = "--version" ]; then echo ${quote(version)}${stderr ? ' >&2' : ''}; exit 0; fi\n`;
-    if (agent) {
-      const file = join(dir, `${name}.json`);await writeFile(file, JSON.stringify(agent));
-      script += `FAKE_ACP_CONFIG_FILE=${quote(file)} exec ${quote(process.execPath)} ${quote(AGENT)} "$@"\n`;
+    if (agent || agy) {
+      const file = join(dir, `${name}.json`);await writeFile(file, JSON.stringify(agent || agy));
+      script += agent ? `FAKE_ACP_CONFIG_FILE=${quote(file)} exec ${quote(process.execPath)} ${quote(AGENT)} "$@"\n` : `FAKE_AGY_CONFIG_FILE=${quote(file)} exec ${quote(process.execPath)} ${quote(AGY)} "$@"\n`;
     } else script += 'exit 1\n';
     await writeFile(join(bin, name), script);await chmod(join(bin, name), 0o755);
   }

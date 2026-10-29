@@ -5,8 +5,8 @@ import test from 'node:test';
 import assert from 'node:assert/strict';
 import {CLAUDE_TERMINAL_MODELS, profileCommand} from '../server/provider-catalog.js';
 import {CHECK_FIRST, NOT_IN_CHECK, validateSettings} from '../server/agent-settings.js';
-import {changeDraft, commandPreview, draftProfile, duplicateDraft, levelChoices, listSource, modelChoices, modelSummary, newDraft, parseEnv, profileDraft, profileId, profileState,
-  roleChoices, saveErrors, signInState, withProfile, withRoleDefault, withoutProfile} from '../src/agent-settings-model.js';
+import {canCheck, changeDraft, commandPreview, draftProfile, duplicateDraft, levelChoices, listSource, modelChoices, modelSummary, newDraft, parseEnv, profileDraft, profileId, profileState,
+  providerList, relativeTime, roleChoices, saveErrors, signInState, withProfile, withRoleDefault, withoutProfile} from '../src/agent-settings-model.js';
 
 const CHECKED = {program: 'codex-acp', programVersion: '2.3.0', checkedAt: '2026-10-29T07:00:00.000Z', models: [
   {id: 'gpt-5-codex', name: 'GPT-5 Codex', levels: ['low', 'medium', 'high']}, {id: 'gpt-5', name: 'GPT-5', levels: ['minimal', 'high']}, {id: 'mini', name: 'mini', levels: []}, {id: 'x', name: 'X', levels: null}]};
@@ -72,6 +72,24 @@ test('the preview is the profile command of the catalog with the program on PATH
   assert.deepEqual(profileCommand(opencode, {programs: {opencode: 'opencode2'}}), ['opencode2', 'mini', '--model', 'openai/gpt-6#high'], 'the server builds the same command');
   assert.deepEqual(commandPreview({harness: 'gemini-cli', connection: 'acp', model: 'flash'}, null), ['gemini --acp --model flash']);
   assert.equal(commandPreview({...codex, model: ''}, PROVIDERS[1]), null);
+});
+
+test('Antigravity CLI: the check runs agy, the editor selects the terminal connection, and the preview adds -i before the prompt', () => {
+  const AGY_CHECK = {program: 'agy', programVersion: '1.4.9', checkedAt: '2026-10-29T08:00:00.000Z', models: [{id: 'gemini-4-argon-medium', name: 'Gemini 4 Argon (Medium)', levels: ['low', 'medium', 'high', 'xhigh', 'max']}]};
+  const agy = {harness: 'antigravity', label: 'Antigravity CLI', connections: ['terminal'], programs: {acp: null, terminal: program('agy')}, check: AGY_CHECK, stale: false, lists: {acp: null, terminal: list(AGY_CHECK)}};
+  const providers = [...PROVIDERS, agy];
+  assert.equal(canCheck(agy), true);assert.equal(canCheck({...agy, programs: {acp: null, terminal: program('agy', null)}}), false);
+  assert.equal(signInState(agy), null, 'agy models reads no sign-in state');
+  assert.deepEqual(providerList(agy), list(AGY_CHECK));
+  const draft = changeDraft({...newDraft(PROVIDERS, []), roles: ['coordinator']}, 'harness', 'antigravity', providers);
+  assert.deepEqual([draft.connection, draft.signIn, draft.model, draft.reasoning, draft.roles], ['terminal', 'harness', 'gemini-4-argon-medium', '', ['coordinator']]);
+  assert.equal(changeDraft(draft, 'connection', 'acp', providers).connection, 'terminal', 'Antigravity CLI has no ACP connection');
+  assert.equal(newDraft([PROVIDERS[0], agy], []).harness, 'antigravity', 'a new draft selects the first checked provider');
+  const source = listSource(agy, 'terminal');
+  assert.deepEqual([source.badge, source.text], ['Checked', `From the check of agy 1.4.9, ${relativeTime(AGY_CHECK.checkedAt)}.`]);
+  const profile = draftProfile({...changeDraft(draft, 'reasoning', 'max', providers), name: 'Antigravity Argon'});
+  assert.deepEqual(commandPreview(profile, agy), ['agy --model gemini-4-argon-medium --effort max -i "<initial prompt>"', 'in a herdr pane']);
+  assert.deepEqual(validateSettings({version: 1, profiles: [profile], roleDefaults: {coordinator: profile.id}}, {providers: {antigravity: AGY_CHECK}, save: true}).valid, true);
 });
 
 test('drafts become profiles that the settings service accepts, with role defaults, and IDs stay unique', () => {

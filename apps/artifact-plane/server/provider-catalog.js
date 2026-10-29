@@ -5,14 +5,14 @@
 import {execFile} from 'node:child_process';
 import {accessSync, constants, statSync} from 'node:fs';
 import {delimiter, isAbsolute, join} from 'node:path';
-import {CATALOG, CONNECTIONS, HARNESSES, profileCommand} from '../src/launch-catalog.js';
+import {CATALOG, CONNECTIONS, HARNESSES, checkedConnection, profileCommand} from '../src/launch-catalog.js';
 
-export {CATALOG, CONNECTIONS, HARNESSES, profileCommand};
+export {CATALOG, CONNECTIONS, HARNESSES, checkedConnection, profileCommand};
 
 // The time limit of one `--version` run.
 export const VERSION_LIMIT_MS = 5000;
 // The programs whose version the settings query reads. OpenCode has two candidate names.
-export const PROGRAMS = ['claude', 'claude-agent-acp', 'codex', 'codex-acp', 'opencode', 'opencode2', 'cmd', 'gemini', 'herdr', 'ttyd'];
+export const PROGRAMS = ['claude', 'claude-agent-acp', 'codex', 'codex-acp', 'opencode', 'opencode2', 'cmd', 'gemini', 'agy', 'herdr', 'ttyd'];
 
 // The documented list of a Claude Code terminal profile: the model aliases of
 // code.claude.com/docs/en/model-config ("Model aliases"; `default` is not an alias)
@@ -28,7 +28,7 @@ export const CLAUDE_TERMINAL_MODELS = [
 
 // The permission-bypass list (Validity). A pair also matches as `--flag=value`.
 export const BYPASS_ARGUMENTS = ['--dangerously-skip-permissions', '--allow-dangerously-skip-permissions', '--dangerously-bypass-approvals-and-sandbox', '--yolo', '-y', 'bypassPermissions', '--approval-mode=yolo'];
-export const BYPASS_PAIRS = [['--approval-mode', 'yolo'], ['--permission-mode', 'bypass'], ['--permission-mode', 'yolo'], ['--permission-mode', 'dont-ask'], ['--ask-for-approval', 'never'], ['-a', 'never']];
+export const BYPASS_PAIRS = [['--approval-mode', 'yolo'], ['--permission-mode', 'bypass'], ['--permission-mode', 'yolo'], ['--permission-mode', 'dont-ask'], ['--mode', 'auto'], ['--ask-for-approval', 'never'], ['-a', 'never']];
 // The first argument of the list that bypasses permission prompts, or null.
 export function bypassArgument(args) {
  for (let i = 0; i < args.length; i++) {

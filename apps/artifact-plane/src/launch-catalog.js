@@ -11,10 +11,12 @@ export const SIGN_IN_REQUIRED = 'Sign-in required', API_KEY_SIGN_IN = 'Needs an 
 // The refusal of start rule 5 (Start rules; AOA12). The launch dialog shows the same text.
 export const ROLE_TERMINAL = 'Role sessions run in a terminal, where you chat with the harness tool.';
 // For each provider: the ACP program and whether its model is an ACP option or a flag,
-// the terminal program, the model and effort flags, the initial prompt form and the
-// terminal resume arguments (the terminal adapter adds the prompt and the resume).
-// `{level}` and `{session}` are placeholders; effort `suffix` puts `#<level>` after
-// the model value (OpenCode). The catalog is plain data.
+// the terminal program, the model and effort flags, the initial prompt form (`last`, or
+// the flag before the prompt) and the terminal resume arguments (the terminal adapter
+// adds the prompt and the resume). `{level}` and `{session}` are placeholders; effort
+// `suffix` puts `#<level>` after the model value (OpenCode). A provider without an ACP
+// program (`acp: null`) has `models`: the arguments of the terminal program that list
+// its models, and the effort levels of each model. The catalog is plain data.
 export const CATALOG = {
  'claude-code': {label: 'Claude Code', acp: {program: 'claude-agent-acp', args: ['--hide-claude-auth'], model: 'option'},
   terminal: {program: 'claude', args: [], modelFlag: '--model', effort: ['--effort', '{level}'], prompt: 'last', resume: ['--resume', '{session}']}},
@@ -26,8 +28,14 @@ export const CATALOG = {
   terminal: {program: 'cmd', args: [], modelFlag: '--model', effort: ['--effort', '{level}'], prompt: 'last', resume: null}},
  'gemini-cli': {label: 'Gemini CLI', acp: {program: 'gemini', args: ['--acp'], model: 'flag', modelFlag: '--model'},
   terminal: {program: 'gemini', args: [], modelFlag: '--model', effort: null, prompt: 'last', resume: null}},
+ 'antigravity': {label: 'Antigravity CLI', acp: null,
+  terminal: {program: 'agy', args: [], modelFlag: '--model', effort: ['--effort', '{level}'], prompt: '-i', resume: null},
+  models: {args: ['models'], levels: ['low', 'medium', 'high', 'xhigh', 'max']}},
 };
 export const HARNESSES = Object.keys(CATALOG);
+// The connection whose program the provider check runs: the ACP program, or the
+// terminal program of a provider without one.
+export const checkedConnection = harness => CATALOG[harness]?.acp ? 'acp' : 'terminal';
 
 // The profile command as an argument list: the program of the connection, the model
 // flag and model for a terminal profile or an ACP model flag, the effort of a terminal

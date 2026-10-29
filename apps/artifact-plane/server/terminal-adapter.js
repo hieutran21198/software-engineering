@@ -38,7 +38,8 @@ export const herdrSession = id => {
 export const shellQuote = value => `'${String(value).replaceAll("'", "'\\''")}'`;
 
 // The command line that `pane run` types: the profile command with each argument quoted,
-// then the prompt reference in the form of the Initial prompt column, or, with `resume`
+// then the prompt reference in the form of the Initial prompt column (the last argument,
+// or after the prompt flag: `--prompt` for OpenCode, `-i` for Antigravity CLI), or, with `resume`
 // (a harness session ID), the resume arguments of the catalog. It never holds the prompt text.
 export function terminalCommandLine(profile, {programs = {}, resume} = {}) {
  const entry = profile.harness === 'other' ? null : CATALOG[profile.harness]?.terminal;
@@ -48,7 +49,7 @@ export function terminalCommandLine(profile, {programs = {}, resume} = {}) {
   if (typeof resume !== 'string' || !HARNESS_SESSION.test(resume)) throw new TerminalError('invalid', 'The harness session ID is missing or not valid.');
   return [...command, ...entry.resume.map(part => part.replace('{session}', () => resume))].map(shellQuote).join(' ');
  }
- const prompt = entry?.prompt === '--prompt' ? [shellQuote('--prompt'), PROMPT_REFERENCE] : [PROMPT_REFERENCE];
+ const prompt = entry && entry.prompt !== 'last' ? [shellQuote(entry.prompt), PROMPT_REFERENCE] : [PROMPT_REFERENCE];
  return [...command.map(shellQuote), ...prompt].join(' ');
 }
 

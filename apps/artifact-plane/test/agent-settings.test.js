@@ -89,6 +89,14 @@ test('each validity rule makes a profile invalid with its reason, and the invali
  const catalog = {...CATALOG, 'gemini-cli': {...CATALOG['gemini-cli'], terminal: undefined}};
  assert.match(reasons({id: 'g', harness: 'gemini-cli', connection: 'terminal', signIn: 'harness', model: 'gemini-3-pro'}, {catalog}), /Gemini CLI does not offer the terminal connection/);
  assert.match(reasons({...CODEX, connection: 'ssh'}), /connection must be acp or terminal/);
+ // Antigravity CLI has no ACP agent: only its terminal connection is valid.
+ const AGY = {id: 'agy', harness: 'antigravity', connection: 'terminal', signIn: 'harness', model: 'gemini-4-argon-medium', reasoning: 'high'};
+ assert.equal(profileOf(AGY).valid, true);
+ assert.equal(reasons({...AGY, connection: 'acp'}), 'Antigravity CLI does not offer the acp connection.');
+ // `--mode auto` of Antigravity CLI skips permission prompts, as a pair and as `--mode=auto`; other modes pass.
+ assert.equal(reasons({...AGY, args: ['--mode', 'auto']}), '--mode auto skips permission prompts. Plane does not start such a profile.');
+ assert.equal(reasons({...AGY, args: ['--mode=auto']}), '--mode=auto skips permission prompts. Plane does not start such a profile.');
+ for (const args of [['--mode', 'plan'], ['--mode', 'accept-edits'], ['--mode=plan'], ['auto']]) assert.equal(profileOf({...AGY, args}).valid, true, args.join(' '));
  // Each entry of the permission-bypass list, in args and in the command of harness other.
  const bypasses = [...BYPASS_ARGUMENTS.map(a => [a]), ...BYPASS_PAIRS, ...BYPASS_PAIRS.map(([flag, value]) => [`${flag}=${value}`])];
  for (const args of bypasses) {
@@ -158,8 +166,11 @@ test('the builder makes the profile command of each catalog provider and connect
   [{harness: 'command-code', connection: 'terminal', model: 'claude-sonnet', reasoning: 'high'}, ['cmd', '--model', 'claude-sonnet', '--effort', 'high']],
   [{harness: 'gemini-cli', connection: 'acp', model: 'gemini-3-pro'}, ['gemini', '--acp', '--model', 'gemini-3-pro']],
   [{harness: 'gemini-cli', connection: 'terminal', model: 'gemini-3-pro'}, ['gemini', '--model', 'gemini-3-pro']],
+  [{harness: 'antigravity', connection: 'terminal', model: 'gemini-4-argon-medium', reasoning: 'xhigh'}, ['agy', '--model', 'gemini-4-argon-medium', '--effort', 'xhigh']],
  ];
- assert.deepEqual(cases.map(([p]) => `${p.harness} ${p.connection}`).sort(), HARNESSES.flatMap(h => ['acp', 'terminal'].map(c => `${h} ${c}`)).sort(), 'every catalog entry has a case');
+ assert.deepEqual(cases.map(([p]) => `${p.harness} ${p.connection}`).sort(), HARNESSES.flatMap(h => ['acp', 'terminal'].filter(c => CATALOG[h][c]).map(c => `${h} ${c}`)).sort(), 'every catalog entry has a case');
+ assert.equal(CATALOG.antigravity.acp, null, 'Antigravity CLI offers only the terminal connection');
+ assert.throws(() => profileCommand({harness: 'antigravity', connection: 'acp', model: 'm'}), /No catalog program for antigravity acp/);
  for (const [profile, command] of cases) {
   assert.deepEqual(profileCommand(profile), command, `${profile.harness} ${profile.connection}`);
   assert.equal(bypassArgument(command), null, 'the catalog adds no option that skips a permission prompt');
@@ -246,10 +257,11 @@ test('query returns the providers with their programs, versions, last checks and
  await mkdir(bin);await mkdir(slow);
  const fake = async (dir, name, script) => {await writeFile(join(dir, name), `#!/bin/sh\n${script}\n`);await chmod(join(dir, name), 0o755);};
  for (const [name, output] of [['claude', '2.1.312 (Claude Code)'], ['claude-agent-acp', '0.99.0'], ['codex', 'codex-cli 0.165.0'], ['codex-acp', 'codex-acp 2.3.0'],
-  ['opencode', '1.14.2'], ['opencode2', '2.2.0'], ['herdr', 'herdr 0.9.5']]) await fake(bin, name, `echo "${output}"`);
+  ['opencode', '1.14.2'], ['opencode2', '2.2.0'], ['agy', '1.4.9'], ['herdr', 'herdr 0.9.5']]) await fake(bin, name, `echo "${output}"`);
  await fake(bin, 'ttyd', 'echo "ttyd version 1.7.7-40e79c7" >&2');
  await fake(slow, 'cmd', `exec "${process.execPath}" -e "setTimeout(() => console.log('1.88.0'), 5000)"`);await writeFile(join(bin, 'gemini'), 'not executable');
- await writeChecks(f.state, {codex: CODEX_CHECK, opencode: {program: 'opencode2', programVersion: '2.1.0', checkedAt: '2026-10-28T00:00:00.000Z', models: [{id: 'openai/gpt-6', name: 'GPT-6', levels: ['low', 'high']}]}});
+ const AGY_CHECK = {program: 'agy', programVersion: '1.4.9', checkedAt: '2026-10-29T08:00:00.000Z', models: [{id: 'gemini-4-argon-medium', name: 'Gemini 4 Argon (Medium)', levels: ['low', 'medium', 'high', 'xhigh', 'max']}]};
+ await writeChecks(f.state, {codex: CODEX_CHECK, antigravity: AGY_CHECK, opencode: {program: 'opencode2', programVersion: '2.1.0', checkedAt: '2026-10-28T00:00:00.000Z', models: [{id: 'openai/gpt-6', name: 'GPT-6', levels: ['low', 'high']}]}});
  const digest = await writeSettingsFile(f.file, settings([CLAUDE, {id: 'oc', harness: 'opencode', connection: 'terminal', signIn: 'harness', model: 'openai/gpt-6', reasoning: 'high'}], {implementer: 'oc'}));
  const service = createSettingsService({configDir: f.config, stateDir: f.state, env: {PATH: ['relative', bin, slow].join(':')}, timeoutMs: 500, runner: async () => ({available: false})});
  const started = Date.now(), view = await service.query();
@@ -275,6 +287,9 @@ test('query returns the providers with their programs, versions, last checks and
  assert.deepEqual(by['claude-code'].lists.terminal, {source: 'documented', models: CLAUDE_TERMINAL_MODELS});
  assert.deepEqual(by.codex.lists.terminal, by.codex.lists.acp, 'a terminal profile uses the check of the ACP program');
  assert.equal(by.codex.lists.acp.source, 'checked');assert.equal(by['gemini-cli'].lists.terminal, null);
+ // Antigravity CLI: only the terminal program agy, whose check gives the terminal list.
+ assert.deepEqual([by.antigravity.label, by.antigravity.connections, by.antigravity.programs], ['Antigravity CLI', ['terminal'], {acp: null, terminal: {name: 'agy', path: join(bin, 'agy'), version: '1.4.9'}}]);
+ assert.deepEqual([by.antigravity.check, by.antigravity.stale, by.antigravity.lists], [AGY_CHECK, false, {acp: null, terminal: {source: 'checked', checkedAt: AGY_CHECK.checkedAt, programVersion: '1.4.9', models: AGY_CHECK.models}}]);
  // OpenCode 2 under the name opencode wins over opencode2; without version 2 there is no OpenCode program.
  await fake(bin, 'opencode', 'echo "2.0.1"');
  assert.equal((await service.query()).providers.find(p => p.harness === 'opencode').programs.acp.name, 'opencode');

@@ -9,8 +9,8 @@ import {homedir} from 'node:os';
 import {basename, dirname, isAbsolute, join, relative, resolve, sep} from 'node:path';
 import {isDeepStrictEqual} from 'node:util';
 import {defaultStateDir, digest} from './runtime-store.js';
-import {CATALOG, CLAUDE_TERMINAL_MODELS, CONNECTIONS, HARNESSES, VERSION_LIMIT_MS, bypassArgument, profileCommand, readPrograms} from './provider-catalog.js';
-import {ProviderCheckError, checkProvider} from './provider-check.js';
+import {CATALOG, CLAUDE_TERMINAL_MODELS, CONNECTIONS, HARNESSES, VERSION_LIMIT_MS, bypassArgument, checkedConnection, profileCommand, readPrograms} from './provider-catalog.js';
+import {ProviderCheckError, checkModelList, checkProvider} from './provider-check.js';
 import {CHECK_FIRST, NOT_IN_CHECK, ROLES, SIGN_INS} from '../src/launch-catalog.js';
 
 export {CHECK_FIRST, NOT_IN_CHECK, ROLES, SIGN_INS};
@@ -108,8 +108,10 @@ export function readProviders(stateDir = defaultStateDir()) {
  return providers;
 }
 
-// The model list of a provider and connection (Model and effort lists), or null without a list.
+// The model list of a provider and connection (Model and effort lists), or null without a
+// list or for a connection that the provider does not offer.
 export function modelList(harness, connection, providers = {}) {
+ if (!CATALOG[harness]?.[connection]) return null;
  if (harness === 'claude-code' && connection === 'terminal') return {source: 'documented', models: CLAUDE_TERMINAL_MODELS};
  const record = providers[harness];
  return record?.models.length ? {source: 'checked', checkedAt: record.checkedAt, programVersion: record.programVersion, models: record.models} : null;
@@ -232,9 +234,10 @@ export function createSettingsService({configDir, stateDir = defaultStateDir(), 
    const file = readSettings({path, roots}), checks = readProviders(stateDir), names = {opencode: opencode || 'opencode'};
    const program = name => name === 'opencode' ? (opencode ? programs[opencode] : {name, path: null, version: null}) : programs[name];
    const providers = HARNESSES.map(harness => {
-    const entry = CATALOG[harness], acp = program(entry.acp.program), check = checks[harness] || null;
-    return {harness, label: entry.label, connections: CONNECTIONS.filter(c => entry[c]), programs: {acp, terminal: program(entry.terminal.program)},
-     check, stale: Boolean(check && (check.program !== acp.name || check.programVersion !== acp.version)),
+    const entry = CATALOG[harness], check = checks[harness] || null;
+    const programs = {acp: entry.acp ? program(entry.acp.program) : null, terminal: program(entry.terminal.program)}, checked = programs[checkedConnection(harness)];
+    return {harness, label: entry.label, connections: CONNECTIONS.filter(c => entry[c]), programs,
+     check, stale: Boolean(check && (check.program !== checked.name || check.programVersion !== checked.version)),
      lists: {acp: modelList(harness, 'acp', checks), terminal: modelList(harness, 'terminal', checks)}};
    });
    return {path, settings: file.settings, digest: file.digest, error: file.error, refused: file.refused,
@@ -254,17 +257,20 @@ export function createSettingsService({configDir, stateDir = defaultStateDir(), 
    try {digest = writeSettings(path, body.settings);} catch {throw new SettingsError(500, 'Plane could not write the settings file.');}
    return {path, digest, validity};
   },
-  // The route /api/settings/check (Provider check). It writes the result of a completed
-  // check to providers.json; a missing program returns 503 and a failed check 502.
+  // The route /api/settings/check (Provider check). It checks the ACP program, or runs the
+  // model list command of a provider without one (`agy models`). It writes the result of a
+  // completed check to providers.json; a missing program returns 503 and a failed check 502.
   async check(body) {
    if (!plain(body) || Object.keys(body).some(k => k !== 'harness') || !HARNESSES.includes(body.harness))
     throw new SettingsError(400, `Send the harness of a catalog provider: ${HARNESSES.join(', ')}.`);
-   const harness = body.harness, entry = CATALOG[harness].acp, {programs, opencode} = await readPrograms({env, timeoutMs});
+   const harness = body.harness, provider = CATALOG[harness], entry = provider[checkedConnection(harness)], {programs, opencode} = await readPrograms({env, timeoutMs});
    const name = entry.program === 'opencode' ? opencode : entry.program, program = name ? programs[name] : null;
    if (!program?.path) throw new SettingsError(503, `${entry.program} is not on PATH.`);
    let result;
-   try {result = await checkProvider({harness, command: [program.path, ...entry.args], stateDir, env, ...checkLimits});}
-   catch (error) {if (error instanceof ProviderCheckError) throw new SettingsError(502, error.message);throw error;}
+   try {
+    result = provider.acp ? await checkProvider({harness, command: [program.path, ...entry.args], stateDir, env, ...checkLimits})
+     : await checkModelList({command: [program.path, ...provider.models.args], levels: provider.models.levels, stateDir, env, ...checkLimits});
+   } catch (error) {if (error instanceof ProviderCheckError) throw new SettingsError(502, error.message);throw error;}
    const record = providerRecord({program: name, programVersion: program.version, checkedAt: new Date().toISOString(), ...result});
    try {writeProviderRecord(stateDir, harness, record);} catch {throw new SettingsError(500, 'Plane could not write providers.json.');}
    return {harness, check: record, stale: false};

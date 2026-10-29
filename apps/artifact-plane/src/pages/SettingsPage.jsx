@@ -127,7 +127,7 @@ function SettingsSections({data, checks, saving, onCheck, onCheckAll, onEdit, on
         </table>
       </div>
       {data.providers.filter(p => checks[p.harness]?.error).map(p => <p key={p.harness} role="alert" className="operation-error settings-check-error">Check of {p.label}: {checks[p.harness].error}</p>)}
-      <p className="tiny settings-note">Check starts the ACP agent in a private temporary folder, reads its sign-in state, models and reasoning levels, and stops it. Check sends no prompt.</p>
+      <p className="tiny settings-note">Check starts the ACP agent in a private temporary folder, reads its sign-in state, models and reasoning levels, and stops it. For Antigravity CLI, Check runs <code>agy models</code> and reads the models. Check sends no prompt.</p>
     </Section>
 
     <Section title="Default profile for each ADD role">
@@ -169,7 +169,10 @@ function SettingsSections({data, checks, saving, onCheck, onCheckAll, onEdit, on
 
 function ProviderRow({provider, check, onCheck}) {
   const programs = providerPrograms(provider), found = programs.filter(p => p.path), sign = signInState(provider), list = providerList(provider);
-  const connections = provider.connections.filter(c => provider.programs[c]?.path);
+  const connections = provider.connections.filter(c => provider.programs[c]?.path), terminal = provider.programs.terminal;
+  // Without a sign-in state: the Claude plan, and the terminal program of a provider without ACP.
+  const note = !terminal?.path ? null : provider.harness === 'claude-code' ? 'Plane does not check a plan sign-in.'
+    : !provider.connections.includes('acp') ? `Plane does not check the ${terminal.name} sign-in.` : null;
   return <tr>
     <th scope="row">{provider.label}</th>
     <Cell label="Programs">{found.length ? programs.map(p => <div key={p.name} className={p.path ? 'mono' : 'muted small'}>{p.path ? `${p.name} ${p.version || '(version unknown)'}` : `${p.name} not found`}</div>)
@@ -178,9 +181,9 @@ function ProviderRow({provider, check, onCheck}) {
     <Cell label="Sign-in">{sign ? <>
       <StatusBadge status={sign.status}>{sign.text}</StatusBadge>
       {sign.detail && <small className="state-detail">{sign.detail}</small>}
+    </> : note ? <small className="muted">{note}</small> : !provider.check && '—'}
       {provider.check && <small className="state-detail">Checked {relativeTime(provider.check.checkedAt)}</small>}
-      {provider.stale && <small className="settings-warning">The program changed since the last check. Check again.</small>}
-    </> : provider.harness === 'claude-code' && provider.programs.terminal?.path ? <small className="muted">Plane does not check a plan sign-in.</small> : '—'}</Cell>
+      {provider.stale && <small className="settings-warning">The program changed since the last check. Check again.</small>}</Cell>
     <Cell label="Models">{list?.models.length ? <details className="model-list">
       <summary>{modelSummary(list)}</summary>
       <ul>{list.models.map(m => <li key={m.id}><span className="mono">{m.id}</span> <span className="muted">{levelText(m.levels)}</span></li>)}</ul>

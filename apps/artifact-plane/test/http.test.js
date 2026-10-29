@@ -208,7 +208,7 @@ test("the settings routes query and save under the loopback, Host, Origin, JSON 
   const empty = await post("/api/settings/query", {});
   assert.equal(empty.status, 200);
   assert.deepEqual([empty.body.path, empty.body.settings, empty.body.digest, empty.body.validity, empty.body.runner], [join(config, "profiles.json"), null, null, null, null]);
-  assert.deepEqual(empty.body.providers.map((p) => p.harness), ["claude-code", "codex", "opencode", "command-code", "gemini-cli"]);
+  assert.deepEqual(empty.body.providers.map((p) => p.harness), ["claude-code", "codex", "opencode", "command-code", "gemini-cli", "antigravity"]);
   const saved = await post("/api/settings/save", {settings: {version: 1, profiles: [profile]}, digest: null});
   assert.equal(saved.status, 200);
   assert.match(saved.body.digest, /^[0-9a-f]{64}$/);
