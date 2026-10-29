@@ -22,6 +22,7 @@ import {LONG_PATH_MESSAGE, RUNNER_VERSION, RunnerError, readMessages, runnerSock
 import {RuntimeStore, defaultStateDir} from './runtime-store.js';
 import {readBase} from './session-output.js';
 import {TerminalSession} from './terminal-adapter.js';
+import {TerminalRelays} from './terminal-relay.js';
 
 export const IDLE_EXIT_MS = 10 * 60 * 1000;
 // The copy interval of the harness session ID that the SessionStart hook records.
@@ -30,6 +31,8 @@ export const PROMPT_LIMIT = 64 * 1024;
 // A client that does not read its pushed events loses its connection.
 const OUTPUT_LIMIT = 64 * 1024 * 1024;
 export const METHODS = ['hello', 'start', 'prompt', 'answer', 'cancel', 'resume', 'end', 'openTerminal', 'snapshot', 'subscribe', 'unsubscribe'];
+// The methods of the embedded terminal relay (Embedded terminal; server/terminal-relay.js).
+export const RELAY_METHODS = ['relay', 'relayViewers'];
 const SESSION_ID = /^[0-9a-f]{12}$/, REVISION = /^[0-9a-f]{40}(?:[0-9a-f]{24})?$/, NAME = /^[a-z0-9][a-z0-9-]*$/, PROGRAM = /^[A-Za-z0-9][A-Za-z0-9._-]*$/;
 const CONTROL = /[\x00-\x1f\x7f]/;
 // The attempt state after a turn and the interruption reason of the turn (States, Lifecycle events).
@@ -88,17 +91,21 @@ async function listenSocket(server, path) {
 }
 
 // One session of the runner: the stored record, the attempt ID, the full profile (memory
-// only, because it can hold variables) and the adapter.
+// only, because it can hold variables), the adapter and the relays of the runner.
 class Host {
- constructor(record, {attempt = null, profile = null, programs = {}, started = true} = {}) {
-  Object.assign(this, {record, attempt, profile, programs, started});
+ constructor(record, {attempt = null, profile = null, programs = {}, started = true, relays = null} = {}) {
+  Object.assign(this, {record, attempt, profile, programs, started, relays});
   this.adapter = null;this.agentStatus = null;this.error = null;this.seq = 0;this.resuming = false;this.subscribers = new Set();
  }
  get acp() {return this.record.profile.connection === 'acp';}
  // The runner hosts a running agent process or a followed herdr pane.
  get running() {return Boolean(this.adapter) && !['interrupted', 'ended'].includes(this.record.state);}
- // The session fields with the attempt, the herdr status, the last error message and `hosted`.
- view() {return {...this.record, attempt: this.attempt, agentStatus: this.agentStatus, error: this.error, hosted: this.running};}
+ // The session fields with the attempt, the herdr status, the last error message, `hosted`, and
+ // `relay`: {available, reason} of the embedded terminal of a running terminal session, else null.
+ view() {
+  const relay = !this.acp && this.running && this.relays ? this.relays.status(this.record.id) : null;
+  return {...this.record, attempt: this.attempt, agentStatus: this.agentStatus, error: this.error, hosted: this.running, relay};
+ }
  // The live state of an ACP session: memory only.
  live() {
   if (!this.acp || !this.adapter) return null;
@@ -109,10 +116,10 @@ class Host {
 
 // The runner of one state directory. Events: `idle` (no session runs and no server is
 // connected since idleMs), `session-ended` (session ID) and `store-error`. `methods` maps a
-// protocol method to its handler (params, client); a later task adds its methods there, for
-// example the relay start and stop of the embedded terminal, and listens to `session-ended`.
+// protocol method to its handler (params, client): METHODS and RELAY_METHODS. `relayOptions`
+// holds the stop and start times of the terminal relay (server/terminal-relay.js).
 export class SessionRunner extends EventEmitter {
- constructor({stateDir = defaultStateDir(), env = process.env, idleMs = IDLE_EXIT_MS, harnessPollMs = HARNESS_ID_POLL_MS, acpOptions = {}, terminalOptions = {}, mcpServer = planeMcpServer()} = {}) {
+ constructor({stateDir = defaultStateDir(), env = process.env, idleMs = IDLE_EXIT_MS, harnessPollMs = HARNESS_ID_POLL_MS, acpOptions = {}, terminalOptions = {}, relayOptions = {}, mcpServer = planeMcpServer()} = {}) {
   super();
   this.stateDir = resolve(stateDir);
   this.store = new RuntimeStore({stateDir: this.stateDir});
@@ -122,8 +129,15 @@ export class SessionRunner extends EventEmitter {
   this.mcpServer = {...mcpServer, args: [...(mcpServer.args || []), '--state-dir', this.stateDir]};
   this.hosts = new Map();this.clients = new Set();this.startedAt = Date.now();this.harnessSeq = 0;this.closing = false;
   this.idleTimer = null;this.harnessTimer = null;
-  this.methods = Object.fromEntries(METHODS.map(name => [name, (params, client) => this[name](params, client)]));
+  this.methods = Object.fromEntries([...METHODS, ...RELAY_METHODS].map(name => [name, (params, client) => this[name](params, client)]));
   this.server = createServer(socket => this.#accept(socket));
+  // A change of the relay availability reaches the subscribers as a new session state.
+  this.relays = new TerminalRelays({stateDir: this.stateDir, env, ...relayOptions, onChange: id => {
+   const host = this.hosts.get(id);
+   if (host && !this.closing) this.#push(host, 'state', host.view());
+  }});
+  // The runner stops ttyd when the session ends (Relay stop).
+  this.on('session-ended', id => {this.relays.stop(id);});
  }
 
  // Listens on runner.sock, then follows the terminal sessions that ran when the runner stopped.
@@ -145,7 +159,7 @@ export class SessionRunner extends EventEmitter {
   return this.closed = (async () => {
    for (const client of this.clients) client.socket.destroy();
    await new Promise(done => this.server.close(() => done()));
-   const stops = [];
+   const stops = [this.relays.close()];
    for (const host of this.hosts.values()) {
     if (host.adapter instanceof TerminalSession) host.adapter.stopWatching();
     else if (host.running) stops.push(host.adapter.end().catch(() => {}));
@@ -163,6 +177,7 @@ export class SessionRunner extends EventEmitter {
   socket.on('close', () => {
    this.clients.delete(client);
    for (const id of client.sessions) this.hosts.get(id)?.subscribers.delete(client);
+   this.relays.dropClient(client);
    this.#checkIdle();
   });
   readMessages(socket, message => this.#request(client, message));
@@ -212,7 +227,7 @@ export class SessionRunner extends EventEmitter {
  // A host for a stored session. A terminal session that has not ended gets its adapter with
  // the stored pane, tab and state; an ACP session of an earlier runner has no adapter.
  #load({attempt, ...record}) {
-  const host = new Host(record, {attempt});
+  const host = new Host(record, {attempt, relays: this.relays});
   if (!host.acp && record.state !== 'ended') host.adapter = this.#terminalAdapter(host);
   this.hosts.set(record.id, host);
   return host;
@@ -364,7 +379,7 @@ export class SessionRunner extends EventEmitter {
   const now = Date.now(), {id: profileId, harness, connection, signIn, model, reasoning = null} = profile;
   const record = {id, repository, worktree, role, artifact, change, task, branch, profile: {id: profileId, harness, connection, signIn, model, reasoning},
    reportedModel: null, harnessSession: null, pane: null, tab: null, baseRevision: base, state: 'starting', reason: null, startedAt: now, updatedAt: now, endedAt: null, respawnOf};
-  const host = new Host(record, {attempt, profile, programs, started: false});
+  const host = new Host(record, {attempt, profile, programs, started: false, relays: this.relays});
   // The adapter checks its own arguments before the record exists.
   host.adapter = connection === 'acp' ? this.#acpAdapter(host) : this.#terminalAdapter(host, label ?? [role, task ?? change].filter(Boolean).join(' '));
   this.hosts.set(id, host);
@@ -474,6 +489,23 @@ export class SessionRunner extends EventEmitter {
  }
  unsubscribe({session}, client) {
   this.hosts.get(session)?.subscribers.delete(client);client.sessions.delete(session);
+  return {};
+ }
+
+ // Embedded terminal. {socket}: the relay socket of a running terminal session. The first
+ // view starts ttyd; without ttyd, or when it does not start, the error has code `relay` and
+ // the reason, and the session continues in herdr.
+ async relay({session}) {
+  const host = this.#host(session);
+  if (host.acp) throw new RunnerError('not-terminal', 'The session has no terminal.', {session});
+  if (!host.running) throw new RunnerError('state', host.record.state === 'ended' ? 'The session has ended.' : 'The session is interrupted. Resume or respawn it.');
+  return {socket: await this.relays.ensure(host.record.id)};
+ }
+ // The number of open relay WebSockets of the calling server for one session. The runner
+ // stops ttyd 10 minutes after the last viewer of every server disconnects.
+ relayViewers({session, count}, client) {
+  if (typeof session !== 'string' || !SESSION_ID.test(session) || !Number.isInteger(count) || count < 0) throw new RunnerError('invalid', 'Send the session ID and the number of its open terminal viewers.');
+  this.relays.viewers(session, client, count);
   return {};
  }
 }

@@ -40,7 +40,8 @@ const delay = ms => new Promise(done => setTimeout(done, ms));
 // state, busy, unknown-request, unknown-option, program-missing (with `program`),
 // resume-unavailable, no-terminal-app, sign-in, start, resume, herdr (with `herdrCode`),
 // server-start, timeout, version (a different runner version), running (another runner
-// listens), unavailable (no runner in 3 seconds), runner-lost, store or internal.
+// listens), unavailable (no runner in 3 seconds), runner-lost, store, not-terminal (an ACP
+// session has no embedded terminal), relay (the terminal relay is unavailable) or internal.
 export class RunnerError extends Error {
  constructor(code, message, details = {}) {super(message);this.code = code;Object.assign(this, details);}
 }
@@ -48,7 +49,7 @@ export class RunnerError extends Error {
 // 409 refused or wrong state, 503 runner, herdr or program unavailable.
 export const ERROR_STATUS = {
  invalid: 400, 'unknown-method': 400, 'unknown-request': 400, 'unknown-option': 400, 'no-terminal-app': 400,
- 'unknown-session': 404,
+ 'unknown-session': 404, 'not-terminal': 404,
  state: 409, busy: 409, ended: 409, version: 409, 'resume-unavailable': 409,
 };
 export const errorStatus = code => ERROR_STATUS[code] ?? 503;
@@ -224,6 +225,10 @@ export class RunnerClient {
  openTerminal(session, open) {return this.call('openTerminal', {session, open});}
  // {seq, session, live}: live holds the last message and the pending requests of an ACP session.
  snapshot(session) {return this.call('snapshot', {session});}
+ // {socket}: the relay socket of a terminal session; the first call starts ttyd.
+ relay(session) {return this.call('relay', {session});}
+ // The number of open relay WebSockets of this server for the session.
+ relayViewers(session, count) {return this.call('relayViewers', {session, count});}
  // Calls listener with each pushed {event, session, seq, update} of the session: `state`
  // (the session), `live` (the live state) and `lifecycle` (one lifecycle event). After a
  // runner loss, the listener gets {event: 'runner-lost'} and no more events. A stream

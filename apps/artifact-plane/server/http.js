@@ -1,4 +1,4 @@
-import { createServer } from "node:http";
+import { createServer, STATUS_CODES } from "node:http";
 import { readFile, realpath } from "node:fs/promises";
 import { existsSync, realpathSync } from "node:fs";
 import { resolve, relative, isAbsolute, sep, extname, dirname, join } from "node:path";
@@ -16,7 +16,8 @@ import {createKnowledgeService} from './knowledge-operations.js';
 import {knowledgeGit} from './knowledge-git.js';
 import {errorBody as editError} from './knowledge-writer.js';
 import {createSettingsService, SettingsError} from './agent-settings.js';
-import {createRunnerClient} from './runner-client.js';
+import {createRunnerClient, errorStatus, RunnerError} from './runner-client.js';
+import {forwardRelayRequest, forwardRelayUpgrade, relayRoute, RELAY_SILENT} from './terminal-relay.js';
 import pkg from "../package.json" with { type: "json" };
 // A bundled server.mjs has dist/ beside it; a source checkout has it beside server/.
 export const distDirectory = (directory) => existsSync(join(directory, "dist")) ? join(directory, "dist") : resolve(directory, "../dist");
@@ -30,21 +31,31 @@ const mime = {
   ".svg": "image/svg+xml",
   ".woff2": "font/woff2",
 };
+// The workbench policy frames only pages of its own origin: the embedded terminal.
 const security = {
   "Content-Security-Policy":
-    "default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline'; img-src 'self' data:; connect-src 'self'; object-src 'none'; base-uri 'none'; frame-ancestors 'none'",
+    "default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline'; img-src 'self' data:; connect-src 'self'; frame-src 'self'; object-src 'none'; base-uri 'none'; frame-ancestors 'none'",
   "X-Content-Type-Options": "nosniff",
   "Referrer-Policy": "no-referrer",
   "Cache-Control": "no-store",
 };
+// Responses of the terminal relay route: only a workbench page of this origin can frame them,
+// and the ttyd page keeps its own scripts (specifications/agent-orchestration.md: Embedded terminal).
+const relaySecurity = {...security, "Content-Security-Policy": "frame-ancestors 'self'"};
 // Serialize first: a reply that cannot be serialized fails before its headers are sent.
-function json(res, status, data) {
+function json(res, status, data, headers = security) {
   const body = JSON.stringify(data);
   res.writeHead(status, {
-    ...security,
+    ...headers,
     "Content-Type": "application/json; charset=utf-8",
   });
   res.end(body);
+}
+// The JSON error reply to a refused WebSocket upgrade, on the raw socket.
+function refuseUpgrade(socket, status, error, headers = security) {
+  const body = JSON.stringify({error});
+  const fields = {...headers, "Content-Type": "application/json; charset=utf-8", "Content-Length": Buffer.byteLength(body), Connection: "close"};
+  socket.end(`HTTP/1.1 ${status} ${STATUS_CODES[status]}\r\n${Object.entries(fields).map(([name, value]) => `${name}: ${value}`).join("\r\n")}\r\n\r\n${body}`);
 }
 export function createAppServer(options = {}) {
   const runtime = runtimeService(options);
@@ -66,6 +77,17 @@ export function createAppServer(options = {}) {
   const getRunner=()=>runner??=createRunnerClient({stateDir:options.stateDir});
   const getSettings=()=>settings??=createSettingsService({stateDir:options.stateDir,configDir:options.configDir,roots:options.flowRoots||[],runner:()=>getRunner().availability()});
   const observation=options.repositoryObservation||{};
+  // The open relay WebSockets of each session. The runner stops ttyd 10 minutes after the count
+  // of every server reaches 0; it forgets the count of a server whose connection closes.
+  const viewers=new Map(),relaySockets=new Set();
+  const countViewer=(session,change)=>{
+    const count=(viewers.get(session)??0)+change;
+    if(count)viewers.set(session,count);else viewers.delete(session);
+    const client=getRunner();
+    if(client.connected)client.call('relayViewers',{session,count}).catch(()=>{});
+  };
+  // The relay socket of a running terminal session; the runner starts ttyd on the first view.
+  const relaySocketOf=async session=>(await getRunner().call('relay',{session})).socket;
   const repositories=repositoryService({...observation,sample:async(root,settings)=>{const base=observation.sample?await observation.sample(root,settings):await settings.base(settings);return registeredSourceFingerprint(root,base,[...(flows?.observedSources(root)||[]),...(reviews?.observedSources(root)||[])],settings);}});
   const server = createServer(async (req, res) => {
     try {
@@ -81,6 +103,18 @@ export function createAppServer(options = {}) {
       if (url.pathname === "/api/plane") {
         if (req.method !== "GET") return json(res, 405, {error: "Use GET for the identity."});
         return json(res, 200, {name: "artifact-plane", version: pkg.version});
+      }
+      // The embedded terminal: ttyd pages forwarded to the relay socket (Embedded terminal).
+      const relaySession = relayRoute(url.pathname);
+      if (relaySession !== undefined) {
+        if (req.method !== "GET") return json(res, 405, {error: "Use GET for the terminal."}, relaySecurity);
+        if (relaySession === null) return json(res, 404, {error: "The session is unknown."}, relaySecurity);
+        let socket;
+        try {socket = await relaySocketOf(relaySession);}
+        catch (error) {if (error instanceof RunnerError) return json(res, errorStatus(error.code), {error: error.message}, relaySecurity);throw error;}
+        try {await forwardRelayRequest(req, res, socket, relaySecurity);}
+        catch {return json(res, 503, {error: RELAY_SILENT}, relaySecurity);}
+        return;
       }
       if(url.pathname==='/api/repository/events'){
         if(req.method!=='GET')return json(res,405,{error:'Use GET for events.'});
@@ -182,8 +216,29 @@ export function createAppServer(options = {}) {
       });
     }
   });
+  // The WebSocket of the embedded terminal. An upgrade needs the workbench Host and an Origin
+  // equal to the workbench origin; ttyd closes a WebSocket whose Origin differs from Host.
+  server.on("upgrade", async (req, socket, head) => {
+    socket.on("error", () => {});
+    try {
+      const host = `127.0.0.1:${socket.localPort}`;
+      if (req.headers.host !== host || req.headers.origin !== `http://${host}` || req.headers["sec-fetch-site"] === "cross-site")
+        return refuseUpgrade(socket, 403, "Use the local application origin.");
+      const session = relayRoute(new URL(req.url, `http://${host}`).pathname);
+      if (session === undefined || req.method !== "GET") return refuseUpgrade(socket, 404, "Not found.");
+      if (session === null) return refuseUpgrade(socket, 404, "The session is unknown.", relaySecurity);
+      const path = await relaySocketOf(session);
+      if (socket.destroyed) return;
+      await forwardRelayUpgrade(req, socket, head, path, {
+        open: () => {relaySockets.add(socket);countViewer(session, 1);},
+        close: () => {relaySockets.delete(socket);countViewer(session, -1);},
+      });
+    } catch (error) {
+      if (!socket.destroyed) refuseUpgrade(socket, error instanceof RunnerError ? errorStatus(error.code) : 503, error instanceof RunnerError ? error.message : RELAY_SILENT, relaySecurity);
+    }
+  });
   const close=server.close.bind(server);
-  server.close=(...args)=>{runtime.close();repositories.close();flows?.close();if(!options.impactService)impact?.close();if(!options.runnerClient)runner?.close();return close(...args);};
+  server.close=(...args)=>{for(const socket of relaySockets)socket.destroy();runtime.close();repositories.close();flows?.close();if(!options.impactService)impact?.close();if(!options.runnerClient)runner?.close();return close(...args);};
   server.runner=getRunner;
   server.runtime = runtime;
   server.repositories=repositories;
