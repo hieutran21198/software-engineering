@@ -98,7 +98,7 @@ export function createAppServer(options = {}) {
         try {return json(res, 200, url.pathname === "/api/knowledge/edit" ? await getKnowledge().apply(body) : await knowledgeGit(body));}
         catch (error) {const {status, body: payload} = editError(error);return json(res, status, payload);}
       }
-      if (["/api/explore", "/api/runtime/query", "/api/repository/query", "/api/flows/query", "/api/review/query", "/api/impact/query", "/api/settings/query", "/api/settings/save"].includes(url.pathname)) {
+      if (["/api/explore", "/api/runtime/query", "/api/repository/query", "/api/flows/query", "/api/review/query", "/api/impact/query", "/api/settings/query", "/api/settings/save", "/api/settings/check"].includes(url.pathname)) {
         if (req.method !== "POST")
           return json(res, 405, { error: "Use POST to explore a repository." });
         if (
@@ -124,8 +124,8 @@ export function createAppServer(options = {}) {
           if (typeof body?.path !== "string" || !body.path || body.context !== undefined && typeof body.context !== "string") return json(res, 400, {error: "Supply a repository path and optional context ID."});
           return json(res, 200, runtime.query(body.path, body.context));
         }
-        if(url.pathname==='/api/settings/query'||url.pathname==='/api/settings/save'){
-          try{return json(res,200,url.pathname==='/api/settings/query'?await getSettings().query(body):getSettings().save(body));}
+        if(url.pathname.startsWith('/api/settings/')){
+          try{const service=getSettings();return json(res,200,url.pathname==='/api/settings/query'?await service.query(body):url.pathname==='/api/settings/save'?service.save(body):await service.check(body));}
           catch(error){if(error instanceof SettingsError)return json(res,error.status,{...error.body,error:error.message});throw error;}
         }
         if(url.pathname==='/api/review/query')return json(res,200,await getReviews().query(body));

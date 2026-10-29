@@ -6,10 +6,11 @@ import {execFileSync} from 'node:child_process';
 import {randomBytes} from 'node:crypto';
 import {closeSync, constants, existsSync, fstatSync, fsyncSync, mkdirSync, openSync, readFileSync, realpathSync, renameSync, rmSync, writeSync} from 'node:fs';
 import {homedir} from 'node:os';
-import {dirname, isAbsolute, join, relative, resolve, sep} from 'node:path';
+import {basename, dirname, isAbsolute, join, relative, resolve, sep} from 'node:path';
 import {isDeepStrictEqual} from 'node:util';
 import {defaultStateDir, digest} from './runtime-store.js';
 import {CATALOG, CLAUDE_TERMINAL_MODELS, CONNECTIONS, HARNESSES, VERSION_LIMIT_MS, bypassArgument, profileCommand, readPrograms} from './provider-catalog.js';
+import {ProviderCheckError, checkProvider} from './provider-check.js';
 
 export const ROLES = ['coordinator', 'product-owner', 'technical-lead', 'implementer'];
 export const SIGN_INS = ['plan', 'api-key', 'harness'];
@@ -193,21 +194,33 @@ export function validateSettings(settings, {providers = {}, programs = {}, curre
 }
 const firstReason = v => v.errors[0] || v.profiles.find(p => !p.valid)?.reasons[0] || Object.values(v.roleDefaults).find(r => !r.valid)?.reason;
 
-// A temporary file with mode 0600 in the same directory, renamed over the settings file.
-function writeSettings(path, settings) {
+// Writes the bytes to a temporary file with mode 0600 in the same directory and renames
+// it over the file. A missing directory gets mode 0700.
+export function writePrivateFile(path, bytes) {
  mkdirSync(dirname(path), {recursive: true, mode: 0o700});
- const bytes = Buffer.from(JSON.stringify(settings, null, 2) + '\n'), temp = join(dirname(path), `.profiles.json.${randomBytes(6).toString('hex')}.tmp`);
+ const temp = join(dirname(path), `.${basename(path)}.${randomBytes(6).toString('hex')}.tmp`);
  try {
   const fd = openSync(temp, 'wx', 0o600);
   try {writeSync(fd, bytes);fsyncSync(fd);} finally {closeSync(fd);}
   renameSync(temp, path);
  } catch (error) {rmSync(temp, {force: true});throw error;}
+}
+function writeSettings(path, settings) {
+ const bytes = Buffer.from(JSON.stringify(settings, null, 2) + '\n');
+ writePrivateFile(path, bytes);
  return digest(bytes);
 }
+// Replaces the check of one provider in providers.json and keeps the other valid checks.
+// Synchronous from the read to the rename, so two checks of this server never interleave.
+export function writeProviderRecord(stateDir, harness, record) {
+ const providers = {...readProviders(stateDir), [harness]: record};
+ writePrivateFile(providersPath(stateDir), Buffer.from(JSON.stringify({version: 1, providers}, null, 2) + '\n'));
+}
 
-// The routes /api/settings/query and /api/settings/save (Commands). `runner` returns the
-// runner availability; the runner task supplies it, and the query gives null until then.
-export function createSettingsService({configDir, stateDir = defaultStateDir(), roots = [], env = process.env, timeoutMs = VERSION_LIMIT_MS, runner = null} = {}) {
+// The routes /api/settings/query, /api/settings/save and /api/settings/check (Commands).
+// `runner` returns the runner availability; the runner task supplies it, and the query
+// gives null until then. `checkLimits` replaces the provider check limits in tests.
+export function createSettingsService({configDir, stateDir = defaultStateDir(), roots = [], env = process.env, timeoutMs = VERSION_LIMIT_MS, runner = null, checkLimits = {}} = {}) {
  const path = configDir ? join(resolve(configDir), 'profiles.json') : settingsPath(env);
  return {
   path,
@@ -238,6 +251,21 @@ export function createSettingsService({configDir, stateDir = defaultStateDir(), 
    let digest;
    try {digest = writeSettings(path, body.settings);} catch {throw new SettingsError(500, 'Plane could not write the settings file.');}
    return {path, digest, validity};
+  },
+  // The route /api/settings/check (Provider check). It writes the result of a completed
+  // check to providers.json; a missing program returns 503 and a failed check 502.
+  async check(body) {
+   if (!plain(body) || Object.keys(body).some(k => k !== 'harness') || !HARNESSES.includes(body.harness))
+    throw new SettingsError(400, `Send the harness of a catalog provider: ${HARNESSES.join(', ')}.`);
+   const harness = body.harness, entry = CATALOG[harness].acp, {programs, opencode} = await readPrograms({env, timeoutMs});
+   const name = entry.program === 'opencode' ? opencode : entry.program, program = name ? programs[name] : null;
+   if (!program?.path) throw new SettingsError(503, `${entry.program} is not on PATH.`);
+   let result;
+   try {result = await checkProvider({harness, command: [program.path, ...entry.args], stateDir, env, ...checkLimits});}
+   catch (error) {if (error instanceof ProviderCheckError) throw new SettingsError(502, error.message);throw error;}
+   const record = providerRecord({program: name, programVersion: program.version, checkedAt: new Date().toISOString(), ...result});
+   try {writeProviderRecord(stateDir, harness, record);} catch {throw new SettingsError(500, 'Plane could not write providers.json.');}
+   return {harness, check: record, stale: false};
   },
  };
 }

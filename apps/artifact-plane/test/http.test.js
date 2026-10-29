@@ -3,10 +3,11 @@ import assert from "node:assert/strict";
 import { request as httpRequest } from "node:http";
 import { createAppServer } from "../server/http.js";
 import { fixtureRepository } from "./fixtures.js";
-import { mkdtemp, readdir, rm } from "node:fs/promises";
+import { chmod, mkdir, mkdtemp, readdir, rm, stat, writeFile } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
-import { createSettingsService } from "../server/agent-settings.js";
+import { fileURLToPath } from "node:url";
+import { createSettingsService, readProviders } from "../server/agent-settings.js";
 
 test("local API response contract and validation reject hostile or malformed requests", async (t) => {
   const fixture = await fixtureRepository();
@@ -239,4 +240,44 @@ test("the settings routes query and save under the loopback, Host, Origin, JSON 
   }
   assert.equal((await post("/api/settings/query", {})).body.digest, saved.body.digest, "a refused request changes nothing");
   assert.deepEqual(await readdir(config), ["profiles.json"]);
+});
+
+// specifications/agent-orchestration.md: Commands, Provider check.
+test("the settings check route runs a provider check under the loopback, Host, Origin, JSON and size checks", async (t) => {
+  const dir = await mkdtemp(join(tmpdir(), "settings-check-http-")), bin = join(dir, "bin"), state = join(dir, "state");
+  t.after(() => rm(dir, {recursive: true, force: true}));
+  await mkdir(bin);
+  const fake = fileURLToPath(new URL("./fixtures/fake-acp-agent.mjs", import.meta.url));
+  const config = JSON.stringify({version: 2, models: [{id: "gpt-6", levels: ["low", "high"]}]});
+  await writeFile(join(bin, "codex-acp"), `#!/bin/sh\nif [ "$1" = --version ]; then echo "codex-acp 2.3.0"; exit 0; fi\nexec '${process.execPath}' '${fake}' "$@"\n`);
+  await chmod(join(bin, "codex-acp"), 0o755);
+  const settingsService = createSettingsService({configDir: join(dir, "config"), stateDir: state, env: {PATH: bin, FAKE_ACP_CONFIG: config}});
+  const server = createAppServer({settingsService});
+  await new Promise((resolve) => server.listen(0, "127.0.0.1", resolve));
+  t.after(() => new Promise((resolve) => server.close(resolve)));
+  const base = `http://127.0.0.1:${server.address().port}`;
+  const post = async (body, headers = {}) => {
+    const response = await fetch(base + "/api/settings/check", {method: "POST", headers: {"Content-Type": "application/json", ...headers}, body: typeof body === "string" ? body : JSON.stringify(body)});
+    return {status: response.status, body: await response.json()};
+  };
+  const checked = await post({harness: "codex"});
+  assert.equal(checked.status, 200);
+  assert.deepEqual([checked.body.harness, checked.body.check.program, checked.body.check.programVersion, checked.body.check.models], ["codex", "codex-acp", "2.3.0", [{id: "gpt-6", name: "gpt-6", levels: ["low", "high"]}]]);
+  assert.deepEqual(readProviders(state).codex, checked.body.check);
+  assert.equal((await stat(join(state, "providers.json"))).mode & 0o777, 0o600);
+  assert.equal((await post({harness: "unknown"})).status, 400);
+  const missing = await post({harness: "gemini-cli"});
+  assert.deepEqual([missing.status, missing.body.error], [503, "gemini is not on PATH."]);
+  const raw = (headers) => new Promise((resolve, reject) => {
+    const req = httpRequest(base + "/api/settings/check", {method: "POST", headers: {"Content-Type": "application/json", ...headers}}, (res) => {res.resume();resolve(res.statusCode);});
+    req.on("error", reject);req.end(JSON.stringify({harness: "codex"}));
+  });
+  assert.equal((await post({harness: "codex"}, {Origin: "https://foreign.example"})).status, 403);
+  assert.equal(await raw({Host: "foreign.example"}), 403);
+  assert.equal((await post({harness: "codex"}, {"Sec-Fetch-Site": "cross-site"})).status, 403);
+  assert.equal((await post(JSON.stringify({harness: "codex"}), {"Content-Type": "text/plain"})).status, 415);
+  assert.equal((await post(JSON.stringify({harness: "x".repeat(17000)}))).status, 413);
+  assert.equal((await post("{")).status, 400);
+  assert.equal((await fetch(base + "/api/settings/check")).status, 405);
+  assert.deepEqual(await readdir(state), ["providers.json"], "the refused requests start no check");
 });
