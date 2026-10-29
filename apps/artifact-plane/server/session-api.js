@@ -131,10 +131,17 @@ export class SessionService {
   try {return await this.runner()[method](...args);} catch (error) {throw failure(error);}
  }
 
+ // The number of profiles in the settings file, read without the program versions of the
+ // settings query. With 0, the workbench shows no session control (requirement AO18).
+ #profileCount() {
+  const file = readSettings({path: this.settingsFile(), roots: this.roots});
+  return !file.refused && Array.isArray(file.settings?.profiles) ? file.settings.profiles.length : 0;
+ }
  // POST /api/sessions/query {path}: the sessions of the repository of the worktree, newest
- // first, with their attempts. The runner view gives the state, `relay` and `live` of each
- // session that has not ended. The query does not start a runner; its server check marks the
- // ACP sessions of a lost runner as interrupted.
+ // first, with their attempts, and `profiles`, the number of profiles of the settings file.
+ // The runner view gives the state, `relay` and `live` of each session that has not ended. The
+ // query does not start a runner; its server check marks the ACP sessions of a lost runner as
+ // interrupted.
  async query(body) {
   fields(body, ['path'], 'Send {path}: an absolute worktree path.');
   if (typeof body.path !== 'string') throw new SessionError(400, 'Send {path}: an absolute worktree path.');
@@ -143,7 +150,8 @@ export class SessionService {
   const runner = this.runner();
   try {await runner.check();} catch {/* the stored records stay; a session command shows the reason */}
   const store = this.#open(), repository = store?.repository(root) ?? null;
-  if (!repository) return {repository: null, sessions: []};
+  const profiles = this.#profileCount();
+  if (!repository) return {repository: null, sessions: [], profiles};
   const sessions = await Promise.all(store.sessions({repository: repository.id}).map(async record => {
    if (runner.connected && record.state !== 'ended') {
     try {const {session, live} = await runner.snapshot(record.id);return this.#present(store, session, {live});}
@@ -151,7 +159,7 @@ export class SessionService {
    }
    return this.#present(store, record, {live: null});
   }));
-  return {repository: repository.id, sessions};
+  return {repository: repository.id, sessions, profiles};
  }
 
  // POST /api/sessions/start: start rules 1 to 8 in order, then the explicit binding of an

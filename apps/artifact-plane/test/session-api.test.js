@@ -7,12 +7,13 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import {existsSync, readFileSync} from 'node:fs';
-import {chmod, mkdir, mkdtemp, readFile, realpath, rm, writeFile} from 'node:fs/promises';
+import {chmod, mkdir, mkdtemp, readFile, realpath, rename, rm, writeFile} from 'node:fs/promises';
 import {request as httpRequest} from 'node:http';
 import {tmpdir} from 'node:os';
 import {join} from 'node:path';
 import {fileURLToPath} from 'node:url';
 import pkg from '../package.json' with {type: 'json'};
+import {recordHarnessId} from '../server/agent-hook.js';
 import {createAppServer} from '../server/http.js';
 import {RunnerClient, RunnerError} from '../server/runner-client.js';
 import {RuntimeStore} from '../server/runtime-store.js';
@@ -403,9 +404,18 @@ test('the query merges the store records with the runner views and names the too
  const fresh = await mkdtemp(join(tmpdir(), 'ap-'));
  t.after(() => rm(fresh, {recursive: true, force: true}));
  const empty = createSessionService({stateDir: join(fresh, 'state'), settingsFile: () => join(f.config, 'profiles.json'), runner: () => new FakeRunner(null)});
- assert.deepEqual(await empty.query({path: f.worktree}), {repository: null, sessions: []});
+ // `profiles` counts the profiles of the settings file without the program versions (AO18).
+ assert.deepEqual(await empty.query({path: f.worktree}), {repository: null, sessions: [], profiles: SETTINGS.profiles.length});
  assert.equal(existsSync(join(fresh, 'state')), false);
  empty.close();
+ for (const [content, mode, count] of [[null, 0o600, 0], ['{', 0o600, 0], [JSON.stringify({version: 1}), 0o600, 0], [JSON.stringify(SETTINGS), 0o666, 0]]) {
+  const config = join(fresh, 'config'), file = join(config, 'profiles.json');
+  await rm(config, {recursive: true, force: true});await mkdir(config, {mode: 0o700});
+  if (content !== null) {await writeFile(file, content);await chmod(file, mode);}
+  const service = createSessionService({stateDir: join(fresh, 'state'), settingsFile: () => file, runner: () => new FakeRunner(null)});
+  assert.equal((await service.query({path: f.worktree})).profiles, count, `${content} ${mode.toString(8)}`);
+  service.close();
+ }
  const acp = (await f.implementer()).body.session;
  const terminal = (await f.start({path: f.worktree, role: 'coordinator', profile: 'claude-terminal', request: 'Plan.'})).body.session;
  // Without a runner, the query returns the stored records and starts no runner.
@@ -422,24 +432,34 @@ test('the query merges the store records with the runner views and names the too
  const [qTerminal, qAcp] = query.body.sessions;
  assert.deepEqual([qAcp.state, qAcp.live.lastMessage, qAcp.waitingTool, qTerminal.relay, qTerminal.hosted], ['waiting', 'Done.', null, {available: false, reason: 'The program ttyd is missing.'}, true]);
  assert.equal(qAcp.attempt.binding, 'explicit');
- // A waiting terminal session: the tool of the newest PermissionRequest of its harness session after it became waiting.
+ // A waiting terminal session: the tool of the newest PermissionRequest of its harness session
+ // after the previous state change of the session (fourth amendment). The hook runs before
+ // herdr reports `blocked`.
  const stored = f.store.session(terminal.id);
  f.store.recordSession({...stored, harnessSession: 'h-1'}, {});
  const hook = (session, tool, kind = 'PermissionRequest') => f.store.observe({session_id: session, hook_event_name: kind, turn_id: 't1', cwd: f.worktree, tool_name: tool});
  const toolOf = async () => (await f.post('/api/sessions/query', {path: f.worktree})).body.sessions.find(s => s.id === terminal.id).waitingTool;
+ hook('h-1', 'Glob');
+ f.store.recordSession({...stored, harnessSession: 'h-1', state: 'working'}, {events: [{kind: 'session:working'}]});
  hook('h-1', 'Read');
  f.store.recordSession({...stored, harnessSession: 'h-1', state: 'waiting'}, {events: [{kind: 'session:waiting'}]});
  f.runner.views.delete(terminal.id);
- assert.equal(await toolOf(), null, 'a request before the session became waiting');
+ assert.equal(await toolOf(), 'Read', 'a request after the previous state change and before the session became waiting');
  hook('h-1', 'Bash');hook('h-2', 'Write');
  assert.equal(await toolOf(), 'Bash');
  hook('h-1', 'Edit');
  assert.equal(await toolOf(), 'Edit');
- // A later wait needs a request after it.
+ // A later wait needs a request after the state change before it.
  f.store.recordSession({...stored, harnessSession: 'h-1', state: 'working'}, {events: [{kind: 'session:working'}]});
  assert.equal(await toolOf(), null, 'no tool name for a session that does not wait');
  f.store.recordSession({...stored, harnessSession: 'h-1', state: 'waiting'}, {events: [{kind: 'session:waiting'}]});
- assert.equal(await toolOf(), null);
+ assert.equal(await toolOf(), null, 'the requests before the previous state change do not count');
+ // Other events of the session are not state changes: an output notice keeps the bound.
+ f.store.recordSession({...stored, harnessSession: 'h-1', state: 'working'}, {events: [{kind: 'session:working'}]});
+ hook('h-1', 'WebFetch');
+ f.store.recordSession({...stored, harnessSession: 'h-1', state: 'working'}, {events: [{kind: 'session:output-changed'}]});
+ f.store.recordSession({...stored, harnessSession: 'h-1', state: 'waiting'}, {events: [{kind: 'session:waiting'}]});
+ assert.equal(await toolOf(), 'WebFetch');
  // Input errors.
  for (const body of [{}, {path: 3}, {path: f.worktree, other: 1}, {path: '/nonexistent'}, {path: join(f.worktree, 'docs')}]) assert.equal((await f.post('/api/sessions/query', body)).status, 400, JSON.stringify(body));
 });
@@ -668,4 +688,45 @@ test('with a real runner: a coordinator start keeps no request text, an implemen
  assert.deepEqual(store.db.prepare("SELECT kind FROM events WHERE kind LIKE 'report:%'").all(), []);
  assert.ok(store.db.prepare('SELECT json FROM attempts').all().every(row => JSON.parse(row.json).state !== 'done'));
  assert.ok(!f.storeBytes().includes(MARK), 'the runtime store holds no request text after the end');
+});
+
+test('with a real runner: a PermissionRequest hook observation before herdr reports blocked names the tool of the waiting terminal session (fourth amendment)', {skip}, async t => {
+ const f = await realSetup(t);
+ await writeFile(join(f.config, 'profiles.json'), JSON.stringify({version: 1, profiles: [CLAUDE]}), {mode: 0o600});
+ const started = await f.post('/api/sessions/start', {path: f.root, role: 'coordinator', profile: 'claude-terminal', request: 'Plan the report.'});
+ assert.equal(started.status, 200, JSON.stringify(started.body));
+ const id = started.body.session.id, store = new RuntimeStore({stateDir: f.stateDir});
+ t.after(() => store.close());
+ const setStatus = async status => {
+  const value = f.herdrState();
+  for (const pane of value.sessions[`plane-${id}`].panes) pane.agent_status = status;
+  await writeFile(join(f.herdr, 'state.tmp'), JSON.stringify(value));await rename(join(f.herdr, 'state.tmp'), join(f.herdr, 'state.json'));
+ };
+ const view = async () => (await f.post('/api/sessions/query', {path: f.root})).body.sessions.find(s => s.id === id);
+ const hook = tool => store.observe({session_id: 'harness-7f3c', hook_event_name: 'PermissionRequest', turn_id: 't1', cwd: f.root, tool_name: tool});
+ // The SessionStart hook gives the harness session ID; the runner copies it.
+ recordHarnessId({session_id: 'harness-7f3c', model: 'opus'}, store, id);
+ await waitFor(async () => (await view()).harnessSession === 'harness-7f3c');
+ await setStatus('working');
+ await waitFor(async () => (await view()).state === 'working');
+ const stream = await openStream(f.base, id);
+ t.after(() => stream.close());
+ await waitFor(() => stream.of('snapshot').length);
+ // Claude Code runs the PermissionRequest hook, then herdr reports blocked.
+ hook('Bash');
+ await setStatus('blocked');
+ await waitFor(async () => (await view()).state === 'waiting');
+ assert.equal((await view()).waitingTool, 'Bash');
+ await waitFor(() => stream.of('state').some(e => e.data.session.state === 'waiting'));
+ assert.equal(stream.of('state').find(e => e.data.session.state === 'waiting').data.session.waitingTool, 'Bash', 'the stream names the tool');
+ // The next turn: the earlier request does not name a later wait.
+ await setStatus('working');
+ await waitFor(async () => (await view()).state === 'working');
+ assert.equal((await view()).waitingTool, null);
+ await setStatus('blocked');
+ await waitFor(async () => (await view()).state === 'waiting');
+ assert.equal((await view()).waitingTool, null, 'without a new request, the notice has the general text');
+ hook('Edit');
+ assert.equal((await view()).waitingTool, 'Edit');
+ assert.equal((await f.post('/api/sessions/end', {session: id})).body.session.state, 'ended');
 });

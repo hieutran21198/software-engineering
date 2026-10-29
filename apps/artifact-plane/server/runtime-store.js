@@ -10,6 +10,10 @@ import { unitBriefs } from './units-of-work.js';
 import { isCurrent } from '../src/work-model.js';
 
 export const FRESHNESS_MS = 10 * 60 * 1000;
+// The lifecycle events of specifications/agent-orchestration.md that change a session state
+// (States). `session:harness-id` and `session:output-changed` change no state.
+const STATE_EVENTS = ['session:started','session:prompted','session:permission-requested','session:permission-answered','session:turn-ended',
+ 'session:waiting','session:working','session:idle','session:interrupted','session:resumed','session:ended'];
 const terminal = new Set(['done','failed','interrupted','superseded']);
 const safeName = v => typeof v === 'string' && /^[a-z0-9][a-z0-9-]*$/.test(v);
 const label = v => typeof v === 'string' ? v.replace(/[\x00-\x1f\x7f]/g,'').trim().slice(0,160) : null;
@@ -238,12 +242,15 @@ export class RuntimeStore {
   return a;
  }
  // The tool name of the newest PermissionRequest hook observation of the harness session after
- // the newest `session:waiting` event of the Plane session, or null (Workbench).
+ // the previous state change of the Plane session, or null (Workbench). The hook runs before
+ // herdr reports `blocked`, so the bound is the newest state event before the newest
+ // `session:waiting` event, not the waiting event itself.
  waitingTool(session,harnessSession){
   if(!this.db||!harnessSession)return null;
   const waiting=this.db.prepare("SELECT max(seq) AS seq FROM events WHERE session=? AND kind='session:waiting'").get(session)?.seq;
   if(waiting===null||waiting===undefined)return null;
-  const row=this.db.prepare("SELECT json FROM events WHERE seq>? AND session=? AND kind='PermissionRequest' ORDER BY seq DESC LIMIT 1").get(waiting,label(harnessSession));
+  const previous=this.db.prepare(`SELECT max(seq) AS seq FROM events WHERE session=? AND seq<? AND kind IN (${STATE_EVENTS.map(()=>'?').join(',')})`).get(session,waiting,...STATE_EVENTS)?.seq??0;
+  const row=this.db.prepare("SELECT json FROM events WHERE seq>? AND session=? AND kind='PermissionRequest' ORDER BY seq DESC LIMIT 1").get(previous,label(harnessSession));
   return row?JSON.parse(row.json).tool||null:null;
  }
  // The sequence number of the newest PostToolUse hook observation of the harness session after
