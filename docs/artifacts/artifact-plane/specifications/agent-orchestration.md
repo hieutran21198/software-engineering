@@ -30,13 +30,27 @@ claims:
     basis: documented
     check: With only a Claude plan sign-in on the machine, start the Claude ACP agent with `--hide-claude-auth` and record whether `session/new` returns an authentication error.
     risk_if_wrong: A Claude ACP profile can use a plan sign-in, against requirement AO17.
+  - id: terminal-model-flags
+    kind: unknown
+    statement: The model flags of the terminal programs of Codex, OpenCode, Command Code and Gemini CLI in the provider catalog are not checked.
+    status: open
+    basis: inferred
+    check: Run each terminal program with its model flag and a short initial prompt in a disposable clone, and record the model that the program reports.
+    risk_if_wrong: A terminal profile starts with another model than the profile names.
+  - id: provider-check-history
+    kind: risk
+    statement: A provider check opens a session without a prompt, and some harness tools keep that empty session in their history.
+    status: open
+    basis: inferred
+    check: Check each provider once, then list the sessions of each harness tool and record whether an empty session appears.
+    risk_if_wrong: The history of a harness tool shows empty sessions from Plane checks.
 ---
 
 # Agent orchestration contract
 
 ## Components
 
-This contract implements requirements/agent-orchestration.md. The decisions are [ADR 018](../decisions/018-agent-session-adapters.md) and [ADR 019](../decisions/019-session-runner-process.md).
+This contract implements requirements/agent-orchestration.md. The decisions are [ADR 018](../decisions/018-agent-session-adapters.md), [ADR 019](../decisions/019-session-runner-process.md) and [ADR 020](../decisions/020-profile-editing-catalog.md).
 
 | Component | Process | Responsibility |
 | --- | --- | --- |
@@ -47,6 +61,7 @@ This contract implements requirements/agent-orchestration.md. The decisions are 
 | Terminal adapter | runner | Starts and follows one herdr pane for each session. |
 | Runtime store | file | Keeps sessions, attempts and lifecycle events. It is the existing store of specifications/codex-execution.md. |
 | Output reader | `artifact-plane serve` | Reads the output of a session from Git in its worktree. |
+| Settings service | `artifact-plane serve` | Reads and writes the settings file and checks providers. |
 | Workbench | browser | Shows tasks, sessions, output, permission requests and launch controls. |
 
 Plane routes no model traffic. Each harness tool signs in with its own stored sign-in. Plane never reads, stores, forwards or asks for a credential.
@@ -57,30 +72,29 @@ Plane routes no model traffic. Each harness tool signs in with its own stored si
 | --- | --- |
 | Session | One agent conversation that Plane started for one role. It has a Plane session ID and, after start, a harness session ID. |
 | Attempt | The existing runtime attempt that binds an implementer session to one task. Other roles have sessions without attempts. |
-| Launch profile | A personal setting that names a harness tool, a connection kind, a sign-in kind, a model and a command. |
+| Provider | A supported harness tool and its programs in the provider catalog. |
+| Launch profile | A personal setting that names a provider, a connection kind, a sign-in kind, a model and optional extra arguments. |
+| Role default | The profile that the launch dialog selects for an ADD role. |
 | Connection kind | `acp` for an ACP agent, or `terminal` for a herdr pane that a person drives. |
 | Live state | The last agent message of the latest turn and the pending permission requests of a session. The runner keeps it in memory only. |
 | Base revision | The `HEAD` commit of the session worktree when the session started. A respawn keeps the base revision of the earlier session. |
 | Output | The commits after the base revision and the files that differ from it, committed or not. |
 
-## Launch profiles
+## Settings and launch profiles
 
-Plane reads `profiles.json` from `ARTIFACT_PLANE_CONFIG_DIR` when it is set. Otherwise it reads `$XDG_CONFIG_HOME/artifact-plane/profiles.json`, or `~/.config/artifact-plane/profiles.json`. Plane refuses the file when it is inside an inspected repository or worktree, when it is a symbolic link, or when group or other users can write it. Plane only reads the file; the person edits it.
+The settings file is `profiles.json` in `ARTIFACT_PLANE_CONFIG_DIR` when it is set, otherwise in `$XDG_CONFIG_HOME/artifact-plane/` or `~/.config/artifact-plane/`. Plane refuses the file when it is inside an inspected repository or worktree, when it is a symbolic link, or when group or other users can write it. The person edits it in the workbench or by hand.
 
 ```json
 {
   "version": 1,
   "terminal": { "open": ["ghostty", "-e", "herdr"] },
+  "roleDefaults": { "coordinator": "claude-opus-terminal", "product-owner": "claude-opus-terminal",
+    "technical-lead": "claude-opus-terminal", "implementer": "codex-fast" },
   "profiles": [
     { "id": "claude-opus-terminal", "label": "Claude Opus (terminal)", "harness": "claude-code",
-      "connection": "terminal", "signIn": "plan", "model": "opus",
-      "command": ["claude", "--model", "opus"] },
+      "connection": "terminal", "signIn": "plan", "model": "opus" },
     { "id": "codex-fast", "label": "Codex fast", "harness": "codex",
-      "connection": "acp", "signIn": "harness", "model": "gpt-5-codex-mini", "reasoning": "low",
-      "command": ["codex-acp"] },
-    { "id": "gemini-flash", "label": "Gemini Flash", "harness": "gemini-cli",
-      "connection": "acp", "signIn": "harness", "model": "gemini-flash",
-      "command": ["gemini", "--acp", "--model", "gemini-flash"] }
+      "connection": "acp", "signIn": "harness", "model": "gpt-5-codex", "reasoning": "low" }
   ]
 }
 ```
@@ -89,23 +103,55 @@ Plane reads `profiles.json` from `ARTIFACT_PLANE_CONFIG_DIR` when it is set. Oth
 | --- | --- |
 | `version` | Required. The value is `1`. |
 | `terminal.open` | Optional argument list that opens a terminal with a herdr client. Plane runs it without a shell. |
+| `roleDefaults` | Optional object from role (`coordinator`, `product-owner`, `technical-lead`, `implementer`) to profile `id`. |
 | `id` | Required. Unique. Matches `[a-z0-9][a-z0-9-]*`. |
 | `label` | Optional display text. |
-| `harness` | Required. One of `claude-code`, `codex`, `opencode`, `command-code`, `gemini-cli`, `other`. |
-| `connection` | Required. `acp` or `terminal`. |
+| `harness` | Required. A provider of the catalog, or `other`. |
+| `connection` | Required. `acp` or `terminal`. The provider must offer it. |
 | `signIn` | Required. `plan`, `api-key` or `harness`. It declares how the harness tool signs in; Plane cannot check it. |
-| `model` | Required. For `acp`, Plane selects this value through the model option. For `terminal`, it is a display value; the command selects the model. |
+| `model` | Required. For `acp`, Plane selects this value through the model option, or through the model flag when the agent has no model option. For `terminal`, Plane passes it with the model flag of the catalog. |
 | `reasoning` | Optional. Plane selects it through the reasoning option of an ACP agent. |
-| `command` | Required nonempty argument list. Plane runs it without a shell. |
+| `args` | Optional argument list that Plane adds after the catalog arguments. |
 | `env` | Optional object of extra variables. A name that contains `KEY`, `TOKEN`, `SECRET`, `PASSWORD` or `CREDENTIAL` makes the profile invalid. |
+| `command` | Only for `harness: other`: the full argument list. The workbench shows such a profile but does not edit it. |
+
+### Provider catalog
+
+| Provider | ACP program | ACP model | Terminal program | Model flag | Terminal resume |
+| --- | --- | --- | --- | --- | --- |
+| `claude-code` | `claude-agent-acp --hide-claude-auth` | option | `claude` | `--model` | `--resume <harness session ID>` |
+| `codex` | `codex-acp` | option | `codex` | `--model` | none |
+| `opencode` | `opencode acp` | option | `opencode` | `--model` | none |
+| `command-code` | `cmd acp` | option | `cmd` | `--model` | none |
+| `gemini-cli` | `gemini --acp` | flag | `gemini` | `--model` | none |
+
+The profile command is the program of the profile connection, then the model flag and the model when the connection is `terminal` or the ACP model column says "flag", then `args`. For `harness: other`, the profile command is `command`.
+
+The claim `terminal-model-flags` records that the model flags are not all checked. Plane runs every program without a shell. The Claude ACP agent gets `--hide-claude-auth`, so that it does not offer the plan sign-in; the claim `claude-acp-plan-sign-in` records that this effect is not yet checked.
+
+### Validity
 
 An invalid profile stays visible with its reason and cannot start a session. These rules make a profile invalid:
 
 - `harness: claude-code` with `signIn: plan` and `connection: acp` (requirement AO17).
-- A command argument from the permission-bypass list: `--dangerously-skip-permissions`, `--allow-dangerously-skip-permissions`, `--dangerously-bypass-approvals-and-sandbox`, `--yolo`, `-y`, `bypassPermissions`, `--approval-mode=yolo`, the pair `--approval-mode yolo`, the pair `--permission-mode bypass`, and the pairs `--ask-for-approval never` and `-a never`. The list is a guardrail, not a complete control.
+- A connection that the provider does not offer, or a role default that names no valid profile.
+- An argument from the permission-bypass list: `--dangerously-skip-permissions`, `--allow-dangerously-skip-permissions`, `--dangerously-bypass-approvals-and-sandbox`, `--yolo`, `-y`, `bypassPermissions`, `--approval-mode=yolo`, the pair `--approval-mode yolo`, the pair `--permission-mode bypass`, and the pairs `--ask-for-approval never` and `-a never`. The list is a guardrail, not a complete control.
 - An unknown field or a wrong type.
 
-Plane appends `--hide-claude-auth` to the command of a `claude-code` ACP profile, so that the Claude ACP agent does not offer the plan sign-in. The claim `claude-acp-plan-sign-in` records that this effect is not yet checked.
+### Save
+
+The workbench sends the whole settings object with the digest of the file that it read. When the file changed since then, the save returns 409 with the current settings. Plane validates the object, writes a temporary file in the same directory with mode 0600, and renames it over the settings file. It creates a missing directory with mode 0700. A saved profile of a catalog provider has no `command`. Plane writes no other file.
+
+### Provider check
+
+The settings service finds each catalog program on `PATH` and runs it with `--version` (5-second limit, no shell). A check of an ACP program on request does these steps in a new private directory under the runtime state directory:
+
+1. Start the program and send `initialize`. Record the protocol version and the sign-in methods.
+2. Send `session/new` without MCP servers. An authentication error gives the state "Sign-in required" with the sign-in command of the harness tool.
+3. Read the config options of categories `model` and `thought_level`, or the legacy model list of a version 1 agent. Record the values and names.
+4. Close the session when the agent offers `session/close`, then stop the program and remove the directory.
+
+A check sends no prompt. The server keeps check results in memory for 30 minutes. A check can add a session record to the history of the harness tool; the claim `provider-check-history` records this effect.
 
 ## Roles and initial prompts
 
@@ -126,7 +172,9 @@ The server adds these routes to the existing local server. Every route keeps the
 
 | Route | Body | Effect |
 | --- | --- | --- |
-| `POST /api/sessions/profiles` | `{}` | Returns the profiles with their validity and reasons, the profile file path and the herdr and runner availability. |
+| `POST /api/settings/query` | `{}` | Returns the settings, their digest, the validity of each profile, the settings file path, the providers with their programs and last check, and the herdr and runner availability. |
+| `POST /api/settings/check` | `{harness}` | Runs a provider check and returns its result. |
+| `POST /api/settings/save` | `{settings, digest}` | Validates and saves the settings. Returns the new digest. |
 | `POST /api/sessions/query` | `{path}` | Returns the sessions of the repository with their attempts, newest first. |
 | `POST /api/sessions/start` | `{path, role, profile, artifact?, change?, task?, respawnOf?}` | Validates and starts a session. Returns `{session, attempt?, existing}`. |
 | `POST /api/sessions/prompt` | `{session, text}` | Sends the text of the person to an ACP session. |
@@ -277,11 +325,12 @@ The final layout follows the approved UI/UX mockups. The workbench shows task pr
 - A terminal session page shows the same output, the state, Open terminal and End session, and the text "Type in the terminal."
 - The workbench shows no tool call log and no message stream.
 - The top bar shows the number of sessions that wait for the person.
-- A launch dialog opens from the task details of the change page (Start implementer), from the change page (Start session) and from the Sessions page (New session). It shows role, change, task, worktree, profile, the warnings of the start rules and Start.
+- A launch dialog opens from the task details of the change page (Start implementer), from the change page (Start session) and from the Sessions page (New session). It shows role, change, task, worktree, profile with the role default selected, the warnings of the start rules and Start.
 - Task runtime details also show the harness tool and the model of each attempt.
-- A Profiles section lists the profiles, their validity, the profile file path and the runner and herdr availability. It edits nothing.
+- An Agent settings page shows three sections. Providers lists each catalog provider with its programs and versions, connections, sign-in state and models, and a Check action. Role defaults has one profile selector for each role. Profiles lists the profiles with their state and the actions New profile, Edit, Duplicate and Delete.
+- A profile editor sets name, provider, connection, sign-in kind, model (from the last check, or another model ID), reasoning level, the roles that use the profile as default, and, under Advanced, extra arguments and environment variables. It shows the program that Plane will run and the validity errors, and offers Check profile and Save.
 
-When no profile exists, the workbench shows no session control except a Profiles section that explains where to put the file (requirement AO18).
+When no profile exists, the workbench shows no session control except the Agent settings page (requirement AO18).
 
 ## Failures
 
@@ -309,8 +358,8 @@ These documented facts support the claim `acp-agent-interfaces`. They were read 
 
 ## Specification self-check
 
-- The contract covers AO1 to AO20 with commands, events, states, adapters, the runner, output, recovery, the workbench and failures. After the UI/UX review, the runner keeps only the last message and pending permission requests, and the output reader shows the work from Git.
-- KISS: one port with two adapters, one runner, the existing store and attempt model, no new MCP tool and no profile editor.
+- The contract covers AO1 to AO24 with commands, events, states, adapters, the runner, output, recovery, the workbench and failures. After the UI/UX review, the runner keeps only the last message and pending permission requests, and the output reader shows the work from Git.
+- KISS: one port with two adapters, one runner, the existing store and attempt model, one settings file and no new MCP tool. The profile editor edits only catalog providers, so the HTTP server cannot define an arbitrary program.
 - Impact: execution observation gains Plane-started attempts; the new flows `agent-session-launch` and `agent-session-recovery` record the journeys. The artifact-driven method needs no change; the only reference is the task DAG contract.
 - The two open claims name live checks. They do not block the Plan; the Plan adds the live check.
 - STE: each rule is one sentence or one table row; terms are in the Terms table.

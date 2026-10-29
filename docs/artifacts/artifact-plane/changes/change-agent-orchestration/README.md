@@ -10,7 +10,7 @@ Plane observes ADD work today. The owner wants Plane to also start and coordinat
 
 This change adds person-started agent sessions, agent settings for providers, profiles and role defaults, a view of task progress and output for each session, permission requests, and recovery after an interruption. Observation stays as delivered. The shared outcome is in `docs/artifacts/units-of-work/agent-orchestration/README.md`.
 
-The change edits one artifact in this repository. It adds requirement IDs, two decisions and two flows, so it is medium. The owner approves the UI/UX mockups before the implementation plan.
+The change edits one artifact in this repository. It adds requirement IDs, three decisions and two flows, so it is medium. The owner approves the UI/UX mockups before the implementation plan.
 
 Impact assessment: the impact reader names the hook command, the runtime store, the OpenCode bridge and their tests as potential code impact. No other artifact consumes the changed elements. The only new reference is the task DAG contract of artifact-driven.
 
