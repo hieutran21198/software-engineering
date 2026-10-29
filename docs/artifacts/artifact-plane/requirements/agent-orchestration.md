@@ -6,8 +6,10 @@ claims:
   - id: harness-session-interfaces
     kind: assumption
     statement: Claude Code, Codex, OpenCode V2, Command Code and Antigravity CLI each offer a session interface that a local program can start, prompt, cancel and resume, or run as a terminal program that a person drives.
-    status: open
-    basis: documented
+    status: supported
+    basis: observed
+    evidence:
+      - docs/artifacts/artifact-plane/changes/change-agent-orchestration/tasks/12-live-check.md#evidence
     check: Read the current interface documentation of each harness tool, then start, prompt, cancel and resume one session of each in a disposable clone.
     risk_if_wrong: A harness tool cannot take part, and AOA1 fails for it.
   - id: claude-plan-automation
