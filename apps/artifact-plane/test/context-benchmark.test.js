@@ -14,10 +14,10 @@ test('correctness oracle refuses stale rules, missing checks and missing approva
  const expected={rules:[{id:'R1',text:'Signed evidence'}],checks:['Check signatures'],canImplement:false};assert.equal(checkAnswer({...expected,blockingReason:'Approval missing'},expected),true);assert.equal(checkAnswer({...expected,blockingReason:'ready'},expected),false);assert.equal(checkAnswer({...expected,checks:[],blockingReason:'Approval missing'},expected),false);assert.equal(checkAnswer({...expected,rules:[{id:'R1',text:'Unsigned evidence'}],blockingReason:'Approval missing'},expected),false);
 });
 
-test('benchmark prepares 18 isolated matched working trees and stops on missing usage',async t=>{
+test('benchmark prepares 18 isolated matched working trees, including missing baseline fallback, and stops on missing usage',async t=>{
  const {mkdtemp,readFile,rm}=await import('node:fs/promises'),{tmpdir}=await import('node:os'),{join}=await import('node:path');
  const {runBenchmark}=await import('../scripts/context-benchmark.mjs');const output=await mkdtemp(join(tmpdir(),'context-driver-test-'));t.after(()=>rm(output,{recursive:true,force:true}));let calls=0;const prompts=new Map();
- const result=await runBenchmark({model:'test-only',output,run:async(root,prompt,model)=>{
+ const result=await runBenchmark({model:'test-only',baseline:'missing-benchmark-baseline-ref',output,run:async(root,prompt,model)=>{
   calls++;assert.equal(model,'test-only');const scenario=root.match(/(contained|multi-artifact|resumed)-\d-/)[1];if(prompts.has(scenario))assert.equal(prompt,prompts.get(scenario));else prompts.set(scenario,prompt);
   const requirement=await readFile(join(root,'docs/artifacts/demo/requirements/rules.md'),'utf8');assert.ok(requirement.includes('Preserve signed evidence.'));if(scenario==='resumed')assert.ok(requirement.includes('No user approval'));
   const rules=[{id:'R1',text:'Preserve signed evidence.'}],checks=['Verify evidence signature.'];if(scenario==='multi-artifact'){rules.push({id:'R2',text:'Use the established identity contract.'});checks.push('Check identity compatibility.');}
