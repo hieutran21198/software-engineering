@@ -9,7 +9,7 @@ flow:
     - choose
   steps:
     - id: choose
-      title: Choose the role, change, task and launch profile
+      title: Choose the role, change, task and launch profile, or write a request for new work
       supports:
         - orchestration-contract
     - id: validate

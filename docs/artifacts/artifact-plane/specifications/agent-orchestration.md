@@ -86,7 +86,9 @@ Plane routes no model traffic. Each harness tool signs in with its own stored si
 | Role default | The profile that the launch dialog selects for an ADD role. |
 | Effort level | The reasoning level of a model, stored in the profile field `reasoning`. |
 | Connection kind | `acp` for an ACP agent, or `terminal` for a herdr pane that a person drives. |
-| Live state | The last agent message of the latest turn and the pending permission requests of a session. The runner keeps it in memory only. |
+| Live state | The pending permission requests and the last agent message of a session, and the conversation of a role session. The runner keeps it in memory only. |
+| Role session | A coordinator, product owner or technical lead session. |
+| Conversation | The turns of a role session over ACP: each prompt of the person and the final agent message of that turn. |
 | Base revision | The `HEAD` commit of the session worktree when the session started. A respawn keeps the base revision of the earlier session. |
 | Output | The commits after the base revision and the files that differ from it, committed or not. |
 
@@ -186,7 +188,7 @@ A session has one role. Plane sends one fixed initial prompt. For an ACP session
 | `technical-lead` | You are the ADD technical lead. Load the add-technical-lead skill and follow it for change `{artifact}/{change}`. |
 | `implementer` | You are an ADD implementer. Load the add-implementer skill and follow it. Your task is `{task}` of change `{artifact}/{change}` in this worktree on branch `{branch}`. Plane does not record plan approval; check the gates of the skill before you change code. |
 
-Without a selected change, the coordinator prompt says "No change is selected; start with discovery." A respawn adds: "An earlier attempt on this task stopped: `{reason}`. Read the task, the branch history, `git status` and the change brief before you continue." The reason is one value of the interruption reasons below.
+Without a selected change, the coordinator prompt says: "No change is selected. The person asks: `{request}`. Start with discovery, and create a dedicated branch before you write knowledge." The request is the text of the person, unchanged. A respawn adds: "An earlier attempt on this task stopped: `{reason}`. Read the task, the branch history, `git status` and the change brief before you continue." The reason is one value of the interruption reasons below.
 
 ## Commands
 
@@ -198,7 +200,7 @@ The server adds these routes to the existing local server. Every route keeps the
 | `POST /api/settings/check` | `{harness}` | Runs a provider check and returns its result. |
 | `POST /api/settings/save` | `{settings, digest}` | Validates and saves the settings. Returns the new digest. |
 | `POST /api/sessions/query` | `{path}` | Returns the sessions of the repository with their attempts, newest first. |
-| `POST /api/sessions/start` | `{path, role, profile, artifact?, change?, task?, respawnOf?}` | Validates and starts a session. Returns `{session, attempt?, existing}`. |
+| `POST /api/sessions/start` | `{path, role, profile, artifact?, change?, task?, request?, respawnOf?}` | Validates and starts a session. Returns `{session, attempt?, existing}`. |
 | `POST /api/sessions/prompt` | `{session, text}` | Sends the text of the person to an ACP session. |
 | `POST /api/sessions/permission` | `{session, request, option}` | Sends the selected option of a pending permission request. |
 | `POST /api/sessions/cancel` | `{session}` | Stops the current turn of an ACP session. |
@@ -219,8 +221,9 @@ The orchestrator checks these rules in order and refuses the start with the firs
 2. `path` is a worktree of the inspected repository.
 3. An `implementer` names `artifact`, `change` and `task`. The task is a listed task of a current change in that worktree (specifications/task-dag.md). The branch of the worktree is not `main`, `master` or a detached HEAD.
 4. A `product-owner` or `technical-lead` names `artifact` and `change` of a current change. A `coordinator` can name them.
-5. When the task has an open attempt, the server returns that attempt and its session with `existing: true` and starts nothing. The orchestrator serializes start requests for the same task.
-6. `respawnOf` names an ended or interrupted session of the same task.
+5. Only a `coordinator` takes `request`: nonempty text of at most 8 KiB. A coordinator without a change needs a request. Plane passes the request to the agent and stores no copy.
+6. When the task has an open attempt, the server returns that attempt and its session with `existing: true` and starts nothing. The orchestrator serializes start requests for the same task.
+7. `respawnOf` names an ended or interrupted session of the same task.
 
 The launch dialog shows these facts as warnings that the person confirms; they are not gates of Plane: unchecked DoD items of prerequisite tasks, upstream artifacts without an established version, and the sentence "Plane does not record plan approval."
 
@@ -285,10 +288,10 @@ The runner starts the profile command with the worktree as the working directory
 3. **Session.** Send `session/new` with the worktree as `cwd` and one stdio MCP server: the Plane executable with the argument `mcp`.
 4. **Options.** When the response lists a config option with category `model`, set the profile `model` with `session/set_config_option`. Do the same for category `thought_level` and `reasoning`. In version 2, send `type: "id"`. When an option does not exist or the agent refuses the value, keep the session and record the profile model as declared, not reported. Plane sets no other option, so it never selects a mode that skips permission prompts.
 5. **Prompt.** Send `session/prompt` with the initial prompt, then with each message of the person. Plane sends only one prompt at a time and refuses a prompt while a turn runs.
-6. **Updates.** Join the agent message chunks of the current turn. When the turn ends, keep the joined text (at most 64 KiB) as the last message. Use other updates only to set the state and to send output notices; discard their content. In version 1, the turn ends with the `session/prompt` response and its stop reason. In version 2, the turn ends with an idle `state_update`; a missing or unknown stop reason counts as `end_turn`.
+6. **Updates.** Join the agent message chunks of the current turn. When the turn ends, keep the joined text (at most 64 KiB) as the last message. For a role session, also add the turn to the conversation: the prompt of the person and the last message. The conversation keeps at most 200 turns and 2 MiB; older turns drop first. Use other updates only to set the state and to send output notices; discard their content. In version 1, the turn ends with the `session/prompt` response and its stop reason. In version 2, the turn ends with an idle `state_update`; a missing or unknown stop reason counts as `end_turn`.
 7. **Permissions.** Keep each `session/request_permission` request pending until the person selects one of its options. Never answer it automatically. An unknown outcome is not approval.
 8. **Cancel.** Send `session/cancel` and answer each pending permission request with the `cancelled` outcome.
-9. **Resume.** Start a new agent process and initialize it. In version 2, send `session/resume` with `replayFrom: {type: "start"}` when the agent offers resume. In version 1, send `session/load` when `loadSession` is true. Otherwise resume is unavailable, and the person can respawn. The runner takes the last agent message from the replayed updates.
+9. **Resume.** Start a new agent process and initialize it. In version 2, send `session/resume` with `replayFrom: {type: "start"}` when the agent offers resume. In version 1, send `session/load` when `loadSession` is true. Otherwise resume is unavailable, and the person can respawn. The runner takes the last agent message from the replayed updates, and for a role session it rebuilds the conversation from the replayed user and agent messages.
 10. **End.** Close standard input, then stop the process after 5 seconds.
 
 ## Terminal adapter
@@ -309,7 +312,7 @@ Plane does not install the herdr Claude integration. When the person installs it
 
 The server finds the runner through the socket `runner.sock` in the runtime state directory. When no runner answers, the server starts `artifact-plane runner` as a detached process with the same state directory, and waits up to 3 seconds. The pattern is the one of the workbench start in specifications/ui-discovery.md. The socket file is private (0600) in the private state directory. A stale socket file without a listener is removed before a new runner listens.
 
-Messages are JSON objects, one on each line: requests `{id, method, params}`, responses `{id, result}` or `{id, error}`, and pushed `{event, session, seq, update}` objects. The methods are `hello`, `start`, `prompt`, `answer`, `cancel`, `resume`, `end`, `openTerminal`, `snapshot`, `subscribe` and `unsubscribe`. `snapshot` returns the live state of a session. `hello` returns the runner version; a different version makes the server refuse new starts and show "Restart the session runner".
+Messages are JSON objects, one on each line: requests `{id, method, params}`, responses `{id, result}` or `{id, error}`, and pushed `{event, session, seq, update}` objects. The methods are `hello`, `start`, `prompt`, `answer`, `cancel`, `resume`, `end`, `openTerminal`, `snapshot`, `subscribe` and `unsubscribe`. `snapshot` returns the live state of a session, with the conversation of a role session. `hello` returns the runner version; a different version makes the server refuse new starts and show "Restart the session runner".
 
 The runner exits 10 minutes after its last session ends while no server is connected. When the runner stops, its ACP sessions end with reason `runner-lost` at the next server check. Terminal sessions continue in herdr.
 
@@ -341,6 +344,9 @@ Resume keeps the session and its attempt. Respawn starts a new session with `res
 ## Workbench
 
 The final layout follows the approved UI/UX mockups. The workbench shows task progress and output, not the agent process.
+
+- The Work page has Start ADD work. Its dialog takes the request, the worktree (default: the repository root checkout) and the coordinator profile (default: the role default). It says where the person chats: in the terminal for a terminal profile, on the session page for an ACP profile.
+- A role session page over ACP shows the change phases, the conversation with a reply field, and the output of knowledge files as a tree with diffs. The reply field says that plan approval happens in the conversation and that Plane records no approval.
 
 - The Sessions page lists the implementation tasks with a session, grouped by change. Each row shows the task, its DoD progress, an output summary (files, added and removed lines, commits), the harness tool and model, and the state. A second group lists the coordinator, product owner and technical lead sessions with their output summary.
 - A session page shows a header with the role, task, harness tool, model, connection, branch and start time, and the actions Stop turn and End session. Below it come a pending permission request, the DoD checklist, the commits, the last agent message, and the output: the changed files as a tree and the diff of the selected file. An ACP session also has a message field.
@@ -381,7 +387,7 @@ These documented facts support the claim `acp-agent-interfaces`. They were read 
 
 ## Specification self-check
 
-- The contract covers AO1 to AO25 with commands, events, states, adapters, the runner, output, recovery, the workbench and failures. After the UI/UX review, the runner keeps only the last message and pending permission requests, and the output reader shows the work from Git.
+- The contract covers AO1 to AO27 with commands, events, states, adapters, the runner, output, recovery, the workbench and failures. After the UI/UX review, the runner keeps only the last message and pending permission requests, and the output reader shows the work from Git.
 - KISS: one port with two adapters, one runner, the existing store and attempt model, one settings file and no new MCP tool. The profile editor edits only catalog providers, so the HTTP server cannot define an arbitrary program.
 - Impact: execution observation gains Plane-started attempts; the new flows `agent-session-launch` and `agent-session-recovery` record the journeys. The artifact-driven method needs no change; the only reference is the task DAG contract.
 - The two open claims name live checks. They do not block the Plan; the Plan adds the live check.
