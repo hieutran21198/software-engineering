@@ -13,10 +13,12 @@ flow:
       supports:
         - orchestration-contract
         - store
+        - runner
     - id: choose
       title: Offer the recovery choices that the session state allows
       supports:
         - orchestration-contract
+        - session-api
     - id: continue
       title: Send a new prompt to the live session
       supports:
@@ -26,11 +28,13 @@ flow:
       supports:
         - orchestration-contract
         - adapter-decision
+        - runner
     - id: respawn
       title: Start a new session and attempt with a continuation prompt
       supports:
         - orchestration-contract
         - launch-flow
+        - session-api
   transitions:
     - from: detect
       to: choose
@@ -62,6 +66,18 @@ flow:
       symbol: RuntimeStore
       requires: Keep the interrupted attempt and let an explicit binding supersede it.
       basis: static
+    - id: runner
+      kind: implementation
+      path: apps/artifact-plane/server/session-runner.js
+      symbol: SessionRunner
+      requires: Mark sessions interrupted with their reason, resume the same harness session and restart a stopped herdr server or workspace.
+      basis: static
+    - id: session-api
+      kind: implementation
+      path: apps/artifact-plane/server/session-api.js
+      symbol: SessionService
+      requires: Offer the recovery choices, accept respawnOf only for an implementer session of the same task, and supersede the earlier attempt.
+      basis: static
     - id: launch-flow
       kind: flow
       artifact: artifact-plane
@@ -69,7 +85,7 @@ flow:
       requires: Start the new session with the start rules.
       basis: documented
   gaps:
-    - Recovery code and tests do not exist yet; the Plan adds them.
+    - Fixture tests cover resume and respawn for ACP versions 1 and 2 and terminal sessions; the live check records real harness tools.
     - Uncommitted files stay in the worktree; reasoning of a stopped session that the harness did not save is lost.
   exclusions:
     - Automatic recovery without a choice of the person.

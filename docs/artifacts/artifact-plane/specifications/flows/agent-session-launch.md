@@ -12,30 +12,38 @@ flow:
       title: Choose the role, change, task and launch profile, or write a request for new work
       supports:
         - orchestration-contract
+        - launch-dialog
     - id: validate
       title: Check the start rules and bind an implementer attempt
       supports:
         - orchestration-contract
         - task-dag-contract
         - store
+        - session-api
     - id: start
       title: Start the harness tool through its adapter in the runner
       supports:
         - orchestration-contract
         - adapter-decision
         - runner-decision
+        - runner
+        - acp-client
+        - terminal-adapter
     - id: converse
       title: Answer permission requests and send messages, or work in the terminal
       supports:
         - orchestration-contract
         - adapter-decision
         - relay-decision
+        - terminal-relay
+        - session-page
     - id: observe
       title: Record states and show the task progress and output from Git
       supports:
         - orchestration-contract
         - store
         - hook-command
+        - session-output
     - id: finish
       title: End the turn or the session
       supports:
@@ -103,6 +111,54 @@ flow:
       symbol: observe
       requires: Record hook observations of the harness session of an attempt.
       basis: static
+    - id: session-api
+      kind: implementation
+      path: apps/artifact-plane/server/session-api.js
+      symbol: SessionService
+      requires: Check the start rules in order, bind the implementer attempt, build the initial prompt and serialize starts of one task.
+      basis: static
+    - id: runner
+      kind: implementation
+      path: apps/artifact-plane/server/session-runner.js
+      symbol: SessionRunner
+      requires: Host the adapters outside the server, keep live state in memory and write lifecycle events without text.
+      basis: static
+    - id: acp-client
+      kind: implementation
+      path: apps/artifact-plane/server/acp-client.js
+      symbol: AcpSession
+      requires: Negotiate ACP versions 1 and 2, set the profile model and level, and keep permission requests pending until the person answers.
+      basis: static
+    - id: terminal-adapter
+      kind: implementation
+      path: apps/artifact-plane/server/terminal-adapter.js
+      symbol: TerminalSession
+      requires: Start a named herdr session with the profile command and send no text or keys after the start.
+      basis: static
+    - id: terminal-relay
+      kind: implementation
+      path: apps/artifact-plane/server/terminal-relay.js
+      symbol: TerminalRelays
+      requires: Run ttyd on a private socket and forward only the bytes of the browser after the Host and Origin checks.
+      basis: static
+    - id: session-output
+      kind: implementation
+      path: apps/artifact-plane/server/session-output.js
+      symbol: readOutput
+      requires: Read the commits, changed files, diffs and DoD progress since the base revision without writing Git metadata.
+      basis: static
+    - id: launch-dialog
+      kind: implementation
+      path: apps/artifact-plane/src/pages/LaunchDialog.jsx
+      symbol: LaunchDialog
+      requires: Select the role default, show the start-rule warnings and refusals, and take the request of Start ADD work.
+      basis: static
+    - id: session-page
+      kind: implementation
+      path: apps/artifact-plane/src/pages/SessionPage.jsx
+      symbol: SessionPage
+      requires: Show permission requests, the embedded terminal, the waiting notice and the output, and no tool log or chat.
+      basis: static
     - id: recovery-flow
       kind: flow
       artifact: artifact-plane
@@ -110,7 +166,7 @@ flow:
       requires: Continue, resume or respawn after the session stops.
       basis: documented
   gaps:
-    - The session API, runner, adapters and workbench pages do not exist yet; the Plan adds them and their tests.
+    - Node and browser tests use fake agents, a fake herdr and a fake ttyd; the live check of task live-check records the real harness tools.
     - The live check answered the ACP shape of Command Code and the Claude plan refusal; the Gemini terminal model flag and the Antigravity terminal command stay open claims of the contract.
     - A terminal session reports coarse states only, from herdr status and hooks, and herdr does not detect every harness tool.
   exclusions:
