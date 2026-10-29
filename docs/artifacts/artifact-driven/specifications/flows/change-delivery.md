@@ -11,6 +11,7 @@ flow:
     - id: requirement
       title: Discover the outcome, scope, tier and candidate flows
       supports:
+        - context-efficiency-contract
         - tier-contract
         - impact-contract
         - efficiency-contract
@@ -103,6 +104,12 @@ flow:
       to: specification
       condition: A contract gap requires correction and renewed approval if material.
   support:
+    - id: context-efficiency-contract
+      kind: element
+      artifact: artifact-driven
+      element: specifications/context-efficiency.md
+      requires: Selective context retains governing evidence and approval uncertainty
+      basis: documented
     - id: impact-contract
       kind: element
       artifact: artifact-driven

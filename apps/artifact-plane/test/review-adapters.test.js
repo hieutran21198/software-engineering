@@ -34,7 +34,7 @@ async function setup(t,{roots}={}){
 }
 test('real stdio MCP and HTTP return identical review/packet facts, pages and omissions without writes',async t=>{
  const {fixture,client,http,selectors,stderr}=await setup(t),before=await fingerprint(fixture.root);
- assert.equal((await client.listTools()).tools.length,13);
+ assert.equal((await client.listTools()).tools.length,14);
  const implicit=await client.callTool({name:'get_change_context',arguments:{artifact:'demo',change:'change-review',budget:0}});assert.equal(implicit.structuredContent.repository.path,fixture.root);assert.ok(implicit.structuredContent.data.sources.every(s=>s.text===''&&s.nextCursor===null));
  for(const [operation,name]of [['review','get_change_review'],['packet','get_change_context']]){
   const args={...selectors,budget:7,limit:1};let cursor;const records=[];
@@ -101,4 +101,16 @@ test('HTTP and stdio MCP return the same tiered change impact in the packet',asy
  assert.equal(response.status,200);assert.ok(response.body.data.impact.tiers?.counts,JSON.stringify(response.body.data.impact.tiers?.coverage));
  assert.deepEqual(mcp.structuredContent.data.impact.tiers,response.body.data.impact.tiers);
  assert.ok(response.body.data.impact.tiers.direct.some(i=>i.entity==='flow:demo:behavior'));
+});
+
+// Capture and cursor tokens are service-local, so compare semantic fields, not opaque tokens.
+test('compact HTTP/MCP parity, byte cap, concise text and delta registration',async t=>{
+ const {client,http,selectors}=await setup(t);
+ const args={...selectors,view:'compact',maxResponseBytes:4096};
+ const h=await http({...args,operation:'packet'}),m=await client.callTool({name:'get_change_context',arguments:args});
+ assert.equal(h.status,200);assert.equal(m.isError,undefined);
+ const normalize=r=>({...r,data:{...r.data,captureToken:null},pagination:{...r.pagination,nextCursor:!!r.pagination.nextCursor}});
+ assert.deepEqual(normalize(h.body),normalize(m.structuredContent));assert.ok(m.content[0].text.length<100);assert.ok(Buffer.byteLength(JSON.stringify(m))<=4096);
+ const delta=await client.callTool({name:'get_change_context_delta',arguments:{...args,captureToken:m.structuredContent.data.captureToken}});assert.equal(delta.isError,undefined);assert.ok(delta.structuredContent.data.entries.some(e=>e.section==='unchanged'));
+ const bad=await client.callTool({name:'get_change_context_delta',arguments:{...args,captureToken:h.body.data.captureToken}});assert.equal(bad.isError,true);
 });

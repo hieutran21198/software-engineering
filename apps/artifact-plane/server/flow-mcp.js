@@ -17,7 +17,8 @@ import pkg from '../package.json' with {type:'json'};
 
 // The instructions of specifications/agent-integration.md (MCP), sent on initialize.
 export const INSTRUCTIONS=`Artifact Plane reads ADD knowledge and Git. It never approves, pushes, merges or establishes versions.
-Resume or start: get_change_status. Discover flows and specifications: search_flows, get_flow, read_flow_source.
+Resume or start: get_change_status, then get_change_brief with view compact. Fetch selected registered sources; inspect omissions before conclusions. Compact entries marked json-fragment need text concatenated in offset order through totalCharacters, then JSON.parse; unfinished fragments are not complete facts. Use get_change_context_delta for changes after a compact capture. Capture expiry needs a fresh compact packet.
+Discover flows and specifications: search_flows, get_flow, read_flow_source.
 Specification and Plan: get_impact_context, get_change_impact. Review and context: get_change_review, get_change_context, read_change_context_source.
 Before a self-check or the PR: check_records, get_change_brief, get_change_description.
 Concepts: get_concept; search_flows with kinds.`;
@@ -49,9 +50,10 @@ export function createFlowMcpServer({service,reviewService,impactService,knowled
  for(const [name,description,operation,selectors] of tools)flowTool(name,description,operation,{...common,...selectors});
  // get_concept: the concept operation answer of the flow service, with freshness and completeness.
  flowTool('get_concept','Read one concept (a declared model) by identity, entity or exact title: its declaration, sources, flows and interactions, inferred code and tests, record problems and open changes. An ambiguous title gives candidates.','concept',{path:common.path,worktree:common.worktree,knowledge:common.knowledge,concept:z.string().min(1).max(4000)});
- const reviewCommon={path:common.path,worktree:common.worktree,artifact:z.string().min(1).max(10000),change:z.string().min(1).max(10000),limit:common.limit,budget:common.budget,cursor:common.cursor};
+ const reviewCommon={path:common.path,worktree:common.worktree,artifact:z.string().min(1).max(10000),change:z.string().min(1).max(10000),limit:common.limit,budget:common.budget,cursor:common.cursor,view:z.literal('compact').optional(),maxResponseBytes:z.number().int().min(4096).max(65536).optional()};
  for(const [name,description,operation,selectors]of [
   ['get_change_review','Compare a change with established knowledge (the protected-ref tree for in-place artifacts, the declared-current snapshot for legacy artifacts) and recorded flow impact.','review',{}],
+  ['get_change_context_delta','Read changed source pointers since a compact capture; expired captures require a full compact packet.','delta',{captureToken:z.string().min(1).max(100)}],
   ['get_change_context','Capture source-backed change context with evidence limits and explicit omissions.','packet',{}],
   ['read_change_context_source','Read bounded source pages registered to a captured change context.','source',{source:z.string().min(1).max(10000)}],
   ['get_change_brief','Summarize a change for review: seven answers, its claims with a verification step each, reached, declared and undecided flows, attention items and delivery facts. Approval is not verified by this reader.','brief',{}],
@@ -59,8 +61,8 @@ export function createFlowMcpServer({service,reviewService,impactService,knowled
  ])server.registerTool(name,{description,inputSchema:z.strictObject({...reviewCommon,...selectors}),annotations:{readOnlyHint:true,destructiveHint:false,idempotentHint:true,openWorldHint:false}},async args=>{
   try{
    if(!roots.length)return {isError:true,content:[{type:'text',text:JSON.stringify({error:'Configure at least one repository root.',status:403})}]};
-   const result=await getReviews().query({...args,operation});
-   return {content:[{type:'text',text:JSON.stringify(result)}],structuredContent:result};
+   const result=await getReviews().query({...args,operation,...(operation==='delta'?{view:'compact'}:{})});
+   return {content:[{type:'text',text:result.data?.schema==='artifact-plane.change-context.compact.v1'?'Compact context is in structuredContent; follow continuations before conclusions.':JSON.stringify(result)}],structuredContent:result};
   }catch(error){return {isError:true,content:[{type:'text',text:JSON.stringify({error:error.status?error.message:'Change retrieval failed.',status:error.status||500})}]};}
  });
  // get_change_impact shares the impact service with HTTP; the text content is the compact answer.

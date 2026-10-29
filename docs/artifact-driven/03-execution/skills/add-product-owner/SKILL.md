@@ -17,6 +17,10 @@ Own what is needed and why. Do not choose the technical architecture in place of
 
 If the TL finds a requirement blocker, revise and repeat the self-check in the same change, then commit the correction. Never commit to `main` or `master`, include unrelated files, push or merge. Do not add workflow status tables or an approval database.
 
+## Context entry
+
+Use status → brief → selected registered sources when Plane is available. Request `view: compact` and follow continuations. Refresh affected sources with a delta only while the prior context remains loaded; stale or lost context needs a full refresh. Read governing references and explicit limits. Use bounded files and Git when retrieval is unavailable. See the progressive-loading and handoff guidance in `../../../06-guidelines/working-with-ai.md` when needed.
+
 ## Self-check
 
 - KISS: each requirement states a need, not a solution.
