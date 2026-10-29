@@ -39,7 +39,7 @@ The owner wants to run ADD across several harness tools directly from Plane, and
 - AO3: A person chooses a launch profile for each session. A profile names the harness tool, the connection kind, the sign-in kind, the model and, where the harness tool offers it, the reasoning level.
 - AO4: Launch profiles are personal settings outside every repository. A profile contains no credential value.
 - AO5: An implementer session works in the worktree of its task. Plane refuses an implementer session in a checkout of `main` or `master`.
-- AO6: For a session that reports structured events, the person answers permission requests, reads the last agent message of each turn and sends messages in the workbench. The workbench shows no step-by-step agent activity.
+- AO6: For an implementer session that reports structured events, the person answers permission requests, reads the last agent message of each turn and sends messages in the workbench. The workbench shows no step-by-step agent activity.
 - AO7: For a session that a person drives in a terminal, the workbench shows when the agent waits for the person and opens that terminal on request. After the harness program starts, Plane sends no text and no keys into that terminal.
 - AO8: The workbench shows the role, task, harness tool, model and state of each session, and the DoD progress of its task. It shows the sessions that wait for the person.
 - AO9: The person can stop the current turn of a session and can end a session.
@@ -59,8 +59,8 @@ The owner wants to run ADD across several harness tools directly from Plane, and
 - AO23: The person sets a default profile for each ADD role. The launch dialog selects it, and the person can choose another profile for each session.
 - AO24: A profile that the workbench saves runs only a program of a supported harness tool. Its extra arguments and environment variable names pass the permission-bypass and credential checks.
 - AO25: The profile editor offers the models of the selected harness tool and the effort levels of the selected model as lists. The person does not type a model ID or an effort level.
-- AO26: The person starts ADD work from the workbench with a written request. Plane starts a coordinator session with the request in its initial prompt and keeps no copy of the request.
-- AO27: For a coordinator, product owner or technical lead session with structured events, the workbench shows a conversation: the messages of the person and the final agent message of each turn, without tool activity. The person replies in that conversation.
+- AO26: The person starts ADD work from the workbench with a written request. Plane starts a coordinator session in a terminal with the request in its initial prompt and keeps no copy of the request.
+- AO27: Coordinator, product owner and technical lead sessions run in a terminal, and the person chats with them in the harness tool. The workbench shows their state, the change phases and their output, and builds no chat.
 
 ## Acceptance criteria
 
@@ -74,8 +74,8 @@ The owner wants to run ADD across several harness tools directly from Plane, and
 - AOA8: Existing Node, browser and record checks pass. A screenshot review at desktop and narrow widths matches the approved UI/UX mockups.
 - AOA9: After a session changes files, its page shows the changed files as a tree, their line counts and the diff of a selected file since the session started. The page shows no tool activity log.
 - AOA10: In the workbench, the person checks a harness tool, creates a profile by choosing a model and an effort level from lists, and sets it as the implementer default. Another model shows its own effort levels.
-- AOA11: The person writes a request and starts ADD work. A coordinator session with the coordinator default profile starts in the selected worktree, the agent receives the request, and the runtime store holds no request text.
-- AOA12: A role session over ACP shows each message of the person and the final agent reply of each turn, and no tool call. After a resume, the conversation shows again from the replay of the harness tool. The settings file outside every repository holds the profile, and the launch dialog selects it. A bypass option or a credential-like variable name is refused with a reason.
+- AOA11: The person writes a request and starts ADD work. A coordinator session with the coordinator default profile starts in a terminal in the selected worktree, the agent receives the request, and neither the runtime store nor the shell history holds the request text.
+- AOA12: A start of a coordinator, product owner or technical lead session with an ACP profile is refused with a reason. A role session page shows the change phases, the output and Open terminal, and no chat. The settings file outside every repository holds the profile, and the launch dialog selects it. A bypass option or a credential-like variable name is refused with a reason.
 
 ## Impact
 
@@ -91,4 +91,4 @@ After the UI/UX review, the owner asked for task progress and task output instea
 
 The owner then asked for profile and provider configuration in the workbench. AO21 to AO24 and AOA10 add agent settings: providers, profiles and role defaults. Credential handling stays excluded. The owner prefers lists to typed values; AO25 makes model and effort lists that depend on the harness tool and the model.
 
-The owner asked where ADD work starts and where the person chats. AO26 adds a start of ADD work with a written request, and AO27 adds a conversation for role sessions over ACP. Implementer sessions keep the output view of AO20.
+The owner asked where ADD work starts and where the person chats. AO26 adds a start of ADD work with a written request. The owner then chose not to build a chat: AO27 runs role sessions in a terminal, where the harness tool gives the conversation. Implementer sessions keep the output view of AO20.
