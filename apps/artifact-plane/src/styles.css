@@ -207,7 +207,9 @@ fieldset.checks legend { font-size: 13px; font-weight: 500; margin-bottom: 6px; 
 .switch[aria-checked="true"]::after { transform: translateX(14px); }
 .drawer-backdrop { display: none; }
 
-.page-area { flex: 1; min-width: 0; overflow-y: auto; }
+/* The page area is the containing block of its absolute descendants, so that it
+   clips them: visually hidden text below the fold cannot make the document scroll. */
+.page-area { flex: 1; min-width: 0; overflow-y: auto; position: relative; }
 .page { padding: 40px 56px 64px; }
 .page > .column { max-width: 880px; }
 .page.wide > .column { max-width: 960px; }
