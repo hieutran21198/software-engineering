@@ -40,7 +40,7 @@ The owner wants to run ADD across several harness tools directly from Plane, and
 - AO4: Launch profiles are personal settings outside every repository. A profile contains no credential value.
 - AO5: An implementer session works in the worktree of its task. Plane refuses an implementer session in a checkout of `main` or `master`.
 - AO6: For an implementer session that reports structured events, the person answers permission requests, reads the last agent message of each turn and sends messages in the workbench. The workbench shows no step-by-step agent activity.
-- AO7: For a session that a person drives in a terminal, the workbench shows when the agent waits for the person and opens that terminal on request. After the harness program starts, Plane sends no text and no keys into that terminal.
+- AO7: For a session that a person drives in a terminal, the workbench shows when the agent waits for the person, shows that terminal in the session page and opens it in a terminal app on request. After the harness program starts, Plane forwards only the keys that the person types in the workbench, and generates no text and no keys.
 - AO8: The workbench shows the role, task, harness tool, model and state of each session, and the DoD progress of its task. It shows the sessions that wait for the person.
 - AO9: The person can stop the current turn of a session and can end a session.
 - AO10: After an interruption, the person can continue the live session, resume the same harness session, or start a new attempt with the same or another profile. A new attempt starts from the task, its branch and its recorded evidence.
@@ -61,12 +61,13 @@ The owner wants to run ADD across several harness tools directly from Plane, and
 - AO25: The profile editor offers the models of the selected harness tool and the effort levels of the selected model as lists. The person does not type a model ID or an effort level.
 - AO26: The person starts ADD work from the workbench with a written request. Plane starts a coordinator session in a terminal with the request in its initial prompt and keeps no copy of the request.
 - AO27: Coordinator, product owner and technical lead sessions run in a terminal, and the person chats with them in the harness tool. The workbench shows their state, the change phases and their output, and builds no chat.
+- AO28: The session page of a terminal session embeds that terminal, so the person types in it without another window. Only the local workbench can reach the embedded terminal.
 
 ## Acceptance criteria
 
 - AOA1: With one profile for each of Claude Code, Codex, OpenCode V2, Command Code and Gemini CLI, a person starts a session. The workbench shows its role, harness tool, model and state. The live evidence records each harness version, or names the missing capability.
 - AOA2: An implementer session with structured events asks for a permission. The person answers in the workbench, and the agent continues.
-- AOA3: A terminal session that waits for the person shows as waiting. Open terminal shows that session. A test confirms that Plane sends no input to it after the start command.
+- AOA3: A terminal session that waits for the person shows as waiting. Open in terminal app shows that session. A test confirms that, after the start command, the only input that reaches it is the keys typed in the embedded terminal.
 - AOA4: After its agent process stops, an attempt shows as interrupted. Resume reattaches the same harness session. Respawn starts a new attempt with another profile on the same task branch.
 - AOA5: A second start request for a task with an active attempt returns the existing attempt.
 - AOA6: After a restart of the Plane server, running sessions continue and show their state again.
@@ -75,7 +76,8 @@ The owner wants to run ADD across several harness tools directly from Plane, and
 - AOA9: After a session changes files, its page shows the changed files as a tree, their line counts and the diff of a selected file since the session started. The page shows no tool activity log.
 - AOA10: In the workbench, the person checks a harness tool, creates a profile by choosing a model and an effort level from lists, and sets it as the implementer default. Another model shows its own effort levels.
 - AOA11: The person writes a request and starts ADD work. A coordinator session with the coordinator default profile starts in a terminal in the selected worktree, the agent receives the request, and neither the runtime store nor the shell history holds the request text.
-- AOA12: A start of a coordinator, product owner or technical lead session with an ACP profile is refused with a reason. A role session page shows the change phases, the output and Open terminal, and no chat. The settings file outside every repository holds the profile, and the launch dialog selects it. A bypass option or a credential-like variable name is refused with a reason.
+- AOA12: A start of a coordinator, product owner or technical lead session with an ACP profile is refused with a reason. A role session page shows the change phases, the output and the terminal, and no chat built by Plane.
+- AOA13: The person types an answer in the embedded terminal of a role session, and the harness tool receives it. A request to the embedded terminal with a foreign Host or Origin is refused. Without the terminal relay program, the page offers Open in terminal app only. The settings file outside every repository holds the profile, and the launch dialog selects it. A bypass option or a credential-like variable name is refused with a reason.
 
 ## Impact
 
@@ -83,7 +85,7 @@ Artifact Plane owns this capability. The artifact-driven method keeps ownership 
 
 ## Self-check
 
-Each requirement states a need or an owner constraint, not an adapter technology. The scope excludes agent-started sessions, automatic dispatch, remote runners, team mode, a terminal inside the workbench, approvals recorded by Plane and credential handling. The two claims stay open until the Specification checks the vendor documentation. No blocker prevents Specification. KISS and STE checklists applied.
+Each requirement states a need or an owner constraint, not an adapter technology. The scope excludes agent-started sessions, automatic dispatch, remote runners, team mode, approvals recorded by Plane and credential handling. The two claims stay open until the Specification checks the vendor documentation. No blocker prevents Specification. KISS and STE checklists applied.
 
 The Technical Lead returned AO7: herdr starts a program by typing its command line into the shell of the new pane. AO7 now forbids input only after the harness program starts. The start command contains only the profile command and the fixed initial prompt.
 
@@ -91,4 +93,4 @@ After the UI/UX review, the owner asked for task progress and task output instea
 
 The owner then asked for profile and provider configuration in the workbench. AO21 to AO24 and AOA10 add agent settings: providers, profiles and role defaults. Credential handling stays excluded. The owner prefers lists to typed values; AO25 makes model and effort lists that depend on the harness tool and the model.
 
-The owner asked where ADD work starts and where the person chats. AO26 adds a start of ADD work with a written request. The owner then chose not to build a chat: AO27 runs role sessions in a terminal, where the harness tool gives the conversation. Implementer sessions keep the output view of AO20.
+The owner asked where ADD work starts and where the person chats. AO26 adds a start of ADD work with a written request. The owner then chose not to build a chat: AO27 runs role sessions in a terminal, where the harness tool gives the conversation. Implementer sessions keep the output view of AO20. The owner then asked to embed the terminal now: AO28 and AOA13 add it, and AO7 allows only the keys that the person types.
