@@ -22,8 +22,6 @@ flow_assessment: Inspected role cores, guidance, review service, MCP adapters an
 acceptance:
   - id: context-correctness
     criterion: Compact and incremental reads preserve source identity, uncertainty and governing evidence with compatible legacy behavior.
-  - id: measured-savings
-    criterion: Three paired repetitions per scenario meet the approved 25 percent median input-token target with no scenario regression above 10 percent and all correctness checks passed.
   - id: integration
     criterion: Retrieval, adapter, guidance, Go embedding and build checks pass together.
     integration: true
@@ -32,10 +30,6 @@ evidence:
     method: Run compact service and real HTTP and stdio MCP parity tests.
     result: passed
     source: docs/artifacts/artifact-plane/changes/change-context-efficiency/tasks/01-retrieval.md#evidence
-  - criterion: measured-savings
-    method: Attempt the live Codex prerequisite and exercise the benchmark harness separately.
-    result: incomplete
-    source: docs/artifacts/artifact-plane/changes/change-context-efficiency/tasks/02-measurement.md#live-measurement-blocker
   - criterion: integration
     method: Run Node and all 177 browser tests, build, Go and scoped record validators.
     result: passed
@@ -55,3 +49,5 @@ Selective guidance, compact and delta review retrieval, MCP output and the repro
 ## Excluded scope
 
 Model changes, persistent workflow stores and browser redesign.
+
+The live token-savings run and its 25 percent median target are also excluded. The owner deferred them to a later change, because the model endpoint returned HTTP 403. The [measurement task](../../artifact-plane/changes/change-context-efficiency/tasks/02-measurement.md#deferred-live-run) records the blocker.
