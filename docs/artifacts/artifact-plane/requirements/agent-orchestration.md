@@ -62,6 +62,7 @@ The owner wants to run ADD across several harness tools directly from Plane, and
 - AO26: The person starts ADD work from the workbench with a written request. Plane starts a coordinator session in a terminal with the request in its initial prompt and keeps no copy of the request.
 - AO27: Coordinator, product owner and technical lead sessions run in a terminal, and the person chats with them in the harness tool. The workbench shows their state, the change phases and their output, and builds no chat.
 - AO28: The session page of a terminal session embeds that terminal, so the person types in it without another window. Only the local workbench can reach the embedded terminal.
+- AO29: The setup guide lists the external programs that agent sessions use, with the use and the checked version of each. During adoption, the adopting agent checks these programs and reports to the person the missing ones and what each missing program disables. The agent installs nothing without the consent of the person.
 
 ## Acceptance criteria
 
@@ -78,6 +79,7 @@ The owner wants to run ADD across several harness tools directly from Plane, and
 - AOA11: The person writes a request and starts ADD work. A coordinator session with the coordinator default profile starts in a terminal in the selected worktree, the agent receives the request, and neither the runtime store nor the shell history holds the request text.
 - AOA12: A start of a coordinator, product owner or technical lead session with an ACP profile is refused with a reason. A role session page shows the change phases, the output and the terminal, and no chat built by Plane.
 - AOA13: The person types an answer in the embedded terminal of a role session, and the harness tool receives it. A request to the embedded terminal with a foreign Host or Origin is refused. Without the terminal relay program, the page offers Open in terminal app only. The settings file outside every repository holds the profile, and the launch dialog selects it. A bypass option or a credential-like variable name is refused with a reason.
+- AOA14: An agent that follows the setup guide on a computer reports each external program of agent sessions as present with its version or as missing, and names the sessions that a missing program disables.
 
 ## Impact
 
@@ -96,3 +98,5 @@ The owner then asked for profile and provider configuration in the workbench. AO
 The owner asked where ADD work starts and where the person chats. AO26 adds a start of ADD work with a written request. The owner then chose not to build a chat: AO27 runs role sessions in a terminal, where the harness tool gives the conversation. Implementer sessions keep the output view of AO20. The owner then asked to embed the terminal now: AO28 and AOA13 add it, and AO7 allows only the keys that the person types.
 
 After plan approval, the live check showed that herdr does not detect every harness tool. AO7 now shows the waiting state only where the terminal host detects the agent; for other agents, the workbench says that it cannot see the waiting state.
+
+During implementation, the owner asked that the required programs be written down and that an adopting agent check them and tell the consumer person. AO29 and AOA14 add this; the Plan adds it to task `integration`.
