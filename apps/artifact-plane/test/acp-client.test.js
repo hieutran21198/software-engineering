@@ -188,7 +188,7 @@ for (const version of [1, 2]) {
   const history = [{user: 'First request'}, {agent: 'Old answer'}, {tool: 't9', kind: 'edit'}, {user: 'Second request', id: 'u2'}, {agent: 'Last ', id: 'h5'}, {agent: 'answer.', id: 'h5'}];
   const a = await agent(t, {version, models: MODELS, history, turns: [[{chunk: 'New.'}]]});
   assert.deepEqual(await a.session.resume({harnessSession: 'sess-1'}), {method: version === 2 ? 'resume' : 'load', protocolVersion: version, harnessSession: 'sess-1', reportedModel: 'm1'});
-  const call = (await a.received()).at(-1), params = {sessionId: 'sess-1', cwd: a.worktree, mcpServers: [server]};
+  const call = (await a.received()).find(m => m.method === (version === 2 ? 'session/resume' : 'session/load')), params = {sessionId: 'sess-1', cwd: a.worktree, mcpServers: [server]};
   assert.deepEqual([call.method, call.params], version === 2 ? ['session/resume', {...params, replayFrom: {type: 'start'}}] : ['session/load', params]);
   assert.deepEqual(a.events, [{kind: 'session:resumed', method: version === 2 ? 'resume' : 'load'}], 'a replayed edit sends no output notice');
   assert.deepEqual([a.session.state, a.session.lastMessage], ['idle', 'Last answer.']);
@@ -207,6 +207,49 @@ for (const version of [1, 2]) {
   assert.throws(() => a.session.prompt('Again'), refusal('state'));
   assert.equal((await a.session.resume()).method, version === 2 ? 'resume' : 'load');
   assert.deepEqual([a.session.state, a.session.lastMessage, a.session.harnessSession], ['idle', 'partial', 'sess-1']);
+ });
+
+ // Live check of 2026-10-29: a Codex ACP session resumed with the default model of Codex.
+ // The first model of the fake is the current model of a new agent process.
+ const RESUME_MODELS = [{id: 'm0', name: 'Agent default', levels: ['medium']}, ...MODELS];
+ const reattach = version === 2 ? 'session/resume' : 'session/load';
+
+ test(`after a resume the client sets the profile model and level again, because the agent resumes with its own default model ${v}`, async t => {
+  const a = await agent(t, {version, models: RESUME_MODELS, history: [{user: 'Go'}, {agent: 'Before the stop.'}], turns: [[{chunk: 'After the resume.'}]]});
+  await a.session.start();
+  assert.equal(a.session.reportedModel, 'm1');
+  process.kill((await a.lines())[0].start.pid, 'SIGKILL');
+  await a.event('session:interrupted');
+  const mark = (await a.received()).length;
+  assert.deepEqual(await a.session.resume(), {method: version === 2 ? 'resume' : 'load', protocolVersion: version, harnessSession: 'sess-1', reportedModel: 'm1'});
+  const calls = (await a.received()).slice(mark);
+  assert.deepEqual(calls.map(m => m.method), ['initialize', reattach, 'session/set_config_option', 'session/set_config_option']);
+  assert.deepEqual(calls.slice(2).map(m => m.params), [setParams('model', 'm1'), setParams('effort', 'high')], 'configId, and type id in version 2');
+  assert.deepEqual([a.session.state, a.session.reportedModel, a.session.snapshot().model, a.session.lastMessage], ['idle', 'm1', 'm1', 'Before the stop.']);
+  assert.ok(a.lives.at(-1).reportedModel === 'm1', 'the live state reports the profile model');
+  a.session.prompt('Continue');
+  await a.event('session:turn-ended');
+  assert.equal(a.session.lastMessage, 'After the resume.');
+ });
+
+ test(`after a resume a refused value or a missing option keeps the session and records the model as declared ${v}`, async t => {
+  const cases = [
+   // The agent refuses the profile model, and the level of its default model.
+   [{models: RESUME_MODELS, refuse: ['m1']}, null, ['model', 'effort']],
+   // The agent takes the model and refuses the level: the model is reported.
+   [{models: RESUME_MODELS, refuseLevel: true}, 'm1', ['model', 'effort']],
+   // The resumed session lists no option: the client sets nothing.
+   [{}, null, []],
+  ];
+  for (const [script, reported, sets] of cases) {
+   const a = await agent(t, {version, ...script, turns: [[{chunk: 'Done.'}]]});
+   assert.deepEqual(await a.session.resume({harnessSession: 'sess-1'}), {method: version === 2 ? 'resume' : 'load', protocolVersion: version, harnessSession: 'sess-1', reportedModel: reported}, JSON.stringify(script));
+   assert.deepEqual([a.session.state, a.session.reportedModel, a.session.snapshot().model], ['idle', reported, 'm1'], JSON.stringify(script));
+   assert.deepEqual((await a.received()).filter(m => m.method === 'session/set_config_option').map(m => m.params.configId), sets);
+   a.session.prompt('Go on');
+   await a.event('session:turn-ended');
+   assert.equal(a.session.lastMessage, 'Done.', 'the session continues');
+  }
  });
 
  test(`end closes standard input and stops the process after the grace time ${v}`, async t => {

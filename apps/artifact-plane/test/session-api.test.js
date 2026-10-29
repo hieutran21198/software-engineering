@@ -681,7 +681,7 @@ test('with a real runner: a coordinator start keeps no request text, an implemen
  assert.equal(store.attempt(failed.body.attempt.id).state, 'interrupted');
  // End the sessions.
  for (const id of [session.id, role.id]) assert.equal((await f.post('/api/sessions/end', {session: id})).body.session.state, 'ended');
- assert.equal(f.herdrState().sessions[`plane-${role.id}`].running, false);
+ assert.deepEqual([f.herdrState().sessions[`plane-${role.id}`], existsSync(join(f.herdr, 'sessions', `plane-${role.id}`))], [undefined, false], 'end stops and deletes the named herdr session');
  // No repository file and no Git metadata changed; Plane reported no result and no approval.
  assert.deepEqual(await fingerprint(f.root), before.root);
  assert.deepEqual(await fingerprint(f.worktree), before.worktree);

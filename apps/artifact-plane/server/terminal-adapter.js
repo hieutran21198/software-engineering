@@ -3,7 +3,7 @@
 // `plane-<session ID>`. The adapter runs the herdr CLI without a shell and with limits on
 // time and output. After `pane run` types the start command line, it sends no text and no
 // keys to the pane: it reads `pane list`, attaches a client, creates a resume tab, or stops
-// the named session. The runner hosts one TerminalSession object for each session.
+// and deletes the named session. The runner hosts one TerminalSession object for each session.
 import {execFile, spawn} from 'node:child_process';
 import {accessSync, constants} from 'node:fs';
 import {isAbsolute, resolve} from 'node:path';
@@ -110,7 +110,7 @@ export async function runHerdr(args, {env = process.env, timeoutMs = HERDR_LIMIT
 // One terminal session in its named herdr session. `pane`, `tab` and `state` restore a
 // session after a runner restart. `onUpdate({session, state, agentStatus, reason?})` runs
 // when the status poll changes the state or the herdr agent status; `onError(error)` runs
-// when a poll fails and the state stays.
+// when a poll fails and the state stays, or when the delete of the stopped named session fails.
 export class TerminalSession {
  constructor({id, worktree, label, profile, programs = {}, env = process.env, pane = null, tab = null, state = 'starting', agentStatus = null,
   onUpdate = () => {}, onError = () => {}, intervalMs = STATUS_INTERVAL_MS, timeoutMs = HERDR_LIMIT_MS, serverWaitMs = SERVER_WAIT_MS}) {
@@ -159,7 +159,7 @@ export class TerminalSession {
   return TerminalSession.created(await this.herdr(['workspace', 'create', ...this.paneArguments(prompt)], {result: true}), 'workspace create');
  }
  // Start: a detached `server`, `workspace create` and `pane run` with the command line.
- // A failure before the command runs stops the named session again.
+ // A failure before the command runs stops and deletes the named session again.
  async start(prompt) {
   if (typeof prompt !== 'string' || !prompt || prompt.includes('\0')) throw new TerminalError('invalid', 'The initial prompt is empty or not valid.');
   const commandLine = terminalCommandLine(this.profile, {programs: this.programs});
@@ -173,6 +173,7 @@ export class TerminalSession {
    return {...created, commandLine};
   } catch (error) {
    await this.herdr(['server', 'stop']).catch(() => {});
+   await this.deleteSession();
    throw error;
   }
  }
@@ -205,6 +206,7 @@ export class TerminalSession {
   return this.send({session: this.id, state, agentStatus});
  }
  send(update) {try {this.onUpdate(update);} catch {/* the runner handles its own errors */}return update;}
+ report(error) {try {this.onError(error);} catch {/* the runner handles its own errors */}}
  // Reads the status every intervalMs until stopWatching, end or a missing pane.
  watch() {
   if (this.timer) return this;
@@ -249,11 +251,23 @@ export class TerminalSession {
   Object.assign(this, created, {state: 'starting', agentStatus: null, worked: true});
   return {...created, commandLine};
  }
- // End: `server stop` of the named session. It returns false when no server ran.
+ // End: `server stop` of the named session, then `session delete` of the stopped session
+ // (End, step 7). It returns false when no server ran. A failed delete keeps the session
+ // ended and goes to onError.
  async end() {
   this.stopWatching();
   const state = this.state;this.state = 'ended';
-  try {await this.herdr(['server', 'stop']);return true;}
-  catch (error) {if (error.herdrCode === 'server_not_running') return false;this.state = state;throw error;}
+  let stopped = true;
+  try {await this.herdr(['server', 'stop']);}
+  catch (error) {if (error.herdrCode !== 'server_not_running') {this.state = state;throw error;}stopped = false;}
+  await this.deleteSession();
+  return stopped;
+ }
+ // `herdr session delete <name>` removes the stopped named session from the herdr
+ // configuration. It takes the name as an argument, not `--session`. It returns false and
+ // reports the error to onError when the delete fails.
+ async deleteSession() {
+  try {await runHerdr(['session', 'delete', this.name], {env: this.env, timeoutMs: this.timeoutMs});return true;}
+  catch (error) {this.report(error);return false;}
  }
 }

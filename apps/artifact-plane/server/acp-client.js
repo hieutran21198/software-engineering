@@ -230,7 +230,8 @@ export class AcpSession extends EventEmitter {
   } finally {this.#opening = false;}
  }
  async #open() {
-  this.#opening = true;
+  // The config options belong to the agent process.
+  this.#opening = true;this.#options = null;
   const conn = this.#conn = new AcpConnection(this.command, {cwd: this.cwd, env: {...this.env, ...this.profile.env, ARTIFACT_PLANE_LAUNCH: this.id}});
   conn.on('request', msg => this.#onRequest(conn, msg));
   conn.on('notification', (method, params) => {if (conn === this.#conn) this.#onUpdate(method, params);});
@@ -251,9 +252,11 @@ export class AcpSession extends EventEmitter {
   else settle(failure.message);
   return failure;
  }
- // Sets the profile model, then the level, through their options. A missing option or a
- // refused value keeps the session; the model then stays declared, not reported.
+ // Sets the profile model, then the level, through their options, at start and after a
+ // resume. A missing option or a refused value keeps the session; the model then stays
+ // declared, not reported.
  async #selectOptions() {
+  this.#modelReported = false;
   const model = findOption(this.#options, 'model');
   if (model && text(this.profile.model)) this.#modelReported = await this.#setOption(model, this.profile.model);
   const level = findOption(this.#options, 'thought_level');
@@ -358,8 +361,9 @@ export class AcpSession extends EventEmitter {
 
  // Reattaches the harness session in a new agent process: session/resume with a replay
  // from the start in version 2, session/load in version 1 when the agent offers it. The
- // last message comes from the replay. Resolves with {method, protocolVersion,
- // harnessSession, reportedModel}. A failure leaves the session interrupted.
+ // last message comes from the replay. Then it sets the profile model and level again,
+ // because an agent can resume with its own default model. Resolves with {method,
+ // protocolVersion, harnessSession, reportedModel}. A failure leaves the session interrupted.
  async resume({harnessSession = this.harnessSession} = {}) {
   if (this.state !== 'new' && this.state !== 'interrupted') throw new AcpSessionError('state', 'Only an interrupted session can resume.');
   if (!text(harnessSession)) throw new AcpSessionError('state', 'The session has no harness session ID.');
@@ -373,7 +377,8 @@ export class AcpSession extends EventEmitter {
    try {result = await this.#conn.request(agent.resume === 'resume' ? 'session/resume' : 'session/load', agent.resume === 'resume' ? {...params, replayFrom: {type: 'start'}} : params);}
    catch (error) {throw error instanceof RpcError && error.code === AUTH_REQUIRED ? new AcpSessionError('sign-in', SIGN_IN_MESSAGE) : error;}
    this.lastMessage = this.#replay.messages.text();
-   if (Array.isArray(result?.configOptions)) {this.#options = result.configOptions;this.#modelReported = Boolean(findOption(this.#options, 'model'));this.#reportModel();}
+   if (Array.isArray(result?.configOptions)) this.#options = result.configOptions;
+   await this.#selectOptions();
    this.#setState('idle');
    this.#event('session:resumed', {method: agent.resume});
    this.#live();

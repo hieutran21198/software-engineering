@@ -12,6 +12,7 @@
 //   newError       The error of session/new, for example {code: -32000, message}.
 //   resumeError    The error of session/resume and session/load.
 //   models         [{id, name?, levels?}]: the `model` option; `levels` adds a `thought_level` option.
+//                  The first model is the current model of a new agent process.
 //   grouped        Put the model values in one group.
 //   mode           Add a `mode` option that offers `bypass`.
 //   configOptions  false: no config options.

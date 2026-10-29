@@ -41,10 +41,12 @@ async function fixture(t, {programs = ['herdr', 'term', 'claude', 'codex', 'open
  const setState = async change => {const value = await readState();change(value);await writeFile(join(state, 'state.tmp'), JSON.stringify(value));await rename(join(state, 'state.tmp'), join(state, 'state.json'));};
  const setPanes = change => setState(value => change(value.sessions[NAME].panes));
  const session = (options = {}) => new TerminalSession({id: ID, worktree, label: 'implementer terminal-adapter', profile: CLAUDE, env: environment, ...options});
- return {dir, bin, worktree, env: environment, calls, herdrCalls, readState, setState, setPanes, session};
+ // The folder of a named session in the fake herdr configuration.
+ const folder = (name = NAME) => existsSync(join(state, 'sessions', name));
+ return {dir, bin, worktree, env: environment, calls, herdrCalls, readState, setState, setPanes, session, folder};
 }
-// The herdr command of a recorded call, for example `pane list`.
-const command = call => call.argv.slice(2).slice(0, 2).filter(a => !a.startsWith('-')).join(' ');
+// The herdr command of a recorded call, for example `pane list` or `session delete`.
+const command = call => (call.argv[0] === '--session' ? call.argv.slice(2) : call.argv).slice(0, 2).filter(a => !a.startsWith('-')).join(' ');
 const waitFor = async (check, ms = 5000) => {
  for (const deadline = Date.now() + ms; Date.now() < deadline; await new Promise(done => setTimeout(done, 25))) {const value = await check();if (value) return value;}
  throw Error('Timed out');
@@ -185,7 +187,7 @@ test('the status poll maps agent_status to the session state every 2 seconds, ke
  t.mock.timers.reset();
 });
 
-test('after pane run, the adapter calls only pane list, session attach, tab create with pane run for a resume, and server stop, and sends no text or keys', {skip}, async t => {
+test('after pane run, the adapter calls only pane list, session attach, tab create with pane run for a resume, server stop and session delete, and sends no text or keys', {skip}, async t => {
  const f = await fixture(t), updates = [];
  const session = f.session({onUpdate: update => updates.push(update), intervalMs: 20});
  await session.start(PROMPT);
@@ -209,14 +211,16 @@ test('after pane run, the adapter calls only pane list, session attach, tab crea
  await waitFor(async () => (await f.calls()).some(c => c.program === 'term'));
  assert.equal(await session.end(), true);
  const calls = await f.calls(), after = calls.filter(c => c.program === 'herdr').slice(firstRun);
- const allowed = new Set(['pane list', 'tab create', 'pane run', 'server stop']);
+ const allowed = new Set(['pane list', 'tab create', 'pane run', 'server stop', 'session delete']);
  for (const call of after) {
   assert.ok(allowed.has(command(call)), command(call));
-  assert.deepEqual(call.argv.slice(0, 2), ['--session', NAME]);
+  // session delete names the session as its argument, as session attach does.
+  if (command(call) === 'session delete') assert.deepEqual(call.argv, ['session', 'delete', NAME]);
+  else assert.deepEqual(call.argv.slice(0, 2), ['--session', NAME]);
  }
  // The only pane run after the start is the resume command line in the new tab, right after tab create.
  const order = after.map(command).filter(c => c !== 'pane list');
- assert.deepEqual(order, ['tab create', 'pane run', 'server stop']);
+ assert.deepEqual(order, ['tab create', 'pane run', 'server stop', 'session delete']);
  const resumeRun = after.find(c => command(c) === 'pane run');
  assert.deepEqual(resumeRun.argv, ['--session', NAME, 'pane', 'run', 'w1:p2', resumed.commandLine]);
  const tab = after.find(c => command(c) === 'tab create');
@@ -226,7 +230,7 @@ test('after pane run, the adapter calls only pane list, session attach, tab crea
  for (const call of calls.slice(calls.findIndex(c => command(c) === 'pane run') + 1)) assert.ok(!JSON.stringify(call).includes('PROMPT-TEXT-91c2'), command(call));
  // The attach runs in the terminal app, without --session.
  assert.deepEqual(calls.filter(c => c.program === 'term').map(c => c.argv), [['-e', 'herdr', 'session', 'attach', NAME]]);
- assert.equal((await f.readState()).sessions[NAME].running, false);
+ assert.deepEqual([(await f.readState()).sessions[NAME], f.folder()], [undefined, false], 'the end deleted the stopped named session');
 });
 
 test('Open in terminal app runs the terminal.open arguments plus herdr session attach as a detached process without a shell', {skip}, async t => {
@@ -301,20 +305,50 @@ test('resume starts a stopped named server or a missing workspace again without 
  await assert.rejects(refused.resume('session-1'), refusal('herdr', {herdrCode: 'internal', command: 'tab create'}));
 });
 
-test('end runs server stop of the named session only', {skip}, async t => {
- const f = await fixture(t), session = f.session(), other = f.session({id: 'ffffffffffff'});
+test('end runs server stop of the named session, then session delete of the stopped session, and touches no other session', {skip}, async t => {
+ const f = await fixture(t), errors = [], session = f.session({onError: error => errors.push(error)}), other = f.session({id: 'ffffffffffff'});
  await session.start(PROMPT);await other.start(PROMPT);
+ assert.ok(f.folder() && f.folder('plane-ffffffffffff'), 'herdr keeps a folder for each named session');
+ const mark = (await f.herdrCalls()).length;
  assert.equal(await session.end(), true);
- assert.deepEqual((await f.herdrCalls()).at(-1).argv, ['--session', NAME, 'server', 'stop']);
+ assert.deepEqual((await f.herdrCalls()).slice(mark).map(c => c.argv), [['--session', NAME, 'server', 'stop'], ['session', 'delete', NAME]]);
  const state = await f.readState();
- assert.deepEqual([state.sessions[NAME].running, state.sessions['plane-ffffffffffff'].running], [false, true]);
- // A second end finds no server.
- assert.equal(await session.end(), false);
+ assert.deepEqual([state.sessions[NAME], f.folder(), errors], [undefined, false, []], 'the stopped session and its folder are gone');
+ assert.deepEqual([state.sessions['plane-ffffffffffff'].running, f.folder('plane-ffffffffffff')], [true, true]);
  assert.equal(session.state, 'ended');
  assert.equal(await session.poll(), null);
+ // A second end finds no server and no session to delete; the error goes to onError.
+ assert.equal(await session.end(), false);
+ assert.deepEqual([session.state, errors.length, refusal('herdr', {herdrCode: 'session_not_found', command: 'session delete'})(errors[0])], ['ended', 1, true]);
+ // An interrupted session whose server stopped: the end still deletes the stopped session.
+ await f.setState(value => {value.sessions['plane-ffffffffffff'].running = false;});
+ assert.equal(await f.session({id: 'ffffffffffff', pane: 'w1:p1', state: 'interrupted'}).end(), false);
+ assert.deepEqual([(await f.readState()).sessions['plane-ffffffffffff'], f.folder('plane-ffffffffffff')], [undefined, false]);
 });
 
-test('a missing program, a server that does not start and a failed herdr call give clear errors; a failed start stops the server', {skip}, async t => {
+test('a failed session delete keeps the session ended and goes to onError; the fake herdr refuses to delete a running session', {skip}, async t => {
+ const f = await fixture(t), errors = [];
+ const session = f.session({env: {...f.env, FAKE_HERDR_FAULT: 'session delete:error'}, onError: error => errors.push(error)});
+ await session.start(PROMPT);
+ assert.equal(await session.end(), true, 'the end resolves');
+ assert.equal(session.state, 'ended');
+ assert.deepEqual([errors.length, refusal('herdr', {herdrCode: 'internal', command: 'session delete'})(errors[0])], [1, true]);
+ assert.deepEqual((await f.herdrCalls()).slice(-2).map(command), ['server stop', 'session delete']);
+ assert.deepEqual([(await f.readState()).sessions[NAME].running, f.folder()], [false, true], 'the stopped session stays after the failed delete');
+ // An onError that throws does not fail the end either.
+ const other = f.session({id: 'ffffffffffff', env: {...f.env, FAKE_HERDR_FAULT: 'session delete:error'}, onError: () => {throw Error('handler failure');}});
+ await other.start(PROMPT);
+ assert.equal(await other.end(), true);
+ assert.equal(other.state, 'ended');
+ // herdr refuses to delete a running session.
+ const running = f.session({id: 'eeeeeeeeeeee'});
+ await running.start(PROMPT);
+ await assert.rejects(runHerdr(['session', 'delete', 'plane-eeeeeeeeeeee'], {env: f.env}), refusal('herdr', {herdrCode: 'session_running', command: 'session delete'}));
+ assert.deepEqual([(await f.readState()).sessions['plane-eeeeeeeeeeee'].running, f.folder('plane-eeeeeeeeeeee')], [true, true]);
+ await running.end();
+});
+
+test('a missing program, a server that does not start and a failed herdr call give clear errors; a failed start stops the server and deletes the session', {skip}, async t => {
  const f = await fixture(t);
  await assert.rejects(f.session({env: {...f.env, PATH: join(f.dir, 'empty')}}).start(PROMPT), refusal('missing-program', {program: 'herdr'}));
  await assert.rejects(f.session({profile: {...OTHER, command: ['missing-tool']}}).start(PROMPT), refusal('missing-program', {program: 'missing-tool'}));
@@ -323,11 +357,14 @@ test('a missing program, a server that does not start and a failed herdr call gi
  const slow = f.session({serverWaitMs: 400, env: {...f.env, FAKE_HERDR_SERVER_DELAY_MS: '-1'}}), started = Date.now();
  await assert.rejects(slow.start(PROMPT), refusal('server-start'));
  assert.ok(Date.now() - started >= 400);
- assert.deepEqual((await f.herdrCalls()).map(command).filter(c => c !== 'pane list'), ['server', 'server stop']);
- // A refused workspace create stops the server again.
+ assert.deepEqual((await f.herdrCalls()).map(command).filter(c => c !== 'pane list'), ['server', 'server stop', 'session delete']);
+ assert.deepEqual((await f.herdrCalls()).at(-1).argv, ['session', 'delete', NAME]);
+ assert.equal(f.folder(), false, 'the failed start deleted the session folder');
+ // A refused workspace create stops the server again and deletes the session.
  const refused = f.session({id: 'ffffffffffff', env: {...f.env, FAKE_HERDR_FAULT: 'workspace create:error'}});
  await assert.rejects(refused.start(PROMPT), refusal('herdr', {herdrCode: 'internal', command: 'workspace create'}));
- assert.equal((await f.readState()).sessions['plane-ffffffffffff'].running, false);
+ assert.deepEqual((await f.herdrCalls()).slice(-2).map(c => c.argv), [['--session', 'plane-ffffffffffff', 'server', 'stop'], ['session', 'delete', 'plane-ffffffffffff']]);
+ assert.deepEqual([(await f.readState()).sessions['plane-ffffffffffff'], f.folder('plane-ffffffffffff')], [undefined, false]);
  for (const value of ['', 'a\0b', null]) await assert.rejects(f.session().start(value), refusal('invalid'));
  for (const id of ['0A1B2C3D4E5F', '0a1b2c', '../x', 'plane-0a1b2c3d4e5f']) assert.throws(() => f.session({id}), refusal('invalid'), id);
  assert.throws(() => herdrSession('x'), refusal('invalid'));

@@ -350,7 +350,7 @@ test('the runner sets the session state from herdr for a terminal session; the h
  assert.equal(f.attempt(attempt).state, 'done');
  await client.end(id);
  assert.deepEqual(states(f, id), ['ended', 'done']);
- assert.equal(f.herdrState().sessions[`plane-${id}`].running, false, 'end stops the named herdr session');
+ assert.deepEqual([f.herdrState().sessions[`plane-${id}`], existsSync(join(f.herdr, 'sessions', `plane-${id}`))], [undefined, false], 'end stops and deletes the named herdr session');
  assert.deepEqual(f.kinds(id).at(-1), 'session:ended');
 });
 

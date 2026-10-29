@@ -5,13 +5,16 @@
 // workspaces and panes live in $FAKE_HERDR_DIR/state.json; a test changes a pane status
 // or removes a pane by editing that file. The JSON shapes follow the live record of task
 // verify-interfaces: results on standard output, errors on standard error with status 1.
+// A `server` call creates the session folder $FAKE_HERDR_DIR/sessions/<name>, as herdr
+// creates ~/.config/herdr/sessions/<name>. `herdr session delete <name>` removes the folder
+// and the state of a stopped session and refuses a running one (live check, 2026-10-29).
 //
 // FAKE_HERDR_SERVER_DELAY_MS: the time until a `server` call marks its session running
 // (default 300); a negative value never marks it.
 // FAKE_HERDR_FAULT: `<command>:<fault>` makes that command (for example `workspace create`)
 // fail with `error` (a herdr error), `hang`, `garbage` (no JSON), `exit` (status 3 without
 // JSON), `stdout-error` (the error JSON on standard output) or `flood` (2 MiB of output).
-import {appendFileSync, existsSync, readFileSync, renameSync, writeFileSync} from 'node:fs';
+import {appendFileSync, existsSync, mkdirSync, readFileSync, renameSync, rmSync, writeFileSync} from 'node:fs';
 import {join} from 'node:path';
 
 const [program, ...argv] = process.argv.slice(2);
@@ -57,7 +60,9 @@ const pane = (workspace, tab, number, options) => ({agent_status: 'unknown', cwd
  terminal_title_stripped: 'bash', workspace_id: workspace, label: options.label, env: options.env, runs: []});
 const view = p => Object.fromEntries(Object.entries(p).filter(([key]) => !['label', 'env', 'runs'].includes(key)));
 
+const folder = session => join(dir, 'sessions', session);
 if (command === 'server') {
+ mkdirSync(folder(name), {recursive: true});
  const delay = Number(process.env.FAKE_HERDR_SERVER_DELAY_MS ?? 300);
  if (delay < 0) process.exit(0);
  await new Promise(done => setTimeout(done, delay));
@@ -72,6 +77,18 @@ if (command === 'session attach') {
  process.exit(0);
 }
 const state = load(), session = state.sessions[name];
+// Delete a stopped session: the name is an argument, not --session.
+if (command === 'session delete') {
+ const [target, ...extra] = args.slice(2);
+ if (name !== 'default' || !target || extra.length) fail(id, 'usage', 'usage: herdr session delete <name>', 2);
+ if (state.sessions[target]?.running) fail(id, 'session_running', `session ${target} is running; stop it first`);
+ if (!existsSync(folder(target)) && !state.sessions[target]) fail(id, 'session_not_found', `session ${target} not found`);
+ rmSync(folder(target), {recursive: true, force: true});
+ delete state.sessions[target];
+ save(state);
+ process.stdout.write(`deleted session ${target}\n`);
+ process.exit(0);
+}
 if (!session?.running) fail(id, 'server_not_running', `no herdr server is running at /fake/sessions/${name}/herdr.sock; run \`herdr session attach ${name}\` to start or attach it`);
 const rest = args.slice(2);
 if (command === 'server stop') {
