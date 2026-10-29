@@ -1,0 +1,17 @@
+---
+tier: medium
+---
+
+# Run ADD sessions across harness tools
+
+## Reason and scope
+
+Plane observes ADD work today. The owner wants Plane to also start and coordinate agent sessions across harness tools. Vendors restrict their subscription models to their own harness tools, so one harness tool cannot serve every model. With Plane as the coordinator, a person can give hard ADD roles to a frontier model and easy tasks to a fast model, each in the vendor's own harness tool.
+
+This change adds person-started agent sessions with launch profiles, a workbench inbox for agent messages and permission requests, and recovery after an interruption. Observation stays as delivered. The shared outcome is in `docs/artifacts/units-of-work/agent-orchestration/README.md`.
+
+The change edits one artifact in this repository. It adds requirement IDs and a decision, so it is medium. The owner approves the UI/UX mockups before the implementation plan.
+
+## Exclusions
+
+Sessions that an agent starts, automatic dispatch, remote runners and team mode, a terminal inside the workbench, approvals recorded by Plane, and credential handling.
