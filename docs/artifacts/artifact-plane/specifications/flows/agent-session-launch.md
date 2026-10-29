@@ -4,7 +4,7 @@ flow:
   artifact: artifact-plane
   title: Start and follow an agent session
   trigger: A person starts a session for an ADD role from the workbench with a launch profile.
-  outcome: The harness tool of the profile runs the role in the selected worktree, and the workbench shows its messages, permission requests and state without approving work.
+  outcome: The harness tool of the profile runs the role in the selected worktree, and the workbench shows its state, task progress, output and permission requests without approving work.
   entry_steps:
     - choose
   steps:
@@ -25,12 +25,12 @@ flow:
         - adapter-decision
         - runner-decision
     - id: converse
-      title: Exchange messages and permission answers, or work in the terminal
+      title: Answer permission requests and send messages, or work in the terminal
       supports:
         - orchestration-contract
         - adapter-decision
     - id: observe
-      title: Record lifecycle events and session and attempt states
+      title: Record states and show the task progress and output from Git
       supports:
         - orchestration-contract
         - store

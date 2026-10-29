@@ -42,11 +42,12 @@ This contract implements requirements/agent-orchestration.md. The decisions are 
 | --- | --- | --- |
 | Session API | `artifact-plane serve` | Accepts session commands from the workbench and validates them. |
 | Orchestrator | `artifact-plane serve` | Applies the start rules, binds implementer attempts and builds the initial prompts. |
-| Runner | `artifact-plane runner` | Hosts the adapters, keeps live message buffers in memory and writes lifecycle events. |
+| Runner | `artifact-plane runner` | Hosts the adapters, keeps the live state in memory and writes lifecycle events. |
 | ACP adapter | runner | Talks JSON-RPC with one ACP agent child process for each session. |
 | Terminal adapter | runner | Starts and follows one herdr pane for each session. |
 | Runtime store | file | Keeps sessions, attempts and lifecycle events. It is the existing store of specifications/codex-execution.md. |
-| Workbench | browser | Shows sessions, messages, permission requests and launch controls. |
+| Output reader | `artifact-plane serve` | Reads the output of a session from Git in its worktree. |
+| Workbench | browser | Shows tasks, sessions, output, permission requests and launch controls. |
 
 Plane routes no model traffic. Each harness tool signs in with its own stored sign-in. Plane never reads, stores, forwards or asks for a credential.
 
@@ -58,7 +59,9 @@ Plane routes no model traffic. Each harness tool signs in with its own stored si
 | Attempt | The existing runtime attempt that binds an implementer session to one task. Other roles have sessions without attempts. |
 | Launch profile | A personal setting that names a harness tool, a connection kind, a sign-in kind, a model and a command. |
 | Connection kind | `acp` for an ACP agent, or `terminal` for a herdr pane that a person drives. |
-| Live buffer | The recent session updates that the runner keeps in memory for the workbench. |
+| Live state | The last agent message of the latest turn and the pending permission requests of a session. The runner keeps it in memory only. |
+| Base revision | The `HEAD` commit of the session worktree when the session started. A respawn keeps the base revision of the earlier session. |
+| Output | The commits after the base revision and the files that differ from it, committed or not. |
 
 ## Launch profiles
 
@@ -132,7 +135,9 @@ The server adds these routes to the existing local server. Every route keeps the
 | `POST /api/sessions/resume` | `{session}` | Reattaches the same harness session in a new adapter process or pane. |
 | `POST /api/sessions/end` | `{session}` | Ends the session and its process or pane. |
 | `POST /api/sessions/open-terminal` | `{session}` | Shows the pane of a terminal session in a herdr client. |
-| `GET /api/sessions/stream?session=` | — | Server-sent events with the live buffer, then new live updates of one session. |
+| `POST /api/sessions/output` | `{session}` | Returns the output of the session: base revision, commits and changed files. |
+| `POST /api/sessions/diff` | `{session, path}` | Returns the diff of one changed file since the base revision. |
+| `GET /api/sessions/stream?session=` | — | Server-sent events with the live state, state changes and output notices of one session. |
 
 `path` is a worktree of an inspected repository. Errors use the existing JSON error shape. The status is 400 for invalid input, 404 for an unknown session, 409 for a refused start or a wrong session state, and 503 when the runner or herdr is unavailable.
 
@@ -163,6 +168,7 @@ The runner writes lifecycle events to the existing `events` table with these kin
 | `session:permission-requested` | `request` |
 | `session:permission-answered` | `request`, `optionKind` |
 | `session:turn-ended` | `stopReason` |
+| `session:output-changed` | — (an ACP tool call of kind `edit`, `delete` or `move` completed) |
 | `session:waiting` / `session:working` | — (terminal sessions, from herdr status) |
 | `session:interrupted` | `reason`: `process-exit`, `runner-lost`, `pane-missing`, `max-tokens`, `max-turn-requests` or `cancelled` |
 | `session:resumed` | `method`: `resume`, `load` or `terminal` |
@@ -177,6 +183,7 @@ The store adds a `sessions` table with `CREATE TABLE IF NOT EXISTS sessions(id T
 | `profile` | `id`, `harness`, `connection`, `signIn`, `model`, `reasoning` of the profile at start. |
 | `reportedModel` | The model that the agent or a hook reported, when known. |
 | `harnessSession`, `pane`, `tab` | Harness and herdr identities, when known. |
+| `baseRevision` | The base revision of the output. |
 | `state` | `starting`, `working`, `waiting`, `idle`, `interrupted` or `ended`. |
 | `reason`, `startedAt`, `updatedAt`, `endedAt` | Last reason and times. |
 | `respawnOf` | The earlier session of the task, when present. |
@@ -208,10 +215,10 @@ The runner starts the profile command with the worktree as the working directory
 3. **Session.** Send `session/new` with the worktree as `cwd` and one stdio MCP server: the Plane executable with the argument `mcp`.
 4. **Options.** When the response lists a config option with category `model`, set the profile `model` with `session/set_config_option`. Do the same for category `thought_level` and `reasoning`. In version 2, send `type: "id"`. When an option does not exist or the agent refuses the value, keep the session and record the profile model as declared, not reported. Plane sets no other option, so it never selects a mode that skips permission prompts.
 5. **Prompt.** Send `session/prompt` with the initial prompt, then with each message of the person. Plane sends only one prompt at a time and refuses a prompt while a turn runs.
-6. **Updates.** Add each `session/update` to the live buffer. In version 1, the turn ends with the `session/prompt` response and its stop reason. In version 2, the turn ends with an idle `state_update`; a missing or unknown stop reason counts as `end_turn`.
+6. **Updates.** Join the agent message chunks of the current turn. When the turn ends, keep the joined text (at most 64 KiB) as the last message. Use other updates only to set the state and to send output notices; discard their content. In version 1, the turn ends with the `session/prompt` response and its stop reason. In version 2, the turn ends with an idle `state_update`; a missing or unknown stop reason counts as `end_turn`.
 7. **Permissions.** Keep each `session/request_permission` request pending until the person selects one of its options. Never answer it automatically. An unknown outcome is not approval.
 8. **Cancel.** Send `session/cancel` and answer each pending permission request with the `cancelled` outcome.
-9. **Resume.** Start a new agent process and initialize it. In version 2, send `session/resume` with `replayFrom: {type: "start"}` when the agent offers resume. In version 1, send `session/load` when `loadSession` is true. Otherwise resume is unavailable, and the person can respawn. The replayed updates fill a new live buffer.
+9. **Resume.** Start a new agent process and initialize it. In version 2, send `session/resume` with `replayFrom: {type: "start"}` when the agent offers resume. In version 1, send `session/load` when `loadSession` is true. Otherwise resume is unavailable, and the person can respawn. The runner takes the last agent message from the replayed updates.
 10. **End.** Close standard input, then stop the process after 5 seconds.
 
 ## Terminal adapter
@@ -232,9 +239,23 @@ Plane does not install the herdr Claude integration. When the person installs it
 
 The server finds the runner through the socket `runner.sock` in the runtime state directory. When no runner answers, the server starts `artifact-plane runner` as a detached process with the same state directory, and waits up to 3 seconds. The pattern is the one of the workbench start in specifications/ui-discovery.md. The socket file is private (0600) in the private state directory. A stale socket file without a listener is removed before a new runner listens.
 
-Messages are JSON objects, one on each line: requests `{id, method, params}`, responses `{id, result}` or `{id, error}`, and pushed `{event, session, seq, update}` objects. The methods are `hello`, `start`, `prompt`, `answer`, `cancel`, `resume`, `end`, `openTerminal`, `snapshot`, `subscribe` and `unsubscribe`. `hello` returns the runner version; a different version makes the server refuse new starts and show "Restart the session runner".
+Messages are JSON objects, one on each line: requests `{id, method, params}`, responses `{id, result}` or `{id, error}`, and pushed `{event, session, seq, update}` objects. The methods are `hello`, `start`, `prompt`, `answer`, `cancel`, `resume`, `end`, `openTerminal`, `snapshot`, `subscribe` and `unsubscribe`. `snapshot` returns the live state of a session. `hello` returns the runner version; a different version makes the server refuse new starts and show "Restart the session runner".
 
-The live buffer keeps at most 1000 updates and 2 MiB for each session; older updates drop first. The runner exits 10 minutes after its last session ends while no server is connected. When the runner stops, its ACP sessions end with reason `runner-lost` at the next server check. Terminal sessions continue in herdr.
+The runner exits 10 minutes after its last session ends while no server is connected. When the runner stops, its ACP sessions end with reason `runner-lost` at the next server check. Terminal sessions continue in herdr.
+
+## Output
+
+The output reader runs Git read-only in the session worktree through the existing Git process limits. It never writes a file or Git metadata.
+
+| Item | Source | Limit |
+| --- | --- | --- |
+| Base revision | `git rev-parse HEAD` when the session starts. | — |
+| Commits | `git log` from the base revision to `HEAD`: short ID and subject. | 100 newest |
+| Changed files | `git diff --numstat -z` against the base revision, plus untracked files that Git does not ignore. Each file has its path, status (`A`, `M`, `D` or `R`), added and removed lines, a binary flag and a committed flag. | 500 files |
+| Diff | `git diff` against the base revision for one listed path. An untracked text file shows as all added lines. | 256 KiB, then a truncation notice |
+| DoD progress | The checklist of the task file in the session worktree, with the existing checklist reader. | — |
+
+The diff route accepts only a path of the current changed-file list. A binary file shows its status and no diff. The workbench reads the output again when the session state changes, on `session:output-changed`, after a hook reports a finished tool use of a terminal session, and every 15 seconds while the session works.
 
 ## Recovery
 
@@ -249,14 +270,16 @@ Resume keeps the session and its attempt. Respawn starts a new session with `res
 
 ## Workbench
 
-The final layout follows the UI/UX mockups that the owner approves before Plan.
+The final layout follows the approved UI/UX mockups. The workbench shows task progress and output, not the agent process.
 
-- A Sessions page lists sessions in three groups: Needs you, Running and Ended. Each row shows role, task, harness tool, model, connection and state.
-- A session page shows an ACP session as a thread of messages, tool calls and permission cards, with a message field, Stop turn and End session. It shows a terminal session with its state, Open terminal and End session, and the text "Type in the terminal."
+- The Sessions page lists the implementation tasks with a session, grouped by change. Each row shows the task, its DoD progress, an output summary (files, added and removed lines, commits), the harness tool and model, and the state. A second group lists the coordinator, product owner and technical lead sessions with their output summary.
+- A session page shows a header with the role, task, harness tool, model, connection, branch and start time, and the actions Stop turn and End session. Below it come a pending permission request, the DoD checklist, the commits, the last agent message, and the output: the changed files as a tree and the diff of the selected file. An ACP session also has a message field.
+- A terminal session page shows the same output, the state, Open terminal and End session, and the text "Type in the terminal."
+- The workbench shows no tool call log and no message stream.
 - The top bar shows the number of sessions that wait for the person.
 - A launch dialog opens from the task details of the change page (Start implementer), from the change page (Start session) and from the Sessions page (New session). It shows role, change, task, worktree, profile, the warnings of the start rules and Start.
-- Task runtime details also show the harness tool and the model.
-- A Profiles section lists the profiles, their validity and the profile file path. It edits nothing.
+- Task runtime details also show the harness tool and the model of each attempt.
+- A Profiles section lists the profiles, their validity, the profile file path and the runner and herdr availability. It edits nothing.
 
 When no profile exists, the workbench shows no session control except a Profiles section that explains where to put the file (requirement AO18).
 
@@ -286,7 +309,7 @@ These documented facts support the claim `acp-agent-interfaces`. They were read 
 
 ## Specification self-check
 
-- The contract covers AO1 to AO19 with commands, events, states, adapters, the runner, recovery, the workbench and failures.
+- The contract covers AO1 to AO20 with commands, events, states, adapters, the runner, output, recovery, the workbench and failures. After the UI/UX review, the runner keeps only the last message and pending permission requests, and the output reader shows the work from Git.
 - KISS: one port with two adapters, one runner, the existing store and attempt model, no new MCP tool and no profile editor.
 - Impact: execution observation gains Plane-started attempts; the new flows `agent-session-launch` and `agent-session-recovery` record the journeys. The artifact-driven method needs no change; the only reference is the task DAG contract.
 - The two open claims name live checks. They do not block the Plan; the Plan adds the live check.
