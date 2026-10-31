@@ -113,80 +113,6 @@ Two environment variables change the start:
 
 Set them in the environment that starts the harness, for example in your shell profile. In Claude Code you can also set them in the `env` object of `.claude/settings.local.json`.
 
-## Agent sessions
-
-From the workbench you can start agent sessions in several harness tools. Each tool runs with its own sign-in and its own models. Agent settings (More menu) holds the launch profiles and a default profile for each ADD role. Sessions (More menu, or the "sessions need you" badge) shows the tasks with a session, their DoD progress and output, and the sessions that wait for you.
-
-- Coordinator, product owner and technical lead sessions run in a terminal. You chat in the harness tool: in the embedded terminal of the session page or in your terminal app. After the start, Plane sends no text and no keys to the terminal.
-- Implementer sessions can use the Agent Client Protocol (ACP). You answer permission requests and send messages on the session page.
-- Plane starts a session only when you click Start. It never answers a permission request for you. It stores no prompt, message, tool argument, tool output or credential.
-
-### Programs
-
-| Program | Checked version | Use | Without it |
-| --- | --- | --- | --- |
-| `herdr` | 0.9.5 | Hosts terminal sessions in named herdr sessions | No terminal session: no coordinator, product owner or technical lead session |
-| `ttyd` | 1.7.7 | Embeds the terminal in the session page | Open in terminal app only |
-| A terminal app, for example `ghostty` | — | Open in terminal app (`terminal.open` in the settings) | No Open in terminal app |
-| `claude` | 2.1.312 | Claude Code terminal sessions | No Claude Code terminal profile |
-| `claude-agent-acp` | 0.99.0 | Claude Code ACP sessions; needs an Anthropic Console API key sign-in | No Claude Code ACP profile |
-| `codex`, `codex-acp` | 0.165.0, 2.3.0 | Codex terminal and ACP sessions; `codex-acp` uses its bundled Codex unless the profile sets `CODEX_PATH` | No Codex profile of that connection |
-| `opencode` or `opencode2` (version 2) | 2.2.0 | OpenCode terminal (`opencode mini`) and ACP (`opencode acp`) sessions | No OpenCode profile |
-| `cmd` | 1.88.0 | Command Code terminal and ACP sessions | No Command Code profile |
-| `agy` | 1.4.9 | Antigravity CLI terminal sessions; it has no ACP agent | No Antigravity profile |
-| `gemini` | 0.66.0 | Gemini CLI sessions for accounts with an API key or an enterprise plan | No Gemini CLI profile |
-
-Install the programs that your profiles need. Sign in to each harness tool in its own way; Plane never signs in for you.
-
-### Adoption check
-
-An agent that sets up Plane for a person checks these programs before the first session:
-
-1. Run each program of the table with `--version` only, for example `herdr --version`. Run no other command of the program.
-2. Report to the person each program that is present, with its version, and each program that is missing, with the text of the column "Without it".
-3. Install, update or sign in to nothing without the consent of the person.
-
-Agent settings shows the same facts. Its Check action reads the sign-in state, the models and the levels of a provider without a prompt.
-
-### Launch profiles
-
-The settings file is `profiles.json` in `ARTIFACT_PLANE_CONFIG_DIR`, otherwise in `$XDG_CONFIG_HOME/artifact-plane/` or `~/.config/artifact-plane/`. It must be outside every repository, not a symbolic link, and not writable by other users. Edit it in Agent settings; a hand edit also works.
-
-```json
-{
-  "version": 1,
-  "terminal": { "open": ["ghostty", "-e"] },
-  "roleDefaults": { "coordinator": "claude-opus-terminal", "implementer": "codex-fast" },
-  "profiles": [
-    { "id": "claude-opus-terminal", "label": "Claude Opus (terminal)", "harness": "claude-code",
-      "connection": "terminal", "signIn": "plan", "model": "opus" },
-    { "id": "codex-fast", "label": "Codex fast", "harness": "codex",
-      "connection": "acp", "signIn": "harness", "model": "gpt-5-codex", "reasoning": "low" }
-  ]
-}
-```
-
-- Coordinator, product owner and technical lead defaults must be terminal profiles.
-- Claude Code with a plan sign-in runs only in a terminal. Anthropic Consumer Terms forbid automated access with a plan sign-in, and the Claude ACP agent refuses a plan sign-in.
-- Plane refuses a profile with an option that skips permission prompts, for example `--dangerously-skip-permissions`, `--yolo` or `--mode auto`, and an environment variable name that contains `KEY`, `TOKEN`, `SECRET`, `PASSWORD` or `CREDENTIAL`.
-
-### Session runner
-
-`artifact-plane runner` hosts the sessions. The server starts it when needed, and the sessions keep running when the server restarts. The runner listens on `runner.sock` in the state directory and exits 10 minutes after its last session ends while no server is connected.
-
-When the workbench says "Restart the session runner", end the sessions, then stop the runner with `pkill -TERM -f "artifact-plane runner"`. Terminal sessions continue in herdr. A runner that is killed with SIGKILL can leave its ttyd processes running; stop them with `pkill -TERM -f "ttyd .*--base-path /api/sessions/terminal/"`.
-
-### Limits
-
-- herdr does not detect every harness tool. On 2026-10-29 it detected Claude Code, Codex and Antigravity CLI, and not OpenCode or Command Code in a terminal. For a tool that herdr shows as unknown, the session page says that Plane cannot see when the agent waits.
-- A harness tool can approve its own requests. For example, Codex with `approvals_reviewer = "auto_review"` in `~/.codex/config.toml` asks nothing, so no permission request reaches Plane. Each tool decides how often it asks; add allow rules in its own settings to ask less.
-- The `--effort` flag of `agy` is not checked live; the effort level in an Antigravity model ID, such as `gemini-4-argon-medium`, works.
-- Keys that you type in the first seconds after the terminal opens can be lost. Browser shortcuts such as Ctrl+W stay with the browser; use Full screen or the terminal app.
-- `cmd acp` marks the hooks of the session folder as trusted without asking you.
-- A provider check can leave an empty session in the history of OpenCode and Command Code.
-- Codex and Antigravity can ask you to trust a new worktree folder before the first prompt; answer in the terminal.
-- A UNIX socket path must be shorter than 104 bytes, so the state directory path must be short.
-
 ## MCP tools
 
 The server sends instructions that map ADD activities to its tools. `get_change_status` returns the state that the session start hook adds; `check_records` returns the validator result for a repository or one change. `get_concept` returns one declared concept, and `search_flows` with `kinds: ["concept"]` finds concepts. `--repository /absolute/root` (repeatable) selects other roots, `--state-dir /absolute/path` a private cache directory, and `--allow-writes` adds the knowledge edit tools.
@@ -214,7 +140,7 @@ From a source checkout, `node server/runtime-cli.js <command>` takes the same co
 
 The default is ~/.local/state/artifact-plane/runtime.sqlite, or XDG_STATE_HOME/artifact-plane/runtime.sqlite. Set ARTIFACT_PLANE_STATE_DIR to use another private directory outside every inspected repository and worktree. Set the same value in the environment of the agent and the Plane server, or add `--state-dir` to the hook command and the runtime commands. Runtime paths inside a Git checkout, including symlink aliases, are rejected. On Windows the store cannot confirm a private directory and refuses it, so the observer and the runtime commands do not work there; the context, the refusals and the stop check still work.
 
-The runtime store also keeps the sessions that you start, with their states and lifecycle events, and no message text. The runner socket and the relay sockets of the embedded terminal are in the same directory. Hook processes write directly to SQLite, even when the web server is stopped. The agent harness keeps its own conversation history; the Plane keeps allowlisted observations, session and task bindings, attempts, and graph labels and edges.
+Hook processes write directly to SQLite, even when the web server is stopped. The agent harness keeps its own conversation history; the Plane keeps allowlisted observations, session and task bindings, attempts, and graph labels and edges.
 
 ## Read the graph and history
 

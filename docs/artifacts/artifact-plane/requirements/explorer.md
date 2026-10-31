@@ -1,9 +1,3 @@
----
-self_check:
-  result: passed
-  source: docs/artifacts/artifact-plane/requirements/explorer.md#agent-orchestration-self-check
----
-
 # Repository explorer requirements
 
 ## Need and scope
@@ -27,7 +21,7 @@ The inspected repository must remain unchanged. This restriction includes Git me
 
 ## Constraints
 
-Reading operations remain read-only with no workflow engine. The authoring extension in requirements/authoring-workbench.md defines the only write path, limited to docs/artifacts of the selected worktree on a non-protected branch. The agent orchestration extension in requirements/agent-orchestration.md defines the only agent controls: a person starts each agent session, and Plane writes no repository file. The Codex execution extension permits a local observation store outside inspected repositories, local event authentication, and live browser updates. Retained graph context belongs only to execution history; current knowledge graphs remain derived. Prefer existing libraries.
+Reading operations remain read-only with no workflow engine or agent controls; the authoring extension in requirements/authoring-workbench.md defines the only write path, limited to docs/artifacts of the selected worktree on a non-protected branch. The Codex execution extension permits a local observation store outside inspected repositories, local event authentication, and live browser updates. Retained graph context belongs only to execution history; current knowledge graphs remain derived. Prefer existing libraries.
 
 ## Behavior examples
 
@@ -146,7 +140,3 @@ At a fixed desktop width, opening another page leaves the top bar and the sideba
 ### History requirement self-check
 
 The change affects only Artifact Plane. B17 and B18 cover history separation, recency, phases, and toolbar stability. KISS retains Git/Markdown and existing libraries. STE distinguishes retained history from proof of completed execution. No Requirement blocker remains.
-
-## Agent orchestration self-check
-
-change-agent-orchestration amends the constraints: agent controls now exist only as the person-started sessions of requirements/agent-orchestration.md. Reading stays read-only, and the authoring write path is unchanged.
