@@ -1,5 +1,5 @@
 ---
-current_version: 1.30.0
+current_version: 1.30.1
 depends_on: [artifact-driven]
 ---
 
