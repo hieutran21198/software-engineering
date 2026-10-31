@@ -19,7 +19,7 @@ OpenCode V2 users can connect the Plane and receive supported lifecycle guidance
 - OP5: Missing executables, unavailable stores, malformed responses and timeouts do not stop ordinary agent work.
 - OP6: Integration documentation distinguishes supported behavior, unavailable stop blocking, fixture results and live activation evidence.
 - OP7: Existing Claude Code, Codex, Antigravity, MCP and observer behavior remains compatible.
-- OP8: The plugin bridge never creates prompts, automatically continues work, approves plans or treats an observation as task validation.
+- OP8: The integration never creates prompts, automatically continues work, approves plans or treats an observation as task validation.
 
 ## Acceptance criteria
 
@@ -35,8 +35,6 @@ The `agent-session-guidance` and `execution-observation` flows gain OpenCode ent
 ## Requirement self-check
 
 Requirements preserve the selected full scope but do not promise an undocumented stop API. KISS reuses the existing hook command, policy and runtime store. STE separates observed facts from unverified runtime behavior. No blocker prevents specification; verification of target SDK shapes and live activation remains explicit implementation work. Validator results are recorded below when executed.
-
-change-agent-orchestration narrows OP8 to the plugin bridge and keeps its ID. Sessions that a person starts through requirements/agent-orchestration.md can send that person's prompts to OpenCode.
 
 change-opencode-ci-tests amends OPA4 and keeps its ID. After #58 merged, the artifact-plane CI job failed on main: two bridge tests created their temporary directories under `/tmp/opencode`, which exists only on the developer machine, and the guide test expected a phrase that the guide no longer contains.
 

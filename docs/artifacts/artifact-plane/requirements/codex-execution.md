@@ -1,16 +1,10 @@
----
-self_check:
-  result: passed
-  source: docs/artifacts/artifact-plane/requirements/codex-execution.md#agent-orchestration-self-check
----
-
 # Codex execution requirements
 
 ## Need and boundary
 
 Overlay observed agent activity on Artifact Plane implementation graphs. Each task identifies its artifact without inspector navigation. Readers distinguish concurrent work, returned execution, validated completion, and artifact establishment.
 
-The first release observes work started in Codex through lifecycle hooks and explicit task binding. The observer does not launch, schedule, steer or interrupt agent work. The agent orchestration extension in requirements/agent-orchestration.md starts, prompts, stops and resumes sessions only on a request of a person. Plane never approves or merges agent work. Existing sessions become observable only after integration activation; unavailable past activity remains unknown.
+The first release observes work started in Codex through lifecycle hooks and explicit task binding. Plane does not launch, schedule, steer, interrupt, approve, or merge agent work. Existing sessions become observable only after integration activation; unavailable past activity remains unknown.
 
 ## Acceptance criteria
 
@@ -36,7 +30,3 @@ R11: Completed documented checklists remain visible independently of runtime obs
 R12: Implementation views hide transitively redundant task prerequisites by default and offer Show all prerequisites. Preserve all declared prerequisites in knowledge and inspectors, retain version gates, and preserve reachability.
 
 The user requested these two concrete corrections with do the fix and reaffirmed retry. They amend this still-proposed delivery rather than create a separate outcome. Requirement self-check: the corrections address the screenshot without reconstructing agent history or changing execution authorization. KISS and STE preserve distinct evidence labels.
-
-## Agent orchestration self-check
-
-change-agent-orchestration amends the boundary: the observer stays passive, and person-started sessions of requirements/agent-orchestration.md add launch and stop controls. R1 to R12 keep their meaning, and R8 still forbids stored prompts, transcripts, tool arguments, credentials and tool output.

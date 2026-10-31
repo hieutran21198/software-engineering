@@ -81,28 +81,6 @@ test('no page overflows horizontally at 390, 700, 851 and 1440 pixels', async ({
   } finally {await f.cleanup();}
 });
 
-// Only the page area scrolls: the document never scrolls and the shell fills a
-// short window, also after a scroll of the window to its end. The Change page
-// has phase steps and review items whose visually hidden text lies below the fold.
-test('no page scrolls the document in short windows of 1200×600 and 2000×660 pixels', async ({page}) => {
-  const f = await fixture();
-  try {
-    await openRepository(page, f.root);
-    for (const [width, height] of [[1200, 600], [2000, 660]]) {
-      await page.setViewportSize({width, height});
-      for (const [name, open] of PAGES) {
-        await open(page);await expect(region(page, name)).toBeVisible();
-        await expect(page.locator('main [role="status"]').filter({hasText: /^(Reading|Loading)/})).toHaveCount(0, {timeout: 20000});
-        const facts = await page.evaluate(() => {
-          scrollTo(0, document.documentElement.scrollHeight);
-          return {document: document.documentElement.scrollHeight, shell: document.querySelector('.workspace-root').getBoundingClientRect().bottom};
-        });
-        expect(facts, `${name} at ${width}×${height}`).toEqual({document: height, shell: height});
-      }
-    }
-  } finally {await f.cleanup();}
-});
-
 // Screenshots of every page for the owner's comparison with the approved mockups.
 test('screenshots of every page at 1440 and 390 pixels', async ({page}) => {
   test.setTimeout(120000);

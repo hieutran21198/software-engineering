@@ -6,8 +6,6 @@ import {Icon, Section, StatusBadge} from '../ui.jsx';
 import {GraphPanel, Handles} from '../GraphPanel.jsx';
 import {ActionForm, OperationError, useEdit, checklistItems, sectionText, frontValue, lines} from '../editing.jsx';
 import {useTaskRuntime} from '../Runtime.jsx';
-import {useSessions, useTaskSession} from '../Sessions.jsx';
-import {attemptAgent, isActive} from '../session-model.js';
 import {stateLabels, elapsedLabel} from '../runtime-model.js';
 import {afterLabel, planSelfCheckMissing, taskGraphLayout, taskNumber, taskState, TASK_STATES} from './ChangePageModel.js';
 
@@ -23,25 +21,13 @@ function StatusDot({state}) {
 }
 
 // Observed execution of one task, shown only in its expanded row.
-// The harness tool and the model of each attempt come from its Plane session, or from the
-// model that a hook reported (specifications/agent-orchestration.md, Workbench).
 function TaskRuntime({change, task, worktreePath}) {
-  const value = useTaskRuntime(change.artifact, change.name, task.path, undefined, worktreePath, task), {sessions} = useSessions();
-  const attempt = value.attempts[0], agents = value.attempts.map(a => attemptAgent(a, sessions)).filter(Boolean);
+  const value = useTaskRuntime(change.artifact, change.name, task.path, undefined, worktreePath, task);
+  const attempt = value.attempts[0];
   return <p className="task-runtime"><span className="muted">Execution</span> <StatusBadge status={RUNTIME_STATUS[value.state] || 'Unknown'}>{stateLabels[value.state] || 'Unknown'}</StatusBadge>
-    {attempt && <span className="muted"> {value.attempts.length > 1 ? `${value.attempts.length} agents` : attempt.agent || attempt.session}{agents.length ? ` · ${[...new Set(agents)].join(', ')}` : ''} · {elapsedLabel(Math.max(...value.attempts.map(a => a.elapsedMs)))}{attempt.stale ? ` · stale, last observed ${attempt.lastObservedState}` : ''}</span>}
+    {attempt && <span className="muted"> {value.attempts.length > 1 ? `${value.attempts.length} agents` : attempt.agent || attempt.session} · {elapsedLabel(Math.max(...value.attempts.map(a => a.elapsedMs)))}{attempt.stale ? ` · stale, last observed ${attempt.lastObservedState}` : ''}</span>}
     {!value.attempts.length && <span className="muted"> · Observations do not verify completion.</span>}
   </p>;
-}
-// Start implementer, Open session or Recover for the task (Workbench; artboards 4 and 5).
-function TaskSessionAction({change, task, number}) {
-  const sessions = useSessions(), {worktreePath, go} = useShell(), session = useTaskSession(change.artifact, change.name, task.path);
-  if (!sessions.control) return null;
-  if (session && isActive(session)) return <button onClick={() => go({kind: 'session', session: session.id})}>Open session</button>;
-  return <>
-    {session && <button onClick={() => go({kind: 'session', session: session.id})}>Recover</button>}
-    <button onClick={() => sessions.openLaunch({role: 'implementer', artifact: change.artifact, change: change.name, task: task.path, worktree: worktreePath})} aria-label={`Start implementer for task ${number}`}>Start implementer</button>
-  </>;
 }
 
 // Edit task: title, prerequisites and DoD lines, with Remove task.
@@ -94,7 +80,6 @@ function TaskDetail({change, task, tasks, numbers, writable}) {
       onSubmit={v => edit.run('evidence.record', {path: task.path, ...v})}/>}
     {mode === 'edit' && <EditTaskForm change={change} task={task} tasks={tasks} numbers={numbers} dod={dod} onClose={() => setMode(null)}/>}
     {!mode && <div className="task-actions">
-      {!change.history && !change.version && <TaskSessionAction change={change} task={task} number={numbers.get(task.id) || ''}/>}
       {writable && <button className="quiet" disabled={!text} onClick={() => setMode('evidence')}>{Icon.check}Record evidence</button>}
       {writable && <button className="quiet" disabled={!text} onClick={() => setMode('edit')}>{Icon.pen}Edit task</button>}
       <button className="link" onClick={() => go({kind: 'document', artifact: change.artifact, source: task.path, scope})}>Open task document</button>

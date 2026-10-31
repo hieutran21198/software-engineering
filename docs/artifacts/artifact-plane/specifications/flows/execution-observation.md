@@ -12,7 +12,6 @@ flow:
     - id: bind
       title: Bind a listed task and capture its graph context
       supports:
-        - orchestration-contract
         - ux-simplification-contract
         - ux-browser-checks
         - store
@@ -27,7 +26,6 @@ flow:
     - id: observe
       title: Record allowlisted lifecycle observations
       supports:
-        - orchestration-contract
         - store
         - hook-command
         - opencode-contract
@@ -69,14 +67,6 @@ flow:
       to: retain
       condition: Observation ends, disconnects or becomes stale.
   support:
-    - id: orchestration-contract
-      kind: element
-      artifact: artifact-plane
-      element: specifications/agent-orchestration.md
-      requires: Bind a Plane-started implementer session explicitly, replace its
-        session with the harness session ID, and record session lifecycle events
-        without message text.
-      basis: documented
     - id: opencode-bridge
       kind: implementation
       path: apps/artifact-plane/integration/opencode/index.js
@@ -211,8 +201,8 @@ flow:
     - Observed lifecycle activity and reported checks do not prove task DoD,
       plan approval or artifact establishment.
   exclusions:
-    - Starting agents, which the agent-session-launch flow owns, granting
-      permissions, changing artifact knowledge or maintaining ADD workflow state.
+    - Starting agents, granting permissions, changing artifact knowledge or
+      maintaining ADD workflow state.
   artifact: artifact-plane
 ---
 
